@@ -180,8 +180,11 @@ function validateGeneration({
       if(!listed && !blank(id)) errors.push(`VENUE:${key}:UNLISTED_SOURCE_HAS_ID:${source}`);
       if(listed && blank(id)) errors.push(`VENUE:${key}:LISTED_SOURCE_MISSING_ID:${source}`);
       if(listed && !blank(id)){
-        const match=events.some(e=>normalized(e.Source)===source && String(e['Source Record ID']||'')===String(id));
-        if(!match) errors.push(`VENUE:${key}:NATIVE_ID_WITHOUT_SOURCE_EVENT:${source}:${id}`);
+        const ids=String(id).split(/[;,]/).map(v=>v.trim()).filter(Boolean);
+        for(const nativeId of ids){
+          const match=events.some(e=>normalized(e.Source)===source && String(e['Source Record ID']||'')===nativeId);
+          if(!match) errors.push(`VENUE:${key}:NATIVE_ID_WITHOUT_SOURCE_EVENT:${source}:${nativeId}`);
+        }
       }
     }
 
