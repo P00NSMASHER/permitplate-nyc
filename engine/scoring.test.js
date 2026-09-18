@@ -32,6 +32,16 @@ test('base score math follows exact production components',()=>{
   assert.equal(s.Distribution,58); // +10 stage +8 known cuisine
 });
 
+test('structured concept evidence overrides broad derived labels',()=>{
+  const s=computeScores(base({
+    conceptText:'Restaurant/cafe/pub/bistro (broad generated label)',
+    conceptEvidence:{hotFood:false,restaurant:false,pokeBowl:false,lightPrep:false},
+  }));
+  // No +12 generic restaurant boost merely because an umbrella label contains "Restaurant".
+  assert.equal(s.Equipment,55);
+  assert.equal(s.HoodFire,48);
+});
+
 test('SLA adds exact early timing boosts but specialist ceiling still applies',()=>{
   const s=computeScores(base({sourceCount:2,sources:['DOHMH','SLA'],conceptText:'Restaurant'}));
   // Specialist restaurant text creates direct concept evidence only for generic restaurant,
