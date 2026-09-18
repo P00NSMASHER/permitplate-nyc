@@ -1,5 +1,7 @@
 'use strict';
 
+const {stampRunControlNotes,hasCurrentScoringStamp}=require('./scoring_version');
+
 const TWO_HOURS_MS=2*60*60*1000;
 
 function iso(value,name='time'){
@@ -26,7 +28,7 @@ function beginGeneration({generationId,startedAt,expectedVenueRows,expectedLeadR
     'Validation Status':'PENDING',
     'Commit Status':'NOT_ATTEMPTED',
     'Source Health':String(sourceHealth||''),
-    'Notes':'',
+    'Notes':stampRunControlNotes(''),
     _readbackVerified:false,
   };
 }
@@ -87,6 +89,7 @@ function promotionPlan(record,{venueRows,leadRows}){
         'Staging Venue Rows':venueRows.length,
         'Expected Lead Rows':leadRows.length,
         'Staging Lead Rows':leadRows.length,
+        'Notes':record.Notes,
       }},
     ],
   };
@@ -142,7 +145,8 @@ function deliveryAllowed(record){
     record.Status==='COMMITTED' &&
     record['Validation Status']==='PASS' &&
     record['Commit Status']==='PASS' &&
-    record._readbackVerified===true
+    record._readbackVerified===true &&
+    hasCurrentScoringStamp(record.Notes)
   );
 }
 
