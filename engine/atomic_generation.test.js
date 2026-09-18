@@ -72,6 +72,16 @@ test('count, key-set, or value mismatch becomes COMMIT_VERIFY_FAIL',()=>{
   assert.match(r.Notes,/VENUE_VALUE_MISMATCH/);
 });
 
+test('missing or stale scoring stamp blocks delivery even after successful readback',()=>{
+  let r=stageGeneration(started(),{venueRows:venues,leadRows:leads});
+  r=applyValidation(r,{pass:true,errors:[]},'2026-09-18T12:05:00Z');
+  r=markCommitted(r,'2026-09-18T12:06:00Z');
+  r=verifyReadback(r,{stagedVenues:venues,liveVenues:venues,stagedLeads:leads,liveLeads:leads,venueHeaders:VHEAD,leadHeaders:LHEAD});
+  assert.equal(deliveryAllowed(r),true);
+  assert.equal(deliveryAllowed({...r,Notes:'ScoringVersion=old'}),false);
+  assert.equal(deliveryAllowed({...r,Notes:''}),false);
+});
+
 test('promotion refuses row-count drift from expected generation',()=>{
   let r=stageGeneration(started(),{venueRows:venues,leadRows:leads});
   r=applyValidation(r,{pass:true,errors:[]},'2026-09-18T12:05:00Z');
