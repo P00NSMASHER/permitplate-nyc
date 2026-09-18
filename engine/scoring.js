@@ -73,7 +73,17 @@ function computeScores(input){
     reasons[c]=[`Stage ${stage} +${STAGE_WEIGHTS[stage][c]}`];
   }
 
-  const F=flags(input);
+  const inferred=flags(input);
+  const supplied=input.conceptEvidence||{};
+  const F={
+    hotFood:supplied.hotFood ?? inferred.hotFood,
+    restaurant:supplied.restaurant ?? inferred.restaurant,
+    pokeBowl:supplied.pokeBowl ?? inferred.pokeBowl,
+    lightPrep:supplied.lightPrep ?? inferred.lightPrep,
+    hoodScope:inferred.hoodScope,
+    hoodExtra:inferred.hoodExtra,
+    kitchenMechanical:inferred.kitchenMechanical,
+  };
   const sourceSet=new Set((input.sources||[]).map(norm));
   const hasSla=sourceSet.has('SLA');
   const matchedDob=Boolean(input.strictVenueLinkedHospitalityDob) && !input.buildingLevelUnmatchedDob;
