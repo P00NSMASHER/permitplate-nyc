@@ -75,6 +75,16 @@ test('native source id requires listed source and matching Source Event',()=>{
   assert.ok(r.errors.some(x=>x.includes('NATIVE_ID_WITHOUT_SOURCE_EVENT:SLA:SLA-1')));
 });
 
+test('multi-ID DOB cell requires every filing to have its own Source Event',()=>{
+  const dob1=event({'Event ID':'DOB:D1','Source':'DOB','Source Record ID':'D1','Event Type':'DOB buildout','Stage Evidence':'venue-linked','Job Description':'restaurant interior'});
+  const dob2=event({'Event ID':'DOB:D2','Source':'DOB','Source Record ID':'D2','Event Type':'DOB plumbing','Stage Evidence':'venue-linked','Job Description':'restaurant plumbing'});
+  const v=venue({'Source Count':2,'Sources':'DOHMH; DOB','DOB Job Filing':'D1; D2','Stage':'BUILDOUT / LICENSING','Stage Number':2});
+  let r=validate([v],[lead()],[event(),dob1,dob2]);
+  assert.equal(r.errors.some(x=>x.includes('NATIVE_ID_WITHOUT_SOURCE_EVENT')),false,r.errors.join('\n'));
+  r=validate([v],[lead()],[event(),dob1]);
+  assert.ok(r.errors.some(x=>x.includes('NATIVE_ID_WITHOUT_SOURCE_EVENT:DOB:D2')));
+});
+
 test('Stage 3 requires exact current-CAMIS pre-permit event',()=>{
   const v=venue({'Stage':'HEALTH PRE-PERMIT','Stage Number':3});
   let r=validate([v]);
