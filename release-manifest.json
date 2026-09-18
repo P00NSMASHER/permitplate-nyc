@@ -1,6 +1,8 @@
 {
   "release": "PermitPlate public-product truth alignment v6",
   "date": "2026-09-18",
+  "deploy_triggered_at": "2026-09-18T14:16:16-04:00",
+  "deploy_trigger_reason": "P0-A exact-source continuous-deploy verification",
   "target_site_id": "d968f195-23b5-4b4b-925a-d2ce29a785d0",
   "target_repo": "P00NSMASHER/permitplate-nyc",
   "checkout": "https://buy.stripe.com/4gM28r1cL81x8dF9Xj9sk02",
