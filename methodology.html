@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <meta name="theme-color" content="#07111f" />
 <meta name="robots" content="index,follow,max-image-preview:large" />
-<meta name="description" content="How PermitPlate NYC detects, matches, stages, scores, suppresses, and delivers source-linked restaurant-opening signals." />
+<meta name="description" content="PermitPlate methodology: source events, stable entity resolution, material-change detection, evidence gating, deterministic vendor scoring and source-linked delivery." />
 <title>Methodology — PermitPlate NYC</title>
 <link rel="canonical" href="https://permitplate-nyc.netlify.app/methodology" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -11,16 +11,55 @@
 <link rel="manifest" href="/manifest.webmanifest" />
 <link rel="stylesheet" href="/site.css" />
 </head><body><nav class="nav"><div class="shell navin"><a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>PermitPlate NYC</span></a><div class="navlinks"><a href="/">Home</a><a href="/sample">Sample</a><a href="/methodology">Methodology</a><a class="cta blue" href="https://buy.stripe.com/4gM28r1cL81x8dF9Xj9sk02">Start · $79/mo</a></div></div></nav>
-<header class="pagehero"><div class="shell"><div class="eyebrow"><span class="dot"></span> METHODOLOGY</div><h1>Deterministic source-linked intelligence, not a black-box prediction.</h1><p>PermitPlate uses official public records, conservative matching rules, longitudinal venue history, and vendor-specific prioritization.</p></div></header>
+<header class="pagehero"><div class="shell"><div class="eyebrow"><span class="dot"></span> MODEL V7</div><h1>Entity-first, change-first, evidence-first.</h1><p>PermitPlate is designed to surface material public changes attached to the correct real-world venue—not maximize raw lead count.</p></div></header>
 <main class="page">
-<h2>1. Official sources</h2><p><strong>DOHMH is the core restaurant feed.</strong> PermitPlate also evaluates current/relevant New York State Liquor Authority pending-license records and NYC DOB NOW build/permit records. SLA or DOB evidence is counted only when the record is hospitality-relevant and passes strict identity/address rules. Not every signal is multi-source.</p>
-<h2>2. Venue identity and suppression</h2><p>PermitPlate builds a durable venue graph rather than treating each public row as a new lead. Same-address evidence is not enough by itself in food halls, malls, markets, office buildings, and other multi-tenant sites. Building-level DOB work is excluded from venue-stage and score effects unless the filing can be safely tied to the operator/venue. Institutional and other nontraditional records can be suppressed from commercial delivery.</p>
-<h2>3. Lifecycle stages</h2><table class="methodtable"><thead><tr><th>Stage</th><th>Meaning</th></tr></thead><tbody><tr><td>JUST FILED</td><td>Early official applicant or safely matched source-first evidence without stronger buildout/health evidence.</td></tr><tr><td>BUILDOUT / LICENSING</td><td>Current licensing or venue-linked buildout/permit activity indicates a materially active opening process.</td></tr><tr><td>HEALTH PRE-PERMIT</td><td>An actual CAMIS-matched DOHMH pre-permit Source Event exists.</td></tr><tr><td>MULTI-SOURCE NEAR-OPENING</td><td>Multiple current, safely matched sources support a later-stage opening signal. Multi-source status is never assumed for every venue.</td></tr></tbody></table><p>Stage is evidence-driven. A raw global pre-permit count is never venue-level evidence; Stage 3 requires an actual CAMIS-matched Source Event.</p>
-<h2>4. Eight vendor-specific scores</h2><p>PermitPlate calculates separate deterministic 0–100 prioritization scores for <strong>POS/payments, Insurance, Equipment, Hood/Fire, Waste, Pest, Linen, and Distribution</strong>. Scores combine stage, recency, commercial fit, corroboration, and category-relevant evidence. They are prioritization aids only—not purchase probabilities, purchase-intent predictions, opening probabilities, credit scores, or guarantees.</p><p>Specialist Equipment or Hood/Fire priority must be supported by category-specific physical/buildout evidence or explicit relevant hot-food evidence; generic licensing, corroboration, signage, or awning records alone cannot create specialist priority above generic timing categories.</p>
-<h2>5. What a useful signal may include</h2><ul><li><strong>Why Now:</strong> the material public change that made the venue worth reviewing.</li><li><strong>Purchase Window:</strong> a deterministic timing label based on the observed stage/evidence.</li><li><strong>Watch Next:</strong> the next public milestone worth monitoring.</li><li><strong>Confidence:</strong> a qualitative evidence-strength label, not a probability.</li><li><strong>Source IDs and links:</strong> identifiers customers can use to verify the public evidence.</li><li><strong>Observed Facts vs PermitPlate Inference:</strong> a visible separation between what the public source says and PermitPlate's deterministic interpretation.</li></ul>
-<h2>6. First-customer and backlog semantics</h2><p>The normal daily feed begins at the subscriber's subscription baseline. Normal delivery contains post-baseline new or materially changed signals only. On first fulfillment, PermitPlate may separately label up to 10 still-active records first detected in the prior seven days as <strong>Starter Snapshot — active before you joined</strong>; original detection dates remain visible. Older backlog is never described as new. If the baseline is ambiguous, customer fulfillment fails closed rather than guessing.</p>
-<h2>7. Delivery and CRM output</h2><p>Production processing runs daily. A digest is delivered only when qualifying signals exist for an active subscriber profile. Nonempty digests are designed to include a CRM-ready CSV when technically supported, with the same selected signals, source lineage, and category ranking as the email. Delivery state is keyed deterministically to prevent duplicate treatment of the same customer/signal attempt.</p>
-<h2>8. Freshness and limitations</h2><p>PermitPlate checks source freshness and preserves source timestamps. Public records may be delayed, incomplete, duplicated, changed, corrected, or later superseded. The product is a research and timing tool. Customers remain responsible for verifying official records and for lawful outreach.</p>
-<h2>9. Independence</h2><p>PermitPlate is an independent commercial information service. It is not affiliated with or endorsed by New York City, New York State, DOHMH, DOB, or the State Liquor Authority.</p>
+<h2>1. Current launch scope</h2><p>The current paid product is NYC restaurant vendor intelligence. NYC DOHMH is the core restaurant source. PermitPlate may also use current/relevant New York State Liquor Authority pending-license records and NYC DOB NOW build/permit records when conservative identity/address and hospitality rules pass. Additional markets are not treated as production coverage until their source rights, freshness, matching precision and commercial usefulness are separately validated.</p>
+
+<h2>2. The durable entity is the center of the model</h2><p>PermitPlate maintains a venue/project identity across source events instead of treating each public row as a separate lead. Business-name normalization, address normalization, source identifiers and source-specific evidence are preserved. Same-address evidence alone is not sufficient in food halls, malls, markets, office buildings and other multi-tenant locations. Ambiguous joins fail closed or remain review-only.</p>
+
+<h2>3. Source events are append-only evidence</h2><p>Each retained event should carry source system, source identifier, source date, observed-at timestamp, normalized entity keys, source URL where available, and a content/revision fingerprint when technically available. Corrections, amendments and later records do not erase the prior evidence; they create a new state transition.</p>
+
+<h2>4. Material-change detection</h2><p>PermitPlate compares the newest source state with the previously known entity state. A signal may be created or reopened by a genuinely new filing, lifecycle transition, corrected/superseding record, new corroborating source, materially stronger category-specific evidence, or another change that alters what a vendor should investigate. Duplicate rows, unchanged re-fetches and weak re-statements should not create a new opportunity.</p>
+
+<h2>5. Identity and evidence gates come before scoring</h2><p>A commercially attractive record does not become deliverable if its identity match is unsafe. The model separates <strong>identity confidence</strong>, <strong>evidence strength</strong> and <strong>commercial priority</strong>. Low-confidence entity resolution cannot be rescued by a high vendor score.</p>
+
+<h2>6. Lifecycle stages</h2><table class="methodtable"><thead><tr><th>Stage</th><th>Meaning</th></tr></thead><tbody>
+<tr><td>JUST FILED</td><td>Early official applicant or safely matched source-first evidence without stronger buildout/health evidence.</td></tr>
+<tr><td>BUILDOUT / LICENSING</td><td>Current licensing or venue-linked buildout/permit activity indicates a materially active process.</td></tr>
+<tr><td>HEALTH PRE-PERMIT</td><td>An actual CAMIS-matched DOHMH pre-permit Source Event exists.</td></tr>
+<tr><td>MULTI-SOURCE NEAR-OPENING</td><td>Multiple current, safely matched sources support a later-stage opening signal. Multi-source status is never assumed for every venue.</td></tr>
+</tbody></table>
+
+<h2>7. Vendor-specific priority model</h2><p>PermitPlate retains separate deterministic 0–100 prioritization scores for <strong>POS/payments, Insurance, Equipment, Hood/Fire, Waste, Pest, Linen and Distribution</strong>. Model V7 makes the reasoning explicit through four components:</p>
+<table class="methodtable"><thead><tr><th>Component</th><th>Maximum</th></tr></thead><tbody>
+<tr><td>Material change / recency</td><td>30</td></tr>
+<tr><td>Lifecycle timing / urgency</td><td>25</td></tr>
+<tr><td>Vendor-category relevance</td><td>25</td></tr>
+<tr><td>Evidence strength / corroboration</td><td>20</td></tr>
+<tr><td><strong>Total</strong></td><td><strong>100</strong></td></tr>
+</tbody></table>
+<p>The component model is a prioritization framework, not a probability model. Category-specific specialist scores require category-specific evidence; generic licensing or corroboration cannot by itself manufacture a Hood/Fire or Equipment opportunity.</p>
+
+<h2>8. Opportunity Brief fields</h2><ul>
+<li><strong>What Changed:</strong> the exact new or materially changed public evidence.</li>
+<li><strong>Why Now:</strong> the deterministic reason it deserves review for the selected vendor category.</li>
+<li><strong>Observed Facts:</strong> source-grounded facts only.</li>
+<li><strong>PermitPlate Inference:</strong> the model's interpretation, visibly separated from source facts.</li>
+<li><strong>Watch Next:</strong> the next public milestone worth monitoring.</li>
+<li><strong>Identity Confidence:</strong> confidence that records belong to the same real-world entity.</li>
+<li><strong>Evidence Strength:</strong> strength/currentness/specificity of the supporting public evidence.</li>
+<li><strong>Source lineage:</strong> IDs, dates and links for verification.</li>
+</ul>
+
+<h2>9. Reopen logic</h2><p>An opportunity is not permanently “done.” A new permit, licensing change, pre-permit event, stronger corroboration, correction or later-stage public milestone can reopen a watched entity. Reopening must cite the new evidence and the prior state it changed.</p>
+
+<h2>10. Customer feedback is explicit, not hidden model training</h2><p>The preferred disposition vocabulary is <strong>Investigate</strong>, <strong>Watch</strong>, <strong>Irrelevant</strong>, and <strong>Already knew</strong>. These dispositions can tune customer-specific suppressions, category rules and territory preferences. They should not silently rewrite source facts or convert PermitPlate into an opaque purchase-intent model.</p>
+
+<h2>11. Delivery baseline</h2><p>The normal daily feed begins at the subscriber's subscription baseline and is intended to contain post-baseline new or materially changed signals only. On first fulfillment, PermitPlate may separately label up to 10 still-active records first detected in the prior seven days as <strong>Starter Snapshot — active before you joined</strong>. Older backlog is never described as new.</p>
+
+<h2>12. Freshness, supersession and limitations</h2><p>Public records may be delayed, incomplete, duplicated, changed, corrected or later superseded. Source freshness is monitored where technically available. A source change can reopen analysis; it does not automatically prove a commercial opportunity. Customers remain responsible for verifying official records and for lawful professional outreach.</p>
+
+<h2>13. Expansion rule</h2><p>PermitPlate's architecture is intentionally reusable across permit-, license-, inspection- and public-change markets, but no city or vertical becomes a customer-facing product merely because data exists. New markets require source-rights review, a versioned schema, entity-resolution benchmark, material-change test corpus, false-join review and evidence that the resulting briefs create buyer value.</p>
+
 <div class="policy-nav"><a href="/sample">View sample</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/refunds">Refunds</a></div></main>
-<footer class="footer"><div class="shell footin"><div><a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>PermitPlate NYC</span></a><div class="operator">Independent U.S.-based commercial intelligence product operated by Jamison Perkins in Pennsylvania. Support: <a href="mailto:jayp19386@gmail.com">jayp19386@gmail.com</a>.</div><div class="legal">Verify official sources before outreach. Signals are not exclusive lead assignments, purchase-intent claims, or guarantees.</div></div><div class="footlinks"><a href="/sample">Sample</a><a href="/methodology">Methodology</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/refunds">Refunds</a></div></div></footer></body></html>
+<footer class="footer"><div class="shell footin"><div><a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>PermitPlate NYC</span></a><div class="operator">Independent U.S.-based commercial intelligence product operated by Jamison Perkins in Pennsylvania. Support: <a href="mailto:jayp19386@gmail.com">jayp19386@gmail.com</a>.</div><div class="legal">Verify official sources before outreach. Scores and confidence labels are research aids, not purchase-intent or opening probabilities.</div></div><div class="footlinks"><a href="/sample">Sample</a><a href="/methodology">Methodology</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/refunds">Refunds</a></div></div></footer></body></html>
