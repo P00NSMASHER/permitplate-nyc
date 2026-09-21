@@ -96,7 +96,8 @@ function buildCandidatePackage(input){
     commercialFit:scoring&&scoring.receipt&&scoring.receipt.commercialFit||null,
     scores:scoring&&scoring.receipt&&scoring.receipt.scores||null,
     bestVendorFit:scoring&&scoring.receipt&&scoring.receipt.bestVendorFit||null,
-    bestScore:scoring&&scoring.receipt&&scoring.receipt.bestScore??null,
+    bestScore:scoring&&scoring.receipt&&scoring.receipt.bestScore!=null?
+      scoring.receipt.bestScore:null,
     productionAuthorized:status==='READY_FOR_PROFILE_MATCHING',
     failures
   };
