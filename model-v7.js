@@ -123,6 +123,7 @@ function classifySourceObservation(receipt) {
   const evidenceBound = Boolean(
     r.sourceId &&
     r.connectorConfigHash &&
+    r.queryFingerprint &&
     r.observedAt &&
     r.sourceFresh === true &&
     r.schemaFingerprint &&
