@@ -8,6 +8,9 @@ const root = __dirname;
 const workbook = JSON.parse(fs.readFileSync(path.join(root, 'permitplate-verification-input.json'), 'utf8'));
 const unformatted = JSON.parse(fs.readFileSync(path.join(root, 'permitplate-unformatted-leads.json'), 'utf8'));
 const sourceScan = JSON.parse(fs.readFileSync(path.join(root, 'permit-current-source-scan.json'), 'utf8'));
+const sourceReceiptPath = path.join(root, 'source-observation-receipts.json');
+const sourceReceiptBundle = fs.existsSync(sourceReceiptPath) ?
+  JSON.parse(fs.readFileSync(sourceReceiptPath, 'utf8')) : null;
 const graphRows = workbook['Venue Graph'];
 const previousCommittedCount = 38;
 const normalKeys = v.rowObjects(graphRows).slice(previousCommittedCount).map((row) => String(row['Venue Key']));
@@ -30,7 +33,9 @@ const plans = profiles.map((profile) => v.buildShadowPlan(graphRows, workbook['S
 const repeatedPlans = profiles.map((profile) => v.buildShadowPlan(graphRows, workbook['Source Events'], profile, normalKeys, '2026-09-18'));
 const planVerification = v.verifyPlans(plans);
 const predecessorVerification = v.validatePredecessorScan(graphRows, sourceScan);
-const sourceObservationVerification = v.validateSourceObservationReceipts(workbook['Source Observations'] || []);
+const sourceObservationInput = workbook['Source Observations'] ||
+  (sourceReceiptBundle && Array.isArray(sourceReceiptBundle.receipts) ? sourceReceiptBundle.receipts : []);
+const sourceObservationVerification = v.validateSourceObservationReceipts(sourceObservationInput);
 if (JSON.stringify(plans) !== JSON.stringify(repeatedPlans)) throw new Error('Repeated planning was not deterministic.');
 const artifactDirectory = path.join(root, 'permitplate-shadow-artifacts');
 fs.mkdirSync(artifactDirectory, {recursive: true});
