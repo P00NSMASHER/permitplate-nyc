@@ -36,3 +36,6 @@ jobs:
 
       - name: Run end-to-end engine regression
         run: node pipeline/engine.test.js
+
+      - name: Run Socrata reader regression
+        run: node pipeline/socrata-reader.test.js
