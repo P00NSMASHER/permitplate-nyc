@@ -30,11 +30,16 @@ jobs:
       - name: Run live scoring readiness audit
         run: node pipeline/run-scoring-readiness.js pipeline/scoring-readiness-result.json
 
+      - name: Benchmark shadow scorer against current literal authority
+        run: node pipeline/run-shadow-scoring-evaluation.js pipeline/shadow-score-evaluation-result.json
+
       - name: Upload scoring readiness artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: permitplate-scoring-readiness
-          path: pipeline/scoring-readiness-result.json
+          path: |
+            pipeline/scoring-readiness-result.json
+            pipeline/shadow-score-evaluation-result.json
           if-no-files-found: warn
           retention-days: 14
