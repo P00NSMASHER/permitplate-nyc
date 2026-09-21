@@ -61,6 +61,9 @@ jobs:
       - name: Run current-evidence shadow scoring regression
         run: node pipeline/shadow-scoring-v3.test.js
 
+      - name: Run adversarial scoring invariants
+        run: node pipeline/scoring-invariants.test.js
+
       - name: Run 47-case historical shadow scoring replay
         run: node pipeline/historical-shadow-score-benchmark.test.js
 
