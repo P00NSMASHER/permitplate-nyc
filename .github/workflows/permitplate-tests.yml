@@ -48,3 +48,6 @@ jobs:
 
       - name: Run graph-bound subscriber delivery canary
         run: node pipeline/delivery-plan.test.js
+
+      - name: Run versioned scoring and receipt regression
+        run: node pipeline/scoring.test.js
