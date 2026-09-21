@@ -73,7 +73,7 @@ async function main(args=process.argv.slice(2)){
   }
   if(command==='lock'){
     const [cohortFile,output,...reviews]=a,cohort=read(cohortFile);
-    const result=e.lockThresholds(cohort,reviewers(reviews),'2026-09-21T00:00:00.000Z');
+    const result=e.lockThresholds(cohort,reviewers(reviews),new Date().toISOString());
     write(output,result);console.log(JSON.stringify(result,null,2));if(result.status==='BLOCKED')process.exitCode=2;return result;
   }
   if(command==='holdout'){
