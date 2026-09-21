@@ -65,7 +65,9 @@ function subscriberCanary(overrides){
     },
     artifactFingerprint:'subscriber-canary-fp',
     preferenceSource:'NETLIFY_PRECHECKOUT_FORM',
-    preferenceReceiptId:'submission_canary'
+    preferenceReceiptId:'submission_canary',
+    activationReference:'pp_canaryactivation000000000000000000',
+    stripeClientReferenceId:'pp_canaryactivation000000000000000000'
   },overrides||{});
 }
 function external(overrides){
@@ -81,7 +83,9 @@ function external(overrides){
       netlifyFormsEnabled:true,
       sourceFlowImplemented:true,
       liveFormVerified:false,
-      exactEmailActivationCanaryVerified:true
+      exactEmailActivationCanaryVerified:true,
+      activationReferenceFieldVerified:false,
+      exactReferenceActivationCanaryVerified:true
     },
     netlify:{
       verifiedPublicSourceFingerprint:'public-source-fp',
@@ -226,7 +230,8 @@ function internalInput(overrides){
 {
   const readyExternal=external({
     preCheckoutOnboarding:{
-      liveFormVerified:true
+      liveFormVerified:true,
+      activationReferenceFieldVerified:true
     },
     netlify:{
       verifiedPublicSourceFingerprint:'public-source-fp',
@@ -252,7 +257,8 @@ function internalInput(overrides){
 {
   const fingerprintVerifiedExternal=external({
     preCheckoutOnboarding:{
-      liveFormVerified:true
+      liveFormVerified:true,
+      activationReferenceFieldVerified:true
     },
     netlify:{
       verifiedPublicSourceFingerprint:'public-source-fp',
@@ -274,7 +280,8 @@ function internalInput(overrides){
 {
   const provenExternal=external({
     preCheckoutOnboarding:{
-      liveFormVerified:true
+      liveFormVerified:true,
+      activationReferenceFieldVerified:true
     },
     netlify:{
       verifiedPublicSourceFingerprint:'public-source-fp',
@@ -325,6 +332,17 @@ function internalInput(overrides){
   }));
   assert.equal(out.externalGates.preferenceCaptureReady,true);
   assert.equal(out.firstCustomerOperationallyReady,true);
+}
+
+{
+  const input=internalInput({
+    subscriberCanary:subscriberCanary({
+      stripeClientReferenceId:'pp_otherreference00000000000000000000'
+    })
+  });
+  const out=readiness.evaluateLaunchReadiness(input);
+  assert.equal(out.internalReady,false);
+  assert(out.internalFailures.includes('subscriberCanaryExactCheckoutCorrelation'));
 }
 
 {
