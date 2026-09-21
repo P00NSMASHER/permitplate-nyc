@@ -70,6 +70,12 @@ jobs:
       - name: Run Stripe subscriber adapter regression
         run: node pipeline/stripe-subscriber.test.js
 
+      - name: Run Netlify onboarding receipt regression
+        run: node pipeline/netlify-onboarding.test.js
+
+      - name: Run Netlify-to-Stripe subscriber activation regression
+        run: node pipeline/subscriber-activation.test.js
+
       - name: Run private sheet mapping regression
         run: node pipeline/private-sheet-mapping.test.js
 
