@@ -462,6 +462,7 @@ function buildOpportunityDecision(input) {
   if (reasons.length === 0) decision = 'DELIVER';
   else if (reasons.some((reason) => [
     'IDENTITY_NOT_RESOLVED',
+    'SOURCE_NOT_FRESH',
     'SOURCE_OBSERVATION_NOT_USABLE',
     'MISSING_SOURCE_LINEAGE'
   ].includes(reason))) decision = 'REVIEW';
