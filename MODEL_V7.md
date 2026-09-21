@@ -184,13 +184,27 @@ The profile contract includes:
 
 Omitted territory means all five NYC boroughs. Category is never guessed.
 
-## Stripe baseline rule
+## Subscriber activation and Stripe baseline rule
+
+The production activation path is:
+
+Netlify pre-checkout preference receipt
+→ unchanged Stripe $79 subscription checkout
+→ exact-email match
+→ active/trialing PermitPlate subscription
+→ private subscriber profile
+
+Category, territory, and Starter preference are captured before checkout through the PermitPlate Netlify form. Stripe remains the payment/subscription authority.
 
 Baseline At equals the Stripe Subscription created timestamp.
 
-It is not the time the buyer opened the Checkout Session or Payment Link.
+It is not the time the buyer submitted the preference form, opened the Checkout Session, or opened the Payment Link.
 
-The Stripe subscriber adapter fails closed on wrong link, wrong mode, incomplete/unpaid checkout, missing subscription, ineligible subscription status, wrong project metadata, missing email, missing category preference, or missing Starter preference.
+Activation fails closed on a wrong Payment Link, wrong mode, incomplete/unpaid checkout, missing subscription object, wrong price, ineligible subscription status, wrong project metadata, missing email, missing/stale/ambiguous onboarding submission, or email mismatch.
+
+The matching window is exact-email only. Business name, address, and fuzzy identity are not used to attach preferences to a subscription.
+
+Stripe custom fields remain a supported optional preference source, but payment_links_write is not required for the first production launch.
 
 ## Starter Snapshot
 
@@ -215,13 +229,17 @@ It applies boroughs, categories, threshold, baseline/Starter rules, caps, and ex
 
 Report and CSV use the same ordered signal keys. CSV formula-like values are neutralized.
 
-Private Delivery State tracks recipient, signal key, delivered time, Stripe IDs, provider message ID, Attempt ID, Message Identity, artifact/profile fingerprints, NORMAL/STARTER class, provider status, reconciliation time, and package ID.
+Private Delivery State tracks recipient, signal key, provider-acceptance time, Stripe IDs, provider message ID, Attempt ID, Message Identity, artifact/profile fingerprints, NORMAL/STARTER class, provider status, reconciliation time, package ID, and the exact owner Authorization ID.
+
+Provider acceptance is not described as inbox delivery. FINALIZED private rows are derived only from provider evidence bound to the exact attempt/recipient/artifact plus the valid owner send authorization. Caller-supplied FINALIZED labels cannot authorize state.
 
 ## Current no-send acceptance
 
 Synthetic first-subscriber path has been verified:
 
-completed Stripe subscription
+Netlify pre-checkout preferences
+→ completed unchanged Stripe subscription
+→ exact-email activation
 → subscription-created baseline
 → private profile
 → persistent opportunity ledger
@@ -244,11 +262,13 @@ The public artifact contains only website assets plus build-info.json. Backend p
 
 ## Current external blockers
 
-1. Netlify production has not advanced to the verified public build. The scoped upload helper still times out during package/network resolution.
-2. The connected Stripe key lacks payment_links_write, so the $79 Payment Link cannot yet collect category, territory, and Starter preferences directly.
-3. No real paid PermitPlate subscriber has completed provider-backed delivery/reconciliation yet.
+1. Netlify production has not advanced to the verified onboarding build, so the pre-checkout form is not yet live. The scoped upload helper still times out during package/network resolution.
+2. The live site therefore has no detected permitplate-onboarding form yet, even though Netlify Forms is enabled for the existing project.
+3. No real paid PermitPlate subscriber has completed provider-backed acceptance/reconciliation and next-run duplicate suppression yet.
 
-These are external integration/transport blockers, not unresolved source, identity, scoring, detection, or artifact-model blockers.
+Stripe payment_links_write is no longer a first-launch blocker. The current $79 Payment Link can remain unchanged because preference authority is captured by the Netlify pre-checkout form and joined to Stripe by exact email after subscription creation.
+
+These are external deployment/commercial-proof blockers, not unresolved source, identity, scoring, detection, subscriber-artifact, or authorization-model blockers.
 
 ## Expansion rule
 
