@@ -167,6 +167,18 @@ function acceptedObservation(batch) {
   return Boolean(batch && batch.observation && batch.observation.supportsPositiveObservation === true);
 }
 
+function completeObservation(batch) {
+  return Boolean(batch && batch.observation && batch.observation.supportsAbsenceConclusion === true);
+}
+
+function sourceCompletenessReasons(data) {
+  const reasons = [];
+  if (!completeObservation(data.dohmhBatch)) reasons.push('DOHMH_SOURCE_WINDOW_NOT_COMPLETE');
+  if (!completeObservation(data.slaBatch)) reasons.push('SLA_SOURCE_WINDOW_NOT_COMPLETE');
+  if (!completeObservation(data.dobBatch)) reasons.push('DOB_SOURCE_WINDOW_NOT_COMPLETE');
+  return reasons;
+}
+
 function buildCurrentGraph(input) {
   const data = input || {};
   const dohmhBatch = data.dohmhBatch;
@@ -226,10 +238,11 @@ function buildCurrentGraph(input) {
     suppressionReasons: candidate.suppressionReasons
   })).sort((a, b) => a.entityId.localeCompare(b.entityId))));
 
+  const completenessReasons = sourceCompletenessReasons(data);
   return {
     builderVersion: CANDIDATE_BUILDER_VERSION,
-    graphState: dohmhBatch.observation.state === 'COMPLETE_NONEMPTY' ? 'COMPLETE' : 'PARTIAL',
-    reasons: dohmhBatch.observation.state === 'COMPLETE_NONEMPTY' ? [] : ['DOHMH_SOURCE_WINDOW_PARTIAL'],
+    graphState: completenessReasons.length ? 'PARTIAL' : 'COMPLETE',
+    reasons: completenessReasons,
     graphDigest,
     candidates,
     metrics: {
@@ -241,7 +254,12 @@ function buildCurrentGraph(input) {
       ).length,
       acceptedSlaCorroborationCount: acceptedSla,
       acceptedDobReviewedCorroborationCount: acceptedDobReviewed,
-      rejectedDobColocationCount: rejectedDobColocation
+      rejectedDobColocationCount: rejectedDobColocation,
+      sourceCompleteness: {
+        DOHMH: completeObservation(data.dohmhBatch),
+        SLA_PENDING: completeObservation(data.slaBatch),
+        DOB_NOW: completeObservation(data.dobBatch)
+      }
     }
   };
 }
@@ -255,5 +273,8 @@ module.exports = {
   buildDohmhCandidates,
   indexRecordsByAddress,
   applyCrossCamisOperationalConflicts,
+  acceptedObservation,
+  completeObservation,
+  sourceCompletenessReasons,
   buildCurrentGraph
 };
