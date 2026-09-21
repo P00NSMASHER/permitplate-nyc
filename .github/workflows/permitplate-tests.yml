@@ -70,6 +70,9 @@ jobs:
       - name: Run Stripe subscriber adapter regression
         run: node pipeline/stripe-subscriber.test.js
 
+      - name: Run private sheet mapping regression
+        run: node pipeline/private-sheet-mapping.test.js
+
       - name: Run commercial fit receipt regression
         run: node pipeline/commercial-fit.test.js
 
