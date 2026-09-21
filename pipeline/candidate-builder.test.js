@@ -12,7 +12,8 @@ function observation(sourceKey, rows, state='COMPLETE_NONEMPTY') {
       observationId:'OBS:'+sourceKey,
       sourceId,
       state,
-      supportsPositiveObservation:['COMPLETE_NONEMPTY','PARTIAL'].includes(state)
+      supportsPositiveObservation:['COMPLETE_NONEMPTY','PARTIAL'].includes(state),
+      supportsAbsenceConclusion:['COMPLETE_NONEMPTY','VERIFIED_EMPTY'].includes(state)
     },
     records:rows
   };
@@ -171,11 +172,14 @@ const predecessorPrepermit = dohmh({
 
 {
   const partial=builder.buildCurrentGraph({
-    dohmhBatch:observation('DOHMH',[currentApplicant],'PARTIAL')
+    dohmhBatch:observation('DOHMH',[currentApplicant],'PARTIAL'),
+    slaBatch:observation('SLA_PENDING',[],'VERIFIED_EMPTY'),
+    dobBatch:observation('DOB_NOW',[],'VERIFIED_EMPTY')
   });
   assert.equal(partial.graphState,'PARTIAL');
   assert.equal(partial.metrics.candidateCount,1);
-  assert(partial.reasons.includes('DOHMH_SOURCE_WINDOW_PARTIAL'));
+  assert(partial.reasons.includes('DOHMH_SOURCE_WINDOW_NOT_COMPLETE'));
+  assert.equal(partial.metrics.sourceCompleteness.DOHMH,false);
 }
 
 {
@@ -184,6 +188,20 @@ const predecessorPrepermit = dohmh({
   });
   assert.equal(unusable.graphState,'REVIEW');
   assert.equal(unusable.metrics.candidateCount,0);
+}
+
+{
+  const auxOutage=builder.buildCurrentGraph({
+    dohmhBatch:observation('DOHMH',[currentApplicant]),
+    slaBatch:observation('SLA_PENDING',[],'SOURCE_UNAVAILABLE'),
+    dobBatch:observation('DOB_NOW',[],'VERIFIED_EMPTY')
+  });
+  assert.equal(auxOutage.graphState,'PARTIAL');
+  assert.equal(auxOutage.metrics.candidateCount,1);
+  assert(auxOutage.reasons.includes('SLA_SOURCE_WINDOW_NOT_COMPLETE'));
+  assert.equal(auxOutage.metrics.sourceCompleteness.DOHMH,true);
+  assert.equal(auxOutage.metrics.sourceCompleteness.SLA_PENDING,false);
+  assert.equal(auxOutage.metrics.sourceCompleteness.DOB_NOW,true);
 }
 
 {
