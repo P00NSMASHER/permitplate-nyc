@@ -195,6 +195,9 @@ async function observeSocrataQuery(source, scope, options) {
     receipt.sourceUpdatedAt = metadataUpdatedAt(metadata) === null ?
       null : new Date(metadataUpdatedAt(metadata)).toISOString();
     receipt.sourceFresh = isFresh(metadata, observedAtMs, source.maxFreshnessHours);
+    if (!receipt.sourceFresh) {
+      return {records: [], receipt, classification: model.classifySourceObservation(receipt)};
+    }
   } catch (error) {
     const unavailable = unavailableReceipt(receipt, error);
     return {records: [], receipt: unavailable, classification: model.classifySourceObservation(unavailable)};
