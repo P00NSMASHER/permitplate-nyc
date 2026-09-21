@@ -4,9 +4,10 @@ const assert=require('assert');
 const mapping=require('./private-sheet-mapping');
 const stripe=require('./stripe-subscriber');
 const delivery=require('./delivery-plan');
+const transport=require('./transport-authorization');
 
 function adapterResult(){
-  return stripe.profileFromCheckout({
+  return stripe.profileFromCheckoutAndPreferences({
     session:{
       id:'cs_mapping_test',
       object:'checkout.session',
@@ -18,11 +19,7 @@ function adapterResult(){
       customer_details:{email:'buyer@example.com'},
       metadata:{project:'permitplate_nyc'},
       subscription:'sub_mapping',
-      custom_fields:[
-        {key:'category',type:'dropdown',dropdown:{value:'equipment'}},
-        {key:'territory',type:'text',text:{value:'Manhattan, Queens'}},
-        {key:'starter',type:'dropdown',dropdown:{value:'yes'}}
-      ]
+      custom_fields:[]
     },
     subscription:{
       id:'sub_mapping',
@@ -32,9 +29,22 @@ function adapterResult(){
       customer:'cus_mapping',
       metadata:{project:'permitplate_nyc'},
       items:{data:[{price:{id:'price_1UFjcWDPW8riWrxQhnrPX6nc'}}]}
-    }
+    },
+    expectedPriceId:'price_1UFjcWDPW8riWrxQhnrPX6nc',
+    preferences:{
+      category:'Equipment',
+      boroughs:['Manhattan','Queens'],
+      starterSnapshotEnabled:true,
+      minimumScore:60,
+      starterDays:7,
+      starterLimit:10,
+      maxSignals:25
+    },
+    preferenceSource:'NETLIFY_PRECHECKOUT_FORM',
+    preferenceReceiptId:'submission_mapping'
   });
 }
+
 function artifact(){
   return {
     status:'READY',
@@ -54,12 +64,52 @@ function artifact(){
     ]
   };
 }
+
 function attempt(a){
   return delivery.createDeliveryAttempt({
     status:'READY',
     planFingerprint:a.artifactFingerprint,
     signals:a.signalKeys.map(signalKey=>({signalKey}))
   },'buyer@example.com');
+}
+
+function message(a){
+  return {
+    status:'READY',
+    messageFingerprint:'message-fp-1',
+    signalKeys:a.signalKeys.slice()
+  };
+}
+
+function authorization(a,att,msg){
+  return transport.buildAuthorizationReceipt({
+    approved:true,
+    authorizationType:'OWNER_EXPLICIT_SEND',
+    approvalSource:'OWNER_CHAT_EXPLICIT',
+    approvalNonce:'mapping-nonce',
+    approvedAt:'2026-09-21T16:59:00Z',
+    expiresAt:'2026-09-21T17:30:00Z',
+    attemptId:att.attemptId,
+    messageIdentity:att.messageIdentity,
+    artifactFingerprint:a.artifactFingerprint,
+    messageFingerprint:msg.messageFingerprint,
+    recipient:att.recipient,
+    signalKeys:att.signalKeys
+  });
+}
+
+function acceptedObservation(a,att){
+  return {
+    status:'ACCEPTED',
+    evidenceKind:'PROVIDER_READBACK',
+    attemptId:att.attemptId,
+    messageIdentity:att.messageIdentity,
+    recipient:att.recipient,
+    artifactFingerprint:a.artifactFingerprint,
+    providerMessageId:'gmail-message-1',
+    acceptedAt:'2026-09-21T17:01:00Z',
+    observedAt:'2026-09-21T17:02:00Z'
+  };
 }
 
 {
@@ -77,7 +127,7 @@ function attempt(a){
   assert.equal(mapped.row['Stripe Subscription'],'sub_mapping');
   assert.equal(mapped.row['Profile Fingerprint'],adapted.profileFingerprint);
   assert.equal(mapped.row['Delivery Policy Version'],delivery.DELIVERY_PLANNER_VERSION);
-  assert.equal(mapped.row['Preference Receipt ID'],adapted.preferenceReceiptId||'');
+  assert.equal(mapped.row['Preference Receipt ID'],'submission_mapping');
   assert.match(mapped.rowFingerprint,/^[0-9a-f]{64}$/);
 }
 
@@ -93,6 +143,9 @@ function attempt(a){
   assert.equal(mapped.sheet,'Delivery State');
   assert.equal(mapped.deliveryStatus,'PLANNED');
   assert.equal(mapped.providerStatus,'NOT_SENT');
+  assert.equal(mapped.deliveryConfirmed,false);
+  assert.equal(mapped.retryAllowed,false);
+  assert.equal(mapped.providerReceipt,null);
   assert.equal(mapped.rows.length,2);
   assert(mapped.rows.every(item=>item.values.length===16));
   assert(mapped.rows.every(item=>
@@ -104,46 +157,68 @@ function attempt(a){
   assert(mapped.rows.every(item=>item.row['Artifact Fingerprint']==='artifact-fp-1'));
   assert(mapped.rows.every(item=>item.row['Delivery Status']==='PLANNED'));
   assert(mapped.rows.every(item=>item.row['Provider Status']==='NOT_SENT'));
+  assert(mapped.rows.every(item=>item.row['Authorization ID']===''));
 }
 
 {
   const adapted=adapterResult();
   const a=artifact();
   const att=attempt(a);
+  const msg=message(a);
+  const auth=authorization(a,att,msg);
   const mapped=mapping.deliveryStateRows({
     artifact:a,
     attempt:att,
+    message:msg,
     profile:{profile:adapted.profile,profileFingerprint:adapted.profileFingerprint},
-    providerObservation:{
-      status:'ACCEPTED',
-      providerMessageId:'gmail-message-1',
-      acceptedAt:'2026-09-21T18:00:00Z',
-      reconciledAt:'2026-09-21T18:01:00Z'
-    },
-    transportAuthorization:{authorizationId:'AUTH:approved-1'}
+    providerObservation:acceptedObservation(a,att),
+    transportAuthorization:auth,
+    transportStartedAt:'2026-09-21T17:00:00Z',
+    reconciledAt:'2026-09-21T17:03:00Z'
   });
   assert.equal(mapped.deliveryStatus,'FINALIZED');
   assert.equal(mapped.providerStatus,'ACCEPTED');
+  assert.equal(mapped.deliveryConfirmed,false);
+  assert.equal(mapped.retryAllowed,false);
+  assert(mapped.providerReceipt);
+  assert.equal(mapped.providerReceipt.attemptId,att.attemptId);
+  assert.equal(mapped.providerReceipt.messageIdentity,att.messageIdentity);
   assert(mapped.rows.every(item=>item.row['Gmail Message ID']==='gmail-message-1'));
-  assert(mapped.rows.every(item=>item.row['Delivered At']==='2026-09-21T18:00:00Z'));
-  assert(mapped.rows.every(item=>item.row['Last Reconciled At']==='2026-09-21T18:01:00Z'));
-  assert(mapped.rows.every(item=>item.row['Authorization ID']==='AUTH:approved-1'));
+  assert(mapped.rows.every(item=>item.row['Delivered At']==='2026-09-21T17:01:00.000Z'));
+  assert(mapped.rows.every(item=>item.row['Last Reconciled At']==='2026-09-21T17:03:00.000Z'));
+  assert(mapped.rows.every(item=>item.row['Authorization ID']===auth.authorizationId));
 }
 
 {
   const adapted=adapterResult();
   const a=artifact();
   const att=attempt(a);
+  const msg=message(a);
+  const auth=authorization(a,att,msg);
   const mapped=mapping.deliveryStateRows({
     artifact:a,
     attempt:att,
+    message:msg,
     profile:{profile:adapted.profile,profileFingerprint:adapted.profileFingerprint},
-    providerObservation:{status:'REJECTED',providerMessageId:'provider-reject-1'},
-    transportAuthorization:{authorizationId:'AUTH:approved-2'}
+    providerObservation:{
+      status:'REJECTED',
+      evidenceKind:'PROVIDER_SEND_RESPONSE',
+      attemptId:att.attemptId,
+      messageIdentity:att.messageIdentity,
+      recipient:att.recipient,
+      artifactFingerprint:a.artifactFingerprint,
+      providerRequestId:'request-rejected-1',
+      occurredAt:'2026-09-21T17:00:30Z',
+      observedAt:'2026-09-21T17:00:40Z'
+    },
+    transportAuthorization:auth,
+    transportStartedAt:'2026-09-21T17:00:00Z',
+    reconciledAt:'2026-09-21T17:03:00Z'
   });
   assert.equal(mapped.deliveryStatus,'REJECTED');
   assert.equal(mapped.providerStatus,'REJECTED');
   assert(mapped.rows.every(item=>item.row['Delivered At']===''));
+  assert(mapped.rows.every(item=>item.row['Authorization ID']===auth.authorizationId));
 }
 
 {
@@ -177,10 +252,9 @@ function attempt(a){
       artifact:a,
       attempt:att,
       profile:{profile:adapted.profile,profileFingerprint:adapted.profileFingerprint},
-      deliveryStatus:'FINALIZED',
-      providerObservation:{status:'ACCEPTED',providerMessageId:'gmail-message-1'}
+      deliveryStatus:'FINALIZED'
     }),
-    /FINALIZED_DELIVERY_TIME_MISSING/
+    /DELIVERY_STATUS_EVIDENCE_CONFLICT/
   );
 }
 
@@ -188,18 +262,41 @@ function attempt(a){
   const adapted=adapterResult();
   const a=artifact();
   const att=attempt(a);
+  const msg=message(a);
   assert.throws(
     ()=>mapping.deliveryStateRows({
       artifact:a,
       attempt:att,
+      message:msg,
       profile:{profile:adapted.profile,profileFingerprint:adapted.profileFingerprint},
-      providerObservation:{
-        status:'ACCEPTED',
-        providerMessageId:'gmail-message-1',
-        acceptedAt:'2026-09-21T18:00:00Z'
-      }
+      providerObservation:acceptedObservation(a,att),
+      transportStartedAt:'2026-09-21T17:00:00Z',
+      reconciledAt:'2026-09-21T17:03:00Z'
     }),
     /TRANSPORT_AUTHORIZATION_REQUIRED/
+  );
+}
+
+{
+  const adapted=adapterResult();
+  const a=artifact();
+  const att=attempt(a);
+  const msg=message(a);
+  const auth=authorization(a,att,msg);
+  const bad=acceptedObservation(a,att);
+  bad.recipient='other@example.com';
+  assert.throws(
+    ()=>mapping.deliveryStateRows({
+      artifact:a,
+      attempt:att,
+      message:msg,
+      profile:{profile:adapted.profile,profileFingerprint:adapted.profileFingerprint},
+      providerObservation:bad,
+      transportAuthorization:auth,
+      transportStartedAt:'2026-09-21T17:00:00Z',
+      reconciledAt:'2026-09-21T17:03:00Z'
+    }),
+    /PROVIDER_EVIDENCE_INVALID:PROVIDER_RECIPIENT_MISMATCH/
   );
 }
 
