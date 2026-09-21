@@ -25,6 +25,9 @@ jobs:
       - name: Verify public deployment boundary
         run: node build-site.test.js
 
+      - name: Verify public conversion copy and onboarding constraints
+        run: node pipeline/public-conversion.test.js
+
       - name: Run model regression
         run: node model-v7.test.js
 
