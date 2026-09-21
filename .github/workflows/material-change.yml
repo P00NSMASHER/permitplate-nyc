@@ -1,0 +1,39 @@
+name: PermitPlate material-change boundary
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    paths:
+      - 'pipeline/material-change*'
+      - 'pipeline/source-refresh-regression.test.js'
+      - 'pipeline/project-signal.js'
+      - 'pipeline/candidate-builder.js'
+      - 'pipeline/detection-ledger.js'
+      - 'pipeline/delivery-plan.js'
+      - '.github/workflows/material-change.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  semantic-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test source refresh and material-change boundary
+        run: |
+          mkdir -p verification-output
+          set -o pipefail
+          node --test pipeline/source-refresh-regression.test.js | tee verification-output/source-refresh.tap
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: permitplate-material-change
+          path: verification-output/
+          retention-days: 14
