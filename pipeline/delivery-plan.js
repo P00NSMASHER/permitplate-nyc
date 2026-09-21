@@ -97,6 +97,7 @@ function validateScoreReceipt(candidate, receipt, fingerprint, graphDigest, cate
   if (text(receipt.changeFingerprint) !== fingerprint) reasons.push('SCORE_CHANGE_MISMATCH');
   if (graphDigest && text(receipt.graphDigest) !== text(graphDigest)) reasons.push('SCORE_GRAPH_MISMATCH');
   if (!text(receipt.scorerVersion)) reasons.push('SCORER_VERSION_MISSING');
+  if (receipt.productionAuthorized !== true) reasons.push('SCORE_NOT_PRODUCTION_AUTHORIZED');
 
   const key = categoryScoreKey(category);
   if (!key) reasons.push('PROFILE_CATEGORY_UNKNOWN');
