@@ -24,6 +24,8 @@ on:
       - 'sample.html'
       - 'site.css'
       - 'site.js'
+      - 'start.html'
+      - 'start-checkout.html'
       - 'sitemap.xml'
       - 'terms.html'
       - '.github/workflows/public-site-build.yml'
