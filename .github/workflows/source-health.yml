@@ -1,0 +1,38 @@
+name: PermitPlate public-source health
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 11 * * *'
+  push:
+    paths:
+      - 'pipeline/**'
+      - '.github/workflows/source-health.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  source-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Scan official public sources
+        run: node pipeline/run-source-health.js source-health-result.json
+
+      - name: Retain source observation receipt artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: permitplate-source-health
+          path: source-health-result.json
+          if-no-files-found: warn
+          retention-days: 30
