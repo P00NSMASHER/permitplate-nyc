@@ -332,4 +332,66 @@ const m = require('./model-v7');
   assert(result.reasons.includes('MISSING_SOURCE_LINEAGE'));
 }
 
+{
+  const result = m.resolveEntity(
+    {businessName:'Same Cafe', address:'1 Main St', sourceEntityId:'CAMIS-B'},
+    {canonicalName:'Same Cafe', address:'1 Main St', sourceEntityIds:['CAMIS-A']}
+  );
+  assert.equal(result.stableIdentifierConflict, true);
+  assert.equal(result.contradictoryEvidence, true);
+  assert.equal(result.resolutionStatus, 'UNRESOLVED');
+}
+
+{
+  const normal = m.classifySubscriberEligibility({
+    baselineAt:'2026-09-21T12:00:00Z',
+    firstSignalAt:'2026-09-21T12:00:01Z'
+  });
+  assert.equal(normal.eligible, true);
+  assert.equal(normal.section, 'NORMAL');
+}
+
+{
+  const starter = m.classifySubscriberEligibility({
+    baselineAt:'2026-09-21T12:00:00Z',
+    firstSignalAt:'2026-09-18T12:00:00Z',
+    starterSnapshotEnabled:true,
+    starterDays:7
+  });
+  assert.equal(starter.eligible, true);
+  assert.equal(starter.section, 'STARTER');
+  assert.equal(starter.reason, 'LABELED_STARTER_SNAPSHOT');
+}
+
+{
+  const backlog = m.classifySubscriberEligibility({
+    baselineAt:'2026-09-21T12:00:00Z',
+    firstSignalAt:'2026-09-01T12:00:00Z',
+    starterSnapshotEnabled:true,
+    starterDays:7
+  });
+  assert.equal(backlog.eligible, false);
+  assert.equal(backlog.reason, 'PRE_BASELINE_BACKLOG');
+}
+
+{
+  const reopen = m.classifySubscriberEligibility({
+    baselineAt:'2026-09-21T12:00:00Z',
+    firstSignalAt:'2026-08-01T00:00:00Z',
+    qualifyingReopen:true,
+    reopenAt:'2026-09-21T13:00:00Z'
+  });
+  assert.equal(reopen.eligible, true);
+  assert.equal(reopen.reason, 'POST_BASELINE_REOPEN');
+}
+
+{
+  const unknownTime = m.classifySubscriberEligibility({
+    baselineAt:'2026-09-21T12:00:00Z'
+  });
+  assert.equal(unknownTime.eligible, false);
+  assert.equal(unknownTime.section, 'REVIEW');
+  assert.equal(unknownTime.reason, 'EVENT_TIME_UNPROVEN');
+}
+
 console.log('PermitPlate Model V7 regression tests passed.');
