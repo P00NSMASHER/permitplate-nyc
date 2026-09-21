@@ -1,0 +1,1942 @@
+{
+  "fixtureVersion": "PermitPlate-historical-shadow-score-benchmark-v1",
+  "authorityId": "PermitPlate-legacy-score-authority-2026-09-18",
+  "authorityCutoff": "2026-09-18",
+  "scope": "DOHMH-backed rows from validated production Venue Graph; actual phone values removed",
+  "recordCount": 47,
+  "records": [
+    {
+      "venueKey": "820 FRANKLIN AVE|11225",
+      "camis": "50192367",
+      "canonicalName": "WILKIE",
+      "borough": "Brooklyn",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "BUILDOUT / LICENSING",
+      "sourceCount": 2,
+      "sourceSystems": [
+        "DOHMH",
+        "SLA_PENDING"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192367:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "WILKIE",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [
+        {
+          "sourceSystem": "SLA_PENDING",
+          "sourceRecordId": "SLA_PENDING:NA-0370-26-120315:HISTORICAL_FIXTURE",
+          "eventType": "Pending liquor license",
+          "dba": null,
+          "legalName": "Beanstable LLC",
+          "description": "Food & Beverage Business",
+          "initialCost": null,
+          "jobDescription": null,
+          "workTypes": null
+        }
+      ],
+      "expected": {
+        "scores": {
+          "POS": 83,
+          "Insurance": 84,
+          "Equipment": 84,
+          "Hood/Fire": 84,
+          "Waste": 68,
+          "Pest": 65,
+          "Linen": 65,
+          "Distribution": 76
+        },
+        "bestVendorFit": "Insurance",
+        "bestScore": 84
+      }
+    },
+    {
+      "venueKey": "81-07 ROOSEVELT AVE|11372",
+      "camis": "50192372",
+      "canonicalName": "SWEET ICE CREAM SHOP CORPORATION",
+      "borough": "Queens",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192372:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "SWEET ICE CREAM SHOP CORPORATION",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 68,
+          "Insurance": 65,
+          "Equipment": 55,
+          "Hood/Fire": 36,
+          "Waste": 52,
+          "Pest": 50,
+          "Linen": 40,
+          "Distribution": 58
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 68
+      }
+    },
+    {
+      "venueKey": "582 E FORDHAM RD|10458",
+      "camis": "50192375",
+      "canonicalName": "MONBACKS",
+      "borough": "Bronx",
+      "commercialFit": "MEDIUM",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192375:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "MONBACKS",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 58,
+          "Insurance": 55,
+          "Equipment": 45,
+          "Hood/Fire": 38,
+          "Waste": 42,
+          "Pest": 40,
+          "Linen": 38,
+          "Distribution": 40
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 58
+      }
+    },
+    {
+      "venueKey": "153 BOWERY|10002",
+      "camis": "50192386",
+      "canonicalName": "CRYBABY",
+      "borough": "Manhattan",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "BUILDOUT / LICENSING",
+      "sourceCount": 2,
+      "sourceSystems": [
+        "DOHMH",
+        "DOB_NOW"
+      ],
+      "latestSignalDate": "2026-09-03",
+      "authorityCutoff": "2026-09-17T15:16:44-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192386:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "CRYBABY",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [
+        {
+          "sourceSystem": "DOB_NOW",
+          "sourceRecordId": "DOB_NOW:M00692498-P1:HISTORICAL_FIXTURE",
+          "eventType": "DOB approval / eating-drinking buildout",
+          "dba": "CRYBABY",
+          "legalName": "CRY BABY BAR LLC",
+          "description": "Eating & drinking establishment; outdoor BBQ",
+          "initialCost": 173900,
+          "jobDescription": "NEW EATING & DRINKING ESTABLISHMENT AT FIRST FLOOR LESS THAN 75 PEOPLE, AND OUT DOOR BBQ ON THE ROOF, OBTAIN A NEW C. OF O.",
+          "workTypes": "General construction"
+        }
+      ],
+      "expected": {
+        "scores": {
+          "POS": 65,
+          "Insurance": 64,
+          "Equipment": 100,
+          "Hood/Fire": 100,
+          "Waste": 58,
+          "Pest": 55,
+          "Linen": 65,
+          "Distribution": 78
+        },
+        "bestVendorFit": "Equipment",
+        "bestScore": 100
+      }
+    },
+    {
+      "venueKey": "31 GRAND ST|11249",
+      "camis": "50192396",
+      "canonicalName": "HACO BROOKLYN LLC",
+      "borough": "Brooklyn",
+      "commercialFit": "MEDIUM",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192396:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "HACO BROOKLYN LLC",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 58,
+          "Insurance": 55,
+          "Equipment": 45,
+          "Hood/Fire": 38,
+          "Waste": 42,
+          "Pest": 40,
+          "Linen": 38,
+          "Distribution": 40
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 58
+      }
+    },
+    {
+      "venueKey": "1285 1ST AVE|10021",
+      "camis": "50192400",
+      "canonicalName": "DOUGHNUT PLANT NYC INC.",
+      "borough": "Manhattan",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192400:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "DOUGHNUT PLANT NYC INC.",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 68,
+          "Insurance": 65,
+          "Equipment": 75,
+          "Hood/Fire": 66,
+          "Waste": 52,
+          "Pest": 50,
+          "Linen": 58,
+          "Distribution": 70
+        },
+        "bestVendorFit": "Equipment",
+        "bestScore": 75
+      }
+    },
+    {
+      "venueKey": "7609 5TH AVE|11209",
+      "camis": "50192405",
+      "canonicalName": "VOUNAROS RESTAURANT CORP.",
+      "borough": "Brooklyn",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "BUILDOUT / LICENSING",
+      "sourceCount": 2,
+      "sourceSystems": [
+        "DOHMH",
+        "SLA_PENDING"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192405:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "VOUNAROS RESTAURANT CORP.",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [
+        {
+          "sourceSystem": "SLA_PENDING",
+          "sourceRecordId": "SLA_PENDING:NA-0240-26-119768:HISTORICAL_FIXTURE",
+          "eventType": "Pending liquor license",
+          "dba": "Royal Diner",
+          "legalName": "Vounaros Restaurant Corp.",
+          "description": "Restaurant",
+          "initialCost": null,
+          "jobDescription": null,
+          "workTypes": null
+        }
+      ],
+      "expected": {
+        "scores": {
+          "POS": 83,
+          "Insurance": 84,
+          "Equipment": 84,
+          "Hood/Fire": 84,
+          "Waste": 68,
+          "Pest": 65,
+          "Linen": 77,
+          "Distribution": 86
+        },
+        "bestVendorFit": "Distribution",
+        "bestScore": 86
+      }
+    },
+    {
+      "venueKey": "47 ADELPHI ST|11205",
+      "camis": "50192408",
+      "canonicalName": "27 CLUB COFFEE",
+      "borough": "Brooklyn",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192408:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "27 CLUB COFFEE",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 68,
+          "Insurance": 65,
+          "Equipment": 55,
+          "Hood/Fire": 36,
+          "Waste": 52,
+          "Pest": 50,
+          "Linen": 40,
+          "Distribution": 58
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 68
+      }
+    },
+    {
+      "venueKey": "253-17 NORTHERN BLVD|11362",
+      "camis": "50192409",
+      "canonicalName": "LITTLE BISTRO INC",
+      "borough": "Queens",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192409:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "LITTLE BISTRO INC",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 68,
+          "Insurance": 65,
+          "Equipment": 67,
+          "Hood/Fire": 60,
+          "Waste": 52,
+          "Pest": 50,
+          "Linen": 60,
+          "Distribution": 68
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 68
+      }
+    },
+    {
+      "venueKey": "1590 PARK AVE|10029",
+      "camis": "50192413",
+      "canonicalName": "EASTHARLEM125 LLC",
+      "borough": "Manhattan",
+      "commercialFit": "MEDIUM",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-18T05:28:00-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192413:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "EASTHARLEM125 LLC",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 58,
+          "Insurance": 55,
+          "Equipment": 45,
+          "Hood/Fire": 38,
+          "Waste": 42,
+          "Pest": 40,
+          "Linen": 38,
+          "Distribution": 40
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 58
+      }
+    },
+    {
+      "venueKey": "465 4 AVE|11215",
+      "camis": "50192416",
+      "canonicalName": "LA CASA DE VICKY LLC",
+      "borough": "Brooklyn",
+      "commercialFit": "MEDIUM",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192416:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "LA CASA DE VICKY LLC",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 58,
+          "Insurance": 55,
+          "Equipment": 45,
+          "Hood/Fire": 38,
+          "Waste": 42,
+          "Pest": 40,
+          "Linen": 38,
+          "Distribution": 40
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 58
+      }
+    },
+    {
+      "venueKey": "182 SPRING ST|10012",
+      "camis": "50192431",
+      "canonicalName": "THISBOWL 65 BLEECKER LLC",
+      "borough": "Manhattan",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192431:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "THISBOWL 65 BLEECKER LLC",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 68,
+          "Insurance": 65,
+          "Equipment": 63,
+          "Hood/Fire": 54,
+          "Waste": 52,
+          "Pest": 50,
+          "Linen": 48,
+          "Distribution": 66
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 68
+      }
+    },
+    {
+      "venueKey": "47-04 VERNON BLVD|11101",
+      "camis": "50192442",
+      "canonicalName": "PMC CAFE INC.",
+      "borough": "Queens",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192442:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "PMC CAFE INC.",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 68,
+          "Insurance": 65,
+          "Equipment": 55,
+          "Hood/Fire": 48,
+          "Waste": 52,
+          "Pest": 50,
+          "Linen": 48,
+          "Distribution": 58
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 68
+      }
+    },
+    {
+      "venueKey": "1179 PUGSLEY AVE|10472",
+      "camis": "50192445",
+      "canonicalName": "GREAT WALL 168 LLC",
+      "borough": "Bronx",
+      "commercialFit": "MEDIUM",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192445:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "GREAT WALL 168 LLC",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 58,
+          "Insurance": 55,
+          "Equipment": 45,
+          "Hood/Fire": 38,
+          "Waste": 42,
+          "Pest": 40,
+          "Linen": 38,
+          "Distribution": 40
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 58
+      }
+    },
+    {
+      "venueKey": "1221 AVE OF THE AMERICAS|10036",
+      "camis": "50192446",
+      "canonicalName": "ROCKEFELLER GROUP 21ST FL",
+      "borough": "Manhattan",
+      "commercialFit": "EXCLUDE",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": true,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192446:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "ROCKEFELLER GROUP 21ST FL",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 0,
+          "Insurance": 0,
+          "Equipment": 0,
+          "Hood/Fire": 0,
+          "Waste": 0,
+          "Pest": 0,
+          "Linen": 0,
+          "Distribution": 0
+        },
+        "bestVendorFit": "SUPPRESSED",
+        "bestScore": 0
+      }
+    },
+    {
+      "venueKey": "30-73 STEINWAY ST|11103",
+      "camis": "50192450",
+      "canonicalName": "MAGIC ASTORIA LLC",
+      "borough": "Queens",
+      "commercialFit": "MEDIUM",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192450:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "MAGIC ASTORIA LLC",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 58,
+          "Insurance": 55,
+          "Equipment": 45,
+          "Hood/Fire": 38,
+          "Waste": 42,
+          "Pest": 40,
+          "Linen": 38,
+          "Distribution": 40
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 58
+      }
+    },
+    {
+      "venueKey": "1457 3RD AVE|10028",
+      "camis": "50192451",
+      "canonicalName": "PURE POKE NY INC",
+      "borough": "Manhattan",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192451:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "PURE POKE NY INC",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 68,
+          "Insurance": 65,
+          "Equipment": 63,
+          "Hood/Fire": 54,
+          "Waste": 52,
+          "Pest": 50,
+          "Linen": 48,
+          "Distribution": 66
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 68
+      }
+    },
+    {
+      "venueKey": "90-15 QUEENS BLVD|11373",
+      "camis": "50192452",
+      "canonicalName": "NOCHES QUEENS FAST LLC",
+      "borough": "Queens",
+      "commercialFit": "MEDIUM",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192452:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "NOCHES QUEENS FAST LLC",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 58,
+          "Insurance": 55,
+          "Equipment": 45,
+          "Hood/Fire": 38,
+          "Waste": 42,
+          "Pest": 40,
+          "Linen": 38,
+          "Distribution": 40
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 58
+      }
+    },
+    {
+      "venueKey": "115 COLUMBIA ST|11201",
+      "camis": "50192454",
+      "canonicalName": "BAN BE",
+      "borough": "Brooklyn",
+      "commercialFit": "MEDIUM",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192454:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "BAN BE",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 58,
+          "Insurance": 55,
+          "Equipment": 45,
+          "Hood/Fire": 38,
+          "Waste": 42,
+          "Pest": 40,
+          "Linen": 38,
+          "Distribution": 40
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 58
+      }
+    },
+    {
+      "venueKey": "97-05 ROCKAWAY BLVD|11417",
+      "camis": "50192463",
+      "canonicalName": "LA COCINE DE NONITA CORP",
+      "borough": "Queens",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "MULTI-SOURCE NEAR-OPENING",
+      "sourceCount": 2,
+      "sourceSystems": [
+        "DOHMH",
+        "DOB_NOW"
+      ],
+      "latestSignalDate": "2026-08-21",
+      "authorityCutoff": "2026-09-17T15:16:44-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192463:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "LA COCINE DE NONITA CORP",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [
+        {
+          "sourceSystem": "DOB_NOW",
+          "sourceRecordId": "DOB_NOW:Q01342456-I1:HISTORICAL_FIXTURE",
+          "eventType": "DOB permit / restaurant conversion",
+          "dba": "LA COCINE DE NONITA CORP",
+          "legalName": "LA COCINA DE NONITA CORP.",
+          "description": "Restaurant / commercial kitchen",
+          "initialCost": 270000,
+          "jobDescription": "Change of use from mercantile to restaurant; installation of commercial kitchen equipment, Type I hood, fire suppression and new plumbing fixtures.",
+          "workTypes": "Mechanical; general construction; commercial kitchen; Type I hood; fire suppression"
+        },
+        {
+          "sourceSystem": "DOB_NOW",
+          "sourceRecordId": "DOB_NOW:Q01173837-S1:HISTORICAL_FIXTURE",
+          "eventType": "DOB active plumbing / new restaurant",
+          "dba": "LA COCINE DE NONITA CORP",
+          "legalName": "LA COCINA DE NONITA CORP.",
+          "description": "New restaurant",
+          "initialCost": 21000,
+          "jobDescription": "Plumbing work for a new restaurant.",
+          "workTypes": "Plumbing"
+        }
+      ],
+      "expected": {
+        "scores": {
+          "POS": 55,
+          "Insurance": 50,
+          "Equipment": 98,
+          "Hood/Fire": 96,
+          "Waste": 72,
+          "Pest": 75,
+          "Linen": 80,
+          "Distribution": 94
+        },
+        "bestVendorFit": "Equipment",
+        "bestScore": 98
+      }
+    },
+    {
+      "venueKey": "66-79B FRESH POND RD|11385",
+      "camis": "50192479",
+      "canonicalName": "Joe & John's Slice Shoppe",
+      "borough": "Queens",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192479:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "Joe & John's Slice Shoppe",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 68,
+          "Insurance": 65,
+          "Equipment": 75,
+          "Hood/Fire": 66,
+          "Waste": 52,
+          "Pest": 50,
+          "Linen": 58,
+          "Distribution": 70
+        },
+        "bestVendorFit": "Equipment",
+        "bestScore": 75
+      }
+    },
+    {
+      "venueKey": "301 E 91ST ST|10128",
+      "camis": "50192480",
+      "canonicalName": "BIDDYS PUB",
+      "borough": "Manhattan",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192480:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "BIDDYS PUB",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 68,
+          "Insurance": 65,
+          "Equipment": 67,
+          "Hood/Fire": 60,
+          "Waste": 52,
+          "Pest": 50,
+          "Linen": 60,
+          "Distribution": 68
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 68
+      }
+    },
+    {
+      "venueKey": "123 W 13TH ST|10011",
+      "camis": "50192483",
+      "canonicalName": "THE MARKLE RESIDENCE",
+      "borough": "Manhattan",
+      "commercialFit": "EXCLUDE",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": true,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192483:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "THE MARKLE RESIDENCE",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 0,
+          "Insurance": 0,
+          "Equipment": 0,
+          "Hood/Fire": 0,
+          "Waste": 0,
+          "Pest": 0,
+          "Linen": 0,
+          "Distribution": 0
+        },
+        "bestVendorFit": "SUPPRESSED",
+        "bestScore": 0
+      }
+    },
+    {
+      "venueKey": "456 9TH AVE|10018",
+      "camis": "50192487",
+      "canonicalName": "Kham Koon",
+      "borough": "Manhattan",
+      "commercialFit": "MEDIUM",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192487:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "Kham Koon",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 58,
+          "Insurance": 55,
+          "Equipment": 45,
+          "Hood/Fire": 38,
+          "Waste": 42,
+          "Pest": 40,
+          "Linen": 38,
+          "Distribution": 40
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 58
+      }
+    },
+    {
+      "venueKey": "173 BLEECKER ST|10012",
+      "camis": "50192488",
+      "canonicalName": "Koke",
+      "borough": "Manhattan",
+      "commercialFit": "LOW",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-18T10:13:58-04:00",
+      "deliverySuppressed": true,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192488:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "Koke",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 28,
+          "Insurance": 25,
+          "Equipment": 15,
+          "Hood/Fire": 8,
+          "Waste": 12,
+          "Pest": 10,
+          "Linen": 8,
+          "Distribution": 10
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 28
+      }
+    },
+    {
+      "venueKey": "1196 FULTON ST|11216",
+      "camis": "50192493",
+      "canonicalName": "GERGERLI PIZZA INC",
+      "borough": "Brooklyn",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192493:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "GERGERLI PIZZA INC",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 68,
+          "Insurance": 65,
+          "Equipment": 75,
+          "Hood/Fire": 66,
+          "Waste": 52,
+          "Pest": 50,
+          "Linen": 58,
+          "Distribution": 70
+        },
+        "bestVendorFit": "Equipment",
+        "bestScore": 75
+      }
+    },
+    {
+      "venueKey": "45-08 46TH ST|11104",
+      "camis": "50192495",
+      "canonicalName": "IBO PIZZERIA INC",
+      "borough": "Queens",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192495:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "IBO PIZZERIA INC",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 68,
+          "Insurance": 65,
+          "Equipment": 75,
+          "Hood/Fire": 66,
+          "Waste": 52,
+          "Pest": 50,
+          "Linen": 58,
+          "Distribution": 70
+        },
+        "bestVendorFit": "Equipment",
+        "bestScore": 75
+      }
+    },
+    {
+      "venueKey": "371 COURT ST|11231",
+      "camis": "50192497",
+      "canonicalName": "IL QUARTIERE",
+      "borough": "Brooklyn",
+      "commercialFit": "MEDIUM",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-17",
+      "authorityCutoff": "2026-09-17T14:53:45-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192497:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "IL QUARTIERE",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 58,
+          "Insurance": 55,
+          "Equipment": 45,
+          "Hood/Fire": 38,
+          "Waste": 42,
+          "Pest": 40,
+          "Linen": 38,
+          "Distribution": 40
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 58
+      }
+    },
+    {
+      "venueKey": "37-13 UNION ST|11354",
+      "camis": "50192498",
+      "canonicalName": "SSY TEA LLC",
+      "borough": "Queens",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "BUILDOUT / LICENSING",
+      "sourceCount": 2,
+      "sourceSystems": [
+        "DOHMH",
+        "DOB_NOW"
+      ],
+      "latestSignalDate": "2026-07-09",
+      "authorityCutoff": "2026-09-17T15:16:44-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192498:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "SSY TEA LLC",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [
+        {
+          "sourceSystem": "DOB_NOW",
+          "sourceRecordId": "DOB_NOW:Q01426065-I1:HISTORICAL_FIXTURE",
+          "eventType": "DOB permit / identity-matched awning",
+          "dba": "SSY TEA LLC",
+          "legalName": "SSY Tea LLC",
+          "description": "Tea / light-prep",
+          "initialCost": 3000,
+          "jobDescription": "INSTALLATION OF A NEW AWNING ON THE EXISTING BUILDING AS PER PLAN HEREWITH.",
+          "workTypes": "General construction; awning"
+        }
+      ],
+      "expected": {
+        "scores": {
+          "POS": 60,
+          "Insurance": 59,
+          "Equipment": 60,
+          "Hood/Fire": 58,
+          "Waste": 53,
+          "Pest": 50,
+          "Linen": 42,
+          "Distribution": 61
+        },
+        "bestVendorFit": "Distribution",
+        "bestScore": 61
+      }
+    },
+    {
+      "venueKey": "86-06 JAMAICA AVE|11421",
+      "camis": "50192510",
+      "canonicalName": "EL REY DE LA BRASA LLC",
+      "borough": "Queens",
+      "commercialFit": "MEDIUM",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-18",
+      "authorityCutoff": "2026-09-18T07:03:00-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192510:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "EL REY DE LA BRASA LLC",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 58,
+          "Insurance": 55,
+          "Equipment": 45,
+          "Hood/Fire": 38,
+          "Waste": 42,
+          "Pest": 40,
+          "Linen": 38,
+          "Distribution": 40
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 58
+      }
+    },
+    {
+      "venueKey": "147 LEWIS AVE|11221",
+      "camis": "50192514",
+      "canonicalName": "LEXOUNE MARCELLIN",
+      "borough": "Brooklyn",
+      "commercialFit": "MEDIUM",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-18",
+      "authorityCutoff": "2026-09-18T07:03:00-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192514:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "LEXOUNE MARCELLIN",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 58,
+          "Insurance": 55,
+          "Equipment": 45,
+          "Hood/Fire": 38,
+          "Waste": 42,
+          "Pest": 40,
+          "Linen": 38,
+          "Distribution": 40
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 58
+      }
+    },
+    {
+      "venueKey": "1140 BAY ST|10305",
+      "camis": "50192517",
+      "canonicalName": "TONY'S BRICK OVEN",
+      "borough": "Staten Island",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-18",
+      "authorityCutoff": "2026-09-18T07:03:00-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192517:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "TONY'S BRICK OVEN",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 68,
+          "Insurance": 65,
+          "Equipment": 55,
+          "Hood/Fire": 48,
+          "Waste": 52,
+          "Pest": 50,
+          "Linen": 48,
+          "Distribution": 58
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 68
+      }
+    },
+    {
+      "venueKey": "430 SAINT MARKS PL|10301",
+      "camis": "50192526",
+      "canonicalName": "LOFT 430 LLC",
+      "borough": "Staten Island",
+      "commercialFit": "MEDIUM",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-18",
+      "authorityCutoff": "2026-09-18T07:03:00-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192526:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "LOFT 430 LLC",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 58,
+          "Insurance": 55,
+          "Equipment": 45,
+          "Hood/Fire": 38,
+          "Waste": 42,
+          "Pest": 40,
+          "Linen": 38,
+          "Distribution": 40
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 58
+      }
+    },
+    {
+      "venueKey": "66-56 MYRTLE AVE|11385",
+      "camis": "50192533",
+      "canonicalName": "ISOGOOD",
+      "borough": "Queens",
+      "commercialFit": "MEDIUM",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-18",
+      "authorityCutoff": "2026-09-18T07:03:00-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192533:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "ISOGOOD",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 58,
+          "Insurance": 55,
+          "Equipment": 45,
+          "Hood/Fire": 38,
+          "Waste": 42,
+          "Pest": 40,
+          "Linen": 38,
+          "Distribution": 40
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 58
+      }
+    },
+    {
+      "venueKey": "907 NEW YORK AVE|11203",
+      "camis": "50192535",
+      "canonicalName": "HOUSE OF BAABEL LLC",
+      "borough": "Brooklyn",
+      "commercialFit": "MEDIUM",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-18",
+      "authorityCutoff": "2026-09-18T07:03:00-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192535:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "HOUSE OF BAABEL LLC",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 58,
+          "Insurance": 55,
+          "Equipment": 45,
+          "Hood/Fire": 38,
+          "Waste": 42,
+          "Pest": 40,
+          "Linen": 38,
+          "Distribution": 40
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 58
+      }
+    },
+    {
+      "venueKey": "917 UTICA AVE|11203",
+      "camis": "50192537",
+      "canonicalName": "PAM AND STEVE GUYANESE RESTAURANT AND BAKERY LTD",
+      "borough": "Brooklyn",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-18",
+      "authorityCutoff": "2026-09-18T07:03:00-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192537:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "PAM AND STEVE GUYANESE RESTAURANT AND BAKERY LTD",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 68,
+          "Insurance": 65,
+          "Equipment": 75,
+          "Hood/Fire": 66,
+          "Waste": 52,
+          "Pest": 50,
+          "Linen": 58,
+          "Distribution": 70
+        },
+        "bestVendorFit": "Equipment",
+        "bestScore": 75
+      }
+    },
+    {
+      "venueKey": "6001 7TH AVE|11220",
+      "camis": "50192542",
+      "canonicalName": "SIWEI WANG",
+      "borough": "Brooklyn",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "BUILDOUT / LICENSING",
+      "sourceCount": 2,
+      "sourceSystems": [
+        "DOHMH",
+        "DOB_NOW"
+      ],
+      "latestSignalDate": "2026-09-18",
+      "authorityCutoff": "2026-09-18T07:03:00-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192542:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "SIWEI WANG",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [
+        {
+          "sourceSystem": "DOB_NOW",
+          "sourceRecordId": "DOB_NOW:B01421629-I1:HISTORICAL_FIXTURE",
+          "eventType": "DOB permit / take-out restaurant buildout",
+          "dba": null,
+          "legalName": "INFINITY BLOCK LLC.",
+          "description": "Take-out restaurant",
+          "initialCost": 60000,
+          "jobDescription": "INTERIOR RENOVATION AT 1ST FLOOR TAKE-OUT RESTAURANT OF EXISTING 3-STORY BUILDING WITH GENERAL CONSTRUCTION WORK AS PER PLANS FILED HEREWITH. RELATED PLUMBING WORK WILL BE FILED SUBSEQUENTLY. NO CHANGE IN USE, EGRESS OR CERTIFICATE OF OCCUPANCY.",
+          "workTypes": "General construction; take-out restaurant"
+        },
+        {
+          "sourceSystem": "DOB_NOW",
+          "sourceRecordId": "DOB_NOW:B01421629-S2:HISTORICAL_FIXTURE",
+          "eventType": "DOB permit / take-out restaurant plumbing",
+          "dba": null,
+          "legalName": "INFINITY BLOCK LLC.",
+          "description": "Take-out restaurant",
+          "initialCost": 30000,
+          "jobDescription": "PLUMBING WORK AT 1ST FLOOR TAKE-OUT RESTAURANT OF EXISTING 3-STORY BUILDING WITH PLUMBING WORK AS PER PLANS FILED HEREWITH. NO CHANGE IN USE, EGRESS OR CERTIFICATE OF OCCUPANCY.",
+          "workTypes": "Plumbing; take-out restaurant"
+        }
+      ],
+      "expected": {
+        "scores": {
+          "POS": 75,
+          "Insurance": 74,
+          "Equipment": 100,
+          "Hood/Fire": 100,
+          "Waste": 68,
+          "Pest": 65,
+          "Linen": 77,
+          "Distribution": 86
+        },
+        "bestVendorFit": "Hood/Fire",
+        "bestScore": 100
+      }
+    },
+    {
+      "venueKey": "1674 BROADWAY|10019",
+      "camis": "50192550",
+      "canonicalName": "DINER 24 BROADWAY NYC LLC.",
+      "borough": "Manhattan",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "BUILDOUT / LICENSING",
+      "sourceCount": 3,
+      "sourceSystems": [
+        "DOHMH",
+        "SLA_PENDING",
+        "DOB_NOW"
+      ],
+      "latestSignalDate": "2026-09-18",
+      "authorityCutoff": "2026-09-18T07:08:00-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192550:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "DINER 24 BROADWAY NYC LLC.",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [
+        {
+          "sourceSystem": "DOB_NOW",
+          "sourceRecordId": "DOB_NOW:M01428802-I1:HISTORICAL_FIXTURE",
+          "eventType": "DOB permit / identity-matched signage",
+          "dba": "DINER 24",
+          "legalName": "EMMES REALTY ASSOCIATES. AGENT",
+          "description": "Diner identity / signage",
+          "initialCost": 6900,
+          "jobDescription": "INSTALL EXTERIOR ILLUMINATED WALL SIGN (DINER 24)",
+          "workTypes": "Exterior illuminated signage"
+        },
+        {
+          "sourceSystem": "DOB_NOW",
+          "sourceRecordId": "DOB_NOW:M01428813-I1:HISTORICAL_FIXTURE",
+          "eventType": "DOB permit / identity-matched signage",
+          "dba": "DINER 24",
+          "legalName": "EMMES REALTY ASSOCIATES. AGENT",
+          "description": "Diner identity / signage",
+          "initialCost": 7500,
+          "jobDescription": "INSTALL EXTERIOR ILLUMINATED WALL SIGN (DINER 24)",
+          "workTypes": "Exterior illuminated signage"
+        },
+        {
+          "sourceSystem": "DOB_NOW",
+          "sourceRecordId": "DOB_NOW:M01431925-I1:HISTORICAL_FIXTURE",
+          "eventType": "DOB permit / identity-matched signage",
+          "dba": "DINER 24",
+          "legalName": "EMMES REALTY ASSOCIATES. AGENT",
+          "description": "Diner identity / signage",
+          "initialCost": 1400,
+          "jobDescription": "INSTALL ILLUMINATED D/F BLADE SIGN ON EXTERIOR WALL (DINER 24)",
+          "workTypes": "Exterior illuminated signage"
+        },
+        {
+          "sourceSystem": "SLA_PENDING",
+          "sourceRecordId": "SLA_PENDING:NA-0340-26-124871:HISTORICAL_FIXTURE",
+          "eventType": "SLA pending license",
+          "dba": "DINER 24 BROADWAY NYC LLC.",
+          "legalName": "Diner 24 Broadway LLC",
+          "description": "Restaurant",
+          "initialCost": null,
+          "jobDescription": null,
+          "workTypes": null
+        }
+      ],
+      "expected": {
+        "scores": {
+          "POS": 91,
+          "Insurance": 92,
+          "Equipment": 92,
+          "Hood/Fire": 92,
+          "Waste": 76,
+          "Pest": 73,
+          "Linen": 85,
+          "Distribution": 89
+        },
+        "bestVendorFit": "Insurance",
+        "bestScore": 92
+      }
+    },
+    {
+      "venueKey": "225 PARK ROW|10007",
+      "camis": "50192551",
+      "canonicalName": "KEVIN AND GABRIELLA PIZZA AND RESTAURANT INC",
+      "borough": "Manhattan",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-18",
+      "authorityCutoff": "2026-09-18T07:03:00-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192551:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "KEVIN AND GABRIELLA PIZZA AND RESTAURANT INC",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 68,
+          "Insurance": 65,
+          "Equipment": 75,
+          "Hood/Fire": 66,
+          "Waste": 52,
+          "Pest": 50,
+          "Linen": 58,
+          "Distribution": 70
+        },
+        "bestVendorFit": "Equipment",
+        "bestScore": 75
+      }
+    },
+    {
+      "venueKey": "79 MOTT ST|10013",
+      "camis": "50192552",
+      "canonicalName": "AJAY CHAWLA",
+      "borough": "Manhattan",
+      "commercialFit": "MEDIUM",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-18",
+      "authorityCutoff": "2026-09-18T07:03:00-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192552:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "AJAY CHAWLA",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 58,
+          "Insurance": 55,
+          "Equipment": 45,
+          "Hood/Fire": 38,
+          "Waste": 42,
+          "Pest": 40,
+          "Linen": 38,
+          "Distribution": 40
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 58
+      }
+    },
+    {
+      "venueKey": "65-37 99TH ST|11374",
+      "camis": "50192553",
+      "canonicalName": "JONATHAN ZHU",
+      "borough": "Queens",
+      "commercialFit": "MEDIUM",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-18",
+      "authorityCutoff": "2026-09-18T07:03:00-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192553:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "JONATHAN ZHU",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 58,
+          "Insurance": 55,
+          "Equipment": 45,
+          "Hood/Fire": 38,
+          "Waste": 42,
+          "Pest": 40,
+          "Linen": 38,
+          "Distribution": 40
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 58
+      }
+    },
+    {
+      "venueKey": "90-46 161ST ST|11432",
+      "camis": "50192555",
+      "canonicalName": "9046 DELI AND GRILL INC.",
+      "borough": "Queens",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-18",
+      "authorityCutoff": "2026-09-18T07:03:00-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192555:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "9046 DELI AND GRILL INC.",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 68,
+          "Insurance": 65,
+          "Equipment": 75,
+          "Hood/Fire": 66,
+          "Waste": 52,
+          "Pest": 50,
+          "Linen": 58,
+          "Distribution": 70
+        },
+        "bestVendorFit": "Equipment",
+        "bestScore": 75
+      }
+    },
+    {
+      "venueKey": "445 GOLD ST|11201",
+      "camis": "50192558",
+      "canonicalName": "CARNEGIE DINER & CAFE",
+      "borough": "Brooklyn",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-18",
+      "authorityCutoff": "2026-09-18T07:03:00-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192558:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "CARNEGIE DINER & CAFE",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 68,
+          "Insurance": 65,
+          "Equipment": 55,
+          "Hood/Fire": 48,
+          "Waste": 52,
+          "Pest": 50,
+          "Linen": 48,
+          "Distribution": 58
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 68
+      }
+    },
+    {
+      "venueKey": "25 E 26TH ST|10010",
+      "camis": "50192560",
+      "canonicalName": "SPITFIRE COFFEE & SANDWICH",
+      "borough": "Manhattan",
+      "commercialFit": "HIGH",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-18",
+      "authorityCutoff": "2026-09-18T07:03:00-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192560:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "SPITFIRE COFFEE & SANDWICH",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 68,
+          "Insurance": 65,
+          "Equipment": 55,
+          "Hood/Fire": 36,
+          "Waste": 52,
+          "Pest": 50,
+          "Linen": 40,
+          "Distribution": 58
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 68
+      }
+    },
+    {
+      "venueKey": "730 KELLY ST|10455",
+      "camis": "50192562",
+      "canonicalName": "CLOVERSTONE CONSULTING LLC",
+      "borough": "Bronx",
+      "commercialFit": "MEDIUM",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-18",
+      "authorityCutoff": "2026-09-18T07:03:00-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192562:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "CLOVERSTONE CONSULTING LLC",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 58,
+          "Insurance": 55,
+          "Equipment": 45,
+          "Hood/Fire": 38,
+          "Waste": 42,
+          "Pest": 40,
+          "Linen": 38,
+          "Distribution": 40
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 58
+      }
+    },
+    {
+      "venueKey": "175-15 ROCKAWAY BLVD|11434",
+      "camis": "50192563",
+      "canonicalName": "CLOVERSTONE CONSULTING LLC",
+      "borough": "Queens",
+      "commercialFit": "MEDIUM",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-18",
+      "authorityCutoff": "2026-09-18T07:03:00-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192563:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "CLOVERSTONE CONSULTING LLC",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 58,
+          "Insurance": 55,
+          "Equipment": 45,
+          "Hood/Fire": 38,
+          "Waste": 42,
+          "Pest": 40,
+          "Linen": 38,
+          "Distribution": 40
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 58
+      }
+    },
+    {
+      "venueKey": "3017 CHURCH AVE|11226",
+      "camis": "50192567",
+      "canonicalName": "GOLDEN BRIDGE HOLDINGS C INC.",
+      "borough": "Brooklyn",
+      "commercialFit": "MEDIUM",
+      "lifecycleStage": "JUST FILED",
+      "sourceCount": 1,
+      "sourceSystems": [
+        "DOHMH"
+      ],
+      "latestSignalDate": "2026-09-18",
+      "authorityCutoff": "2026-09-18T07:03:00-04:00",
+      "deliverySuppressed": false,
+      "primary": {
+        "sourceSystem": "DOHMH",
+        "sourceRecordId": "DOHMH:50192567:HISTORICAL_FIXTURE",
+        "eventType": "Never-inspected applicant",
+        "dba": "GOLDEN BRIDGE HOLDINGS C INC.",
+        "cuisineDescription": null,
+        "phonePresent": true
+      },
+      "acceptedEvidence": [],
+      "expected": {
+        "scores": {
+          "POS": 58,
+          "Insurance": 55,
+          "Equipment": 45,
+          "Hood/Fire": 38,
+          "Waste": 42,
+          "Pest": 40,
+          "Linen": 38,
+          "Distribution": 40
+        },
+        "bestVendorFit": "POS/payments",
+        "bestScore": 58
+      }
+    }
+  ]
+}
