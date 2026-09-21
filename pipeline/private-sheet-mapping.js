@@ -2,8 +2,9 @@
 
 const crypto=require('crypto');
 const delivery=require('./delivery-plan');
+const {resolveDeliveryStateEvidence}=require('./delivery-state-evidence');
 
-const PRIVATE_SHEET_MAPPING_VERSION='PermitPlate-private-sheet-mapping-v1.0.0';
+const PRIVATE_SHEET_MAPPING_VERSION='PermitPlate-private-sheet-mapping-v1.1.0';
 const SUBSCRIBER_PROFILE_HEADERS=Object.freeze([
   'Email','Categories','Boroughs/Territory','Minimum Score','Updated At','Notes',
   'Baseline At','Starter Snapshot Sent At','Starter Snapshot Through','Delivery Policy Version',
@@ -122,42 +123,18 @@ function deliveryStateRows(input){
   }
 
   const packageMap=packageBySignal(artifact);
-  const provider=data.providerObservation||{};
-  const providerStatus=normalizeProviderStatus(provider.status)||'NOT_SENT';
-  const requestedStatus=data.deliveryStatus?
-    normalizeDeliveryStatus(data.deliveryStatus):null;
-  const deliveryStatus=requestedStatus||
-    (providerStatus==='ACCEPTED'?'FINALIZED':
-      providerStatus==='REJECTED'||providerStatus==='BOUNCED'?'REJECTED':
-      providerStatus==='NOT_SENT'?'PLANNED':'PENDING');
-
-  const deliveredAt=deliveryStatus==='FINALIZED'?
-    text(data.deliveredAt||provider.deliveredAt||provider.acceptedAt):'';
-  if(deliveryStatus==='FINALIZED'&&!deliveredAt){
-    throw new Error('FINALIZED_DELIVERY_TIME_MISSING');
+  if(packageMap.size!==artifactKeys.length || artifactKeys.some(key=>!packageMap.has(key))){
+    throw new Error('ARTIFACT_ROW_SIGNAL_SET_MISMATCH');
   }
-
-  const providerMessageId=text(
-    provider.providerMessageId||
-    provider.gmailMessageId||
-    data.gmailMessageId
-  );
-  const reconciledAt=text(data.reconciledAt||provider.reconciledAt);
-  const authorizationId=text(
-    data.transportAuthorization&&data.transportAuthorization.authorizationId
-  );
-  const transportState=
-    providerStatus!=='NOT_SENT' ||
-    ['PENDING','FINALIZED','REJECTED'].includes(deliveryStatus);
-  if(transportState&&!authorizationId){
-    throw new Error('TRANSPORT_AUTHORIZATION_REQUIRED');
-  }
+  const evidence=resolveDeliveryStateEvidence(data);
+  const {deliveryStatus,providerStatus,deliveredAt,providerMessageId,reconciledAt,authorizationId}=evidence;
 
   const rows=artifactKeys.map((signalKey)=>{
-    const packageInfo=packageMap.get(signalKey)||{};
+    const packageInfo=packageMap.get(signalKey);
     const row={
       'Recipient Email':profile.recipientEmail,
       'Lead Key':signalKey,
+      // Legacy column name: this is provider acceptance time, not inbox proof.
       'Delivered At':deliveredAt,
       'Stripe Customer':profile.stripeCustomerId||'',
       'Stripe Subscription':profile.stripeSubscriptionId||profile.subscriberId||'',
@@ -189,6 +166,9 @@ function deliveryStateRows(input){
     attemptId:attempt.attemptId,
     messageIdentity:attempt.messageIdentity,
     artifactFingerprint:artifact.artifactFingerprint,
+    providerReceipt:evidence.receipt,
+    retryAllowed:evidence.retryAllowed,
+    deliveryConfirmed:evidence.deliveryConfirmed,
     rows,
     batchFingerprint:sha256(stableStringify(rows.map((item)=>item.row)))
   };
