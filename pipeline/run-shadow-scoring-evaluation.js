@@ -66,7 +66,13 @@ function evaluate(graph,batches,observedAt) {
     }
 
     const authority=literal.resolveScoreAuthority(candidate);
-    if(authority.status!=='SCORED'||s.status!=='SHADOW_SCORED') continue;
+    if(authority.status!=='SCORED') continue;
+    const replayAtAuthorityCutoff=shadow.computeShadowScores(
+      candidate,
+      recordsById,
+      authority.authorityCutoff || observedAt
+    );
+    if(replayAtAuthorityCutoff.status!=='SHADOW_SCORED') continue;
     literalOverlap+=1;
 
     const errors={};
@@ -74,7 +80,7 @@ function evaluate(graph,batches,observedAt) {
     let within5=true;
     for(const category of shadow.CATEGORIES){
       const expected=Number(authority.scores[category]);
-      const actual=Number(s.scores[category]);
+      const actual=Number(replayAtAuthorityCutoff.scores[category]);
       const abs=Math.abs(actual-expected);
       errors[category]={shadow:actual,literal:expected,absoluteError:abs};
       const stat=categoryError[category];
@@ -88,17 +94,18 @@ function evaluate(graph,batches,observedAt) {
     if(exactRow) exactAllCategoryRows+=1;
     if(within5) within5AllCategories+=1;
 
-    const bestAgree=normalizeBest(s.bestVendorFit)===normalizeBest(authority.bestVendorFit);
+    const bestAgree=normalizeBest(replayAtAuthorityCutoff.bestVendorFit)===normalizeBest(authority.bestVendorFit);
     if(bestAgree) bestFitAgree+=1;
     overlap.push({
       entityId:candidate.entityId,
       literalFit:authority.commercialFit,
-      shadowFit:s.fitReceipt.fit,
+      shadowFit:replayAtAuthorityCutoff.fitReceipt.fit,
+      benchmarkAt:authority.authorityCutoff || observedAt,
       literalBest:authority.bestVendorFit,
-      shadowBest:s.bestVendorFit,
+      shadowBest:replayAtAuthorityCutoff.bestVendorFit,
       bestFitAgree:bestAgree,
       literalBestScore:authority.bestScore,
-      shadowBestScore:s.bestScore,
+      shadowBestScore:replayAtAuthorityCutoff.bestScore,
       categoryErrors:errors
     });
   }
