@@ -23,7 +23,8 @@ const text=v=>typeof v==='string'?v.trim():'';
 const normalize=v=>text(v).toUpperCase().replace(/\s+/g,' ');
 const safeUrl=value=>{
   try{const u=new URL(value);return u.protocol==='https:'&&
-    ['data.cityofnewyork.us','data.ny.gov'].includes(u.hostname)?u.href:null;}
+    ['data.cityofnewyork.us','data.ny.gov'].includes(u.hostname)&&
+    !u.username&&!u.password&&!u.port?u.href:null;}
   catch{return null;}
 };
 function sealed(body,field='fingerprint'){return {...body,[field]:hash(body)};}
@@ -39,9 +40,9 @@ function siteKey(candidate){
 function sourceCard(record){
   const f=record.facts||{};
   // Deliberate allowlist: no phone, email, officer, owner, applicant or contact fields.
-  const fields=record.sourceSystem==='DOHMH'?['inspection_date','inspection_type','cuisine_description']:
+  const fields=record.sourceSystem==='DOHMH'?['inspection_date','inspection_type','action','cuisine_description']:
     record.sourceSystem==='SLA_PENDING'?['received_date','status','description']:
-    record.sourceSystem==='DOB_NOW'?['filing_date','job_status','job_description','work_types','initial_cost_number']:[];
+    record.sourceSystem==='DOB_NOW'?['filing_date','filing_status','job_description','work_on_floor','work_types','initial_cost_number']:[];
   return {sourceSystem:record.sourceSystem,recordId:record.sourceRecordId,
     sourceUrl:safeUrl(record.sourceUrl),eventType:record.eventType||null,
     facts:Object.fromEntries(fields.filter(k=>f[k]!==undefined&&f[k]!==null&&f[k]!=='')
@@ -125,17 +126,52 @@ function buildCohort({graph,batches,observedAt,sourceRevision,codeHashes,seed='p
 }
 function validateCohort(cohort){
   if(!verify(cohort)||cohort.version!==VERSION||cohort.productionAuthorized!==false||
-    stable(cohort.protocol)!==stable(PROTOCOL)) throw new Error('COHORT_INTEGRITY_INVALID');
-  const groups=new Map(),ids=new Set();
+    cohort.transportMode!=='NO_SEND'||stable(cohort.protocol)!==stable(PROTOCOL)) throw new Error('COHORT_INTEGRITY_INVALID');
+  if(!Array.isArray(cohort.categories)||!cohort.categories.length||
+    new Set(cohort.categories).size!==cohort.categories.length||
+    cohort.categories.some(category=>!v4.CATEGORIES.includes(category))) throw new Error('COHORT_CATEGORIES_INVALID');
+  if(!Array.isArray(cohort.rows))throw new Error('COHORT_ROWS_INVALID');
+  const groups=new Map(),ids=new Set(),entities=new Set();
+  const actual={benchmark:0,tuning:0,holdout:0,diagnostic:0};
   for(const row of cohort.rows){
+    if(!row||!text(row.caseId)||!text(row.entityId)||typeof row.eligible!=='boolean'||
+      !row.card||typeof row.card!=='object'||Array.isArray(row.card))throw new Error('COHORT_ROW_INVALID');
     if(ids.has(row.caseId))throw new Error('DUPLICATE_CASE');ids.add(row.caseId);
-    if(groups.has(row.groupId)&&groups.get(row.groupId)!==row.split)throw new Error('SITE_SPLIT_LEAKAGE');
+    if(entities.has(row.entityId))throw new Error('DUPLICATE_ENTITY');entities.add(row.entityId);
+    if(groups.has(row.groupId)){
+      if(groups.get(row.groupId)!==row.split)throw new Error('SITE_SPLIT_LEAKAGE');
+      // Even within one split, a repeated site is not independent sample support.
+      throw new Error('DUPLICATE_SITE_GROUP');
+    }
     groups.set(row.groupId,row.split);
     if(!['BENCHMARK','DIAGNOSTIC'].includes(row.panel)||!['TUNING','HOLDOUT','DIAGNOSTIC'].includes(row.split))throw new Error('PANEL_OR_SPLIT_INVALID');
     if(row.panel==='BENCHMARK'&&!['TUNING','HOLDOUT'].includes(row.split))throw new Error('BENCHMARK_SPLIT_INVALID');
     if(row.panel==='DIAGNOSTIC'&&row.split!=='DIAGNOSTIC')throw new Error('DIAGNOSTIC_SPLIT_INVALID');
     if(row.panel==='BENCHMARK'&&!row.eligible)throw new Error('INELIGIBLE_BENCHMARK_CASE');
     if(hash(row.card)!==row.evidenceFingerprint)throw new Error('EVIDENCE_FINGERPRINT_MISMATCH');
+    actual[row.panel==='BENCHMARK'?'benchmark':'diagnostic']++;
+    if(row.split==='TUNING')actual.tuning++;
+    if(row.split==='HOLDOUT')actual.holdout++;
+    if(row.eligible){
+      for(const model of ['v3','v4'])for(const category of cohort.categories){
+        const score=row.predictions?.[model]?.[category];
+        if(!Number.isInteger(score)||score<0||score>100)throw new Error('BENCHMARK_PREDICTION_INVALID');
+      }
+    }
+  }
+  // Check derived group bindings after duplicate/split checks for actionable errors.
+  for(const row of cohort.rows){
+    if(row.groupId!==hash(siteKey({entityId:row.entityId,borough:row.card.borough,address:row.card.address}))){
+      throw new Error('SITE_GROUP_BINDING_INVALID');
+    }
+  }
+  const counts=cohort.counts,fields=['graphCandidates','eligibleCandidates','eligibleSiteGroups',...Object.keys(actual)];
+  if(!counts||fields.some(key=>!Number.isInteger(counts[key])||counts[key]<0)||
+    Object.entries(actual).some(([key,value])=>counts[key]!==value)||
+    counts.graphCandidates<cohort.rows.length||counts.graphCandidates<counts.eligibleCandidates||
+    counts.eligibleCandidates<counts.eligibleSiteGroups||counts.eligibleSiteGroups<counts.benchmark||
+    counts.holdout!==Math.ceil(counts.benchmark*0.3)||counts.tuning+counts.holdout!==counts.benchmark){
+    throw new Error('COHORT_COUNTS_INVALID');
   }
   return cohort;
 }
