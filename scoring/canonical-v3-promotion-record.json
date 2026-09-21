@@ -1,0 +1,43 @@
+{
+  "promotionRecordVersion": "PermitPlate-canonical-v3-promotion-record-v1.0.0",
+  "promotionRecordId": "canonical-v3-internal-production-2026-09-21",
+  "status": "APPROVED_FOR_INTERNAL_PRODUCTION_SCORING",
+  "approvedAt": "2026-09-21T16:00:24.708Z",
+  "policyVersion": "PermitPlate-scoring-policy-v1.0.0",
+  "canonicalScoringVersion": "permitplate-shadow-score-v3-2026-09-21",
+  "targetProductionMode": "CANONICAL_V3_WITH_LEGACY_FALLBACK",
+  "rollbackMode": "LEGACY_LITERAL",
+  "externalTransportAllowed": false,
+  "transportMode": "NO_SEND",
+  "referenceCanary": {
+    "artifactFingerprint": "2f15f75b29acbc87eefdb2e01e5d3e7ce0d4305fcfab15bbe3565692b9624917",
+    "evidenceFingerprint": "d0297b1e841f5e7275effd84210494eb005dc04ceca464a152bae3ee35d20716",
+    "graphState": "COMPLETE",
+    "candidateCount": 4104,
+    "shadowCoverageRate": 1,
+    "currentOverlap": 13,
+    "currentExactAllCategoryRate": 1,
+    "currentBestFitAgreementRate": 1,
+    "historicalRecordCount": 47,
+    "historicalExactRowRate": 1,
+    "historicalFitAgreementRate": 1,
+    "historicalBestFitAgreementRate": 1,
+    "documentedLegacyAnomalyIds": [
+      "50192386",
+      "50192550"
+    ],
+    "canonicalCanaryReceiptCount": 4091,
+    "canonicalCanaryProductionAuthorizedCount": 0,
+    "canaryDeliveryBlocked": true,
+    "externalSendCalls": 0
+  },
+  "runtimeRequirements": [
+    "Fresh graph state must be COMPLETE.",
+    "Canonical current-evidence score coverage must be 100%.",
+    "Current literal-overlap category and best-fit parity must remain exact.",
+    "47-case canonical historical replay must remain exact.",
+    "Documented legacy anomaly set must remain exactly CAMIS 50192386 and 50192550.",
+    "If any promotion gate fails, use valid LEGACY_LITERAL authority when available; otherwise REVIEW.",
+    "This promotion does not authorize email or any external transport."
+  ]
+}
