@@ -9,7 +9,8 @@ const scoringPolicy=require('./scoring-policy');
 const firstSubscriber=require('./run-first-subscriber-canary');
 const publicBuild=require('../build-site');
 
-const LAUNCH_READINESS_VERSION='PermitPlate-launch-readiness-v1.0.0';
+const LAUNCH_READINESS_VERSION='PermitPlate-launch-readiness-v1.1.0';
+const EXTERNAL_EVIDENCE_MAX_AGE_MS=24*60*60*1000;
 
 function stableStringify(value){
   if(Array.isArray(value)) return '['+value.map(stableStringify).join(',')+']';
@@ -40,6 +41,31 @@ function publicSourceFingerprint(){
   return sha256(items.map((item)=>item.path+':'+item.sha256).join('\n'));
 }
 function normalizeBool(value){ return value===true; }
+function timeMs(value){
+  const ms=Date.parse(String(value||''));
+  return Number.isFinite(ms)?ms:null;
+}
+function evidenceFresh(observedAt,evaluatedAt){
+  const observed=timeMs(observedAt);
+  const evaluated=timeMs(evaluatedAt);
+  if(observed===null||evaluated===null||evaluated<observed) return false;
+  return evaluated-observed<=EXTERNAL_EVIDENCE_MAX_AGE_MS;
+}
+function remediationFor(gate){
+  const map={
+    stripePaymentLinkWriteAuthorized:'GRANT_STRIPE_PAYMENT_LINK_WRITE',
+    stripeCheckoutPreferenceFieldsVerified:'APPLY_AND_VERIFY_STRIPE_CHECKOUT_PREFERENCES',
+    verifiedPublicBuildMatchesCurrentSource:'REBUILD_DEPLOYABLE_PUBLIC_ARTIFACT',
+    netlifyProductionDeployVerified:'DEPLOY_VERIFIED_PUBLIC_ARTIFACT',
+    netlifyLiveCommitKnown:'VERIFY_NETLIFY_LIVE_BUILD_IDENTITY',
+    netlifyLiveCommitMatchesVerifiedBuild:'ALIGN_NETLIFY_LIVE_DEPLOY_TO_VERIFIED_BUILD',
+    externalEvidenceFresh:'REFRESH_EXTERNAL_LAUNCH_EVIDENCE',
+    realPaidSubscriberEndToEndVerified:'RUN_FIRST_REAL_PAID_SUBSCRIBER_ACCEPTANCE',
+    providerBackedDeliveryVerified:'RECONCILE_REAL_PROVIDER_DELIVERY',
+    nextRunDuplicateSuppressionVerifiedForRealSubscriber:'VERIFY_REAL_NEXT_RUN_DEDUPE'
+  };
+  return map[gate]||('FIX_'+String(gate||'UNKNOWN').toUpperCase());
+}
 
 function evaluateLaunchReadiness(input){
   const data=input||{};
@@ -53,6 +79,7 @@ function evaluateLaunchReadiness(input){
   const external=data.externalEvidence||{};
   const publicBuildFailures=Array.isArray(data.publicBuildFailures)?data.publicBuildFailures:[];
   const currentPublicSourceFingerprint=data.currentPublicSourceFingerprint||null;
+  const evaluatedAt=data.evaluatedAt||new Date().toISOString();
 
   const detValidation=detection.validateLedger(detectionLedger);
   const oppValidation=opportunity.validateLedger(opportunityLedger);
@@ -102,6 +129,7 @@ function evaluateLaunchReadiness(input){
   const customerProof=external.customerProof||{};
 
   const externalGates={
+    externalEvidenceFresh:evidenceFresh(external.observedAt,evaluatedAt),
     stripePaymentLinkWriteAuthorized:normalizeBool(stripe.paymentLinkWriteAuthorized),
     stripeCheckoutPreferenceFieldsVerified:normalizeBool(stripe.checkoutPreferenceFieldsVerified),
     verifiedPublicBuildMatchesCurrentSource:
@@ -123,6 +151,7 @@ function evaluateLaunchReadiness(input){
   };
 
   const firstCustomerExternalGates={
+    externalEvidenceFresh:externalGates.externalEvidenceFresh,
     stripePaymentLinkWriteAuthorized:externalGates.stripePaymentLinkWriteAuthorized,
     stripeCheckoutPreferenceFieldsVerified:externalGates.stripeCheckoutPreferenceFieldsVerified,
     verifiedPublicBuildMatchesCurrentSource:externalGates.verifiedPublicBuildMatchesCurrentSource,
@@ -209,17 +238,28 @@ function evaluateLaunchReadiness(input){
     },
     externalEvidenceVersion:external.evidenceVersion||null,
     externalObservedAt:external.observedAt||null,
+    evaluatedAt,
+    externalEvidenceAgeMs:
+      timeMs(external.observedAt)!==null&&timeMs(evaluatedAt)!==null?
+        timeMs(evaluatedAt)-timeMs(external.observedAt):null,
     internalGates,
     internalFailures,
     externalGates,
     firstCustomerExternalFailures,
     commercialProofFailures,
     blockers:[
-      ...internalFailures.map((gate)=>({class:'INTERNAL',gate})),
-      ...firstCustomerExternalFailures.map((gate)=>({class:'EXTERNAL_INTEGRATION',gate})),
-      ...commercialProofFailures.map((gate)=>({class:'COMMERCIAL_PROOF',gate}))
+      ...internalFailures.map((gate)=>({class:'INTERNAL',gate,action:remediationFor(gate)})),
+      ...firstCustomerExternalFailures.map((gate)=>({
+        class:'EXTERNAL_INTEGRATION',gate,action:remediationFor(gate)
+      })),
+      ...commercialProofFailures.map((gate)=>({
+        class:'COMMERCIAL_PROOF',gate,action:remediationFor(gate)
+      }))
     ]
   };
+  result.recommendedNextActions=Array.from(new Set(
+    result.blockers.map((item)=>item.action)
+  ));
   result.readinessFingerprint=sha256(stableStringify(result));
   return result;
 }
