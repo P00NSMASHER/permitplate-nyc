@@ -228,10 +228,36 @@ async function observeSocrataQuery(source, scope, options) {
   }
 
   if (publisherCount === 0) {
-    receipt.fetchedCount = 0;
-    receipt.cursorClosed = true;
-    const classification = model.classifySourceObservation(receipt);
-    return {records: [], receipt, classification};
+    const emptyParams = {'$limit': 1, '$offset': 0};
+    if (normalized.where) emptyParams['$where'] = normalized.where;
+    if (normalized.select) emptyParams['$select'] = normalized.select;
+    if (normalized.order) emptyParams['$order'] = normalized.order;
+
+    try {
+      const emptyResponse = await fetchImpl(buildResourceUrl(source, emptyParams), {headers, redirect: 'manual'});
+      if (emptyResponse.status >= 300 && emptyResponse.status < 400) {
+        const moved = movedReceipt(receipt, emptyResponse);
+        return {records: [], receipt: moved, classification: model.classifySourceObservation(moved)};
+      }
+      if (!emptyResponse.ok) {
+        const unavailable = unavailableReceipt(receipt, emptyResponse);
+        return {records: [], receipt: unavailable, classification: model.classifySourceObservation(unavailable)};
+      }
+      const parsed = await readResponse(emptyResponse);
+      receipt.rawPageHashes.push(sha256(parsed.text));
+      if (!Array.isArray(parsed.json)) {
+        receipt.transportOk = false;
+        receipt.httpStatus = emptyResponse.status;
+        return {records: [], receipt, classification: model.classifySourceObservation(receipt)};
+      }
+      receipt.fetchedCount = parsed.json.length;
+      receipt.cursorClosed = parsed.json.length === 0;
+      const classification = model.classifySourceObservation(receipt);
+      return {records: parsed.json, receipt, classification};
+    } catch (error) {
+      const unavailable = unavailableReceipt(receipt, error);
+      return {records: [], receipt: unavailable, classification: model.classifySourceObservation(unavailable)};
+    }
   }
 
   const records = [];
