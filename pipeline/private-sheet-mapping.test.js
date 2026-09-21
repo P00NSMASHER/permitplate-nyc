@@ -17,6 +17,7 @@ function session(){
     payment_status:'paid',
     customer:'cus_mapping',
     customer_details:{email:'buyer@example.com'},
+    client_reference_id:'pp_mappingfixture000000000000000000',
     metadata:{project:'permitplate_nyc'},
     subscription:'sub_mapping',
     custom_fields:[]
@@ -43,6 +44,7 @@ function form(){
       onboarding_version:'permitplate-onboarding-v1',
       plan:'monthly_79',
       email:'buyer@example.com',
+      activation_ref:'pp_mappingfixture000000000000000000',
       category:'equipment',
       territory:'Manhattan, Queens',
       starter:'yes',
