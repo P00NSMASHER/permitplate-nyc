@@ -260,6 +260,8 @@ function buildSourceObservation(sourceKey, input) {
   const receipt = {
     sourceId: config.sourceId,
     connectorConfigHash: configFingerprint(config),
+    queryScopeHash: inData.queryScopeHash || null,
+    queryScope: inData.queryScope || null,
     observedAt: inData.observedAt || null,
     sourceFresh: inData.sourceFresh === true,
     transportOk: inData.transportOk,
