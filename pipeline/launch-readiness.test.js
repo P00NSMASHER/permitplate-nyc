@@ -139,8 +139,11 @@ function internalInput(overrides){
   assert(out.firstCustomerExternalFailures.includes('preferenceCaptureReady'));
   assert(out.firstCustomerExternalFailures.includes('netlifyProductionDeployVerified'));
   assert(out.firstCustomerExternalFailures.includes('netlifyLiveBuildIdentityVerified'));
+  assert.equal(out.criticalPathClass,'EXTERNAL_INTEGRATION');
   assert(out.recommendedNextActions.includes('DEPLOY_AND_VERIFY_NETLIFY_PRECHECKOUT_FORM'));
   assert(out.recommendedNextActions.includes('DEPLOY_VERIFIED_PUBLIC_ARTIFACT'));
+  assert(!out.recommendedNextActions.includes('RUN_FIRST_REAL_PAID_SUBSCRIBER_ACCEPTANCE'));
+  assert(out.deferredBlockers.some((item)=>item.class==='COMMERCIAL_PROOF'));
 }
 
 {
@@ -151,7 +154,10 @@ function internalInput(overrides){
   const out=readiness.evaluateLaunchReadiness(input);
   assert.equal(out.internalReady,false);
   assert.equal(out.launchState,'INTERNAL_BLOCKED');
+  assert.equal(out.criticalPathClass,'INTERNAL');
   assert(out.internalFailures.includes('graphComplete'));
+  assert(out.criticalPathBlockers.every((item)=>item.class==='INTERNAL'));
+  assert(!out.recommendedNextActions.includes('DEPLOY_VERIFIED_PUBLIC_ARTIFACT'));
 }
 
 {
@@ -238,6 +244,9 @@ function internalInput(overrides){
   assert.equal(out.launchState,'READY_FOR_FIRST_PAID_CUSTOMER');
   assert.deepEqual(out.firstCustomerExternalFailures,[]);
   assert.equal(out.commercialProofFailures.length,3);
+  assert.equal(out.criticalPathClass,'COMMERCIAL_PROOF');
+  assert(out.recommendedNextActions.includes('RUN_FIRST_REAL_PAID_SUBSCRIBER_ACCEPTANCE'));
+  assert(!out.recommendedNextActions.includes('DEPLOY_VERIFIED_PUBLIC_ARTIFACT'));
 }
 
 {
@@ -288,6 +297,9 @@ function internalInput(overrides){
   assert.equal(out.launchState,'PAID_CUSTOMER_PROVEN');
   assert.deepEqual(out.firstCustomerExternalFailures,[]);
   assert.deepEqual(out.commercialProofFailures,[]);
+  assert.equal(out.criticalPathClass,null);
+  assert.deepEqual(out.criticalPathBlockers,[]);
+  assert.deepEqual(out.recommendedNextActions,[]);
 }
 
 {

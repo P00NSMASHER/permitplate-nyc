@@ -215,6 +215,23 @@ function evaluateLaunchReadiness(input){
   else if(commercialProofFailures.length) launchState='READY_FOR_FIRST_PAID_CUSTOMER';
   else launchState='PAID_CUSTOMER_PROVEN';
 
+  const allBlockers=[
+    ...internalFailures.map((gate)=>({class:'INTERNAL',gate,action:remediationFor(gate)})),
+    ...firstCustomerExternalFailures.map((gate)=>({
+      class:'EXTERNAL_INTEGRATION',gate,action:remediationFor(gate)
+    })),
+    ...commercialProofFailures.map((gate)=>({
+      class:'COMMERCIAL_PROOF',gate,action:remediationFor(gate)
+    }))
+  ];
+  const criticalPathClass=
+    !internalReady?'INTERNAL':
+    firstCustomerExternalFailures.length?'EXTERNAL_INTEGRATION':
+    commercialProofFailures.length?'COMMERCIAL_PROOF':
+    null;
+  const criticalPathBlockers=criticalPathClass?
+    allBlockers.filter((item)=>item.class===criticalPathClass):[];
+
   const result={
     readinessVersion:LAUNCH_READINESS_VERSION,
     launchState,
@@ -279,18 +296,13 @@ function evaluateLaunchReadiness(input){
     externalGates,
     firstCustomerExternalFailures,
     commercialProofFailures,
-    blockers:[
-      ...internalFailures.map((gate)=>({class:'INTERNAL',gate,action:remediationFor(gate)})),
-      ...firstCustomerExternalFailures.map((gate)=>({
-        class:'EXTERNAL_INTEGRATION',gate,action:remediationFor(gate)
-      })),
-      ...commercialProofFailures.map((gate)=>({
-        class:'COMMERCIAL_PROOF',gate,action:remediationFor(gate)
-      }))
-    ]
+    blockers:allBlockers,
+    criticalPathClass,
+    criticalPathBlockers,
+    deferredBlockers:allBlockers.filter((item)=>item.class!==criticalPathClass)
   };
   result.recommendedNextActions=Array.from(new Set(
-    result.blockers.map((item)=>item.action)
+    criticalPathBlockers.map((item)=>item.action)
   ));
   result.readinessFingerprint=sha256(stableStringify(result));
   return result;
