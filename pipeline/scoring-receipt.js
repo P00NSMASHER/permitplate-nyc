@@ -35,6 +35,8 @@ function buildScoreReceipt(input) {
       changeFingerprint,
       scoringVersion:scoring.SCORING_VERSION,
       scorerVersion:scoring.SCORING_VERSION,
+      authorityMode:'LEGACY_LITERAL',
+      productionAuthorized:false,
       authorityId:resolved.authorityId || null,
       authorityRecordFingerprint:resolved.authorityRecordFingerprint || null,
       errors:resolved.errors || ['SCORE_AUTHORITY_FAILED']
@@ -64,6 +66,8 @@ function buildScoreReceipt(input) {
     scoredAt:data.scoredAt || resolved.authorityCutoff || null,
     scoringVersion:scoring.SCORING_VERSION,
     scorerVersion:scoring.SCORING_VERSION,
+    authorityMode:'LEGACY_LITERAL',
+    productionAuthorized:true,
     authorityId:resolved.authorityId,
     authorityKind:resolved.authorityKind,
     authorityRecordFingerprint:resolved.authorityRecordFingerprint,
