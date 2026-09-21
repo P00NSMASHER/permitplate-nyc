@@ -252,4 +252,84 @@ const m = require('./model-v7');
   assert.equal(r.reason, 'SOURCE_NOT_FRESH');
 }
 
+{
+  const input = {
+    event:{
+      businessName:'CRYBABY',
+      address:'153 Bowery',
+      sourceEntityId:'CAMIS-50192386',
+      sourceRecordId:'50192386',
+      sourceUrl:'https://data.cityofnewyork.us/example'
+    },
+    candidate:{
+      entityId:'venue-1',
+      canonicalName:'Crybaby',
+      address:'153 Bowery',
+      sourceEntityIds:['CAMIS-50192386'],
+      commercialFit:'HIGH'
+    },
+    sourceObservation:{
+      transportOk:true,
+      intendedFullScope:true,
+      sourceId:'nyc-dohmh',
+      connectorConfigHash:'cfg-v1',
+      observedAt:'2026-09-21T13:30:00Z',
+      sourceFresh:true,
+      schemaFingerprint:'schema-v1',
+      rawPageHashes:['page-1'],
+      cursorClosed:true,
+      publisherCount:1,
+      fetchedCount:1
+    },
+    previousState:{lifecycleStage:'JUST FILED',sourceSystems:['DOHMH'],categoryEvidence:[],status:'active'},
+    currentState:{lifecycleStage:'BUILDOUT / LICENSING',sourceSystems:['DOHMH','DOB'],categoryEvidence:['commercial-kitchen'],status:'active'},
+    scoreParts:{changeRecencyMateriality:30,lifecycleTimingUrgency:22,categoryRelevance:25,evidenceStrength:18},
+    postBaseline:true,
+    minimumScore:60,
+    alreadyDeliveredFingerprint:false
+  };
+  const first = m.buildOpportunityDecision(input);
+  const replay = m.buildOpportunityDecision(JSON.parse(JSON.stringify(input)));
+  assert.equal(first.decision, 'DELIVER');
+  assert.equal(first.modelVersion, 'PermitPlate-v7.1.0');
+  assert.equal(first.replayFingerprint, replay.replayFingerprint);
+  assert.equal(first.sourceObservation.state, 'COMPLETE_NONEMPTY');
+}
+
+{
+  const input = {
+    event:{businessName:'A',address:'1 Main St',sourceEntityId:'id-1',sourceRecordId:'r1',sourceUrl:'https://example.com/r1'},
+    candidate:{entityId:'e1',canonicalName:'A',address:'1 Main St',sourceEntityIds:['id-1'],commercialFit:'HIGH'},
+    sourceObservation:{transportOk:false,sourceFresh:false},
+    previousState:{status:'active'},
+    currentState:{status:'changed'},
+    scoreParts:{changeRecencyMateriality:30,lifecycleTimingUrgency:20,categoryRelevance:20,evidenceStrength:20},
+    postBaseline:true,
+    minimumScore:50
+  };
+  const result = m.buildOpportunityDecision(input);
+  assert.equal(result.decision, 'REVIEW');
+  assert(result.reasons.includes('SOURCE_OBSERVATION_NOT_USABLE'));
+}
+
+{
+  const input = {
+    event:{businessName:'A',address:'1 Main St',sourceEntityId:'id-1',sourceRecordId:'r1',sourceUrl:''},
+    candidate:{entityId:'e1',canonicalName:'A',address:'1 Main St',sourceEntityIds:['id-1'],commercialFit:'HIGH'},
+    sourceObservation:{
+      transportOk:true,intendedFullScope:true,sourceId:'s',connectorConfigHash:'c',
+      observedAt:'2026-09-21T13:30:00Z',sourceFresh:true,schemaFingerprint:'x',
+      rawPageHashes:['p'],cursorClosed:true,publisherCount:1,fetchedCount:1
+    },
+    previousState:{status:'active'},
+    currentState:{status:'changed'},
+    scoreParts:{changeRecencyMateriality:30,lifecycleTimingUrgency:20,categoryRelevance:20,evidenceStrength:20},
+    postBaseline:true,
+    minimumScore:50
+  };
+  const result = m.buildOpportunityDecision(input);
+  assert.equal(result.decision, 'REVIEW');
+  assert(result.reasons.includes('MISSING_SOURCE_LINEAGE'));
+}
+
 console.log('PermitPlate Model V7 regression tests passed.');
