@@ -9,7 +9,7 @@ const scoringPolicy=require('./scoring-policy');
 const firstSubscriber=require('./run-first-subscriber-canary');
 const publicBuild=require('../build-site');
 
-const LAUNCH_READINESS_VERSION='PermitPlate-launch-readiness-v1.1.0';
+const LAUNCH_READINESS_VERSION='PermitPlate-launch-readiness-v1.2.0';
 const EXTERNAL_EVIDENCE_MAX_AGE_MS=24*60*60*1000;
 
 function stableStringify(value){
@@ -122,6 +122,9 @@ function evaluateLaunchReadiness(input){
     subscriberCanaryUsesNetlifyPreferences:
       subscriberCanary.preferenceSource==='NETLIFY_PRECHECKOUT_FORM'&&
       Boolean(subscriberCanary.preferenceReceiptId),
+    subscriberCanaryExactCheckoutCorrelation:
+      Boolean(subscriberCanary.activationReference)&&
+      subscriberCanary.activationReference===subscriberCanary.stripeClientReferenceId,
     publicBuildBoundaryClean:publicBuildFailures.length===0
   };
 
@@ -142,7 +145,9 @@ function evaluateLaunchReadiness(input){
       normalizeBool(preCheckout.netlifyFormsEnabled) &&
       normalizeBool(preCheckout.sourceFlowImplemented) &&
       normalizeBool(preCheckout.liveFormVerified) &&
-      normalizeBool(preCheckout.exactEmailActivationCanaryVerified)
+      normalizeBool(preCheckout.exactEmailActivationCanaryVerified) &&
+      normalizeBool(preCheckout.activationReferenceFieldVerified) &&
+      normalizeBool(preCheckout.exactReferenceActivationCanaryVerified)
     );
 
   const externalGates={
@@ -155,6 +160,10 @@ function evaluateLaunchReadiness(input){
     netlifyPreCheckoutLiveFormVerified:normalizeBool(preCheckout.liveFormVerified),
     netlifyExactEmailActivationCanaryVerified:
       normalizeBool(preCheckout.exactEmailActivationCanaryVerified),
+    netlifyActivationReferenceFieldVerified:
+      normalizeBool(preCheckout.activationReferenceFieldVerified),
+    netlifyExactReferenceActivationCanaryVerified:
+      normalizeBool(preCheckout.exactReferenceActivationCanaryVerified),
     preferenceCaptureReady,
     verifiedPublicBuildMatchesCurrentSource:
       Boolean(currentPublicSourceFingerprint)&&
