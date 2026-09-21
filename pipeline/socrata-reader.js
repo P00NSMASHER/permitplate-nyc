@@ -33,7 +33,7 @@ function queryScope(config, options) {
     sourceId: config.sourceId,
     where: opts.where || null,
     order: opts.order || null,
-    select: opts.select || '*'
+    select: opts.select || config.recordFields.join(',')
   };
 }
 
@@ -272,7 +272,7 @@ async function readSocrataSource(sourceKey, options) {
     const remaining = Math.min(pageSize, Number.isFinite(maxRows) ? Math.max(0, maxRows - rows.length) : pageSize);
     if (remaining <= 0) break;
     const params = {
-      '$select': opts.select || '*',
+      '$select': opts.select || config.recordFields.join(','),
       '$limit': publisherCount === 0 ? 1 : remaining,
       '$offset': offset
     };
