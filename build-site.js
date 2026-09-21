@@ -24,6 +24,8 @@ const PUBLIC_FILES=Object.freeze([
   'sample.html',
   'site.css',
   'site.js',
+  'start.html',
+  'start-checkout.html',
   'sitemap.xml',
   'terms.html'
 ]);
