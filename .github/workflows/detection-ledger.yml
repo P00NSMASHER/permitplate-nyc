@@ -28,7 +28,10 @@ jobs:
       - name: Advance detection ledger from complete live graph
         run: node pipeline/run-detection-ledger.js state/detection-ledger.json pipeline/detection-ledger-run-result.json
 
-      - name: Commit detection state when advanced
+      - name: Build scored opportunity packages for customer-eligible detections
+        run: node pipeline/run-opportunity-packages.js pipeline/detection-ledger-run-result.json pipeline/opportunity-packages-result.json
+
+      - name: Commit detection state only after package success
         run: |
           if git diff --quiet -- state/detection-ledger.json; then
             echo "Detection ledger unchanged."
@@ -45,6 +48,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: permitplate-detection-ledger
-          path: pipeline/detection-ledger-run-result.json
+          path: |
+            pipeline/detection-ledger-run-result.json
+            pipeline/opportunity-packages-result.json
           if-no-files-found: warn
           retention-days: 30
