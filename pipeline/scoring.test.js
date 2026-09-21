@@ -4,6 +4,7 @@ const assert = require('assert');
 const scoring = require('./scoring');
 const receipt = require('./scoring-receipt');
 const delivery = require('./delivery-plan');
+const fit = require('./commercial-fit');
 const snapshot = require('../scoring/legacy-score-authority-2026-09-18.json');
 
 function authorityRecord() {
