@@ -76,6 +76,9 @@ jobs:
       - name: Run customer digest renderer regression
         run: node pipeline/customer-message.test.js
 
+      - name: Run explicit transport authorization regression
+        run: node pipeline/transport-authorization.test.js
+
       - name: Run commercial fit receipt regression
         run: node pipeline/commercial-fit.test.js
 
