@@ -143,6 +143,7 @@ function normalizeObservationReceipt(row) {
     observationId: row.observationId || asText(row['Observation ID']),
     sourceId: row.sourceId || asText(row['Source ID']),
     connectorConfigHash: row.connectorConfigHash || asText(row['Connector Config Hash']),
+    queryFingerprint: row.queryFingerprint || asText(row['Query Fingerprint']),
     observedAt: row.observedAt || asText(row['Observed At']),
     sourceFresh: row.sourceFresh !== undefined ? row.sourceFresh : asBoolean(row['Source Fresh']),
     transportOk: row.transportOk !== undefined ? row.transportOk : asBoolean(row['Transport OK']),
