@@ -80,4 +80,38 @@ const noReceiptCanary = v.validateSourceObservationReceipts([]);
 assert.equal(noReceiptCanary.passed, true);
 assert.equal(noReceiptCanary.enforced, false);
 
+{
+  const base = {
+    'Venue Key':'153 BOWERY|10002',
+    'Latest Signal Date':'2026-09-18',
+    'Stage':'BUILDOUT / LICENSING',
+    'Sources':'DOHMH;DOB',
+    'Why Now':'New buildout filing',
+    'Purchase Window':'NOW',
+    'Commercial Fit':'HIGH',
+    'Best Score':90
+  };
+  const same = Object.assign({}, base);
+  const later = Object.assign({}, base, {
+    'Latest Signal Date':'2026-09-21',
+    'Stage':'MULTI-SOURCE NEAR-OPENING',
+    'Why Now':'New corroborating SLA evidence'
+  });
+  assert.equal(v.materialChangeFingerprint(base), v.materialChangeFingerprint(same));
+  assert.notEqual(v.materialChangeFingerprint(base), v.materialChangeFingerprint(later));
+  assert.notEqual(
+    v.makeSignalKey('normal', '2026-09-18', base),
+    v.makeSignalKey('normal', '2026-09-18', later)
+  );
+}
+
+{
+  const row = {
+    'Venue Key':'A',
+    'Change Fingerprint':'explicit-change-123'
+  };
+  assert.equal(v.materialChangeFingerprint(row), 'explicit-change-123');
+  assert(v.makeSignalKey('normal', '2026-09-18', row).endsWith(':explicit-change-123'));
+}
+
 console.log('PermitPlate delivery verifier unit tests passed.');
