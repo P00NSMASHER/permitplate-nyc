@@ -1,6 +1,6 @@
 {
   "evidenceVersion": "PermitPlate-external-launch-evidence-v1.0.0",
-  "observedAt": "2026-09-21T18:00:00Z",
+  "observedAt": "2026-09-21T18:15:00Z",
   "stripe": {
     "account": "acct_1UFCRjDPW8riWrxQ",
     "paymentLinkId": "plink_1UG3RUDPW8riWrxQpZwHExK2",
@@ -33,9 +33,20 @@
     "formName": "permitplate-onboarding",
     "netlifyFormsEnabled": true,
     "sourceFlowImplemented": true,
-    "liveFormVerified": false,
+    "liveFormVerified": true,
     "exactEmailActivationCanaryVerified": true,
     "baselineAuthority": "STRIPE_SUBSCRIPTION_CREATED",
-    "reason": "Netlify Forms is enabled and the source flow is implemented; the form is not launch-eligible until the new public build is deployed and the live form is verified."
+    "reason": "Netlify project form registry now recognizes permitplate-onboarding with expected fields and honeypot. Public build identity is still verified separately.",
+    "liveFormId": "6ab1726645d634000824cdd9",
+    "liveFormSubmissionCount": 0,
+    "liveFormFields": [
+      "plan",
+      "onboarding_version",
+      "bot-field",
+      "email",
+      "category",
+      "territory",
+      "starter"
+    ]
   }
 }
