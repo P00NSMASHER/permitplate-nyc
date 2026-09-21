@@ -86,6 +86,14 @@ function classifySourceObservation(receipt) {
   const httpStatus = Number(r.httpStatus);
 
   if (r.transportOk === false || (Number.isFinite(httpStatus) && httpStatus >= 400)) {
+    if (fetchedCount !== null && fetchedCount > 0) {
+      return {
+        state: SOURCE_OBSERVATION_STATES.PARTIAL,
+        supportsPositiveObservation: true,
+        supportsAbsenceConclusion: false,
+        reason: 'PARTIAL_FETCH_BEFORE_FAILURE'
+      };
+    }
     return {
       state: SOURCE_OBSERVATION_STATES.SOURCE_UNAVAILABLE,
       supportsPositiveObservation: false,
