@@ -27,3 +27,6 @@ jobs:
 
       - name: Run delivery verifier regression
         run: node operations/delivery-verifier.test.js
+
+      - name: Run NYC source adapter regression
+        run: node pipeline/source-adapters.test.js
