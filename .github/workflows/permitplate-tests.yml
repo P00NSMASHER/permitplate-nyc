@@ -45,3 +45,6 @@ jobs:
 
       - name: Run candidate graph regression
         run: node pipeline/candidate-builder.test.js
+
+      - name: Run graph-bound subscriber delivery canary
+        run: node pipeline/delivery-plan.test.js
