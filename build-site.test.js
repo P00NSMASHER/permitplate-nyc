@@ -72,6 +72,7 @@ try{
   assert(startHtml.includes('name="email"'));
   assert(startHtml.includes('name="category"'));
   assert(startHtml.includes('name="starter"'));
+  assert(startHtml.includes('name="activation_ref"'));
 
   const stripeUrl='https://buy.stripe.com/4gM28r1cL81x8dF9Xj9sk02';
   const stripeOccurrences=[];
@@ -80,11 +81,18 @@ try{
     const count=html.split(stripeUrl).length-1;
     if(count) stripeOccurrences.push({file,count});
   }
-  assert.deepEqual(stripeOccurrences,[{file:'start-checkout.html',count:2}]);
+  // HTML never exposes a fallback that can start an uncorrelated checkout.
+  assert.deepEqual(stripeOccurrences,[]);
+
+  const siteJs=fs.readFileSync(path.join(build.OUT,'site.js'),'utf8');
+  assert.equal(siteJs.split(stripeUrl).length-1,1);
+  assert(siteJs.includes("'locked_prefilled_email'"));
+  assert(siteJs.includes("'client_reference_id'"));
 
   const handoff=fs.readFileSync(path.join(build.OUT,'start-checkout.html'),'utf8');
-  assert(handoff.includes('http-equiv="refresh"'));
-  assert(handoff.includes(stripeUrl));
+  assert(!handoff.includes('http-equiv="refresh"'));
+  assert(!handoff.includes(stripeUrl));
+  assert(handoff.includes('CHECKOUT NOT STARTED'));
 
   const manifest=JSON.parse(fs.readFileSync(path.join(build.OUT,'build-info.json'),'utf8'));
   assert.equal(manifest.publicFileCount,build.PUBLIC_FILES.length);
