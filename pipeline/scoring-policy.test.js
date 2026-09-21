@@ -30,7 +30,7 @@ function goodEvidence(overrides) {
   }));
   assert.equal(a.canaryReady,true);
   assert.equal(a.productionAuthorized,false);
-  assert.equal(a.productionScoringMode,'LEGACY_LITERAL');
+  assert.equal(a.productionScoringMode,'CANONICAL_V3_WITH_LEGACY_FALLBACK');
   assert.equal(a.nextMode,'CANONICAL_V3_CANARY');
   assert.equal(a.evidenceFingerprint,b.evidenceFingerprint);
 }
@@ -142,11 +142,13 @@ function canonicalCandidate() {
     observedAt:'2026-09-21T15:00:00Z',
     promotionEvidence:goodEvidence()
   });
-  assert.equal(out.selectedMode,'CANONICAL_V3_CANARY');
-  assert.equal(out.productionAuthorized,false);
-  assert.equal(out.receipt.status,'CANARY_SCORED');
-  assert.equal(out.receipt.productionAuthorized,false);
-  assert.equal(out.receipt.authorityMode,'CANONICAL_V3_CANARY');
+  assert.equal(out.selectedMode,'CANONICAL_V3_PRODUCTION');
+  assert.equal(out.productionAuthorized,true);
+  assert.equal(out.receipt.status,'SCORED');
+  assert.equal(out.receipt.productionAuthorized,true);
+  assert.equal(out.receipt.authorityMode,'CANONICAL_V3_PRODUCTION');
+  assert(out.receipt.canaryScoreReceiptId);
+  assert(out.receipt.promotionRecordId);
   assert.equal(out.receipt.scorerVersion,shadow.SHADOW_SCORING_VERSION);
   assert.equal(out.receipt.scores.Equipment,75);
   assert(out.receipt.policyEvidenceFingerprint);
@@ -167,7 +169,8 @@ function canonicalCandidate() {
   assert(out.promotion.failures.includes('CURRENT_OVERLAP_TOO_SMALL'));
 }
 
-assert.equal(policy.PRODUCTION_SCORING_MODE,'LEGACY_LITERAL');
+assert.equal(policy.PRODUCTION_SCORING_MODE,'CANONICAL_V3_WITH_LEGACY_FALLBACK');
+assert.equal(policy.validatePromotionRecord(require('../scoring/canonical-v3-promotion-record.json')).valid,true);
 assert.deepEqual(policy.DOCUMENTED_LEGACY_ANOMALIES,['50192386','50192550']);
 
 console.log('PermitPlate scoring promotion policy regression tests passed.');
