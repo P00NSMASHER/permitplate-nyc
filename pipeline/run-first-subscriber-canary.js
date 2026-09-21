@@ -6,6 +6,7 @@ const opportunity=require('./opportunity-ledger');
 const stripeSubscriber=require('./stripe-subscriber');
 const subscriberArtifact=require('./subscriber-artifact');
 const customerMessage=require('./customer-message');
+const transportAuthorization=require('./transport-authorization');
 const privateSheetMapping=require('./private-sheet-mapping');
 const delivery=require('./delivery-plan');
 
@@ -171,6 +172,14 @@ function run(){
     signals:first.signalKeys.map((signalKey)=>({signalKey}))
   },stripe.profile.recipientEmail);
 
+  const transportPreflight=transportAuthorization.validateTransportAuthorization({
+    artifact:first,
+    message,
+    attempt,
+    authorization:null,
+    now:'2026-09-21T17:10:00Z'
+  });
+
   const profileSheetPlan=privateSheetMapping.subscriberProfileRow(stripe);
   const deliverySheetPlan=privateSheetMapping.deliveryStateRows({
     artifact:first,
@@ -225,6 +234,10 @@ function run(){
       state:attempt.state,
       signalKeys:attempt.signalKeys
     },
+    transportPreflight:{
+      allowed:transportPreflight.allowed,
+      failures:transportPreflight.failures
+    },
     privateStatePlan:{
       subscriberProfileSheet:profileSheetPlan.sheet,
       subscriberProfileColumnCount:profileSheetPlan.values.length,
@@ -256,6 +269,8 @@ function run(){
     result.customerMessage.signalKeys.join('|')===result.firstArtifact.signalKeys.join('|') &&
     Boolean(result.customerMessage.attachmentSha256) &&
     result.plannedAttempt.state==='PLANNED' &&
+    result.transportPreflight.allowed===false &&
+    result.transportPreflight.failures.includes('OWNER_AUTHORIZATION_MISSING') &&
     result.privateStatePlan.subscriberProfileColumnCount===20 &&
     result.privateStatePlan.deliveryStateRowCount===2 &&
     result.privateStatePlan.deliveryStateColumnCount===16 &&
