@@ -58,6 +58,12 @@ jobs:
       - name: Run persistent opportunity ledger regression
         run: node pipeline/opportunity-ledger.test.js
 
+      - name: Run subscriber profile contract regression
+        run: node pipeline/subscriber-profile.test.js
+
+      - name: Run subscriber artifact no-send regression
+        run: node pipeline/subscriber-artifact.test.js
+
       - name: Run commercial fit receipt regression
         run: node pipeline/commercial-fit.test.js
 
