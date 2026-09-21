@@ -85,7 +85,7 @@ const OBS='2026-09-21T14:00:00Z';
 {
   const primary=dohmh({
     camis:'50100004',dba:'PURE POKE',boro:'Manhattan',building:'1',street:'BOWERY',
-    zipcode:'10002',phone:'555-1001',cuisine_description:'Other',
+    zipcode:'10002',phone:'555-1001',cuisine_description:'Japanese',
     inspection_date:'1900-01-01T00:00:00.000',record_date:'2026-09-21T12:00:00.000'
   });
   const out=shadow.computeShadowScores(candidateFrom(primary),map([primary]),OBS);
