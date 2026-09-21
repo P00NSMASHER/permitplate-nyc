@@ -97,7 +97,7 @@ function dobScopeFacts(records) {
 
 function knownCuisine(primary) {
   const cuisine = String(primary && primary.facts && primary.facts.cuisine_description || '').trim();
-  return Boolean(cuisine && !/^(UNKNOWN|OTHER|NOT LISTED|N\/A|NA)$/i.test(cuisine));
+  return Boolean(cuisine && !/^(UNKNOWN|OTHER|NOT LISTED(?:\/NOT APPLICABLE)?|NOT APPLICABLE|N\/A|NA)$/i.test(cuisine));
 }
 
 function publicPhone(primary) {
