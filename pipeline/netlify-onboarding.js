@@ -8,6 +8,7 @@ const FORM_NAME='permitplate-onboarding';
 const FORM_VERSION='permitplate-onboarding-v1';
 const PLAN='monthly_79';
 const MAX_PRECHECKOUT_AGE_MS=24*60*60*1000;
+const ACTIVATION_REFERENCE_PATTERN=/^pp_[A-Za-z0-9_-]{20,120}$/;
 
 function stableStringify(value){
   if(Array.isArray(value)) return '['+value.map(stableStringify).join(',')+']';
@@ -28,6 +29,10 @@ function iso(value){
 function validEmail(value){
   const email=text(value).toLowerCase();
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)?email:null;
+}
+function activationReference(value){
+  const ref=text(value);
+  return ACTIVATION_REFERENCE_PATTERN.test(ref)?ref:null;
 }
 function submissionData(submission){
   if(submission&&submission.data&&typeof submission.data==='object'){
@@ -79,6 +84,9 @@ function normalizeSubmission(submission){
   const category=profiles.canonicalCategory(data.category);
   if(!category) failures.push('CATEGORY_INVALID');
 
+  const activationRef=activationReference(data.activation_ref);
+  if(!activationRef) failures.push('ACTIVATION_REFERENCE_INVALID');
+
   const territory=text(data.territory)||'ALL NYC';
   const starter=text(data.starter).toLowerCase();
   if(!['yes','no'].includes(starter)) failures.push('STARTER_INVALID');
@@ -91,6 +99,7 @@ function normalizeSubmission(submission){
       submissionId:id,
       submittedAt:createdAt,
       email,
+      activationReference:activationRef,
       preferences:null,
       receiptFingerprint:sha256(stableStringify({
         version:NETLIFY_ONBOARDING_VERSION,
@@ -121,6 +130,7 @@ function normalizeSubmission(submission){
       submissionId:id,
       submittedAt:createdAt,
       email,
+      activationReference:activationRef,
       preferences:null,
       receiptFingerprint:sha256(stableStringify({
         version:NETLIFY_ONBOARDING_VERSION,
@@ -148,6 +158,7 @@ function normalizeSubmission(submission){
     submissionId:id,
     submittedAt:createdAt,
     email,
+    activationReference:activationRef,
     formName,
     formVersion:FORM_VERSION,
     plan:PLAN,
@@ -161,9 +172,11 @@ function matchSubmissionToSubscription(input){
   const data=input||{};
   const subscriptionEmail=validEmail(data.subscriptionEmail);
   const baselineAt=iso(data.baselineAt);
+  const clientReferenceId=activationReference(data.clientReferenceId);
   const failures=[];
   if(!subscriptionEmail) failures.push('SUBSCRIPTION_EMAIL_INVALID');
   if(!baselineAt) failures.push('BASELINE_INVALID');
+  if(!clientReferenceId) failures.push('CLIENT_REFERENCE_ID_INVALID');
 
   const normalized=(data.submissions||[]).map(normalizeSubmission);
   const reviewReceipts=normalized.filter((item)=>item.status!=='READY');
@@ -178,6 +191,7 @@ function matchSubmissionToSubscription(input){
   const eligible=normalized.filter((item)=>{
     if(item.status!=='READY') return false;
     if(item.email!==subscriptionEmail) return false;
+    if(item.activationReference!==clientReferenceId) return false;
     const submittedMs=Date.parse(item.submittedAt);
     if(submittedMs>baselineMs) return false;
     if(baselineMs-submittedMs>MAX_PRECHECKOUT_AGE_MS) return false;
@@ -191,7 +205,13 @@ function matchSubmissionToSubscription(input){
   if(!eligible.length){
     return {
       status:'REVIEW',
-      failures:['MATCHING_ONBOARDING_SUBMISSION_MISSING'],
+      failures:[
+        normalized.some((item)=>
+          item.status==='READY'&&
+          item.email===subscriptionEmail&&
+          item.activationReference!==clientReferenceId
+        )?'ACTIVATION_REFERENCE_MISMATCH':'MATCHING_ONBOARDING_SUBMISSION_MISSING'
+      ],
       matched:null,
       eligibleCount:0,
       reviewReceipts
@@ -219,6 +239,7 @@ function matchSubmissionToSubscription(input){
     matchFingerprint:sha256(stableStringify({
       subscriptionEmail,
       baselineAt,
+      clientReferenceId,
       submissionId:matched.submissionId,
       receiptFingerprint:matched.receiptFingerprint
     }))
@@ -231,11 +252,13 @@ module.exports={
   FORM_VERSION,
   PLAN,
   MAX_PRECHECKOUT_AGE_MS,
+  ACTIVATION_REFERENCE_PATTERN,
   stableStringify,
   sha256,
   text,
   iso,
   validEmail,
+  activationReference,
   submissionData,
   submissionName,
   submissionId,

@@ -119,6 +119,7 @@ function checkoutSession(){
     created:Date.parse('2026-09-21T15:55:00Z')/1000,
     customer:'cus_canary',
     customer_details:{email:'canary@permitplate.invalid'},
+    client_reference_id:'pp_canaryactivation000000000000000000',
     metadata:{project:'permitplate_nyc',plan:'monthly_79'},
     subscription:'sub_canary',
     custom_fields:[]
@@ -146,6 +147,7 @@ function onboardingSubmission(){
       onboarding_version:'permitplate-onboarding-v1',
       plan:'monthly_79',
       email:'canary@permitplate.invalid',
+      activation_ref:'pp_canaryactivation000000000000000000',
       category:'equipment',
       territory:'Manhattan',
       starter:'yes',
@@ -229,6 +231,8 @@ function run(){
     preferenceSource:stripe.preferenceSource,
     preferenceReceiptId:stripe.preferenceReceiptId,
     onboardingSubmissionId:activation.onboardingSubmissionId,
+    activationReference:activation.activationReference,
+    stripeClientReferenceId:activation.stripeClientReferenceId,
     onboardingMatchFingerprint:activation.onboardingMatchFingerprint,
     baselineAt:stripe.profile.baselineAt,
     profileFingerprint:stripe.profileFingerprint,
@@ -297,6 +301,8 @@ function run(){
     result.preferenceSource==='NETLIFY_PRECHECKOUT_FORM' &&
     result.preferenceReceiptId==='submission_canary' &&
     result.onboardingSubmissionId==='submission_canary' &&
+    result.activationReference==='pp_canaryactivation000000000000000000' &&
+    result.stripeClientReferenceId===result.activationReference &&
     result.privateStatePlan.subscriberProfileColumnCount===25 &&
     result.privateStatePlan.deliveryStateRowCount===2 &&
     result.privateStatePlan.deliveryStateColumnCount===19 &&

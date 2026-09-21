@@ -14,6 +14,7 @@ function session(overrides){
     created:1790000000,
     customer:'cus_test',
     customer_details:{email:'buyer@example.com'},
+    client_reference_id:'pp_stripefixture000000000000000000',
     metadata:{project:'permitplate_nyc',plan:'monthly_79'},
     subscription:'sub_test',
     custom_fields:[
@@ -192,9 +193,19 @@ function subscription(overrides){
   });
   assert.equal(ctx.status,'VALID_SUBSCRIPTION');
   assert.equal(ctx.email,'buyer@example.com');
+  assert.equal(ctx.clientReferenceId,'pp_stripefixture000000000000000000');
   assert.equal(ctx.baselineAt,new Date(1790003600*1000).toISOString());
   assert.equal(ctx.priceId,'price_1UFjcWDPW8riWrxQhnrPX6nc');
   assert.match(ctx.contextFingerprint,/^[0-9a-f]{64}$/);
+}
+
+{
+  const ctx=s.checkoutSubscriptionContext({
+    session:session({client_reference_id:null,custom_fields:[]}),
+    subscription:subscription()
+  });
+  assert.equal(ctx.status,'VALID_SUBSCRIPTION');
+  assert.equal(ctx.clientReferenceId,null);
 }
 
 {

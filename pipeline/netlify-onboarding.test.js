@@ -13,6 +13,7 @@ function submission(id,overrides){
       onboarding_version:'permitplate-onboarding-v1',
       plan:'monthly_79',
       email:'Buyer@Example.com',
+      activation_ref:'pp_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       category:'equipment',
       territory:'Manhattan, Brooklyn',
       starter:'yes',
@@ -70,6 +71,7 @@ function submission(id,overrides){
   const out=n.matchSubmissionToSubscription({
     subscriptionEmail:'buyer@example.com',
     baselineAt:'2026-09-21T16:00:00Z',
+    clientReferenceId:'pp_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     submissions:[
       submission('old',{created_at:'2026-09-21T14:00:00Z',data:{category:'pos'}}),
       submission('latest',{created_at:'2026-09-21T15:55:00Z',data:{category:'equipment'}})
@@ -87,6 +89,7 @@ function submission(id,overrides){
   const out=n.matchSubmissionToSubscription({
     subscriptionEmail:'buyer@example.com',
     baselineAt:'2026-09-21T16:00:00Z',
+    clientReferenceId:'pp_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     submissions:[
       submission('wrong-email',{data:{email:'other@example.com'}}),
       submission('future',{created_at:'2026-09-21T16:01:00Z'}),
@@ -101,6 +104,7 @@ function submission(id,overrides){
   const out=n.matchSubmissionToSubscription({
     subscriptionEmail:'buyer@example.com',
     baselineAt:'2026-09-21T16:00:00Z',
+    clientReferenceId:'pp_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     submissions:[
       submission('a',{created_at:'2026-09-21T15:55:00Z',data:{category:'pos'}}),
       submission('b',{created_at:'2026-09-21T15:55:00Z',data:{category:'equipment'}})
@@ -114,11 +118,39 @@ function submission(id,overrides){
   const out=n.matchSubmissionToSubscription({
     subscriptionEmail:'bad-email',
     baselineAt:'bad',
+    clientReferenceId:'bad-ref',
     submissions:[submission('x')]
   });
   assert.equal(out.status,'REVIEW');
   assert(out.failures.includes('SUBSCRIPTION_EMAIL_INVALID'));
   assert(out.failures.includes('BASELINE_INVALID'));
+}
+
+{
+  const out=n.matchSubmissionToSubscription({
+    subscriptionEmail:'buyer@example.com',
+    baselineAt:'2026-09-21T16:00:00Z',
+    clientReferenceId:'pp_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+    submissions:[submission('wrong-ref')]
+  });
+  assert.equal(out.status,'REVIEW');
+  assert(out.failures.includes('ACTIVATION_REFERENCE_MISMATCH'));
+}
+
+{
+  const out=n.matchSubmissionToSubscription({
+    subscriptionEmail:'buyer@example.com',
+    baselineAt:'2026-09-21T16:00:00Z',
+    submissions:[submission('missing-client-ref')]
+  });
+  assert.equal(out.status,'REVIEW');
+  assert(out.failures.includes('CLIENT_REFERENCE_ID_INVALID'));
+}
+
+{
+  const out=n.normalizeSubmission(submission('bad-ref',{data:{activation_ref:'not-valid'}}));
+  assert.equal(out.status,'REVIEW');
+  assert(out.failures.includes('ACTIVATION_REFERENCE_INVALID'));
 }
 
 {
