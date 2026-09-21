@@ -332,6 +332,73 @@ function classifySubscriberEligibility(input) {
   return {eligible: false, section: 'INELIGIBLE', reason: 'PRE_BASELINE_BACKLOG'};
 }
 
+function boundedScore(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const n = Number(value);
+  if (!Number.isFinite(n)) return null;
+  return Math.max(0, Math.min(100, n));
+}
+
+function applyVerticalEvidenceCeiling(input) {
+  const data = input || {};
+  const category = String(data.category || '').toUpperCase().replace(/[^A-Z]/g, '');
+  const rawScore = boundedScore(data.score);
+  const posScore = boundedScore(data.posScore);
+  const insuranceScore = boundedScore(data.insuranceScore);
+  const vertical = category === 'EQUIPMENT' || category === 'HOODFIRE';
+
+  if (!vertical) {
+    return {
+      category: data.category || null,
+      score: rawScore,
+      capped: false,
+      reviewRequired: rawScore === null,
+      reason: rawScore === null ? 'SCORE_INVALID' : 'NOT_VERTICAL_CEILING_CATEGORY'
+    };
+  }
+
+  if (rawScore === null || posScore === null || insuranceScore === null) {
+    return {
+      category: data.category || null,
+      score: rawScore,
+      capped: false,
+      reviewRequired: true,
+      reason: 'REFERENCE_SCORES_MISSING'
+    };
+  }
+
+  const referenceScore = Math.max(posScore, insuranceScore);
+  const tags = new Set((data.evidenceTags || []).map((tag) =>
+    String(tag).toUpperCase().replace(/[^A-Z_]/g, '')
+  ));
+  const specialist = data.hotFoodSpecialistEvidence === true || tags.has('HOT_FOOD_SPECIALIST');
+  const directlySupported = category === 'EQUIPMENT' ?
+    (tags.has('EQUIPMENT') || specialist) :
+    (tags.has('HOOD_FIRE') || specialist);
+
+  if (rawScore > referenceScore && !directlySupported) {
+    return {
+      category: data.category || null,
+      score: referenceScore,
+      originalScore: rawScore,
+      referenceScore,
+      capped: true,
+      reviewRequired: false,
+      reason: 'VERTICAL_EVIDENCE_CEILING'
+    };
+  }
+
+  return {
+    category: data.category || null,
+    score: rawScore,
+    originalScore: rawScore,
+    referenceScore,
+    capped: false,
+    reviewRequired: false,
+    reason: directlySupported ? 'DIRECT_VERTICAL_EVIDENCE' : 'WITHIN_REFERENCE_CEILING'
+  };
+}
+
 function deliveryGate(input) {
   const reasons = [];
   if (input.resolutionStatus !== 'RESOLVED') reasons.push('IDENTITY_NOT_RESOLVED');
@@ -431,6 +498,7 @@ module.exports = {
   classifySourceObservation,
   absenceMutationGate,
   classifySubscriberEligibility,
+  applyVerticalEvidenceCeiling,
   resolveEntity,
   materialChange,
   vendorScore,
