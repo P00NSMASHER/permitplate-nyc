@@ -3,8 +3,10 @@
 const crypto=require('crypto');
 const delivery=require('./delivery-plan');
 const scoringPolicy=require('./scoring-policy');
+const eventTime=require('./event-time');
+const shadow=require('./shadow-scoring-v3');
 
-const CANDIDATE_PACKAGE_VERSION='PermitPlate-candidate-package-v1.0.0';
+const CANDIDATE_PACKAGE_VERSION='PermitPlate-candidate-package-v1.1.0';
 
 function stableStringify(value){
   if(Array.isArray(value)) return '['+value.map(stableStringify).join(',')+']';
@@ -92,6 +94,13 @@ function buildCandidatePackage(input){
     borough:candidate.borough||null,
     zip:candidate.zip||null,
     lifecycleStage:candidate.lifecycleStage||null,
+    customerStage:eventTime.customerStage(candidate.lifecycleStage),
+    eventChronology:eventTime.describe(
+      candidate,
+      data.recordsById instanceof Map?data.recordsById:shadow.sourceMap(data.sourceRecords||[]),
+      data.observedAt,
+      {firstObservedAt:data.detectionReceipt&&data.detectionReceipt.firstDetectedAt,detectedAt:detectionTime(data.detectionReceipt)}
+    ),
     sourceFirstEffectiveAt:candidate.sourceFirstEffectiveAt||null,
     sourceLatestEffectiveAt:candidate.sourceLatestEffectiveAt||null,
     sourceSystems:Array.isArray(candidate.sourceSystems)?candidate.sourceSystems.slice().sort():[],
