@@ -86,6 +86,7 @@ const a = require('./source-adapters');
 {
   const complete = a.buildSourceObservation('DOHMH', {
     observedAt:'2026-09-21T13:30:00Z',
+    queryScope:{where:"record_date >= '2026-09-20'"},
     sourceFresh:true,
     transportOk:true,
     intendedFullScope:true,
@@ -103,6 +104,7 @@ const a = require('./source-adapters');
 {
   const verifiedEmpty = a.buildSourceObservation('SLA_PENDING', {
     observedAt:'2026-09-21T13:30:00Z',
+    queryScope:{where:"record_date >= '2026-09-20'"},
     sourceFresh:true,
     transportOk:true,
     intendedFullScope:true,
@@ -119,6 +121,7 @@ const a = require('./source-adapters');
 {
   const unprovenEmpty = a.buildSourceObservation('SLA_PENDING', {
     observedAt:'2026-09-21T13:30:00Z',
+    queryScope:{where:"record_date >= '2026-09-20'"},
     sourceFresh:true,
     transportOk:true,
     intendedFullScope:true,
@@ -134,6 +137,7 @@ const a = require('./source-adapters');
 {
   const mismatch = a.buildSourceObservation('DOB_NOW', {
     observedAt:'2026-09-21T13:30:00Z',
+    queryScope:{where:"record_date >= '2026-09-20'"},
     sourceFresh:true,
     transportOk:true,
     intendedFullScope:true,
@@ -149,6 +153,7 @@ const a = require('./source-adapters');
 {
   const moved = a.buildSourceObservation('DOHMH', {
     observedAt:'2026-09-21T13:30:00Z',
+    queryScope:{where:"record_date >= '2026-09-20'"},
     sourceFresh:false,
     transportOk:true,
     redirected:true,
@@ -166,6 +171,7 @@ const a = require('./source-adapters');
 {
   const batch = a.normalizeBatch('DOHMH', {
     observedAt:'2026-09-21T13:30:00Z',
+    queryScope:{where:"record_date >= '2026-09-20'"},
     sourceFresh:true,
     transportOk:true,
     intendedFullScope:true,
@@ -183,6 +189,7 @@ const a = require('./source-adapters');
 {
   const a1 = a.buildSourceObservation('DOHMH', {
     observedAt:'2026-09-21T13:30:00Z',
+    queryScope:{where:"record_date >= '2026-09-20'"},
     sourceFresh:true,
     transportOk:true,
     intendedFullScope:true,
@@ -194,6 +201,7 @@ const a = require('./source-adapters');
   });
   const a2 = a.buildSourceObservation('DOHMH', {
     observedAt:'2026-09-21T13:30:00Z',
+    queryScope:{where:"record_date >= '2026-09-20'"},
     sourceFresh:true,
     transportOk:true,
     intendedFullScope:true,
