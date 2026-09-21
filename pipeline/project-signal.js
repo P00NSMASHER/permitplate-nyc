@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const materialChange = require('./material-change');
 
 const PROJECT_SIGNAL_VERSION = 'PermitPlate-project-signal-v1.0.0';
 
@@ -265,6 +266,7 @@ function buildProjectSignal(primary, evidenceRecords, options) {
       rejected: rejectedEvidence
     },
     commercialEvidence,
+    materialEvidence: acceptedRecords.map(materialChange.sourceEvidence),
     provenance: {
       sourceUrls: acceptedRecords.map((record) => record.sourceUrl).filter(Boolean),
       sourceObservationIds: Array.from(new Set(
