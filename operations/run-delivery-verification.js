@@ -30,6 +30,7 @@ const plans = profiles.map((profile) => v.buildShadowPlan(graphRows, workbook['S
 const repeatedPlans = profiles.map((profile) => v.buildShadowPlan(graphRows, workbook['Source Events'], profile, normalKeys, '2026-09-18'));
 const planVerification = v.verifyPlans(plans);
 const predecessorVerification = v.validatePredecessorScan(graphRows, sourceScan);
+const sourceObservationVerification = v.validateSourceObservationReceipts(workbook['Source Observations'] || []);
 if (JSON.stringify(plans) !== JSON.stringify(repeatedPlans)) throw new Error('Repeated planning was not deterministic.');
 const artifactDirectory = path.join(root, 'permitplate-shadow-artifacts');
 fs.mkdirSync(artifactDirectory, {recursive: true});
@@ -45,6 +46,7 @@ const result = {
   snapshot,
   planVerification,
   predecessorVerification,
+  sourceObservationVerification,
   profiles: plans.map((plan) => ({
     profile: plan.profile,
     normal: plan.normalCount,
@@ -53,7 +55,7 @@ const result = {
     attemptId: plan.attemptId
   }))
 };
-result.passed = snapshot.passed && planVerification.passed && predecessorVerification.passed;
+result.passed = snapshot.passed && planVerification.passed && predecessorVerification.passed && sourceObservationVerification.passed;
 fs.writeFileSync(path.join(root, 'permitplate-delivery-verification-result.json'), JSON.stringify(result, null, 2) + '\n');
 if (!result.passed) {
   console.error(JSON.stringify(result, null, 2));
