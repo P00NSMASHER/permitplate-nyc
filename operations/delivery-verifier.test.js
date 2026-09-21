@@ -30,4 +30,54 @@ const predecessor = v.validatePredecessorScan(graph, {predecessor_conflicts:[{ap
 assert.equal(predecessor.passed, true);
 assert.equal(predecessor.presentInGraph, 1);
 
+const safeReceipt = v.validateSourceObservationReceipts([{
+  observationId:'obs-1',
+  sourceId:'nyc-dohmh',
+  connectorConfigHash:'cfg-1',
+  observedAt:'2026-09-21T13:30:00Z',
+  sourceFresh:true,
+  transportOk:true,
+  intendedFullScope:true,
+  publisherCount:2,
+  fetchedCount:2,
+  cursorClosed:true,
+  schemaFingerprint:'schema-1',
+  rawPageHashes:['page-a'],
+  declaredState:'COMPLETE_NONEMPTY',
+  absenceActionsAllowed:true
+}]);
+assert.equal(safeReceipt.passed, true);
+assert.equal(safeReceipt.enforced, true);
+assert.equal(safeReceipt.states.COMPLETE_NONEMPTY, 1);
+
+const unsafeReceipt = v.validateSourceObservationReceipts([{
+  observationId:'obs-2',
+  sourceId:'nyc-dob',
+  connectorConfigHash:'cfg-2',
+  observedAt:'2026-09-21T13:30:00Z',
+  sourceFresh:true,
+  transportOk:true,
+  intendedFullScope:true,
+  fetchedCount:0,
+  cursorClosed:false,
+  schemaFingerprint:'schema-2',
+  rawPageHashes:['page-b'],
+  declaredState:'VERIFIED_EMPTY',
+  absenceActionsAllowed:true
+}]);
+assert.equal(unsafeReceipt.passed, false);
+assert(unsafeReceipt.failures.some((x) => x.includes('declared source state')));
+assert(unsafeReceipt.failures.some((x) => x.includes('absence actions are enabled')));
+
+const duplicateReceipt = v.validateSourceObservationReceipts([
+  {observationId:'dup', sourceId:'a', transportOk:false},
+  {observationId:'dup', sourceId:'b', transportOk:false}
+]);
+assert.equal(duplicateReceipt.passed, false);
+assert(duplicateReceipt.failures.some((x) => x.includes('blank or duplicated')));
+
+const noReceiptCanary = v.validateSourceObservationReceipts([]);
+assert.equal(noReceiptCanary.passed, true);
+assert.equal(noReceiptCanary.enforced, false);
+
 console.log('PermitPlate delivery verifier unit tests passed.');
