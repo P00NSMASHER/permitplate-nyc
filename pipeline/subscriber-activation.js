@@ -46,6 +46,7 @@ function activateFromNetlifyPreferences(input){
   const match=onboarding.matchSubmissionToSubscription({
     subscriptionEmail:context.email,
     baselineAt:context.baselineAt,
+    clientReferenceId:context.clientReferenceId,
     submissions:data.submissions||[]
   });
   if(match.status!=='MATCHED'){
@@ -79,6 +80,8 @@ function activateFromNetlifyPreferences(input){
     stripeContextFingerprint:context.contextFingerprint,
     onboardingMatchFingerprint:match.matchFingerprint,
     onboardingSubmissionId:match.matched.submissionId,
+    activationReference:match.matched.activationReference,
+    stripeClientReferenceId:context.clientReferenceId,
     onboardingReceiptFingerprint:match.matched.receiptFingerprint,
     subscriber
   };
