@@ -252,7 +252,11 @@ function buildSourceObservation(sourceKey, input) {
   const inData = input || {};
   const rawPages = Array.isArray(inData.rawPages) ? inData.rawPages : [];
   const rows = Array.isArray(inData.rows) ? inData.rows : [];
-  const observedFields = Array.from(new Set(rows.flatMap((row) => Object.keys(row || {}))));
+  const observedFields = Array.from(new Set(
+    (Array.isArray(inData.schemaFields) ? inData.schemaFields : [])
+      .concat(rows.flatMap((row) => Object.keys(row || {})))
+      .filter(Boolean)
+  ));
   const receipt = {
     sourceId: config.sourceId,
     connectorConfigHash: configFingerprint(config),
@@ -267,7 +271,7 @@ function buildSourceObservation(sourceKey, input) {
     publisherCount: inData.publisherCount,
     fetchedCount: rows.length,
     cursorClosed: inData.cursorClosed === true,
-    schemaFingerprint: schemaFingerprint(config, observedFields),
+    schemaFingerprint: observedFields.length ? schemaFingerprint(config, observedFields) : null,
     rawPageHashes: rawPages.map((page) => sha256(typeof page === 'string' ? page : stableStringify(page)))
   };
   const classified = model.classifySourceObservation(receipt);
