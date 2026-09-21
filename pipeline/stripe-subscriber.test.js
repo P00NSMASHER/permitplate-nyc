@@ -184,4 +184,64 @@ function subscription(overrides){
   assert.equal(a.profileFingerprint,b.profileFingerprint);
 }
 
+{
+  const ctx=s.checkoutSubscriptionContext({
+    session:session({custom_fields:[]}),
+    subscription:subscription(),
+    expectedPriceId:'price_1UFjcWDPW8riWrxQhnrPX6nc'
+  });
+  assert.equal(ctx.status,'VALID_SUBSCRIPTION');
+  assert.equal(ctx.email,'buyer@example.com');
+  assert.equal(ctx.baselineAt,new Date(1790003600*1000).toISOString());
+  assert.equal(ctx.priceId,'price_1UFjcWDPW8riWrxQhnrPX6nc');
+  assert.match(ctx.contextFingerprint,/^[0-9a-f]{64}$/);
+}
+
+{
+  const out=s.profileFromCheckoutAndPreferences({
+    session:session({custom_fields:[]}),
+    subscription:subscription(),
+    expectedPriceId:'price_1UFjcWDPW8riWrxQhnrPX6nc',
+    preferences:{
+      category:'Equipment',
+      boroughs:['Manhattan','Brooklyn'],
+      starterSnapshotEnabled:true,
+      minimumScore:60,
+      starterDays:7,
+      starterLimit:10,
+      maxSignals:25
+    },
+    preferenceSource:'NETLIFY_PRECHECKOUT_FORM',
+    preferenceReceiptId:'submission_123'
+  });
+  assert.equal(out.status,'ACTIVE');
+  assert.deepEqual(out.profile.categories,['Equipment']);
+  assert.deepEqual(out.profile.boroughs,['Manhattan','Brooklyn']);
+  assert.equal(out.profile.starterSnapshotEnabled,true);
+  assert.equal(out.preferenceSource,'NETLIFY_PRECHECKOUT_FORM');
+  assert.equal(out.preferenceReceiptId,'submission_123');
+}
+
+{
+  const out=s.checkoutSubscriptionContext({
+    session:session({custom_fields:[]}),
+    subscription:subscription(),
+    expectedPriceId:'price_wrong'
+  });
+  assert.equal(out.status,'REVIEW');
+  assert(out.failures.includes('PRICE_ID_MISMATCH'));
+}
+
+{
+  const out=s.profileFromCheckoutAndPreferences({
+    session:session({custom_fields:[]}),
+    subscription:subscription(),
+    preferences:{category:'Unknown',starterSnapshotEnabled:true},
+    preferenceSource:'NETLIFY_PRECHECKOUT_FORM',
+    preferenceReceiptId:'submission_bad'
+  });
+  assert.equal(out.status,'REVIEW');
+  assert(out.failures.includes('PROFILE_NORMALIZATION_FAILED'));
+}
+
 console.log('PermitPlate Stripe subscriber adapter tests passed.');
