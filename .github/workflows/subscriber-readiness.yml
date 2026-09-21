@@ -8,6 +8,11 @@ on:
       - 'pipeline/subscriber-profile.js'
       - 'pipeline/subscriber-artifact.js'
       - 'pipeline/stripe-subscriber.js'
+      - 'pipeline/netlify-onboarding.js'
+      - 'pipeline/subscriber-activation.js'
+      - 'pipeline/private-sheet-mapping.js'
+      - 'pipeline/customer-message.js'
+      - 'pipeline/transport-authorization.js'
       - 'pipeline/run-first-subscriber-canary.js'
       - '.github/workflows/subscriber-readiness.yml'
 
