@@ -1,13 +1,15 @@
 {
   "evidenceVersion": "PermitPlate-external-launch-evidence-v1.0.0",
-  "observedAt": "2026-09-21T17:46:00Z",
+  "observedAt": "2026-09-21T17:55:00Z",
   "stripe": {
     "account": "acct_1UFCRjDPW8riWrxQ",
     "paymentLinkId": "plink_1UG3RUDPW8riWrxQpZwHExK2",
     "priceId": "price_1UFjcWDPW8riWrxQhnrPX6nc",
     "paymentLinkWriteAuthorized": false,
     "checkoutPreferenceFieldsVerified": false,
-    "reason": "Connected Stripe key does not currently have payment_links_write."
+    "reason": "Connected Stripe key does not currently have payment_links_write.",
+    "paymentLinkActiveVerified": true,
+    "preferenceCaptureMode": "NETLIFY_PRECHECKOUT_FORM"
   },
   "netlify": {
     "siteId": "d968f195-23b5-4b4b-925a-d2ce29a785d0",
@@ -24,5 +26,15 @@
     "providerBackedDeliveryVerified": false,
     "nextRunDuplicateSuppressionVerifiedForRealSubscriber": false,
     "reason": "No real paid PermitPlate subscriber has completed provider-backed delivery/reconciliation yet."
+  },
+  "preCheckoutOnboarding": {
+    "mode": "NETLIFY_FORM_THEN_STRIPE",
+    "formName": "permitplate-onboarding",
+    "netlifyFormsEnabled": true,
+    "sourceFlowImplemented": true,
+    "liveFormVerified": false,
+    "exactEmailActivationCanaryVerified": true,
+    "baselineAuthority": "STRIPE_SUBSCRIPTION_CREATED",
+    "reason": "Netlify Forms is enabled and the source flow is implemented; the form is not launch-eligible until the new public build is deployed and the live form is verified."
   }
 }
