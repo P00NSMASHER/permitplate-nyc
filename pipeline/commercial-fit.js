@@ -59,12 +59,15 @@ function sourceRecordMap(records) {
 
 function directConceptEvidence(candidate) {
   const name = text(candidate && candidate.canonicalName);
+  const cuisine = text(candidate && candidate.primaryRecord && candidate.primaryRecord.facts &&
+    candidate.primaryRecord.facts.cuisine_description);
+  const directText = [name,cuisine].filter(Boolean).join(' | ');
   const hits = STRONG_CONCEPT_PATTERNS
-    .filter(([,pattern]) => pattern.test(name))
+    .filter(([,pattern]) => pattern.test(directText))
     .map(([tag]) => tag);
   return {
     authority:'DIRECT_SOURCE_TEXT',
-    text:name,
+    text:directText,
     tags:hits,
     explicit:hits.length > 0,
     hotFood:hits.some((tag) => ['PIZZA','DOUGHNUT_BAKERY','GRILL','DELI','BRICK_OVEN'].includes(tag)),
@@ -148,18 +151,18 @@ function classifyCommercialFit(input) {
   }
 
   const accepted = acceptedEvidence(candidate, recordsById);
+  const concept = directConceptEvidence(candidate);
   if (explicitHospitalitySla(accepted.sla)) {
     reasons.push('ACCEPTED_SLA_HOSPITALITY_CLASSIFICATION');
     evidenceRefs.push(...accepted.sla.map((record) => record.sourceRecordId));
-    return buildReceipt(candidate,fingerprint,'HIGH',reasons,evidenceRefs);
+    return buildReceipt(candidate,fingerprint,'HIGH',reasons,evidenceRefs,{conceptEvidence:concept});
   }
   if (explicitHospitalityDob(accepted.dob)) {
     reasons.push('ACCEPTED_DOB_HOSPITALITY_SCOPE');
     evidenceRefs.push(...accepted.dob.map((record) => record.sourceRecordId));
-    return buildReceipt(candidate,fingerprint,'HIGH',reasons,evidenceRefs);
+    return buildReceipt(candidate,fingerprint,'HIGH',reasons,evidenceRefs,{conceptEvidence:concept});
   }
 
-  const concept = directConceptEvidence(candidate);
   if (concept.explicit) {
     reasons.push('DIRECT_DBA_COMMERCIAL_CONCEPT:' + concept.tags.join('|'));
     if (candidate.primaryRecord && candidate.primaryRecord.sourceRecordId) {
@@ -171,7 +174,7 @@ function classifyCommercialFit(input) {
   if (candidate.primaryRecord && candidate.primaryRecord.sourceSystem === 'DOHMH') {
     reasons.push('DOHMH_APPLICANT_CONCEPT_UNCLEAR');
     evidenceRefs.push(candidate.primaryRecord.sourceRecordId);
-    return buildReceipt(candidate,fingerprint,'MEDIUM',reasons,evidenceRefs);
+    return buildReceipt(candidate,fingerprint,'MEDIUM',reasons,evidenceRefs,{conceptEvidence:concept});
   }
 
   return {
