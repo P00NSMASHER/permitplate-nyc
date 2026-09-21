@@ -1,0 +1,45 @@
+name: PermitPlate blind category calibration
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    paths:
+      - 'pipeline/calibration-*'
+      - 'pipeline/calibration.test.js'
+      - '.github/workflows/category-calibration.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  category-calibration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify leakage, label and threshold safeguards
+        run: |
+          mkdir -p verification-output
+          set -o pipefail
+          node --test pipeline/calibration.test.js | tee verification-output/calibration.tap
+      - name: Preserve first-subscriber NO_SEND behavior
+        run: node pipeline/run-first-subscriber-canary.js verification-output/first-subscriber.json
+      - name: Prepare score-blind review kit from complete public-source snapshot
+        run: node pipeline/calibration-runner.js prepare verification-output/review-kit
+      - name: Verify no tracked production files changed
+        run: git diff --exit-code -- pipeline scoring state model-v7.js
+      - name: Retain source-only reproduction inputs
+        if: always()
+        run: git archive --format=tar.gz HEAD pipeline scoring model-v7.js model-v7.test.js > verification-output/source-test-inputs.tar.gz
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: permitplate-blind-calibration
+          path: verification-output/
+          retention-days: 14
