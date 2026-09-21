@@ -1,216 +1,201 @@
 'use strict';
 
 const assert = require('assert');
-const s = require('./scoring');
-const r = require('./scoring-receipt');
+const scoring = require('./scoring');
+const receipt = require('./scoring-receipt');
 const delivery = require('./delivery-plan');
+const snapshot = require('../scoring/legacy-score-authority-2026-09-18.json');
 
-function base(overrides) {
+function authorityRecord() {
+  const record = snapshot.records.find((item) =>
+    item && item.authorityKey && item.authorityKey.camis &&
+    Number(item.sourceCount) === 1 &&
+    Array.isArray(item.sources) &&
+    item.sources.length === 1 &&
+    String(item.sources[0]).toUpperCase() === 'DOHMH' &&
+    String(item.stage) === 'JUST FILED'
+  );
+  if (!record) throw new Error('Expected at least one DOHMH-only legacy authority record');
+  return record;
+}
+
+function candidateFrom(record, overrides) {
+  const camis = String(record.authorityKey.camis);
   return Object.assign({
-    commercialFit:'HIGH',
-    materialAgeDays:2,
-    sourceCount:1,
-    publicPhone:true,
-    stageNumber:1,
-    sources:['DOHMH'],
-    conceptEvidence:{authority:'DIRECT_SOURCE_TEXT',hotFood:false,restaurant:false,pokeBowl:false,lightPrep:false},
-    knownCuisineType:true,
-    actualDohmhPrePermit:false,
-    strictVenueLinkedHospitalityDob:false,
-    buildingLevelUnmatchedDob:false,
-    directEquipmentDobScope:false,
-    directHoodFireDobScope:false,
-    directHoodExtraScope:false,
-    dobInitialCost:null
-  }, overrides || {});
-}
-
-// Historical base math is preserved.
-{
-  const out = s.computeScores(base());
-  assert.equal(out.status,'SCORED');
-  assert.equal(out.scores.POS,68);
-  assert.equal(out.scores.Insurance,65);
-  assert.equal(out.scores.Waste,52);
-  assert.equal(out.scores.Distribution,58);
-}
-
-// Missing authority never becomes a low/default score.
-{
-  const out = s.computeScores(base({commercialFit:null}));
-  assert.equal(out.status,'REVIEW');
-  assert(out.errors.includes('COMMERCIAL_FIT_UNPROVEN'));
-}
-{
-  const out = s.computeScores(base({materialAgeDays:null}));
-  assert.equal(out.status,'REVIEW');
-  assert(out.errors.includes('MATERIAL_AGE_UNPROVEN'));
-}
-
-// Broad/generated concept labels have zero specialist effect without DIRECT_SOURCE_TEXT authority.
-{
-  const normal = s.computeScores(base({
-    conceptEvidence:{authority:'DIRECT_SOURCE_TEXT',hotFood:false,restaurant:false,pokeBowl:false,lightPrep:false}
-  }));
-  const broad = s.computeScores(base({
-    conceptEvidence:{authority:'GENERATED_LABEL',hotFood:true,restaurant:true,pokeBowl:false,lightPrep:false}
-  }));
-  assert.deepEqual(broad.scores,normal.scores);
-}
-
-// Accepted SLA corroboration preserves the original timing boosts.
-{
-  const out = s.computeScores(base({
-    sourceCount:2,
-    sources:['DOHMH','SLA_PENDING']
-  }));
-  assert.equal(out.scores.POS,86);
-  assert.equal(out.scores.Insurance,85);
-}
-
-// Direct-source hot-food evidence can unlock specialist scoring.
-{
-  const out = s.computeScores(base({
-    conceptEvidence:{authority:'DIRECT_SOURCE_TEXT',hotFood:true,restaurant:false,pokeBowl:false,lightPrep:false}
-  }));
-  assert(out.scores.Equipment > out.scores.POS);
-  assert.equal(out.bestVendorFit,'Equipment');
-}
-
-// Accepted venue-linked DOB + direct scope can exceed generic reference ceiling.
-{
-  const out = s.computeScores(base({
-    stageNumber:2,
-    sourceCount:2,
-    sources:['DOHMH','DOB_NOW'],
-    strictVenueLinkedHospitalityDob:true,
-    directEquipmentDobScope:true,
-    directHoodFireDobScope:true,
-    directHoodExtraScope:true,
-    dobInitialCost:173900,
-    conceptEvidence:{authority:'DIRECT_SOURCE_TEXT',hotFood:true,restaurant:false,pokeBowl:false,lightPrep:false}
-  }));
-  assert.equal(out.status,'SCORED');
-  assert.equal(out.scores.Equipment,100);
-  assert(out.scores['Hood/Fire'] >= out.scores.POS);
-}
-
-// EXCLUDE is explicit all-zero suppression.
-{
-  const out = s.computeScores(base({commercialFit:'EXCLUDE'}));
-  assert.equal(out.bestScore,0);
-  assert.equal(out.bestVendorFit,'SUPPRESSED');
-  assert(Object.values(out.scores).every((value)=>value===0));
-}
-
-function candidate(overrides) {
-  return Object.assign({
-    entityId:'CAMIS:50192386',
-    projectSignalId:'PS:crybaby',
-    canonicalName:'CRYBABY',
+    entityId:'CAMIS:' + camis,
+    camis,
+    projectSignalId:'PS:legacy:' + camis,
+    canonicalName:'Legacy-authorized candidate',
     borough:'Manhattan',
-    lifecycleStage:'BUILDOUT / LICENSING',
-    sourceLatestEffectiveAt:'2026-09-20T12:00:00Z',
-    sourceSystems:['DOHMH','SLA_PENDING','DOB_NOW'],
-    sourceCount:3,
+    lifecycleStage:record.stage,
+    sourceLatestEffectiveAt:record.lastUpdated,
+    sourceSystems:record.sources.slice(),
+    sourceCount:Number(record.sourceCount),
     deliverySuppressed:false,
-    commercialEvidence:[
-      {tag:'EQUIPMENT',sourceSystem:'DOB_NOW',sourceRecordId:'DOB_NOW:M00692498-P1'},
-      {tag:'HOOD_FIRE',sourceSystem:'DOB_NOW',sourceRecordId:'DOB_NOW:M00692498-P1'}
-    ]
+    commercialEvidence:[],
+    detectionReceiptId:'DET:' + camis,
+    scoreReceiptId:null
   }, overrides || {});
 }
 
-// Score receipt is deterministic and bound to graph + exact change.
-{
-  const c = candidate();
-  const input = {
-    candidate:c,
-    graphDigest:'graph-1',
-    authority:{
-      scoredAt:'2026-09-21T12:00:00Z',
-      firstDetectedAt:'2026-09-20T12:00:00Z',
-      commercialFit:'HIGH',
-      publicPhone:true,
-      conceptEvidence:{authority:'DIRECT_SOURCE_TEXT',hotFood:true,restaurant:false,pokeBowl:false,lightPrep:false},
-      knownCuisineType:true,
-      acceptedDobInitialCost:173900,
-      directHoodExtraScope:true
-    }
+function expectedScores(record) {
+  return {
+    POS:Number(record.scores['POS Score']),
+    Insurance:Number(record.scores['Insurance Score']),
+    Equipment:Number(record.scores['Equipment Score']),
+    'Hood/Fire':Number(record.scores['Hood/Fire Score']),
+    Waste:Number(record.scores['Waste Score']),
+    Pest:Number(record.scores['Pest Score']),
+    Linen:Number(record.scores['Linen Score']),
+    Distribution:Number(record.scores['Distribution Score'])
   };
-  const first = r.buildScoreReceipt(input);
-  const replay = r.buildScoreReceipt(JSON.parse(JSON.stringify(input)));
+}
+
+const authority = authorityRecord();
+
+// Literal production snapshot replays exactly; there is no inferred category formula.
+{
+  const candidate = candidateFrom(authority);
+  const out = scoring.resolveScoreAuthority(candidate);
+  assert.equal(out.status,'SCORED');
+  assert.equal(out.authorityId,snapshot.authorityId);
+  assert.equal(out.scoringVersion,scoring.SCORING_VERSION);
+  assert.deepEqual(out.scores,expectedScores(authority));
+  assert.equal(out.bestVendorFit,authority.bestVendorFit);
+  assert.equal(out.bestScore,Number(authority.bestScore));
+  assert(out.authorityRecordFingerprint);
+}
+
+// Missing score authority is REVIEW, never a synthesized low/default score.
+{
+  const out = scoring.resolveScoreAuthority({
+    entityId:'CAMIS:99999999',
+    camis:'99999999',
+    lifecycleStage:'JUST FILED',
+    sourceSystems:['DOHMH'],
+    sourceCount:1,
+    sourceLatestEffectiveAt:'2026-09-18T00:00:00Z'
+  });
+  assert.equal(out.status,'REVIEW');
+  assert(out.errors.includes('SCORE_AUTHORITY_MISSING'));
+  assert.equal(Object.prototype.hasOwnProperty.call(out,'scores'),false);
+}
+
+// State drift invalidates the frozen authority.
+{
+  const out = scoring.resolveScoreAuthority(candidateFrom(authority,{
+    lifecycleStage:'BUILDOUT / LICENSING'
+  }));
+  assert.equal(out.status,'REVIEW');
+  assert(out.errors.includes('LEGACY_AUTHORITY_STAGE_DRIFT'));
+}
+
+{
+  const out = scoring.resolveScoreAuthority(candidateFrom(authority,{
+    sourceSystems:['DOHMH','SLA_PENDING'],
+    sourceCount:2
+  }));
+  assert.equal(out.status,'REVIEW');
+  assert(out.errors.includes('LEGACY_AUTHORITY_SOURCE_COUNT_DRIFT'));
+  assert(out.errors.includes('LEGACY_AUTHORITY_SOURCE_SET_DRIFT'));
+}
+
+// A later source state cannot inherit an older score even when stage/sources look unchanged.
+{
+  const cutoff = Date.parse(authority.lastUpdated);
+  assert(Number.isFinite(cutoff));
+  const out = scoring.resolveScoreAuthority(candidateFrom(authority,{
+    sourceLatestEffectiveAt:new Date(cutoff + 60 * 1000).toISOString()
+  }));
+  assert.equal(out.status,'REVIEW');
+  assert(out.errors.includes('LEGACY_AUTHORITY_SUPERSEDED_BY_NEWER_STATE'));
+}
+
+// Delivery suppression cannot be bypassed by an old score row.
+{
+  const out = scoring.resolveScoreAuthority(candidateFrom(authority,{
+    deliverySuppressed:true
+  }));
+  assert.equal(out.status,'REVIEW');
+  assert(out.errors.includes('CANDIDATE_SUPPRESSED'));
+}
+
+// Receipt identity is deterministic and bound to graph, change, authority and literal scores.
+{
+  const candidate = candidateFrom(authority);
+  const input = {
+    candidate,
+    graphDigest:'graph-legacy-1',
+    scoredAt:'2026-09-21T15:00:00Z'
+  };
+  const first = receipt.buildScoreReceipt(input);
+  const replay = receipt.buildScoreReceipt(JSON.parse(JSON.stringify(input)));
   assert.equal(first.status,'SCORED');
   assert.equal(first.scoreReceiptId,replay.scoreReceiptId);
-  assert.equal(first.changeFingerprint,delivery.candidateChangeFingerprint(c));
-  assert.equal(first.graphDigest,'graph-1');
-  assert.equal(first.scorerVersion,s.SCORING_VERSION);
-  assert.equal(first.scores.Equipment,100);
-
-  const changed = candidate({sourceLatestEffectiveAt:'2026-09-21T13:00:00Z'});
-  const second = r.buildScoreReceipt(Object.assign({},input,{candidate:changed}));
-  assert.notEqual(second.changeFingerprint,first.changeFingerprint);
-  assert.notEqual(second.scoreReceiptId,first.scoreReceiptId);
+  assert.equal(first.changeFingerprint,delivery.candidateChangeFingerprint(candidate));
+  assert.equal(first.graphDigest,'graph-legacy-1');
+  assert.equal(first.authorityId,snapshot.authorityId);
+  assert(first.authorityRecordFingerprint);
+  assert.deepEqual(first.scores,expectedScores(authority));
 }
 
-// Receipt refuses missing commercial-fit authority.
+// Drifted candidate gets a REVIEW receipt with no score ID.
 {
-  const out = r.buildScoreReceipt({
-    candidate:candidate(),
-    graphDigest:'graph-1',
-    authority:{
-      scoredAt:'2026-09-21T12:00:00Z',
-      firstDetectedAt:'2026-09-20T12:00:00Z'
-    }
-  });
+  const candidate = candidateFrom(authority,{sourceSystems:['DOHMH','SLA_PENDING'],sourceCount:2});
+  const out = receipt.buildScoreReceipt({candidate,graphDigest:'graph-legacy-1'});
   assert.equal(out.status,'REVIEW');
-  assert(out.errors.includes('COMMERCIAL_FIT_UNPROVEN'));
+  assert.equal(out.scoreReceiptId,undefined);
+  assert(out.errors.includes('LEGACY_AUTHORITY_SOURCE_SET_DRIFT'));
 }
 
-// A real generated score receipt is accepted by the graph-bound delivery planner.
+// A literal-authority score receipt remains compatible with the graph-bound delivery planner.
 {
-  const c = candidate({
-    detectionReceiptId:'DET:crybaby',
-    scoreReceiptId:null
+  const candidate = candidateFrom(authority);
+  const graphDigest = 'graph-live-authority-test';
+  const scoreReceipt = receipt.buildScoreReceipt({
+    candidate,
+    graphDigest,
+    scoredAt:'2026-09-21T15:00:00Z'
   });
-  const fp = delivery.candidateChangeFingerprint(c);
-  const scoreReceipt = r.buildScoreReceipt({
-    candidate:c,
-    graphDigest:'graph-live',
-    authority:{
-      scoredAt:'2026-09-21T12:00:00Z',
-      firstDetectedAt:'2026-09-21T11:00:00Z',
-      commercialFit:'HIGH',
-      publicPhone:false,
-      conceptEvidence:{authority:'DIRECT_SOURCE_TEXT',hotFood:true,restaurant:false,pokeBowl:false,lightPrep:false},
-      knownCuisineType:true,
-      acceptedDobInitialCost:173900,
-      directHoodExtraScope:true
-    }
-  });
-  c.scoreReceiptId = scoreReceipt.scoreReceiptId;
+  assert.equal(scoreReceipt.status,'SCORED');
+  candidate.scoreReceiptId = scoreReceipt.scoreReceiptId;
 
+  const fingerprint = delivery.candidateChangeFingerprint(candidate);
+  const cutoff = Date.parse(authority.lastUpdated);
+  const firstDetectedAt = new Date(cutoff).toISOString();
+  const baselineAt = new Date(cutoff - 60 * 60 * 1000).toISOString();
+  const detectionReceipt = {
+    receiptId:candidate.detectionReceiptId,
+    entityId:candidate.entityId,
+    changeFingerprint:fingerprint,
+    firstDetectedAt
+  };
+
+  const minimumScore = Math.max(0, Number(scoreReceipt.scores.POS) - 1);
   const plan = delivery.planCustomerDelivery({
-    graph:{graphState:'COMPLETE',graphDigest:'graph-live',candidates:[c]},
+    graph:{graphState:'COMPLETE',graphDigest,candidates:[candidate]},
     profile:{
-      subscriberId:'sub-1',
-      baselineAt:'2026-09-21T10:00:00Z',
-      category:'Equipment',
-      boroughs:['Manhattan'],
-      minimumScore:60
+      subscriberId:'sub-authority-test',
+      baselineAt,
+      category:'POS',
+      boroughs:[],
+      minimumScore
     },
-    detectionReceipts:[{
-      receiptId:'DET:crybaby',
-      entityId:c.entityId,
-      changeFingerprint:fp,
-      firstDetectedAt:'2026-09-21T11:00:00Z'
-    }],
+    detectionReceipts:[detectionReceipt],
     scoreReceipts:[scoreReceipt]
   });
   assert.equal(plan.status,'READY');
+  assert.equal(plan.reviews.length,0);
   assert.equal(plan.signals.length,1);
   assert.equal(plan.signals[0].scoreReceiptId,scoreReceipt.scoreReceiptId);
-  assert.equal(plan.signals[0].selectedScore,100);
+  assert.equal(plan.signals[0].selectedScore,scoreReceipt.scores.POS);
 }
 
-console.log('PermitPlate versioned scoring and score-receipt regression tests passed.');
+// computeScores compatibility surface itself refuses formula-style inputs.
+{
+  const out = scoring.computeScores({commercialFit:'HIGH',stageNumber:1});
+  assert.equal(out.status,'REVIEW');
+  assert(out.errors.includes('CANDIDATE_REQUIRED_FOR_SCORE_AUTHORITY'));
+}
+
+console.log('PermitPlate validated score-authority and score-receipt regression tests passed.');
