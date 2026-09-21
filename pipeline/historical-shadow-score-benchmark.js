@@ -53,8 +53,10 @@ function candidateFromFixture(item,records) {
     sourceLatestEffectiveAt:item.latestSignalDate,
     sourceSystems:item.sourceSystems.slice(),
     sourceCount:item.sourceCount,
-    deliverySuppressed:item.deliverySuppressed===true,
-    crossCamisOperationalConflicts:item.deliverySuppressed?[{camis:'HISTORICAL_CONFLICT'}]:[],
+    deliverySuppressed:item.deliverySuppressed===true && String(item.commercialFit).toUpperCase()==='LOW',
+    crossCamisOperationalConflicts:
+      item.deliverySuppressed===true && String(item.commercialFit).toUpperCase()==='LOW'?
+        [{camis:'HISTORICAL_CONFLICT'}]:[],
     primaryRecord:records.primary,
     commercialEvidence:[],
     projectSignal:{
