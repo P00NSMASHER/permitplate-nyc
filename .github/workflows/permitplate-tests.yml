@@ -30,3 +30,6 @@ jobs:
 
       - name: Run NYC source adapter regression
         run: node pipeline/source-adapters.test.js
+
+      - name: Run ProjectSignal corroboration regression
+        run: node pipeline/project-signal.test.js
