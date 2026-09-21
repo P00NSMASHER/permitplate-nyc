@@ -36,7 +36,7 @@
     "liveFormVerified": true,
     "exactEmailActivationCanaryVerified": true,
     "baselineAuthority": "STRIPE_SUBSCRIPTION_CREATED",
-    "reason": "Netlify project form registry now recognizes permitplate-onboarding with expected fields and honeypot. Public build identity is still verified separately.",
+    "reason": "Current live Netlify form is registered but predates the activation_ref field. Source and synthetic activation canary now require activation_ref == Stripe client_reference_id with the checkout email locked. Live field verification waits on deployment of the current public bundle.",
     "liveFormId": "6ab1726645d634000824cdd9",
     "liveFormSubmissionCount": 0,
     "liveFormFields": [
@@ -47,6 +47,9 @@
       "category",
       "territory",
       "starter"
-    ]
+    ],
+    "correlationMode": "LOCKED_PREFILLED_EMAIL_PLUS_CLIENT_REFERENCE_ID",
+    "activationReferenceFieldVerified": false,
+    "exactReferenceActivationCanaryVerified": true
   }
 }
