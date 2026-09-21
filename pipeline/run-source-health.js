@@ -37,13 +37,10 @@ function publicObservation(observation) {
   };
 }
 
-async function scan(nowIso) {
-  const observedAt = nowIso || new Date().toISOString();
+function sourcePlans(observedAt) {
   const dohmhFloor = isoFloorDaysAgo(observedAt, 30);
   const dobFloor = isoFloorDaysAgo(observedAt, 14);
-  const appToken = process.env.SOCRATA_APP_TOKEN || undefined;
-
-  const plans = [
+  return [
     {
       sourceKey:'DOHMH',
       maxAgeDays:3,
@@ -63,10 +60,14 @@ async function scan(nowIso) {
       order:'application_id ASC'
     }
   ];
+}
 
-  const results = [];
-  for (const plan of plans) {
-    const batch = await readSocrataSource(plan.sourceKey, {
+async function scanBatches(nowIso) {
+  const observedAt = nowIso || new Date().toISOString();
+  const appToken = process.env.SOCRATA_APP_TOKEN || undefined;
+  const batches = {};
+  for (const plan of sourcePlans(observedAt)) {
+    batches[plan.sourceKey] = await readSocrataSource(plan.sourceKey, {
       observedAt,
       appToken,
       maxAgeDays:plan.maxAgeDays,
@@ -74,13 +75,21 @@ async function scan(nowIso) {
       where:plan.where,
       order:plan.order
     });
-    results.push({
+  }
+  return {observedAt, batches};
+}
+
+async function scan(nowIso) {
+  const {observedAt, batches} = await scanBatches(nowIso);
+  const results = sourcePlans(observedAt).map((plan) => {
+    const batch = batches[plan.sourceKey];
+    return {
       sourceKey:plan.sourceKey,
       observation:publicObservation(batch.observation),
       normalizedRecordCount:batch.records.length,
       sampleSourceRecordIds:batch.records.slice(0, 5).map((record) => record.sourceRecordId)
-    });
-  }
+    };
+  });
 
   const summary = {
     runnerVersion:'PermitPlate-source-health-v1.0.0',
@@ -109,4 +118,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = {isoFloorDaysAgo, publicObservation, scan};
+module.exports = {isoFloorDaysAgo, publicObservation, sourcePlans, scanBatches, scan};
