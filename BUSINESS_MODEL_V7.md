@@ -46,10 +46,13 @@ This is intentionally different from:
 2. Conservative entity resolution that fails closed on ambiguous joins.
 3. Append-only source-event lineage.
 4. Material-change/reopen logic.
-5. Vendor-specific deterministic scoring.
-6. Observed Facts vs PermitPlate Inference.
-7. Customer feedback dispositions without hidden black-box retraining.
-8. Versioned market/source models so each city/vertical can be audited separately.
+5. Typed source-observation receipts that distinguish verified completeness from outage, movement, partial coverage, and unknown state.
+6. Fail-closed absence handling so a bad/empty fetch cannot silently erase an opportunity.
+7. Vendor-specific deterministic scoring.
+8. Deterministic Opportunity Decision receipts with replay fingerprints and explicit reasons.
+9. Observed Facts vs PermitPlate Inference.
+10. Customer feedback dispositions without hidden black-box retraining.
+11. Versioned market/source models so each city/vertical can be audited separately.
 
 ## Expansion strategy
 Do not expand because a dataset exists. A new market must pass:
@@ -87,4 +90,4 @@ Use custom founder-reviewed pilots for higher-value or new-market buyers before 
 Team/multi-territory pricing should be introduced only after customer usage proves the workflow and the source model can support the promised coverage.
 
 ## Current strategic constraint
-The production intelligence engine still needs to move from automation-prompt orchestration into deterministic, versioned application code with replay tests, migrations, deploy hashes and canary mode. The website and model specification must not claim a level of automation, market coverage or precision that production has not proven.
+The core decision boundary has now begun moving from prompt orchestration into deterministic application code: V7.1 implements typed source-observation classification, fail-closed absence handling, and replayable Opportunity Decision receipts with regression coverage. The remaining product gap is connector adoption and durable persistence: every production source still needs to emit the required receipt metadata and delivery operations must reach 100% receipt enforcement before PermitPlate can claim verified-complete negative coverage. The website must not claim automation, coverage or precision that this rollout has not proven.
