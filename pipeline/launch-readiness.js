@@ -55,6 +55,8 @@ function remediationFor(gate){
   const map={
     stripePaymentLinkWriteAuthorized:'GRANT_STRIPE_PAYMENT_LINK_WRITE',
     stripeCheckoutPreferenceFieldsVerified:'APPLY_AND_VERIFY_STRIPE_CHECKOUT_PREFERENCES',
+    stripePaymentLinkActiveVerified:'VERIFY_STRIPE_PAYMENT_LINK_ACTIVE',
+    preferenceCaptureReady:'DEPLOY_AND_VERIFY_NETLIFY_PRECHECKOUT_FORM',
     verifiedPublicBuildMatchesCurrentSource:'REBUILD_DEPLOYABLE_PUBLIC_ARTIFACT',
     netlifyProductionDeployVerified:'DEPLOY_VERIFIED_PUBLIC_ARTIFACT',
     netlifyLiveCommitKnown:'VERIFY_NETLIFY_LIVE_BUILD_IDENTITY',
@@ -116,6 +118,9 @@ function evaluateLaunchReadiness(input){
       subscriberCanary.transportPreflight.allowed===false&&
       (subscriberCanary.transportPreflight.failures||[])
         .includes('OWNER_AUTHORIZATION_MISSING'),
+    subscriberCanaryUsesNetlifyPreferences:
+      subscriberCanary.preferenceSource==='NETLIFY_PRECHECKOUT_FORM'&&
+      Boolean(subscriberCanary.preferenceReceiptId),
     publicBuildBoundaryClean:publicBuildFailures.length===0
   };
 
@@ -126,12 +131,30 @@ function evaluateLaunchReadiness(input){
 
   const stripe=external.stripe||{};
   const netlify=external.netlify||{};
+  const preCheckout=external.preCheckoutOnboarding||{};
   const customerProof=external.customerProof||{};
+
+  const preferenceCaptureReady=
+    normalizeBool(stripe.checkoutPreferenceFieldsVerified) ||
+    (
+      normalizeBool(stripe.paymentLinkActiveVerified) &&
+      normalizeBool(preCheckout.netlifyFormsEnabled) &&
+      normalizeBool(preCheckout.sourceFlowImplemented) &&
+      normalizeBool(preCheckout.liveFormVerified) &&
+      normalizeBool(preCheckout.exactEmailActivationCanaryVerified)
+    );
 
   const externalGates={
     externalEvidenceFresh:evidenceFresh(external.observedAt,evaluatedAt),
     stripePaymentLinkWriteAuthorized:normalizeBool(stripe.paymentLinkWriteAuthorized),
     stripeCheckoutPreferenceFieldsVerified:normalizeBool(stripe.checkoutPreferenceFieldsVerified),
+    stripePaymentLinkActiveVerified:normalizeBool(stripe.paymentLinkActiveVerified),
+    netlifyFormsEnabled:normalizeBool(preCheckout.netlifyFormsEnabled),
+    netlifyPreCheckoutSourceImplemented:normalizeBool(preCheckout.sourceFlowImplemented),
+    netlifyPreCheckoutLiveFormVerified:normalizeBool(preCheckout.liveFormVerified),
+    netlifyExactEmailActivationCanaryVerified:
+      normalizeBool(preCheckout.exactEmailActivationCanaryVerified),
+    preferenceCaptureReady,
     verifiedPublicBuildMatchesCurrentSource:
       Boolean(currentPublicSourceFingerprint)&&
       Boolean(netlify.verifiedPublicSourceFingerprint)&&
@@ -152,8 +175,8 @@ function evaluateLaunchReadiness(input){
 
   const firstCustomerExternalGates={
     externalEvidenceFresh:externalGates.externalEvidenceFresh,
-    stripePaymentLinkWriteAuthorized:externalGates.stripePaymentLinkWriteAuthorized,
-    stripeCheckoutPreferenceFieldsVerified:externalGates.stripeCheckoutPreferenceFieldsVerified,
+    stripePaymentLinkActiveVerified:externalGates.stripePaymentLinkActiveVerified,
+    preferenceCaptureReady:externalGates.preferenceCaptureReady,
     verifiedPublicBuildMatchesCurrentSource:externalGates.verifiedPublicBuildMatchesCurrentSource,
     netlifyProductionDeployVerified:externalGates.netlifyProductionDeployVerified,
     netlifyLiveCommitKnown:externalGates.netlifyLiveCommitKnown,
