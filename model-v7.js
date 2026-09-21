@@ -1,5 +1,7 @@
 'use strict';
 
+const MODEL_VERSION = 'PermitPlate-v7.1.0';
+
 const STAGE_RANK = Object.freeze({
   'JUST FILED': 1,
   'BUILDOUT / LICENSING': 2,
@@ -294,7 +296,75 @@ function deliveryGate(input) {
   return {eligible: reasons.length === 0, reasons};
 }
 
+
+function buildOpportunityDecision(input) {
+  const data = input || {};
+  const event = data.event || {};
+  const candidate = data.candidate || {};
+  const sourceObservation = classifySourceObservation(data.sourceObservation || {});
+  const resolution = resolveEntity(event, candidate);
+  const change = materialChange(data.previousState || null, data.currentState || {}, data.changeOptions || {});
+  const score = vendorScore(data.scoreParts || {});
+  const lineageComplete = Boolean(
+    event.sourceRecordId &&
+    /^https:\/\//.test(String(event.sourceUrl || ''))
+  );
+
+  const delivery = deliveryGate({
+    resolutionStatus: resolution.resolutionStatus,
+    commercialFit: data.commercialFit || candidate.commercialFit,
+    sourceFresh: Boolean(data.sourceObservation && data.sourceObservation.sourceFresh === true),
+    sourceObservationState: sourceObservation.state,
+    postBaseline: data.postBaseline === true,
+    qualifyingReopen: data.qualifyingReopen === true,
+    vendorScore: score.total,
+    minimumScore: data.minimumScore,
+    alreadyDeliveredFingerprint: data.alreadyDeliveredFingerprint
+  });
+
+  const reasons = delivery.reasons.slice();
+  if (!change.material) reasons.push('NO_MATERIAL_CHANGE');
+  if (!lineageComplete) reasons.push('MISSING_SOURCE_LINEAGE');
+
+  let decision = 'HOLD';
+  if (reasons.length === 0) decision = 'DELIVER';
+  else if (reasons.some((reason) => [
+    'IDENTITY_NOT_RESOLVED',
+    'SOURCE_OBSERVATION_NOT_USABLE',
+    'MISSING_SOURCE_LINEAGE'
+  ].includes(reason))) decision = 'REVIEW';
+
+  const replayFingerprint = stateHash({
+    modelVersion: MODEL_VERSION,
+    entityId: candidate.entityId || candidate.id || null,
+    sourceRecordId: event.sourceRecordId || null,
+    sourceObservationState: sourceObservation.state,
+    currentStateHash: stateHash(data.currentState || {}),
+    changeType: change.type,
+    score: score.total,
+    decision,
+    reasons: reasons.slice().sort()
+  });
+
+  return {
+    modelVersion: MODEL_VERSION,
+    decision,
+    reasons,
+    replayFingerprint,
+    lineageComplete,
+    sourceObservation,
+    resolution,
+    change,
+    score,
+    delivery: {
+      eligible: decision === 'DELIVER',
+      gateEligible: delivery.eligible
+    }
+  };
+}
+
 module.exports = {
+  MODEL_VERSION,
   STAGE_RANK,
   SOURCE_OBSERVATION_STATES,
   norm,
@@ -305,5 +375,6 @@ module.exports = {
   resolveEntity,
   materialChange,
   vendorScore,
-  deliveryGate
+  deliveryGate,
+  buildOpportunityDecision
 };
