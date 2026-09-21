@@ -36,7 +36,7 @@ function publicSourceFingerprint(){
       path:file,
       sha256:publicBuild.sha256File(path.join(publicBuild.ROOT,file))
     }))
-    .sort((a,b)=>a.path.localeCompare(b.path));
+    .sort((a,b)=>a.path<b.path?-1:a.path>b.path?1:0);
   return sha256(items.map((item)=>item.path+':'+item.sha256).join('\n'));
 }
 function normalizeBool(value){ return value===true; }
