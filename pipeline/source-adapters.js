@@ -129,12 +129,20 @@ function normalizeDohmhRow(row, context) {
     sha256(stableStringify(facts)).slice(0, 12)
   ].filter(Boolean).join(':');
 
+  const inspectionDate = nullableText(r.inspection_date);
+  const applicantPlaceholder = Boolean(inspectionDate && /^1900-01-01/.test(inspectionDate));
+  const prePermit = /^pre-permit/i.test(text(r.inspection_type));
+
   return sourceRecord(config, {
     sourceRecordId: `DOHMH:${camis}:${recordSuffix}`,
     sourceEntityId: `CAMIS:${camis}`,
-    sourceEffectiveAt: nullableText(r.inspection_date) || nullableText(r.record_date),
+    sourceEffectiveAt: applicantPlaceholder ?
+      nullableText(r.record_date) :
+      (inspectionDate || nullableText(r.record_date)),
     observedAt: context && context.observedAt,
-    eventType: 'DOHMH_RESTAURANT_RECORD',
+    eventType: applicantPlaceholder ?
+      'DOHMH_APPLICANT_RECORD' :
+      (prePermit ? 'DOHMH_PRE_PERMIT_EVENT' : 'DOHMH_RESTAURANT_RECORD'),
     entityKeys: {
       camis,
       bin: nullableText(r.bin),
@@ -208,7 +216,8 @@ function normalizeSlaPendingRow(row, context) {
       applicationId
     },
     property: {
-      address: normalizedAddress([r.actual_address_of_premises, r.additional_address_information]),
+      address: normalizedAddress([r.actual_address_of_premises]),
+      unit: nullableText(r.additional_address_information),
       city: nullableText(r.city),
       state: nullableText(r.state_name),
       zip: nullableText(r.zip_code)
