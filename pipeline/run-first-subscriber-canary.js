@@ -4,6 +4,7 @@ const fs=require('fs');
 const path=require('path');
 const opportunity=require('./opportunity-ledger');
 const stripeSubscriber=require('./stripe-subscriber');
+const subscriberActivation=require('./subscriber-activation');
 const subscriberArtifact=require('./subscriber-artifact');
 const customerMessage=require('./customer-message');
 const transportAuthorization=require('./transport-authorization');
@@ -120,11 +121,7 @@ function checkoutSession(){
     customer_details:{email:'canary@permitplate.invalid'},
     metadata:{project:'permitplate_nyc',plan:'monthly_79'},
     subscription:'sub_canary',
-    custom_fields:[
-      {key:'category',type:'dropdown',dropdown:{value:'equipment'}},
-      {key:'territory',type:'text',text:{value:'Manhattan'}},
-      {key:'starter',type:'dropdown',dropdown:{value:'yes'}}
-    ]
+    custom_fields:[]
   };
 }
 function subscription(){
@@ -139,13 +136,35 @@ function subscription(){
   };
 }
 
+function onboardingSubmission(){
+  return {
+    id:'submission_canary',
+    form_name:'permitplate-onboarding',
+    created_at:'2026-09-21T15:58:00Z',
+    data:{
+      'form-name':'permitplate-onboarding',
+      onboarding_version:'permitplate-onboarding-v1',
+      plan:'monthly_79',
+      email:'canary@permitplate.invalid',
+      category:'equipment',
+      territory:'Manhattan',
+      starter:'yes',
+      'bot-field':''
+    }
+  };
+}
+
 function run(){
-  const stripe=stripeSubscriber.profileFromCheckout({
+  const activation=subscriberActivation.activateFromNetlifyPreferences({
     session:checkoutSession(),
     subscription:subscription(),
+    submissions:[onboardingSubmission()],
     expectedPriceId:'price_1UFjcWDPW8riWrxQhnrPX6nc'
   });
-  if(stripe.status!=='ACTIVE') throw new Error('Stripe canary profile failed: '+stripe.failures.join(','));
+  if(activation.status!=='ACTIVE'){
+    throw new Error('Subscriber activation canary failed: '+activation.failures.join(','));
+  }
+  const stripe=activation.subscriber;
 
   const ledger=buildCanaryOpportunityLedger();
   const first=subscriberArtifact.buildSubscriberArtifact({
@@ -207,6 +226,10 @@ function run(){
     externalSendCalls:0,
     checkoutSessionId:stripe.checkoutSessionId,
     subscriptionId:stripe.subscriptionId,
+    preferenceSource:stripe.preferenceSource,
+    preferenceReceiptId:stripe.preferenceReceiptId,
+    onboardingSubmissionId:activation.onboardingSubmissionId,
+    onboardingMatchFingerprint:activation.onboardingMatchFingerprint,
     baselineAt:stripe.profile.baselineAt,
     profileFingerprint:stripe.profileFingerprint,
     opportunityLedgerFingerprint:ledger.ledgerFingerprint,
@@ -271,7 +294,10 @@ function run(){
     result.plannedAttempt.state==='PLANNED' &&
     result.transportPreflight.allowed===false &&
     result.transportPreflight.failures.includes('OWNER_AUTHORIZATION_MISSING') &&
-    result.privateStatePlan.subscriberProfileColumnCount===20 &&
+    result.preferenceSource==='NETLIFY_PRECHECKOUT_FORM' &&
+    result.preferenceReceiptId==='submission_canary' &&
+    result.onboardingSubmissionId==='submission_canary' &&
+    result.privateStatePlan.subscriberProfileColumnCount===21 &&
     result.privateStatePlan.deliveryStateRowCount===2 &&
     result.privateStatePlan.deliveryStateColumnCount===16 &&
     result.privateStatePlan.deliveryStatus==='PLANNED' &&
@@ -301,5 +327,6 @@ module.exports={
   buildCanaryOpportunityLedger,
   checkoutSession,
   subscription,
+  onboardingSubmission,
   run
 };
