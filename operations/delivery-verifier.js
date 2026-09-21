@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const model = require('../model-v7');
 
 const SCORE_COLUMNS = Object.freeze([
   ['POS Score', 'POS'],
@@ -112,6 +113,97 @@ function validateSnapshot(input) {
       deliverable: graph.filter(planEligible).length,
       suppressed: graph.filter((row) => !planEligible(row)).length
     }
+  };
+}
+
+function asBoolean(value) {
+  if (value === true || value === false) return value;
+  const text = asText(value).toLowerCase();
+  if (['true', '1', 'yes', 'y'].includes(text)) return true;
+  if (['false', '0', 'no', 'n'].includes(text)) return false;
+  return null;
+}
+
+function optionalNumber(value) {
+  if (value === null || value === undefined || asText(value) === '') return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function observationObjects(input) {
+  if (!Array.isArray(input) || input.length === 0) return [];
+  return Array.isArray(input[0]) ? rowObjects(input) : input;
+}
+
+function normalizeObservationReceipt(row) {
+  if (!row || Array.isArray(row)) return {};
+  const rawHashes = Array.isArray(row.rawPageHashes) ? row.rawPageHashes :
+    asText(row['Raw Page Hashes']).split('|').map(asText).filter(Boolean);
+  return {
+    observationId: row.observationId || asText(row['Observation ID']),
+    sourceId: row.sourceId || asText(row['Source ID']),
+    connectorConfigHash: row.connectorConfigHash || asText(row['Connector Config Hash']),
+    observedAt: row.observedAt || asText(row['Observed At']),
+    sourceFresh: row.sourceFresh !== undefined ? row.sourceFresh : asBoolean(row['Source Fresh']),
+    transportOk: row.transportOk !== undefined ? row.transportOk : asBoolean(row['Transport OK']),
+    httpStatus: row.httpStatus !== undefined ? row.httpStatus : optionalNumber(row['HTTP Status']),
+    sourceMoved: row.sourceMoved !== undefined ? row.sourceMoved : asBoolean(row['Source Moved']),
+    redirected: row.redirected !== undefined ? row.redirected : asBoolean(row['Redirected']),
+    redirectTarget: row.redirectTarget || asText(row['Redirect Target']),
+    intendedFullScope: row.intendedFullScope !== undefined ? row.intendedFullScope : asBoolean(row['Intended Full Scope']),
+    publisherCount: row.publisherCount !== undefined ? row.publisherCount : optionalNumber(row['Publisher Count']),
+    fetchedCount: row.fetchedCount !== undefined ? row.fetchedCount : optionalNumber(row['Fetched Count']),
+    cursorClosed: row.cursorClosed !== undefined ? row.cursorClosed : asBoolean(row['Cursor Closed']),
+    schemaFingerprint: row.schemaFingerprint || asText(row['Schema Fingerprint']),
+    rawPageHashes: rawHashes
+  };
+}
+
+function validateSourceObservationReceipts(input) {
+  const failures = [];
+  const rows = observationObjects(input);
+  if (!rows.length) {
+    return {
+      passed: true,
+      enforced: false,
+      failures,
+      receiptCount: 0,
+      states: {}
+    };
+  }
+
+  const ids = [];
+  const states = {};
+  for (const row of rows) {
+    const receipt = normalizeObservationReceipt(row);
+    const id = receipt.observationId || receipt.sourceId || '(unidentified)';
+    ids.push(receipt.observationId);
+    const classified = model.classifySourceObservation(receipt);
+    states[classified.state] = (states[classified.state] || 0) + 1;
+
+    const declared = row.declaredState || asText(row['Declared State']);
+    if (declared) {
+      assert(declared === classified.state,
+        `${id}: declared source state ${declared} differs from computed ${classified.state}.`, failures);
+    }
+
+    const absenceAllowed = row.absenceActionsAllowed !== undefined ?
+      row.absenceActionsAllowed : asBoolean(row['Absence Actions Allowed']);
+    if (absenceAllowed === true) {
+      assert(classified.supportsAbsenceConclusion,
+        `${id}: absence actions are enabled without complete source authority.`, failures);
+    }
+  }
+
+  assert(uniqueNonblank(ids) && ids.every(Boolean),
+    'Source Observation receipt IDs are blank or duplicated.', failures);
+
+  return {
+    passed: failures.length === 0,
+    enforced: true,
+    failures,
+    receiptCount: rows.length,
+    states
   };
 }
 
@@ -272,6 +364,7 @@ module.exports = {
   SCORE_COLUMNS,
   rowObjects,
   validateSnapshot,
+  validateSourceObservationReceipts,
   validatePredecessorScan,
   buildShadowPlan,
   renderArtifacts,
