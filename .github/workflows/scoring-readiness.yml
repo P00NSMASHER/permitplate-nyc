@@ -33,6 +33,9 @@ jobs:
       - name: Benchmark shadow scorer against current literal authority
         run: node pipeline/run-shadow-scoring-evaluation.js pipeline/shadow-score-evaluation-result.json
 
+      - name: Run no-send scoring promotion canary
+        run: node pipeline/run-scoring-promotion-canary.js pipeline/scoring-promotion-canary-result.json
+
       - name: Upload scoring readiness artifact
         if: always()
         uses: actions/upload-artifact@v4
@@ -41,5 +44,6 @@ jobs:
           path: |
             pipeline/scoring-readiness-result.json
             pipeline/shadow-score-evaluation-result.json
+            pipeline/scoring-promotion-canary-result.json
           if-no-files-found: warn
           retention-days: 14
