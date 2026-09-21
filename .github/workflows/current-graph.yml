@@ -6,6 +6,8 @@ on:
     - cron: '37 11 * * *'
   push:
     paths:
+      - 'pipeline/**'
+      - 'model-v7.js'
       - '.github/workflows/current-graph.yml'
 
 permissions:
