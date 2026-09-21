@@ -1,159 +1,255 @@
 # PermitPlate Model V7
-Updated: 2026-09-19
+
+Updated: 2026-09-21
 
 ## Design goal
-Convert official public records into auditable material-change intelligence without allowing a commercially attractive score to hide weak identity resolution or weak evidence.
 
-## Runtime version
-Current deterministic decision runtime: `PermitPlate-v7.1.0`.
+PermitPlate converts official public records into evidence-backed commercial change intelligence without allowing a high score, a shared address, a transient source failure, or old backlog to masquerade as a safe customer signal.
 
-V7.1 adds typed source-observation receipts, fail-closed absence handling, and a deterministic Opportunity Decision receipt. It does not by itself prove that every live connector supplies complete receipt metadata; delivery operations treat that rollout separately.
+The production model is now a deterministic pipeline rather than a prompt/workbook-only workflow.
 
-## Core objects
-### SourceObservation
-- observation_id
-- source_id
-- connector_config_hash
-- observed_at
-- source_fresh: boolean
-- transport / HTTP state
-- redirect / moved-source metadata
-- intended_full_scope: boolean
-- publisher_count (when independently available)
-- fetched_count
-- cursor_closed
-- schema_fingerprint
-- raw_page_hashes
-- computed state: VERIFIED_EMPTY | COMPLETE_NONEMPTY | PARTIAL | SOURCE_UNAVAILABLE | SOURCE_MOVED | UNKNOWN
+## Current runtime architecture
 
-Only VERIFIED_EMPTY or COMPLETE_NONEMPTY can support an absence-based close/delete/suppress/retire decision, and only when the source is fresh and the observation scope matches the entity being evaluated. A positive record observed in a PARTIAL window can still be useful evidence; partial coverage simply cannot prove absence.
+Core decision runtime: PermitPlate-v7.1.0.
 
-### Entity
-- entity_id
-- canonical_name
-- normalized_address
-- geography
-- entity_type
-- commercial_fit
-- status
-- first_seen_at
-- last_seen_at
+Operational flow:
 
-### SourceEvent
-- source_event_id
-- entity_id (nullable until safely resolved)
-- source_system
-- source_record_id
-- source_url
-- source_effective_date
-- observed_at
-- source_revision_fingerprint
-- event_type
-- normalized_facts
-- raw_fact_references
-- source_freshness_state
+Official public source
+→ SourceObservation receipt
+→ normalized SourceRecord
+→ same-entity ProjectSignal
+→ current candidate graph
+→ commercial-fit receipt
+→ canonical category-score receipt
+→ persistent detection ledger
+→ production-authorized candidate package
+→ persistent opportunity ledger
+→ private subscriber profile
+→ deterministic subscriber artifact
+→ planned delivery identity
+→ private delivery-state reconciliation
 
-### ResolutionEvidence
-- source_event_id
-- candidate_entity_id
-- exact_identifier_match
-- normalized_name_similarity
-- normalized_address_match
-- unit_or_tenant_match
-- source_specific_keys
-- contradictory_evidence
-- resolution_confidence
-- resolution_status: RESOLVED | REVIEW | UNRESOLVED
+Current production scoring policy: CANONICAL_V3_WITH_LEGACY_FALLBACK.
 
-### OpportunityState
-- entity_id
-- prior_state_hash
-- current_state_hash
-- material_change_type
-- material_change_at
-- lifecycle_stage
-- watch_next
-- evidence_strength
-- identity_confidence
-- reopened: boolean
+External transport remains operator-controlled. Internal readiness does not mean that a customer email has been sent.
 
-### OpportunityDecision
-- model_version
-- decision: DELIVER | REVIEW | HOLD
-- reasons[]
-- replay_fingerprint
-- source_observation result
-- resolution result
-- material-change result
-- vendor score
-- source-lineage completeness
-- delivery-gate result
+## Source completeness
 
-The decision receipt is deterministic for the same normalized inputs. It is intended to replace prompt-only orchestration with replayable application logic. The replay fingerprint is a deterministic state fingerprint, not a cryptographic signature.
+Every monitored source window is classified as VERIFIED_EMPTY, COMPLETE_NONEMPTY, PARTIAL, SOURCE_UNAVAILABLE, SOURCE_MOVED, or UNKNOWN.
 
-### VendorScore
-Per category:
-- change_recency_materiality: 0-30
-- lifecycle_timing_urgency: 0-25
-- category_relevance: 0-25
-- evidence_strength: 0-20
-- total: 0-100
+A complete receipt binds the source, connector configuration, exact query fingerprint, observation time, freshness, schema fingerprint, raw-page hashes, publisher count, fetched count, and cursor closure.
 
-Scoring occurs only after resolution/evidence gates pass.
+Missing or null counts never become zero.
 
-## Delivery gate
-Deliver only when:
-1. entity resolution is safe enough for customer use,
-2. commercial fit is not excluded,
-3. the event is post-baseline OR represents a qualifying material reopen,
-4. source freshness is acceptable,
-5. the source observation state is usable for the positive record (COMPLETE_NONEMPTY or PARTIAL),
-6. source record ID + HTTPS source URL lineage are present,
-7. a material change exists,
-8. the vendor score meets the customer's threshold,
-9. the same customer/entity/change fingerprint was not already delivered.
+Only VERIFIED_EMPTY or COMPLETE_NONEMPTY may support absence conclusions. A positive record fetched before a later failure may remain positive evidence, but the failed window cannot prove absence.
 
-## Material reopen examples
-- new source system corroborates the entity,
-- stage advances,
-- permit/license status materially changes,
-- corrected/superseding record changes the known facts,
-- category-specific physical evidence appears,
-- a prior weak event becomes strong enough to pass the evidence gate.
+## Current promised source set
 
-## Absence safety
-Never infer a closure, disappearance, retirement, or suppression merely because a request returned zero rows. Absence mutation requires a fresh, scope-matched SourceObservation whose computed state is VERIFIED_EMPTY or COMPLETE_NONEMPTY. SOURCE_UNAVAILABLE, SOURCE_MOVED, PARTIAL, and UNKNOWN preserve the prior opportunity state.
+NYC restaurant intelligence currently uses:
 
-## Non-events
-Do not create a new customer signal for:
-- unchanged re-fetches,
-- duplicate source rows,
-- weak spelling/name variants of the same record,
-- building-level work that cannot be tied to the venue,
-- a high commercial score with unresolved identity,
-- old backlog presented as new.
+- NYC DOHMH Restaurant Inspection Results, dataset 43nn-pn8j
+- NYC DOB NOW Job Application Filings, dataset w9ak-ipjd
+- NY State Liquor Authority Pending Licenses, dataset f8i8-k2gm
 
-## Feedback dispositions
-- INVESTIGATE
-- WATCH
-- IRRELEVANT
-- ALREADY_KNEW
+The current graph is COMPLETE only when every promised source window is complete or verified empty.
 
-Feedback can tune customer-specific filters and thresholds but never mutates source facts.
+## Identity and ProjectSignal
 
-## Implementation status / next order
-Implemented in deterministic code:
-1. Entity resolution and contradiction gating.
-2. State hashing + material-change detection.
-3. Typed SourceObservation classification.
-4. Fail-closed absence mutation gate.
-5. Versioned Opportunity Decision receipt with deterministic replay fingerprint.
-6. Vendor-score and delivery-gate composition.
+Important invariants:
 
-Next:
-1. Emit SourceObservation receipts from every live connector.
-2. Persist receipt IDs alongside SourceEvents and delivery artifacts.
-3. Make delivery verification fail closed once receipt coverage reaches 100% of production sources.
-4. Add historical replay fixtures spanning source moves, partial pagination, schema change, and corrected records.
-5. Add customer feedback/outcome loop without mutating source truth.
-6. Expand markets only after source-specific validation.
+1. Same address is co-location evidence, not identity.
+2. A conflicting stable identifier fails closed.
+3. DOHMH CAMIS identities remain distinct unless authoritative evidence bridges them.
+4. SLA corroboration requires safe same-premise/business identity.
+5. DOB same-site work does not corroborate a restaurant merely because it is in the same building.
+6. Rejected cross-source evidence contributes zero scoring benefit.
+7. Reviewed identity bridges are explicit and auditable.
+
+Known regression anchors include KOKE current CAMIS 50192488 versus operational predecessor 50184059, and La Marqueta shared-site DOB M01329447-I1.
+
+## Current candidate graph
+
+Recent verified live graph:
+
+- approximately 4,104 candidates
+- approximately 3,798 JUST FILED
+- approximately 306 HEALTH PRE-PERMIT
+- 82 cross-CAMIS operational conflicts suppressed
+
+The graph has a deterministic digest.
+
+## Commercial fit
+
+Commercial fit is versioned evidence, not an informal label.
+
+Dispositions are HIGH, MEDIUM, LOW, EXCLUDE, or REVIEW.
+
+Current rules separate evidence that establishes a commercial prospect from stronger evidence that unlocks specialist scoring.
+
+Examples:
+
+- clear restaurant, pizza, cafe, or accepted hospitality-source evidence can establish HIGH;
+- a current DOHMH applicant with unclear concept remains MEDIUM;
+- operational-predecessor conflicts are LOW/suppressed;
+- institutional, residential, and corporate-floor contexts are EXCLUDE;
+- a brick-oven name can support HIGH fit without automatically unlocking hot-food specialist boosts.
+
+## Category scoring
+
+Categories are POS, Insurance, Equipment, Hood/Fire, Waste, Pest, Linen, and Distribution.
+
+Canonical scorer: permitplate-shadow-score-v3-2026-09-21, promoted for internal production scoring.
+
+Validation includes:
+
+- full live-graph scoring coverage;
+- 13 of 13 current literal-authority overlap parity;
+- 47-case canonical historical replay;
+- adversarial score invariants;
+- no-send promotion canary;
+- committed promotion record.
+
+Two documented legacy score anomalies remain preserved as audit evidence rather than copied into the new model:
+
+- CAMIS 50192386: legacy Hood/Fire 100, canonical 93
+- CAMIS 50192550: legacy Distribution 89 with Insurance best, canonical Distribution 94 with Distribution best
+
+If fresh canonical gates fail, a still-valid LEGACY_LITERAL score can be used as fallback for that unchanged candidate. Otherwise scoring goes to REVIEW.
+
+## Scoring invariants
+
+- Rejected same-site DOB evidence adds zero points.
+- Signage-only identity evidence cannot create hospitality/kitchen boosts.
+- Only accepted source evidence may unlock category-specific DOB boosts.
+- Recency may decay a score but cannot increase it.
+- Public-phone points require observed phone evidence.
+- EXCLUDE rows are all-zero.
+- Scores are integer-bounded from 0 to 100.
+- Score receipts bind graph digest and candidate change fingerprint.
+- Customer delivery requires productionAuthorized true.
+
+## Detection ledger
+
+PermitPlate persists first-observed and material-change state.
+
+Initial bootstrap marked all existing graph candidates BASELINE_EXISTING and customerEligible false. This prevents current backlog from being delivered as new.
+
+Future customer-eligible classes are NEW_ENTITY and MATERIAL_CHANGE.
+
+Disappearance from the rolling monitored window becomes OUT_OF_CURRENT_WINDOW, not business closure. Reappearance becomes REAPPEARED_REVIEW, not an automatic commercial reopen.
+
+The ledger refuses to advance on an incomplete graph or a bad fingerprint.
+
+## Candidate package and opportunity ledger
+
+A production candidate package freezes:
+
+- graph digest;
+- exact change fingerprint;
+- exact detection receipt;
+- exact production-authorized score receipt;
+- project signal;
+- business/location/stage fields;
+- source systems and record IDs;
+- official source URLs;
+- commercial evidence;
+- category scores;
+- best vendor fit and score.
+
+Only READY_FOR_PROFILE_MATCHING packages may enter the opportunity ledger.
+
+The opportunity ledger is keyed by entity plus change fingerprint, is idempotent on exact replay, and fails on conflicting replay.
+
+Detection and opportunity ledgers are committed atomically.
+
+## Subscriber profile
+
+Subscriber data remains private and is not stored in the public GitHub repository.
+
+The profile contract includes:
+
+- subscription ID;
+- recipient email;
+- exact baseline time;
+- one or more categories;
+- NYC borough territory;
+- minimum score;
+- Starter Snapshot opt-in;
+- Starter days, capped at 7;
+- Starter limit, capped at 10;
+- total signal cap, capped at 25;
+- subscription status;
+- Stripe customer/subscription/price IDs;
+- deterministic profile fingerprint.
+
+Omitted territory means all five NYC boroughs. Category is never guessed.
+
+## Stripe baseline rule
+
+Baseline At equals the Stripe Subscription created timestamp.
+
+It is not the time the buyer opened the Checkout Session or Payment Link.
+
+The Stripe subscriber adapter fails closed on wrong link, wrong mode, incomplete/unpaid checkout, missing subscription, ineligible subscription status, wrong project metadata, missing email, missing category preference, or missing Starter preference.
+
+## Starter Snapshot
+
+Starter Snapshot is optional.
+
+When enabled:
+
+- only opportunities already persisted in the opportunity ledger may qualify;
+- detection time must fall in the prior seven days;
+- the item stays labeled STARTER;
+- original detection time is preserved;
+- maximum Starter items is 10;
+- normal and Starter signal keys use separate namespaces.
+
+PermitPlate does not reconstruct arbitrary historical source rows as recent Starter opportunities.
+
+## Subscriber artifact and delivery
+
+A subscriber artifact is deterministic from the subscriber profile, opportunity ledger, and delivered signal keys.
+
+It applies boroughs, categories, threshold, baseline/Starter rules, caps, and exactly-once suppression.
+
+Report and CSV use the same ordered signal keys. CSV formula-like values are neutralized.
+
+Private Delivery State tracks recipient, signal key, delivered time, Stripe IDs, provider message ID, Attempt ID, Message Identity, artifact/profile fingerprints, NORMAL/STARTER class, provider status, reconciliation time, and package ID.
+
+## Current no-send acceptance
+
+Synthetic first-subscriber path has been verified:
+
+completed Stripe subscription
+→ subscription-created baseline
+→ private profile
+→ persistent opportunity ledger
+→ one NORMAL plus one STARTER signal
+→ email/CSV parity
+→ deterministic planned message identity
+→ exact private-sheet row plan
+→ delivered-key replay
+→ zero second-run signals
+
+External send calls: 0.
+
+This is not evidence that a real paid subscriber has received PermitPlate.
+
+## Deployment boundary
+
+Netlify now builds an explicit public-file allowlist into a dist directory rather than publishing the repository root.
+
+The public artifact contains only website assets plus build-info.json. Backend pipeline, tests, scoring authority, and state files are excluded.
+
+## Current external blockers
+
+1. Netlify production has not advanced to the verified public build. The scoped upload helper still times out during package/network resolution.
+2. The connected Stripe key lacks payment_links_write, so the $79 Payment Link cannot yet collect category, territory, and Starter preferences directly.
+3. No real paid PermitPlate subscriber has completed provider-backed delivery/reconciliation yet.
+
+These are external integration/transport blockers, not unresolved source, identity, scoring, detection, or artifact-model blockers.
+
+## Expansion rule
+
+Do not add a second jurisdiction until one real paid-customer delivery is executed and reconciled without weakening the NYC evidence gates.
