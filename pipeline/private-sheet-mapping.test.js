@@ -67,7 +67,7 @@ function attempt(a){
   assert.equal(adapted.status,'ACTIVE');
   const mapped=mapping.subscriberProfileRow(adapted);
   assert.equal(mapped.sheet,'Subscriber Profiles');
-  assert.equal(mapped.values.length,20);
+  assert.equal(mapped.values.length,21);
   assert.deepEqual(Object.keys(mapped.row),mapping.SUBSCRIBER_PROFILE_HEADERS);
   assert.equal(mapped.row.Email,'buyer@example.com');
   assert.equal(mapped.row.Categories,'Equipment');
@@ -77,6 +77,7 @@ function attempt(a){
   assert.equal(mapped.row['Stripe Subscription'],'sub_mapping');
   assert.equal(mapped.row['Profile Fingerprint'],adapted.profileFingerprint);
   assert.equal(mapped.row['Delivery Policy Version'],delivery.DELIVERY_PLANNER_VERSION);
+  assert.equal(mapped.row['Preference Receipt ID'],adapted.preferenceReceiptId||'');
   assert.match(mapped.rowFingerprint,/^[0-9a-f]{64}$/);
 }
 
@@ -226,7 +227,8 @@ assert.deepEqual(mapping.SUBSCRIBER_PROFILE_HEADERS,[
   'Email','Categories','Boroughs/Territory','Minimum Score','Updated At','Notes',
   'Baseline At','Starter Snapshot Sent At','Starter Snapshot Through','Delivery Policy Version',
   'Starter Snapshot Enabled','Starter Days','Starter Limit','Max Signals','Status',
-  'Stripe Customer','Stripe Subscription','Price ID','Profile Fingerprint','Checkout Session'
+  'Stripe Customer','Stripe Subscription','Price ID','Profile Fingerprint','Checkout Session',
+  'Preference Receipt ID'
 ]);
 assert.deepEqual(mapping.DELIVERY_STATE_HEADERS,[
   'Recipient Email','Lead Key','Delivered At','Stripe Customer','Stripe Subscription',
