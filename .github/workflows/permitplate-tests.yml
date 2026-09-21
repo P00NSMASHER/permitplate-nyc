@@ -33,3 +33,6 @@ jobs:
 
       - name: Run ProjectSignal corroboration regression
         run: node pipeline/project-signal.test.js
+
+      - name: Run end-to-end engine regression
+        run: node pipeline/engine.test.js
