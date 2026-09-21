@@ -1,8 +1,9 @@
 'use strict';
 
 const crypto=require('crypto');
+const eventTime=require('./event-time');
 
-const CUSTOMER_MESSAGE_VERSION='PermitPlate-customer-message-v1.0.0';
+const CUSTOMER_MESSAGE_VERSION='PermitPlate-customer-message-v1.1.0';
 
 function stableStringify(value){
   if(Array.isArray(value)) return '['+value.map(stableStringify).join(',')+']';
@@ -43,13 +44,25 @@ function customerRows(artifact){
   if(!artifact||artifact.status!=='READY') throw new Error('READY subscriber artifact required');
   return Array.isArray(artifact.csvRows)?artifact.csvRows:[];
 }
+function chronologyLines(row){
+  const bases={DOHMH_INSPECTION_DATE:'Health inspection',SLA_APPLICATION_RECEIVED_DATE:'Liquor application received',DOB_INITIAL_FILING_DATE:'Building job initially filed'};
+  const date=eventTime.calendarDate(row['Business Event Date']);
+  const basis=bases[row['Business Event Basis']];
+  const lines=[row['Event Time Status']==='KNOWN'&&date&&basis?
+    `${basis}: ${date}. This does not date a later status or scope change.`:
+    'Business event date: not proven by the available record.'];
+  const detected=eventTime.instant(row['Detected At']);
+  if(detected) lines.push(`PermitPlate detected: ${detected} (not a filing date).`);
+  return lines;
+}
 function renderTextRow(row,index){
   const lines=[
     `${index+1}. ${text(row.Business)||'Unnamed business'} — ${text(row.Address)||'Address unavailable'}`,
-    `   Stage: ${text(row.Stage)||'—'}`,
+    `   Stage: ${eventTime.customerStage(row.Stage)||'—'}`,
     `   Fit: ${text(row['Commercial Fit'])||'—'}`,
     `   ${text(row['Selected Category'])||'Category'} score: ${row['Selected Score']??'—'}`
   ];
+  lines.push(...chronologyLines(row).map(line=>'   '+line));
   const tags=text(row['Evidence Tags']);
   if(tags) lines.push(`   Evidence: ${tags}`);
   const urls=sourceUrls(row);
@@ -68,10 +81,11 @@ function renderHtmlRow(row,index){
     `<div style="font-weight:700">${index+1}. ${htmlEscape(text(row.Business)||'Unnamed business')}</div>`,
     `<div>${htmlEscape(text(row.Address)||'Address unavailable')}</div>`,
     '<div style="margin-top:6px;font-size:14px">',
-    `Stage: ${htmlEscape(text(row.Stage)||'—')} · `,
+    `Stage: ${htmlEscape(eventTime.customerStage(row.Stage)||'—')} · `,
     `Fit: ${htmlEscape(text(row['Commercial Fit'])||'—')} · `,
     `${htmlEscape(text(row['Selected Category'])||'Category')} score: ${htmlEscape(row['Selected Score']??'—')}`,
     '</div>',
+    `<div style="margin-top:6px;font-size:13px">${chronologyLines(row).map(htmlEscape).join('<br>')}</div>`,
     tags?`<div style="margin-top:6px;font-size:13px">Evidence: ${htmlEscape(tags)}</div>`:'',
     sourceHtml,
     '</div>'
@@ -183,6 +197,7 @@ module.exports={
   plural,
   reportDate,
   customerRows,
+  chronologyLines,
   renderTextRow,
   renderHtmlRow,
   renderCustomerMessage
