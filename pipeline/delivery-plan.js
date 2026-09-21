@@ -82,6 +82,7 @@ function validateDetectionReceipt(candidate, receipt, fingerprint) {
   else {
     if (text(receipt.entityId) !== text(candidate.entityId)) reasons.push('DETECTION_ENTITY_MISMATCH');
     if (text(receipt.changeFingerprint) !== fingerprint) reasons.push('DETECTION_CHANGE_MISMATCH');
+    if (receipt.customerEligible === false) reasons.push('DETECTION_NOT_CUSTOMER_ELIGIBLE');
     if (!receipt.firstDetectedAt && !receipt.materialChangeAt && !receipt.reopenAt) {
       reasons.push('DETECTION_TIME_MISSING');
     }
@@ -186,7 +187,8 @@ function planCustomerDelivery(input) {
         reason.includes('MISMATCH') ||
         reason.includes('INVALID') ||
         reason.includes('MISSING') ||
-        reason.includes('NOT_PRODUCTION_AUTHORIZED')
+        reason.includes('NOT_PRODUCTION_AUTHORIZED') ||
+        reason.includes('NOT_CUSTOMER_ELIGIBLE')
       );
       (hardReview ? reviews : excluded).push({
         entityId: candidate.entityId,
