@@ -15,7 +15,8 @@ const STRONG_CONCEPT_PATTERNS = Object.freeze([
   ['TEA', /\bTEA\b/i],
   ['ICE_CREAM', /ICE[ -]?CREAM/i],
   ['DOUGHNUT_BAKERY', /DOUGHNUT|DONUT|\bBAKERY\b/i],
-  ['POKE_BOWL', /\bPOKE\b|\bBOWL\b/i],
+  ['POKE_BOWL', /POKE|BOWL/i],
+  ['SLICE_PIZZA', /SLICE\s+SHOP(?:PE)?|PIZZA\s+SLICE/i],
   ['DINER', /\bDINER\b/i],
   ['SUSHI', /\bSUSHI\b/i],
   ['GRILL', /\bGRILL\b/i],
@@ -65,7 +66,7 @@ function directConceptEvidence(candidate) {
   const hits = STRONG_CONCEPT_PATTERNS
     .filter(([,pattern]) => pattern.test(directText))
     .map(([tag]) => tag);
-  const rawHotFood=hits.some((tag) => ['PIZZA','DOUGHNUT_BAKERY','GRILL'].includes(tag));
+  const rawHotFood=hits.some((tag) => ['PIZZA','DOUGHNUT_BAKERY','GRILL','SLICE_PIZZA'].includes(tag));
   const rawPoke=hits.includes('POKE_BOWL');
   const rawLightPrep=hits.some((tag) => ['COFFEE','TEA','ICE_CREAM'].includes(tag));
   const rawRestaurant=hits.some((tag) => ['RESTAURANT','PUB','BISTRO'].includes(tag));
