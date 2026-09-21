@@ -70,6 +70,13 @@ function canonicalBorough(value){
   };
   return map[key]||null;
 }
+function parseBoolean(value,defaultValue=false){
+  if(value===true||value===false) return value;
+  const v=text(value).toLowerCase();
+  if(['true','1','yes','y'].includes(v)) return true;
+  if(['false','0','no','n',''].includes(v)) return false;
+  return defaultValue;
+}
 function validInstant(value){
   const ms=Date.parse(text(value));
   return Number.isFinite(ms)?new Date(ms).toISOString():null;
@@ -124,8 +131,7 @@ function normalizeProfile(input){
   if(!Number.isInteger(minRaw)||minRaw<0||minRaw>100) failures.push('MINIMUM_SCORE_INVALID');
   const minimumScore=Number.isInteger(minRaw)&&minRaw>=0&&minRaw<=100?minRaw:null;
 
-  const starterSnapshotEnabled=data.starterSnapshotEnabled===true ||
-    String(data.starterSnapshotEnabled||'').toLowerCase()==='true';
+  const starterSnapshotEnabled=parseBoolean(data.starterSnapshotEnabled,false);
   const starterDaysRaw=data.starterDays==null||data.starterDays===''?7:Number(data.starterDays);
   const starterLimitRaw=data.starterLimit==null||data.starterLimit===''?10:Number(data.starterLimit);
   const maxSignalsRaw=data.maxSignals==null||data.maxSignals===''?25:Number(data.maxSignals);
@@ -194,7 +200,7 @@ function fromSheetRow(row){
     categories:r.Categories||r.categories,
     boroughs:r['Boroughs/Territory']||r.boroughs,
     minimumScore:r['Minimum Score']??r.minimumScore,
-    starterSnapshotEnabled:Boolean(r['Starter Snapshot Enabled']??r.starterSnapshotEnabled),
+    starterSnapshotEnabled:parseBoolean(r['Starter Snapshot Enabled']??r.starterSnapshotEnabled,false),
     starterDays:r['Starter Days']??r.starterDays,
     starterLimit:r['Starter Limit']??r.starterLimit,
     maxSignals:r['Max Signals']??r.maxSignals,
@@ -216,6 +222,7 @@ module.exports={
   parseList,
   canonicalCategory,
   canonicalBorough,
+  parseBoolean,
   validInstant,
   validEmail,
   normalizeProfile,
