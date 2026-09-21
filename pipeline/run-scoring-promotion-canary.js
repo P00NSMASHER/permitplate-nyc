@@ -9,6 +9,7 @@ const currentEval = require('./run-shadow-scoring-evaluation');
 const historical = require('./historical-shadow-score-benchmark');
 const shadow = require('./shadow-scoring-v3');
 const policy = require('./scoring-policy');
+const canonicalReceipt = require('./canonical-score-receipt');
 const delivery = require('./delivery-plan');
 
 const RUNNER_VERSION = 'PermitPlate-scoring-promotion-canary-v1.0.0';
@@ -84,6 +85,7 @@ function deliveryBoundaryProbe(candidate,scoreReceipt,graphDigest,observedAt) {
     );
   return {
     blocked,
+    accepted:result.signals.length===1 && result.reviews.length===0,
     signalCount:result.signals.length,
     reviewCount:result.reviews.length,
     reasons:result.reviews.flatMap((item)=>item.reasons||[])
@@ -106,9 +108,9 @@ async function run(nowIso) {
 
   const modeCounts={};
   let productionAuthorizedReceiptCount=0;
-  let canonicalCanaryReceiptCount=0;
-  let canonicalCanaryProductionAuthorizedCount=0;
-  let firstCanonical=null;
+  let canonicalProductionReceiptCount=0;
+  let legacyFallbackReceiptCount=0;
+  let firstProduction=null;
 
   for(const candidate of graph.candidates||[]) {
     const scored=policy.scoreCandidateWithPolicy({
@@ -122,18 +124,30 @@ async function run(nowIso) {
     if(scored.receipt&&scored.receipt.productionAuthorized===true) {
       productionAuthorizedReceiptCount+=1;
     }
-    if(scored.selectedMode==='CANONICAL_V3_CANARY'&&scored.receipt) {
-      canonicalCanaryReceiptCount+=1;
-      if(scored.receipt.productionAuthorized===true) {
-        canonicalCanaryProductionAuthorizedCount+=1;
-      }
-      if(!firstCanonical) firstCanonical={candidate,receipt:scored.receipt};
+    if(scored.selectedMode==='CANONICAL_V3_PRODUCTION'&&scored.receipt) {
+      canonicalProductionReceiptCount+=1;
+      if(!firstProduction) firstProduction={candidate,receipt:scored.receipt};
+    }
+    if(scored.selectedMode==='LEGACY_LITERAL'&&scored.receipt) {
+      legacyFallbackReceiptCount+=1;
     }
   }
 
-  const probe=firstCanonical?
-    deliveryBoundaryProbe(firstCanonical.candidate,firstCanonical.receipt,graph.graphDigest,observedAt):
-    {blocked:false,signalCount:0,reviewCount:0,reasons:['NO_CANONICAL_CANARY_RECEIPT']};
+  const firstCandidate=(graph.candidates||[])[0] || null;
+  const explicitCanary=firstCandidate?
+    canonicalReceipt.buildCanonicalCanaryScoreReceipt({
+      candidate:firstCandidate,
+      graphDigest:graph.graphDigest,
+      recordsById,
+      observedAt,
+      policyEvidenceFingerprint:promotion.evidenceFingerprint
+    }):null;
+  const canaryProbe=firstCandidate&&explicitCanary&&explicitCanary.status==='CANARY_SCORED'?
+    deliveryBoundaryProbe(firstCandidate,explicitCanary,graph.graphDigest,observedAt):
+    {blocked:false,accepted:false,signalCount:0,reviewCount:0,reasons:['NO_CANONICAL_CANARY_RECEIPT']};
+  const productionProbe=firstProduction?
+    deliveryBoundaryProbe(firstProduction.candidate,firstProduction.receipt,graph.graphDigest,observedAt):
+    {blocked:false,accepted:false,signalCount:0,reviewCount:0,reasons:['NO_CANONICAL_PRODUCTION_RECEIPT']};
 
   const result={
     runnerVersion:RUNNER_VERSION,
@@ -161,18 +175,24 @@ async function run(nowIso) {
     },
     policyModeCounts:modeCounts,
     productionAuthorizedReceiptCount,
-    canonicalCanaryReceiptCount,
-    canonicalCanaryProductionAuthorizedCount,
-    deliveryBoundaryProbe:probe
+    canonicalProductionReceiptCount,
+    legacyFallbackReceiptCount,
+    canonicalCanaryProbeReceiptCount:explicitCanary&&explicitCanary.status==='CANARY_SCORED'?1:0,
+    canonicalCanaryProductionAuthorizedCount:explicitCanary&&explicitCanary.productionAuthorized===true?1:0,
+    canaryDeliveryBoundaryProbe:canaryProbe,
+    productionDeliveryBoundaryProbe:productionProbe
   };
 
   result.passed=Boolean(
     graph.graphState==='COMPLETE' &&
     promotion.canaryReady===true &&
-    policy.PRODUCTION_SCORING_MODE==='LEGACY_LITERAL' &&
-    canonicalCanaryReceiptCount>0 &&
-    canonicalCanaryProductionAuthorizedCount===0 &&
-    probe.blocked===true &&
+    policy.PRODUCTION_SCORING_MODE==='CANONICAL_V3_WITH_LEGACY_FALLBACK' &&
+    canonicalProductionReceiptCount===(graph.candidates||[]).length &&
+    productionAuthorizedReceiptCount===(graph.candidates||[]).length &&
+    result.canonicalCanaryProbeReceiptCount===1 &&
+    result.canonicalCanaryProductionAuthorizedCount===0 &&
+    canaryProbe.blocked===true &&
+    productionProbe.accepted===true &&
     result.externalSendCalls===0
   );
   result.artifactFingerprint=sha256(stableStringify(result));
