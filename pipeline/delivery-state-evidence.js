@@ -19,7 +19,7 @@ function resolveDeliveryStateEvidence(data) {
     }
     return {
       deliveryStatus:'PLANNED', providerStatus:'NOT_SENT', deliveredAt:'',
-      providerMessageId:'', reconciledAt:'', authorizationId:'',
+      providerMessageId:'', reconciledAt:'', authorizationId:'', transportStartedAt:'',
       retryAllowed:false, deliveryConfirmed:false, receipt:null
     };
   }
@@ -58,8 +58,11 @@ function resolveDeliveryStateEvidence(data) {
   return {
     deliveryStatus:result.state, providerStatus:result.providerStatus, deliveredAt,
     providerMessageId:result.providerMessageId || '', reconciledAt:new Date(reconciled).toISOString(),
-    authorizationId:authorization.authorizationId, retryAllowed:false,
-    deliveryConfirmed:false, receipt:result.receipt || null
+    authorizationId:authorization.authorizationId,
+    transportStartedAt:new Date(started).toISOString(),
+    retryAllowed:false,
+    deliveryConfirmed:false,
+    receipt:result.receipt || null
   };
 }
 
