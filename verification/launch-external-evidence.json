@@ -1,6 +1,6 @@
 {
   "evidenceVersion": "PermitPlate-external-launch-evidence-v1.0.0",
-  "observedAt": "2026-09-21T17:40:00Z",
+  "observedAt": "2026-09-21T17:46:00Z",
   "stripe": {
     "account": "acct_1UFCRjDPW8riWrxQ",
     "paymentLinkId": "plink_1UG3RUDPW8riWrxQpZwHExK2",
@@ -14,9 +14,9 @@
     "currentDeployId": "6aaecade31905a0008c5e43c",
     "verifiedPublicBuildCommit": "a2d8c43f84a060a55f3fd325d6c50f2fde646cd3",
     "verifiedPublicBuildArtifactSha256": "3d86cc6424307b07be7aeed18c272a313a44d429dcb0bd2d392062c5b4510f9f",
-    "liveVerifiedCommit": null,
+    "liveVerifiedCommit": "57312ded8b2bcb3a95d4970ee0d8d4aadcb3dc0f",
     "productionDeployVerified": false,
-    "reason": "Scoped Netlify upload attempts timed out and current deploy ID did not advance.",
+    "reason": "Current Netlify production deploy metadata confirms commit 57312ded8b2bcb3a95d4970ee0d8d4aadcb3dc0f, which does not match the verified public build commit a2d8c43f84a060a55f3fd325d6c50f2fde646cd3.",
     "verifiedPublicSourceFingerprint": "21cbbb49be0b2449a52eea7b3adfff9916b5856d8edde3ae27f0fa6278feeea5"
   },
   "customerProof": {
