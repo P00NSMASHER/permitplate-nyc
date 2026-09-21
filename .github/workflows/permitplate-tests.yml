@@ -55,6 +55,9 @@ jobs:
       - name: Run detection-to-delivery candidate package canary
         run: node pipeline/candidate-package.test.js
 
+      - name: Run persistent opportunity ledger regression
+        run: node pipeline/opportunity-ledger.test.js
+
       - name: Run commercial fit receipt regression
         run: node pipeline/commercial-fit.test.js
 
