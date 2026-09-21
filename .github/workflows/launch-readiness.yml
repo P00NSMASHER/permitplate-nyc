@@ -1,0 +1,50 @@
+name: PermitPlate launch readiness
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'pipeline/launch-readiness.js'
+      - 'pipeline/run-launch-readiness.js'
+      - 'pipeline/run-source-health.js'
+      - 'pipeline/candidate-builder.js'
+      - 'pipeline/run-shadow-scoring-evaluation.js'
+      - 'pipeline/historical-shadow-score-benchmark.js'
+      - 'pipeline/scoring-policy.js'
+      - 'pipeline/run-first-subscriber-canary.js'
+      - 'pipeline/detection-ledger.js'
+      - 'pipeline/opportunity-ledger.js'
+      - 'state/detection-ledger.json'
+      - 'state/opportunity-ledger.json'
+      - 'verification/launch-external-evidence.json'
+      - 'build-site.js'
+      - '.github/workflows/launch-readiness.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  launch-readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run live launch readiness controller
+        run: node pipeline/run-launch-readiness.js pipeline/launch-readiness-result.json
+
+      - name: Retain launch readiness evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: permitplate-launch-readiness
+          path: pipeline/launch-readiness-result.json
+          if-no-files-found: warn
+          retention-days: 30
