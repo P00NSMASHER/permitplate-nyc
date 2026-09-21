@@ -3,7 +3,7 @@
 const NYC_SOURCE_REGISTRY = Object.freeze({
   DOHMH: Object.freeze({
     key: 'DOHMH',
-    sourceId: 'nyc-dohmh-restaurant-inspections',
+    sourceId: 'nyc-open-data:43nn-pn8j',
     domain: 'data.cityofnewyork.us',
     datasetId: '43nn-pn8j',
     authority: 'NYC Department of Health and Mental Hygiene',
@@ -11,7 +11,7 @@ const NYC_SOURCE_REGISTRY = Object.freeze({
   }),
   DOB: Object.freeze({
     key: 'DOB',
-    sourceId: 'nyc-dob-now-job-filings',
+    sourceId: 'nyc-open-data:w9ak-ipjd',
     domain: 'data.cityofnewyork.us',
     datasetId: 'w9ak-ipjd',
     authority: 'NYC Department of Buildings',
@@ -19,7 +19,7 @@ const NYC_SOURCE_REGISTRY = Object.freeze({
   }),
   SLA: Object.freeze({
     key: 'SLA',
-    sourceId: 'nys-sla-pending-licenses',
+    sourceId: 'ny-open-data:f8i8-k2gm',
     domain: 'data.ny.gov',
     datasetId: 'f8i8-k2gm',
     authority: 'New York State Liquor Authority',
