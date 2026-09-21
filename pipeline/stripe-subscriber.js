@@ -3,7 +3,7 @@
 const crypto=require('crypto');
 const profiles=require('./subscriber-profile');
 
-const STRIPE_SUBSCRIBER_ADAPTER_VERSION='PermitPlate-stripe-subscriber-v1.0.0';
+const STRIPE_SUBSCRIBER_ADAPTER_VERSION='PermitPlate-stripe-subscriber-v1.1.0';
 const PERMITPLATE_PAYMENT_LINK='plink_1UG3RUDPW8riWrxQpZwHExK2';
 
 function stableStringify(value){
@@ -67,8 +67,28 @@ function projectMarker(session,subscription){
     subscription&&subscription.metadata&&subscription.metadata.project
   ).toLowerCase();
 }
+function reviewResult(session,subId,failures,extra){
+  const base={
+    adapterVersion:STRIPE_SUBSCRIBER_ADAPTER_VERSION,
+    status:'REVIEW',
+    failures,
+    checkoutSessionId:text(session&&session.id)||null,
+    subscriptionId:subId||null,
+    profile:null,
+    profileFingerprint:null
+  };
+  Object.assign(base,extra||{});
+  base.adapterFingerprint=sha256(stableStringify({
+    version:STRIPE_SUBSCRIBER_ADAPTER_VERSION,
+    checkoutSessionId:base.checkoutSessionId,
+    subscriptionId:base.subscriptionId,
+    failures:failures.slice().sort(),
+    extra:extra||null
+  }));
+  return base;
+}
 
-function profileFromCheckout(input){
+function checkoutSubscriptionContext(input){
   const data=input||{};
   const session=data.session||{};
   const subscription=data.subscription||
@@ -99,81 +119,149 @@ function profileFromCheckout(input){
   const email=recipientEmail(session);
   if(!email) failures.push('CHECKOUT_EMAIL_MISSING');
 
-  const category=customFieldValue(session,'category');
-  if(!category) failures.push('CATEGORY_CUSTOM_FIELD_MISSING');
-
-  const territory=customFieldValue(session,'territory')||'ALL NYC';
-  const starterRaw=customFieldValue(session,'starter');
-  if(!['yes','no'].includes(text(starterRaw).toLowerCase())){
-    failures.push('STARTER_CUSTOM_FIELD_MISSING');
+  const actualPriceId=priceId(subscription);
+  const expectedPriceId=text(data.expectedPriceId);
+  if(!actualPriceId) failures.push('PRICE_ID_MISSING');
+  if(expectedPriceId&&actualPriceId&&actualPriceId!==expectedPriceId){
+    failures.push('PRICE_ID_MISMATCH');
   }
 
   if(failures.length){
-    return {
-      adapterVersion:STRIPE_SUBSCRIBER_ADAPTER_VERSION,
-      status:'REVIEW',
-      failures,
-      checkoutSessionId:text(session.id)||null,
-      subscriptionId:subId,
-      profile:null,
-      profileFingerprint:null,
-      adapterFingerprint:sha256(stableStringify({
-        version:STRIPE_SUBSCRIBER_ADAPTER_VERSION,
-        checkoutSessionId:text(session.id)||null,
-        subscriptionId:subId,
-        failures:failures.slice().sort()
-      }))
-    };
+    return reviewResult(session,subId,failures,{
+      email:email||null,
+      baselineAt:baselineAt||null,
+      subscriptionStatus:status||null,
+      priceId:actualPriceId||null
+    });
   }
 
-  const normalized=profiles.normalizeProfile({
-    subscriberId:subId,
-    recipientEmail:email,
+  const result={
+    adapterVersion:STRIPE_SUBSCRIBER_ADAPTER_VERSION,
+    status:'VALID_SUBSCRIPTION',
+    failures:[],
+    checkoutSessionId:text(session.id),
+    subscriptionId:subId,
+    customerId:customerId(session,subscription),
+    email,
     baselineAt,
-    categories:[category],
-    boroughs:territory,
-    minimumScore:data.minimumScore==null?60:data.minimumScore,
-    starterSnapshotEnabled:text(starterRaw).toLowerCase()==='yes',
-    starterDays:7,
-    starterLimit:10,
-    maxSignals:25,
     subscriptionStatus:status,
-    stripeCustomerId:customerId(session,subscription),
-    stripeSubscriptionId:subId,
-    priceId:priceId(subscription)||text(data.expectedPriceId)||null,
-    updatedAt:baselineAt
+    priceId:actualPriceId
+  };
+  result.contextFingerprint=sha256(stableStringify(result));
+  return result;
+}
+
+function profileFromPreferences(input){
+  const data=input||{};
+  const context=data.context;
+  const preferences=data.preferences||{};
+  if(!context||context.status!=='VALID_SUBSCRIPTION'){
+    return reviewResult(
+      data.session||{},
+      context&&context.subscriptionId||null,
+      ['VALID_SUBSCRIPTION_CONTEXT_REQUIRED']
+    );
+  }
+
+  const categories=preferences.categories||
+    (preferences.category?[preferences.category]:[]);
+  const boroughs=preferences.boroughs||preferences.territory||'ALL NYC';
+  const starter=preferences.starterSnapshotEnabled===true;
+
+  const normalized=profiles.normalizeProfile({
+    subscriberId:context.subscriptionId,
+    recipientEmail:context.email,
+    baselineAt:context.baselineAt,
+    categories,
+    boroughs,
+    minimumScore:preferences.minimumScore==null?60:preferences.minimumScore,
+    starterSnapshotEnabled:starter,
+    starterDays:preferences.starterDays==null?7:preferences.starterDays,
+    starterLimit:preferences.starterLimit==null?10:preferences.starterLimit,
+    maxSignals:preferences.maxSignals==null?25:preferences.maxSignals,
+    subscriptionStatus:context.subscriptionStatus,
+    stripeCustomerId:context.customerId,
+    stripeSubscriptionId:context.subscriptionId,
+    priceId:context.priceId,
+    updatedAt:context.baselineAt
   });
 
   if(normalized.status!=='ACTIVE'){
-    return {
-      adapterVersion:STRIPE_SUBSCRIBER_ADAPTER_VERSION,
-      status:'REVIEW',
-      failures:['PROFILE_NORMALIZATION_FAILED',...(normalized.failures||[])],
-      checkoutSessionId:text(session.id)||null,
-      subscriptionId:subId,
-      profile:null,
-      profileFingerprint:normalized.profileFingerprint,
-      adapterFingerprint:sha256(stableStringify({
-        version:STRIPE_SUBSCRIBER_ADAPTER_VERSION,
-        checkoutSessionId:text(session.id)||null,
-        subscriptionId:subId,
-        failures:['PROFILE_NORMALIZATION_FAILED',...(normalized.failures||[])].sort()
-      }))
-    };
+    return reviewResult(
+      {id:context.checkoutSessionId},
+      context.subscriptionId,
+      ['PROFILE_NORMALIZATION_FAILED',...(normalized.failures||[])],
+      {
+        preferenceSource:text(data.preferenceSource)||null,
+        preferenceReceiptId:text(data.preferenceReceiptId)||null
+      }
+    );
   }
 
   const result={
     adapterVersion:STRIPE_SUBSCRIBER_ADAPTER_VERSION,
     status:'ACTIVE',
     failures:[],
-    checkoutSessionId:text(session.id),
-    subscriptionId:subId,
-    customerId:customerId(session,subscription),
+    checkoutSessionId:context.checkoutSessionId,
+    subscriptionId:context.subscriptionId,
+    customerId:context.customerId,
+    subscriptionContextFingerprint:context.contextFingerprint,
+    preferenceSource:text(data.preferenceSource)||null,
+    preferenceReceiptId:text(data.preferenceReceiptId)||null,
     profile:normalized.profile,
     profileFingerprint:normalized.profileFingerprint
   };
   result.adapterFingerprint=sha256(stableStringify(result));
   return result;
+}
+
+function profileFromCheckout(input){
+  const data=input||{};
+  const context=checkoutSubscriptionContext(data);
+  if(context.status!=='VALID_SUBSCRIPTION') return context;
+
+  const session=data.session||{};
+  const category=customFieldValue(session,'category');
+  const territory=customFieldValue(session,'territory')||'ALL NYC';
+  const starterRaw=customFieldValue(session,'starter');
+  const failures=[];
+  if(!category) failures.push('CATEGORY_CUSTOM_FIELD_MISSING');
+  if(!['yes','no'].includes(text(starterRaw).toLowerCase())){
+    failures.push('STARTER_CUSTOM_FIELD_MISSING');
+  }
+  if(failures.length){
+    return reviewResult(session,context.subscriptionId,failures,{
+      subscriptionContextFingerprint:context.contextFingerprint
+    });
+  }
+
+  return profileFromPreferences({
+    context,
+    preferences:{
+      category,
+      territory,
+      starterSnapshotEnabled:text(starterRaw).toLowerCase()==='yes',
+      minimumScore:data.minimumScore==null?60:data.minimumScore,
+      starterDays:7,
+      starterLimit:10,
+      maxSignals:25
+    },
+    preferenceSource:'STRIPE_CUSTOM_FIELDS',
+    preferenceReceiptId:text(session.id)
+  });
+}
+
+function profileFromCheckoutAndPreferences(input){
+  const data=input||{};
+  const context=checkoutSubscriptionContext(data);
+  if(context.status!=='VALID_SUBSCRIPTION') return context;
+
+  return profileFromPreferences({
+    context,
+    preferences:data.preferences||{},
+    preferenceSource:data.preferenceSource||'EXTERNAL_PREFERENCE_RECEIPT',
+    preferenceReceiptId:data.preferenceReceiptId||null
+  });
 }
 
 function toPrivateSheetRow(adapterResult){
@@ -215,6 +303,9 @@ module.exports={
   priceId,
   recipientEmail,
   projectMarker,
+  checkoutSubscriptionContext,
+  profileFromPreferences,
   profileFromCheckout,
+  profileFromCheckoutAndPreferences,
   toPrivateSheetRow
 };
