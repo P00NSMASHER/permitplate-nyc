@@ -189,17 +189,23 @@ function absenceMutationGate(input) {
 }
 
 function resolveEntity(event, candidate) {
+  const candidateSourceIds = candidate && Array.isArray(candidate.sourceEntityIds) ?
+    candidate.sourceEntityIds.filter(Boolean) : [];
   const exactId = Boolean(
-    event && candidate &&
-    event.sourceEntityId && candidate.sourceEntityIds &&
-    candidate.sourceEntityIds.includes(event.sourceEntityId)
+    event && event.sourceEntityId &&
+    candidateSourceIds.includes(event.sourceEntityId)
+  );
+  const stableIdentifierConflict = Boolean(
+    event && event.sourceEntityId &&
+    candidateSourceIds.length > 0 &&
+    !candidateSourceIds.includes(event.sourceEntityId)
   );
   const addressMatch = norm(event && event.address) &&
     norm(event.address) === norm(candidate && candidate.address);
   const nameSimilarity = jaccard(event && event.businessName, candidate && candidate.canonicalName);
   const unitConflict = Boolean(event && event.unit && candidate && candidate.unit &&
     norm(event.unit) !== norm(candidate.unit));
-  const contradictory = Boolean(event && event.contradictoryEvidence);
+  const contradictory = Boolean(event && event.contradictoryEvidence) || stableIdentifierConflict;
 
   let score = 0;
   if (exactId) score += 70;
@@ -217,6 +223,7 @@ function resolveEntity(event, candidate) {
     normalizedAddressMatch: Boolean(addressMatch),
     normalizedNameSimilarity: Number(nameSimilarity.toFixed(3)),
     contradictoryEvidence: contradictory || unitConflict,
+    stableIdentifierConflict,
     resolutionScore: Math.max(0, Math.min(100, score)),
     resolutionStatus: status
   };
@@ -281,6 +288,50 @@ function vendorScore(parts) {
   };
 }
 
+function parseInstant(value) {
+  if (!value) return null;
+  const ms = Date.parse(String(value));
+  return Number.isFinite(ms) ? ms : null;
+}
+
+function classifySubscriberEligibility(input) {
+  const p = input || {};
+  const baseline = parseInstant(p.baselineAt);
+  if (baseline === null) {
+    return {eligible: false, section: 'REVIEW', reason: 'BASELINE_INVALID'};
+  }
+
+  const firstSignal = parseInstant(p.firstSignalAt);
+  const materialChange = parseInstant(p.materialChangeAt);
+  const reopenAt = parseInstant(p.reopenAt);
+  const starterDays = Math.max(0, Math.min(30, Number.isFinite(Number(p.starterDays)) ? Number(p.starterDays) : 7));
+
+  if (materialChange !== null && materialChange >= baseline) {
+    return {eligible: true, section: 'NORMAL', reason: 'POST_BASELINE_MATERIAL_CHANGE'};
+  }
+
+  if (p.qualifyingReopen === true && reopenAt !== null && reopenAt >= baseline) {
+    return {eligible: true, section: 'NORMAL', reason: 'POST_BASELINE_REOPEN'};
+  }
+
+  if (firstSignal !== null && firstSignal >= baseline) {
+    return {eligible: true, section: 'NORMAL', reason: 'POST_BASELINE_NEW_ENTITY'};
+  }
+
+  if (p.starterSnapshotEnabled === true && firstSignal !== null && firstSignal < baseline) {
+    const floor = baseline - starterDays * 24 * 60 * 60 * 1000;
+    if (firstSignal >= floor) {
+      return {eligible: true, section: 'STARTER', reason: 'LABELED_STARTER_SNAPSHOT'};
+    }
+  }
+
+  if (firstSignal === null && materialChange === null && reopenAt === null) {
+    return {eligible: false, section: 'REVIEW', reason: 'EVENT_TIME_UNPROVEN'};
+  }
+
+  return {eligible: false, section: 'INELIGIBLE', reason: 'PRE_BASELINE_BACKLOG'};
+}
+
 function deliveryGate(input) {
   const reasons = [];
   if (input.resolutionStatus !== 'RESOLVED') reasons.push('IDENTITY_NOT_RESOLVED');
@@ -290,7 +341,7 @@ function deliveryGate(input) {
       !POSITIVE_OBSERVATION_STATES.has(input.sourceObservationState)) {
     reasons.push('SOURCE_OBSERVATION_NOT_USABLE');
   }
-  if (!(input.postBaseline || input.qualifyingReopen)) reasons.push('NOT_NEW_OR_REOPENED');
+  if (!(input.postBaseline || input.qualifyingReopen || input.starterEligible)) reasons.push('NOT_NEW_OR_REOPENED');
   if ((Number(input.vendorScore) || 0) < (Number(input.minimumScore) || 0)) reasons.push('BELOW_SCORE_THRESHOLD');
   if (input.alreadyDeliveredFingerprint) reasons.push('DUPLICATE_DELIVERY');
   return {eligible: reasons.length === 0, reasons};
@@ -305,6 +356,8 @@ function buildOpportunityDecision(input) {
   const resolution = resolveEntity(event, candidate);
   const change = materialChange(data.previousState || null, data.currentState || {}, data.changeOptions || {});
   const score = vendorScore(data.scoreParts || {});
+  const subscriberEligibility = data.subscriberEligibility ?
+    classifySubscriberEligibility(data.subscriberEligibility) : null;
   const lineageComplete = Boolean(
     event.sourceRecordId &&
     /^https:\/\//.test(String(event.sourceUrl || ''))
@@ -315,8 +368,12 @@ function buildOpportunityDecision(input) {
     commercialFit: data.commercialFit || candidate.commercialFit,
     sourceFresh: Boolean(data.sourceObservation && data.sourceObservation.sourceFresh === true),
     sourceObservationState: sourceObservation.state,
-    postBaseline: data.postBaseline === true,
-    qualifyingReopen: data.qualifyingReopen === true,
+    postBaseline: subscriberEligibility ?
+      subscriberEligibility.section === 'NORMAL' : data.postBaseline === true,
+    qualifyingReopen: subscriberEligibility ?
+      subscriberEligibility.reason === 'POST_BASELINE_REOPEN' : data.qualifyingReopen === true,
+    starterEligible: subscriberEligibility ?
+      subscriberEligibility.section === 'STARTER' : false,
     vendorScore: score.total,
     minimumScore: data.minimumScore,
     alreadyDeliveredFingerprint: data.alreadyDeliveredFingerprint
@@ -353,6 +410,7 @@ function buildOpportunityDecision(input) {
     replayFingerprint,
     lineageComplete,
     sourceObservation,
+    subscriberEligibility,
     resolution,
     change,
     score,
@@ -372,6 +430,7 @@ module.exports = {
   stateHash,
   classifySourceObservation,
   absenceMutationGate,
+  classifySubscriberEligibility,
   resolveEntity,
   materialChange,
   vendorScore,
