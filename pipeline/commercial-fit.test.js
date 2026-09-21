@@ -140,4 +140,11 @@ function candidate(name, overrides) {
   assert.equal(a.fitReceiptId,b.fitReceiptId);
 }
 
+{
+  const out=f.classifyCommercialFit({candidate:candidate("TONY'S BRICK OVEN")});
+  assert.equal(out.fit,'HIGH');
+  assert.equal(out.conceptEvidence.explicit,true);
+  assert.equal(out.conceptEvidence.hotFood,false);
+}
+
 console.log('PermitPlate commercial-fit receipt regression tests passed.');
