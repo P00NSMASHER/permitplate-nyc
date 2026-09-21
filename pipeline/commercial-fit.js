@@ -70,7 +70,7 @@ function directConceptEvidence(candidate) {
     text:directText,
     tags:hits,
     explicit:hits.length > 0,
-    hotFood:hits.some((tag) => ['PIZZA','DOUGHNUT_BAKERY','GRILL','DELI','BRICK_OVEN'].includes(tag)),
+    hotFood:hits.some((tag) => ['PIZZA','DOUGHNUT_BAKERY','GRILL','DELI'].includes(tag)),
     restaurant:hits.some((tag) => ['RESTAURANT','PUB','BISTRO','DINER','SUSHI','LOUNGE'].includes(tag)),
     pokeBowl:hits.includes('POKE_BOWL'),
     lightPrep:hits.some((tag) => ['COFFEE','TEA','ICE_CREAM','SANDWICH'].includes(tag))
