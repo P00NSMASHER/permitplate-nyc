@@ -167,6 +167,29 @@ function plan(candidates, profileOverrides, receiptOverrides) {
   assert(result.reviews[0].reasons.includes('SCORE_GRAPH_MISMATCH'));
 }
 
+// A bootstrap/baseline detection receipt can never enter a customer feed.
+{
+  const c = candidate('baseline-detection');
+  const fp = p.candidateChangeFingerprint(c);
+  const bound = boundReceipts([c]);
+  const result = p.planCustomerDelivery({
+    graph:{graphState:'COMPLETE',graphDigest:GRAPH_DIGEST,candidates:[c]},
+    profile:{subscriberId:'sub-1',baselineAt:BASELINE,category:'POS',minimumScore:0},
+    detectionReceipts:[{
+      receiptId:c.detectionReceiptId,
+      entityId:c.entityId,
+      changeFingerprint:fp,
+      detectionClass:'BASELINE_EXISTING',
+      customerEligible:false,
+      firstDetectedAt:'2026-09-21T13:00:00Z'
+    }],
+    scoreReceipts:bound.scoreReceipts
+  });
+  assert.equal(result.signals.length,0);
+  assert.equal(result.reviews.length,1);
+  assert(result.reviews[0].reasons.includes('DETECTION_NOT_CUSTOMER_ELIGIBLE'));
+}
+
 // A canary/shadow score receipt can never reach customer delivery.
 {
   const c = candidate('canary-score');
