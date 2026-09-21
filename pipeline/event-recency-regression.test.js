@@ -3,7 +3,7 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const adapters=require('./source-adapters');
 const builder=require('./candidate-builder');
-const scorer=require('./shadow-scoring-v3');
+const scorer=require('./shadow-scoring-v4');
 
 // New synthetic fixture, not a modified historical benchmark target.
 function candidate(recordDate){
