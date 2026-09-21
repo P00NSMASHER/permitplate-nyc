@@ -229,8 +229,26 @@ function comparePlans(a, b) {
     asText(a['Venue Key']).localeCompare(asText(b['Venue Key']));
 }
 
+function materialChangeFingerprint(row) {
+  const explicit = asText(row && (row['Change Fingerprint'] || row['Opportunity Fingerprint']));
+  if (explicit) return explicit;
+
+  const materialState = {
+    venueKey: asText(row && row['Venue Key']),
+    latestSignalDate: asText(row && row['Latest Signal Date']),
+    stage: asText(row && row['Stage']),
+    sources: asText(row && row['Sources']),
+    whyNow: asText(row && row['Why Now']),
+    purchaseWindow: asText(row && row['Purchase Window']),
+    commercialFit: asText(row && row['Commercial Fit']),
+    bestScore: score(row || {}, 'Best Score'),
+    categoryScores: Object.fromEntries(SCORE_COLUMNS.map(([column]) => [column, score(row || {}, column)]))
+  };
+  return crypto.createHash('sha256').update(JSON.stringify(materialState)).digest('hex').slice(0, 20);
+}
+
 function makeSignalKey(section, baselineDate, row) {
-  return `${section}:${baselineDate}:${asText(row['Venue Key'])}`;
+  return `${section}:${baselineDate}:${asText(row['Venue Key'])}:${materialChangeFingerprint(row)}`;
 }
 
 function buildShadowPlan(graphRows, sourceEventRows, profile, normalKeys, baselineDate) {
@@ -262,9 +280,11 @@ function buildShadowPlan(graphRows, sourceEventRows, profile, normalKeys, baseli
       if (!evidence.length || evidence.some((event) => !asText(event['Source Record ID']) || !/^https:\/\//.test(asText(event['Source URL'])))) {
         throw new Error(`Missing source ID/URL for ${venueKey}`);
       }
+      const changeFingerprint = materialChangeFingerprint(row);
       return {
         section,
         signalKey: makeSignalKey(section, baselineDate, row),
+        changeFingerprint,
         venueKey,
         name: asText(row['Best Name']),
         borough: asText(row['Borough']),
@@ -296,9 +316,9 @@ function csvEncode(rows) {
 
 function renderArtifacts(plan) {
   const emailRows = plan.signals.map((signal) => signal.signalKey);
-  const csvRows = [['Section', 'Signal Key', 'Venue', 'Borough', 'Stage', 'Selected Score', 'Best Score', 'Source IDs', 'Source URLs']]
+  const csvRows = [['Section', 'Signal Key', 'Change Fingerprint', 'Venue', 'Borough', 'Stage', 'Selected Score', 'Best Score', 'Source IDs', 'Source URLs']]
     .concat(plan.signals.map((signal) => [
-      signal.section, signal.signalKey, signal.name, signal.borough, signal.stage,
+      signal.section, signal.signalKey, signal.changeFingerprint, signal.name, signal.borough, signal.stage,
       signal.selectedScore, signal.bestScore,
       signal.evidence.map((item) => item.id).join(' | '),
       signal.evidence.map((item) => item.url).join(' | ')
@@ -367,6 +387,8 @@ module.exports = {
   validateSourceObservationReceipts,
   validatePredecessorScan,
   buildShadowPlan,
+  materialChangeFingerprint,
+  makeSignalKey,
   renderArtifacts,
   verifyPlans,
   pendingSignalKeys,
