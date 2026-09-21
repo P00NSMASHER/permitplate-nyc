@@ -2,6 +2,7 @@
 
 const crypto = require('crypto');
 const model = require('../model-v7');
+const materialChange = require('./material-change');
 
 const DELIVERY_PLANNER_VERSION = 'PermitPlate-delivery-plan-v1.0.0';
 
@@ -34,7 +35,11 @@ function candidateChangeFingerprint(candidate) {
       tag: item && item.tag || null,
       sourceSystem: item && item.sourceSystem || null,
       sourceRecordId: item && item.sourceRecordId || null
-    })).sort((a, b) => stableStringify(a).localeCompare(stableStringify(b)))
+    })).sort((a, b) => stableStringify(a).localeCompare(stableStringify(b))),
+    // Preserve the raw binding above while also invalidating a receipt when an
+    // accepted filing's status/scope/cost changes without changing its stable ID.
+    ...(Array.isArray(c.projectSignal && c.projectSignal.materialEvidence) ?
+      {materialFingerprint: materialChange.describe(c).fingerprint} : {})
   }));
 }
 
