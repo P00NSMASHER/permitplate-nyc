@@ -1,0 +1,40 @@
+name: PermitPlate scoring readiness
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '47 12 * * *'
+  push:
+    branches: [main]
+    paths:
+      - 'pipeline/**'
+      - 'scoring/**'
+      - '.github/workflows/scoring-readiness.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run live scoring readiness audit
+        run: node pipeline/run-scoring-readiness.js pipeline/scoring-readiness-result.json
+
+      - name: Upload scoring readiness artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: permitplate-scoring-readiness
+          path: pipeline/scoring-readiness-result.json
+          if-no-files-found: warn
+          retention-days: 14
