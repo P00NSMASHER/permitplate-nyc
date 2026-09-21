@@ -78,6 +78,8 @@ const m = require('./model-v7');
     intendedFullScope:true,
     sourceId:'tempe-building-permits',
     connectorConfigHash:'cfg-1',
+    observedAt:'2026-09-21T13:30:00Z',
+    sourceFresh:true,
     schemaFingerprint:'schema-1',
     rawPageHashes:['page-1'],
     cursorClosed:true,
@@ -94,6 +96,8 @@ const m = require('./model-v7');
     intendedFullScope:true,
     sourceId:'tempe-building-permits',
     connectorConfigHash:'cfg-1',
+    observedAt:'2026-09-21T13:30:00Z',
+    sourceFresh:true,
     schemaFingerprint:'schema-1',
     rawPageHashes:['page-1'],
     cursorClosed:true,
@@ -210,6 +214,42 @@ const m = require('./model-v7');
   });
   assert.equal(g.eligible, false);
   assert(g.reasons.includes('SOURCE_OBSERVATION_NOT_USABLE'));
+}
+
+
+{
+  const r = m.classifySourceObservation({
+    transportOk:true,
+    intendedFullScope:true,
+    sourceId:'x',
+    connectorConfigHash:'cfg',
+    observedAt:'2026-09-21T13:30:00Z',
+    sourceFresh:true,
+    schemaFingerprint:'schema',
+    rawPageHashes:['page'],
+    cursorClosed:true,
+    fetchedCount:0
+  });
+  assert.equal(r.state, 'UNKNOWN');
+  assert.equal(r.supportsAbsenceConclusion, false);
+}
+
+{
+  const r = m.classifySourceObservation({
+    transportOk:true,
+    intendedFullScope:true,
+    sourceId:'x',
+    connectorConfigHash:'cfg',
+    observedAt:'2026-09-21T13:30:00Z',
+    sourceFresh:false,
+    schemaFingerprint:'schema',
+    rawPageHashes:['page'],
+    cursorClosed:true,
+    publisherCount:0,
+    fetchedCount:0
+  });
+  assert.equal(r.state, 'UNKNOWN');
+  assert.equal(r.reason, 'SOURCE_NOT_FRESH');
 }
 
 console.log('PermitPlate Model V7 regression tests passed.');
