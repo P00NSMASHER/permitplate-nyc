@@ -16,7 +16,8 @@
     "verifiedPublicBuildArtifactSha256": "3d86cc6424307b07be7aeed18c272a313a44d429dcb0bd2d392062c5b4510f9f",
     "liveVerifiedCommit": null,
     "productionDeployVerified": false,
-    "reason": "Scoped Netlify upload attempts timed out and current deploy ID did not advance."
+    "reason": "Scoped Netlify upload attempts timed out and current deploy ID did not advance.",
+    "verifiedPublicSourceFingerprint": "21cbbb49be0b2449a52eea7b3adfff9916b5856d8edde3ae27f0fa6278feeea5"
   },
   "customerProof": {
     "realPaidSubscriberEndToEndVerified": false,
