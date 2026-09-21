@@ -1,5 +1,7 @@
 'use strict';
 
+const fs=require('fs');
+const path=require('path');
 const opportunity=require('./opportunity-ledger');
 const stripeSubscriber=require('./stripe-subscriber');
 const subscriberArtifact=require('./subscriber-artifact');
@@ -224,6 +226,11 @@ function run(){
 
 if(require.main===module){
   const result=run();
+  const outputPath=process.argv[2]?path.resolve(process.argv[2]):null;
+  if(outputPath){
+    fs.mkdirSync(path.dirname(outputPath),{recursive:true});
+    fs.writeFileSync(outputPath,JSON.stringify(result,null,2)+'\n');
+  }
   console.log(JSON.stringify(result,null,2));
   if(!result.passed) process.exitCode=1;
 }
