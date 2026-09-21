@@ -1,283 +1,229 @@
 'use strict';
 
-const model = require('../model-v7');
+const crypto = require('crypto');
+const snapshot = require('../scoring/legacy-score-authority-2026-09-18.json');
 
-const SCORING_VERSION = 'permitplate-score-v3-2026-09-21';
-const CATEGORIES = Object.freeze(['POS','Insurance','Equipment','Hood/Fire','Waste','Pest','Linen','Distribution']);
-
-const STAGE_WEIGHTS = Object.freeze({
-  1:{POS:28,Insurance:25,Equipment:15,'Hood/Fire':8,Waste:12,Pest:10,Linen:8,Distribution:10},
-  2:{POS:25,Insurance:24,Equipment:35,'Hood/Fire':35,Waste:18,Pest:15,Linen:15,Distribution:18},
-  3:{POS:20,Insurance:17,Equipment:25,'Hood/Fire':25,Waste:28,Pest:30,Linen:25,Distribution:32},
-  4:{POS:15,Insurance:10,Equipment:10,'Hood/Fire':12,Waste:32,Pest:35,Linen:30,Distribution:34}
+const SCORING_VERSION = 'permitplate-score-authority-v1-2026-09-21';
+const CATEGORIES = Object.freeze([
+  'POS','Insurance','Equipment','Hood/Fire','Waste','Pest','Linen','Distribution'
+]);
+const SNAPSHOT_SCORE_KEYS = Object.freeze({
+  POS:'POS Score',
+  Insurance:'Insurance Score',
+  Equipment:'Equipment Score',
+  'Hood/Fire':'Hood/Fire Score',
+  Waste:'Waste Score',
+  Pest:'Pest Score',
+  Linen:'Linen Score',
+  Distribution:'Distribution Score'
 });
 
-const FIT = Object.freeze({HIGH:20,MEDIUM:10,LOW:-20});
-
-function clamp(value) {
-  return Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
+function stableStringify(value) {
+  if (Array.isArray(value)) return '[' + value.map(stableStringify).join(',') + ']';
+  if (value && typeof value === 'object') {
+    return '{' + Object.keys(value).sort()
+      .map((key) => JSON.stringify(key) + ':' + stableStringify(value[key])).join(',') + '}';
+  }
+  return JSON.stringify(value);
 }
 
-function recency(ageDays) {
-  const n = Number(ageDays);
-  if (!Number.isFinite(n) || n < 0) throw new Error('materialAgeDays must be a nonnegative number');
-  if (n <= 3) return 15;
-  if (n <= 7) return 10;
-  if (n <= 30) return 5;
-  return 0;
+function sha256(value) {
+  return crypto.createHash('sha256').update(String(value)).digest('hex');
 }
 
-function corroboration(sourceCount) {
-  const n = Number(sourceCount);
-  if (!Number.isInteger(n) || n < 1) throw new Error('sourceCount must be an integer >= 1');
-  if (n >= 3) return 18;
-  if (n === 2) return 10;
-  return 0;
-}
-
-function normalizedSource(value) {
+function normSource(value) {
   return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 }
 
-function sourceSet(values) {
-  return new Set((values || []).map(normalizedSource));
+function canonicalSources(values) {
+  return Array.from(new Set((values || []).map(normSource).filter(Boolean))).sort();
 }
 
-function hasSla(values) {
-  const set = sourceSet(values);
-  return set.has('SLA') || set.has('SLAPENDING');
+function equalArrays(a, b) {
+  return a.length === b.length && a.every((value, index) => value === b[index]);
 }
 
-function directConceptFlags(input) {
-  const supplied = input && input.conceptEvidence;
-  if (!supplied || supplied.authority !== 'DIRECT_SOURCE_TEXT') {
-    return {hotFood:false,restaurant:false,pokeBowl:false,lightPrep:false};
+function parseTime(value) {
+  if (!value) return null;
+  const ms = Date.parse(String(value));
+  return Number.isFinite(ms) ? ms : null;
+}
+
+function candidateCamis(candidate) {
+  const direct = candidate && candidate.camis;
+  if (direct) return String(direct).trim();
+  const entityId = String(candidate && candidate.entityId || '');
+  const match = /^CAMIS:(.+)$/i.exec(entityId);
+  return match ? match[1].trim() : null;
+}
+
+function authorityByCamis(camis) {
+  if (!camis) return [];
+  return (snapshot.records || []).filter((record) =>
+    String(record && record.authorityKey && record.authorityKey.camis || '').trim() === String(camis).trim()
+  );
+}
+
+function literalScores(record) {
+  const input = record && record.scores || {};
+  const scores = {};
+  for (const category of CATEGORIES) {
+    const key = SNAPSHOT_SCORE_KEYS[category];
+    const value = Number(input[key]);
+    if (!Number.isInteger(value) || value < 0 || value > 100) return null;
+    scores[category] = value;
   }
+  return scores;
+}
+
+function authorityState(record) {
   return {
-    hotFood:supplied.hotFood === true,
-    restaurant:supplied.restaurant === true,
-    pokeBowl:supplied.pokeBowl === true,
-    lightPrep:supplied.lightPrep === true
+    stage:String(record && record.stage || '').trim(),
+    sourceCount:Number(record && record.sourceCount || 0),
+    sources:canonicalSources(record && record.sources),
+    commercialFit:String(record && record.commercialFit || '').trim().toUpperCase(),
+    lastUpdated:record && record.lastUpdated || null
   };
 }
 
-function authorityNumber(value) {
-  if (value === null || value === undefined || value === '') return null;
-  const n = Number(value);
-  return Number.isFinite(n) ? n : null;
+function candidateState(candidate) {
+  return {
+    stage:String(candidate && candidate.lifecycleStage || '').trim(),
+    sourceCount:Number(candidate && (candidate.sourceCount ?? (candidate.sourceSystems || []).length) || 0),
+    sources:canonicalSources(candidate && candidate.sourceSystems),
+    sourceLatestEffectiveAt:candidate && candidate.sourceLatestEffectiveAt || null,
+    suppressed:candidate && candidate.deliverySuppressed === true
+  };
 }
 
-function validateInput(input) {
+function authorityFingerprint(record) {
+  return sha256(stableStringify({
+    authorityId:snapshot.authorityId,
+    authorityKey:record.authorityKey,
+    commercialFit:record.commercialFit,
+    stage:record.stage,
+    sourceCount:record.sourceCount,
+    sources:record.sources,
+    scores:record.scores,
+    bestVendorFit:record.bestVendorFit,
+    bestScore:record.bestScore,
+    purchaseWindow:record.purchaseWindow,
+    lastUpdated:record.lastUpdated,
+    intelligenceStatus:record.intelligenceStatus,
+    confidence:record.confidence
+  }));
+}
+
+function verifyAuthorityMatch(candidate, record) {
   const errors = [];
-  const fit = String(input && input.commercialFit || '').toUpperCase();
-  if (fit !== 'EXCLUDE' && !(fit in FIT)) errors.push('COMMERCIAL_FIT_UNPROVEN');
+  const c = candidateState(candidate);
+  const a = authorityState(record);
 
-  const stage = authorityNumber(input && input.stageNumber);
-  if (stage === null || !STAGE_WEIGHTS[stage]) errors.push('STAGE_UNPROVEN');
-
-  const age = authorityNumber(input && input.materialAgeDays);
-  if (age === null || age < 0) errors.push('MATERIAL_AGE_UNPROVEN');
-
-  const count = authorityNumber(input && input.sourceCount);
-  if (count === null || !Number.isInteger(count) || count < 1) errors.push('SOURCE_COUNT_INVALID');
-
-  if (input && input.strictVenueLinkedHospitalityDob === true &&
-      input.buildingLevelUnmatchedDob === true) {
-    errors.push('DOB_IDENTITY_CONTRADICTION');
+  if (!record) return {matched:false,errors:['SCORE_AUTHORITY_MISSING']};
+  if (c.suppressed) errors.push('CANDIDATE_SUPPRESSED');
+  if (!c.stage || c.stage !== a.stage) errors.push('LEGACY_AUTHORITY_STAGE_DRIFT');
+  if (!Number.isInteger(c.sourceCount) || c.sourceCount !== a.sourceCount) {
+    errors.push('LEGACY_AUTHORITY_SOURCE_COUNT_DRIFT');
   }
-  return errors;
+  if (!equalArrays(c.sources, a.sources)) errors.push('LEGACY_AUTHORITY_SOURCE_SET_DRIFT');
+
+  const candidateLatest = parseTime(c.sourceLatestEffectiveAt);
+  const authorityCutoff = parseTime(a.lastUpdated);
+  if (candidateLatest !== null && authorityCutoff !== null && candidateLatest > authorityCutoff) {
+    errors.push('LEGACY_AUTHORITY_SUPERSEDED_BY_NEWER_STATE');
+  }
+  if (!literalScores(record)) errors.push('LEGACY_AUTHORITY_SCORE_INVALID');
+
+  return {matched:errors.length === 0,errors,candidateState:c,authorityState:a};
 }
 
-function computeScores(input) {
-  const errors = validateInput(input || {});
-  if (errors.length) return {status:'REVIEW',errors,scoringVersion:SCORING_VERSION};
-
-  const fit = String(input.commercialFit).toUpperCase();
-  if (fit === 'EXCLUDE') {
-    const scores = Object.fromEntries(CATEGORIES.map((category) => [category,0]));
+function resolveScoreAuthority(candidate) {
+  const camis = candidateCamis(candidate);
+  if (!camis) {
     return {
-      status:'SCORED',
+      status:'REVIEW',
       scoringVersion:SCORING_VERSION,
-      scores,
-      bestVendorFit:'SUPPRESSED',
-      bestScore:0,
-      reasons:{common:['Commercial Fit EXCLUDE => all scores 0']}
+      authorityId:snapshot.authorityId,
+      errors:['SCORE_AUTHORITY_IDENTITY_MISSING']
     };
   }
 
-  const stage = Number(input.stageNumber);
-  const common =
-    FIT[fit] +
-    recency(input.materialAgeDays) +
-    corroboration(input.sourceCount) +
-    (input.publicPhone === true ? 5 : 0);
-
-  const scores = {};
-  const reasons = {common:[
-    `Fit ${fit} ${FIT[fit] >= 0 ? '+' : ''}${FIT[fit]}`,
-    `Recency +${recency(input.materialAgeDays)}`,
-    `Corroboration +${corroboration(input.sourceCount)}`,
-    `Public phone +${input.publicPhone === true ? 5 : 0}`
-  ]};
-
-  for (const category of CATEGORIES) {
-    scores[category] = common + STAGE_WEIGHTS[stage][category];
-    reasons[category] = [`Stage ${stage} +${STAGE_WEIGHTS[stage][category]}`];
+  const records = authorityByCamis(camis);
+  if (records.length === 0) {
+    return {
+      status:'REVIEW',
+      scoringVersion:SCORING_VERSION,
+      authorityId:snapshot.authorityId,
+      errors:['SCORE_AUTHORITY_MISSING']
+    };
+  }
+  if (records.length !== 1) {
+    return {
+      status:'REVIEW',
+      scoringVersion:SCORING_VERSION,
+      authorityId:snapshot.authorityId,
+      errors:['SCORE_AUTHORITY_AMBIGUOUS']
+    };
   }
 
-  if (hasSla(input.sources)) {
-    scores.POS += 8;
-    scores.Insurance += 10;
-    reasons.POS.push('Accepted SLA corroboration +8');
-    reasons.Insurance.push('Accepted SLA corroboration +10');
+  const record = records[0];
+  const verification = verifyAuthorityMatch(candidate, record);
+  if (!verification.matched) {
+    return {
+      status:'REVIEW',
+      scoringVersion:SCORING_VERSION,
+      authorityId:snapshot.authorityId,
+      authorityRecordFingerprint:authorityFingerprint(record),
+      errors:verification.errors
+    };
   }
 
-  const matchedDob = input.strictVenueLinkedHospitalityDob === true &&
-    input.buildingLevelUnmatchedDob !== true;
-
-  if (matchedDob) {
-    scores.Equipment += 20;
-    reasons.Equipment.push('Accepted venue-linked hospitality DOB +20');
-
-    if (input.directHoodFireDobScope === true) {
-      scores['Hood/Fire'] += 18;
-      reasons['Hood/Fire'].push('Accepted direct hood/fire DOB scope +18');
-    }
-
-    const cost = Number(input.dobInitialCost);
-    if (Number.isFinite(cost) && cost >= 150000) {
-      scores.Equipment += 8;
-      reasons.Equipment.push('Accepted DOB cost >=150k +8');
-    } else if (Number.isFinite(cost) && cost >= 50000) {
-      scores.Equipment += 5;
-      reasons.Equipment.push('Accepted DOB cost >=50k +5');
-    }
-
-    if (input.directHoodExtraScope === true) {
-      scores['Hood/Fire'] += 8;
-      reasons['Hood/Fire'].push('Accepted plumbing/mechanical/commercial-kitchen scope +8');
-    }
-  }
-
-  const concept = directConceptFlags(input);
-  if (concept.hotFood) {
-    scores.Equipment += 20;
-    scores['Hood/Fire'] += 18;
-    scores.Linen += 10;
-    scores.Distribution += 12;
-    reasons.Equipment.push('Direct-source hot-food concept +20');
-    reasons['Hood/Fire'].push('Direct-source hot-food concept +18');
-    reasons.Linen.push('Direct-source hot-food concept +10');
-    reasons.Distribution.push('Direct-source hot-food concept +12');
-  }
-  if (concept.restaurant) {
-    scores.Equipment += 12;
-    scores['Hood/Fire'] += 12;
-    scores.Linen += 12;
-    scores.Distribution += 10;
-    reasons.Equipment.push('Direct-source restaurant/pub/bistro +12');
-    reasons['Hood/Fire'].push('Direct-source restaurant/pub/bistro +12');
-    reasons.Linen.push('Direct-source restaurant/pub/bistro +12');
-    reasons.Distribution.push('Direct-source restaurant/pub/bistro +10');
-  }
-  if (concept.pokeBowl) {
-    scores.Equipment += 8;
-    scores['Hood/Fire'] += 6;
-    scores.Distribution += 8;
-    reasons.Equipment.push('Direct-source poke/bowl +8');
-    reasons['Hood/Fire'].push('Direct-source poke/bowl +6');
-    reasons.Distribution.push('Direct-source poke/bowl +8');
-  }
-  if (concept.lightPrep) {
-    scores['Hood/Fire'] -= 12;
-    scores.Linen -= 8;
-    reasons['Hood/Fire'].push('Direct-source light-prep -12');
-    reasons.Linen.push('Direct-source light-prep -8');
-  }
-
-  if (input.knownCuisineType === true) {
-    scores.Distribution += 8;
-    reasons.Distribution.push('Known cuisine/type +8');
-  }
-  if (input.actualDohmhPrePermit === true) {
-    scores.Pest += 5;
-    scores.Waste += 5;
-    scores.Distribution += 5;
-    reasons.Pest.push('Current-CAMIS DOHMH pre-permit +5');
-    reasons.Waste.push('Current-CAMIS DOHMH pre-permit +5');
-    reasons.Distribution.push('Current-CAMIS DOHMH pre-permit +5');
-  }
-
-  for (const category of CATEGORIES) scores[category] = clamp(scores[category]);
-
-  const evidenceTags = [];
-  if (input.directEquipmentDobScope === true) evidenceTags.push('EQUIPMENT');
-  if (input.directHoodFireDobScope === true) evidenceTags.push('HOOD_FIRE');
-
-  for (const category of ['Equipment','Hood/Fire']) {
-    const result = model.applyVerticalEvidenceCeiling({
-      category,
-      score:scores[category],
-      posScore:scores.POS,
-      insuranceScore:scores.Insurance,
-      evidenceTags,
-      hotFoodSpecialistEvidence:concept.hotFood
-    });
-    if (result.reviewRequired) {
-      return {status:'REVIEW',errors:['REFERENCE_SCORE_AUTHORITY_MISSING'],scoringVersion:SCORING_VERSION};
-    }
-    scores[category] = result.score;
-    if (result.capped) reasons[category].push('Vertical evidence ceiling applied');
-  }
-
-  const best = selectBestVendor(scores, {
-    stageNumber:stage,
-    sources:input.sources,
-    matchedDob,
-    directHoodFireDobScope:input.directHoodFireDobScope === true,
-    dobInitialCost:input.dobInitialCost,
-    concept
-  });
-
+  const scores = literalScores(record);
   return {
     status:'SCORED',
     scoringVersion:SCORING_VERSION,
+    authorityId:snapshot.authorityId,
+    authorityKind:snapshot.authorityKind,
+    authorityRecordFingerprint:authorityFingerprint(record),
+    authorityCutoff:record.lastUpdated,
+    commercialFit:record.commercialFit,
     scores,
-    bestVendorFit:best.bestVendorFit,
-    bestScore:best.bestScore,
-    reasons
+    bestVendorFit:record.bestVendorFit,
+    bestScore:Number(record.bestScore),
+    purchaseWindow:record.purchaseWindow,
+    intelligenceStatus:record.intelligenceStatus,
+    confidence:record.confidence
   };
 }
 
-function selectBestVendor(scores, context) {
-  const max = Math.max(...CATEGORIES.map((category) => Number(scores[category])));
-  const tied = CATEGORIES.filter((category) => Number(scores[category]) === max);
-  if (tied.length === 1) return {bestVendorFit:tied[0],bestScore:max};
-
-  const ctx = context || {};
-  const preferences = [];
-  if (ctx.matchedDob && ctx.directHoodFireDobScope) preferences.push('Hood/Fire');
-  if (ctx.matchedDob && Number(ctx.dobInitialCost) >= 50000) preferences.push('Equipment');
-  if (ctx.concept && ctx.concept.hotFood) preferences.push('Equipment');
-  if (hasSla(ctx.sources) && Number(ctx.stageNumber) === 1) preferences.push('Insurance');
-  preferences.push(...CATEGORIES);
-
-  for (const candidate of preferences) {
-    if (tied.includes(candidate)) return {bestVendorFit:candidate,bestScore:max};
+// Compatibility name retained for callers. No category formula is computed here.
+// The only accepted scores are literal values from a pinned validated authority.
+function computeScores(input) {
+  if (!input || !input.candidate) {
+    return {
+      status:'REVIEW',
+      scoringVersion:SCORING_VERSION,
+      authorityId:snapshot.authorityId,
+      errors:['CANDIDATE_REQUIRED_FOR_SCORE_AUTHORITY']
+    };
   }
-  throw new Error('unable to select best vendor fit');
+  return resolveScoreAuthority(input.candidate);
 }
 
 module.exports = {
   SCORING_VERSION,
   CATEGORIES,
-  STAGE_WEIGHTS,
-  FIT,
-  recency,
-  corroboration,
-  directConceptFlags,
-  authorityNumber,
-  validateInput,
-  computeScores,
-  selectBestVendor
+  SNAPSHOT_SCORE_KEYS,
+  stableStringify,
+  sha256,
+  canonicalSources,
+  candidateCamis,
+  authorityByCamis,
+  literalScores,
+  authorityState,
+  candidateState,
+  authorityFingerprint,
+  verifyAuthorityMatch,
+  resolveScoreAuthority,
+  computeScores
 };
