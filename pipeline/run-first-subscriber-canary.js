@@ -199,7 +199,7 @@ function run(){
     now:'2026-09-21T17:10:00Z'
   });
 
-  const profileSheetPlan=privateSheetMapping.subscriberProfileRow(stripe);
+  const profileSheetPlan=privateSheetMapping.subscriberProfileRow(activation);
   const deliverySheetPlan=privateSheetMapping.deliveryStateRows({
     artifact:first,
     attempt,
@@ -297,9 +297,9 @@ function run(){
     result.preferenceSource==='NETLIFY_PRECHECKOUT_FORM' &&
     result.preferenceReceiptId==='submission_canary' &&
     result.onboardingSubmissionId==='submission_canary' &&
-    result.privateStatePlan.subscriberProfileColumnCount===21 &&
+    result.privateStatePlan.subscriberProfileColumnCount===25 &&
     result.privateStatePlan.deliveryStateRowCount===2 &&
-    result.privateStatePlan.deliveryStateColumnCount===16 &&
+    result.privateStatePlan.deliveryStateColumnCount===19 &&
     result.privateStatePlan.deliveryStatus==='PLANNED' &&
     result.privateStatePlan.providerStatus==='NOT_SENT' &&
     result.replayArtifact.signalCount===0 &&
