@@ -11,6 +11,8 @@ on:
       - 'pipeline/detection-ledger.js'
       - 'pipeline/run-detection-ledger.js'
       - 'pipeline/run-opportunity-packages.js'
+      - 'pipeline/opportunity-ledger.js'
+      - 'pipeline/run-opportunity-ledger.js'
       - 'pipeline/candidate-package.js'
       - 'pipeline/scoring-policy.js'
       - 'pipeline/canonical-score-receipt.js'
@@ -37,16 +39,19 @@ jobs:
       - name: Build scored opportunity packages for customer-eligible detections
         run: node pipeline/run-opportunity-packages.js pipeline/detection-ledger-run-result.json pipeline/opportunity-packages-result.json
 
-      - name: Commit detection state only after package success
+      - name: Append production-authorized packages to opportunity ledger
+        run: node pipeline/run-opportunity-ledger.js pipeline/opportunity-packages-result.json state/opportunity-ledger.json pipeline/opportunity-ledger-run-result.json
+
+      - name: Commit detection and opportunity state atomically
         run: |
-          if git diff --quiet -- state/detection-ledger.json; then
-            echo "Detection ledger unchanged."
+          if git diff --quiet -- state/detection-ledger.json state/opportunity-ledger.json; then
+            echo "PermitPlate state unchanged."
             exit 0
           fi
           git config user.name "PermitPlate Detection Bot"
           git config user.email "actions@users.noreply.github.com"
-          git add state/detection-ledger.json
-          git commit -m "state: advance PermitPlate detection ledger [skip ci]"
+          git add state/detection-ledger.json state/opportunity-ledger.json
+          git commit -m "state: advance PermitPlate detection and opportunity ledgers [skip ci]"
           git push
 
       - name: Retain detection evidence
@@ -57,5 +62,6 @@ jobs:
           path: |
             pipeline/detection-ledger-run-result.json
             pipeline/opportunity-packages-result.json
+            pipeline/opportunity-ledger-run-result.json
           if-no-files-found: warn
           retention-days: 30
