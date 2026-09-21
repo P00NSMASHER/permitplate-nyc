@@ -1,0 +1,39 @@
+name: PermitPlate provider reconciliation
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    paths:
+      - 'pipeline/provider-reconciliation*'
+      - 'pipeline/delivery-state-evidence.js'
+      - 'pipeline/private-sheet-mapping*'
+      - 'pipeline/transport-authorization.js'
+      - '.github/workflows/provider-reconciliation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  reconciliation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run provider and private-state regressions without transport
+        run: |
+          mkdir -p verification-output
+          set -o pipefail
+          node --test pipeline/provider-reconciliation.test.js pipeline/private-sheet-mapping.test.js | tee verification-output/reconciliation.tap
+      - name: Preserve the first-subscriber no-send boundary
+        run: node pipeline/run-first-subscriber-canary.js verification-output/first-subscriber.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: permitplate-provider-reconciliation
+          path: verification-output/
+          retention-days: 14
