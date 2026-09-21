@@ -198,41 +198,50 @@ No subscriber email or Stripe customer data is stored in the public GitHub repos
 
 ## 9. Stripe subscriber adapter
 
-Implemented checkout-to-profile adapter.
+PermitPlate now separates payment/subscription authority from preference authority.
 
-Fail-closed checks include:
+### Stripe subscription authority
+
+The Stripe adapter validates:
 
 - exact PermitPlate Payment Link;
 - subscription mode;
 - checkout complete;
 - paid/no-payment-required state;
 - PermitPlate project metadata;
-- subscription object present;
-- active/trialing subscription;
-- customer email present;
-- category preference present;
-- Starter preference present.
+- exact subscription object/id;
+- active/trialing status;
+- checkout email;
+- exact expected price;
+- Subscription.created as the service baseline.
 
 Critical timing rule:
 
 Baseline At = Stripe Subscription.created
 
-It is NOT Checkout Session.created.
+It is NOT the pre-checkout form time, Checkout Session.created, or Payment Link open time.
 
-Current live subscription link:
+Current live subscription identifiers:
 
 - Payment Link ID: plink_1UG3RUDPW8riWrxQpZwHExK2
 - Price ID: price_1UFjcWDPW8riWrxQhnrPX6nc
 
-Prepared preference fields:
+### Netlify preference authority
 
-- required service-category dropdown;
-- optional NYC territory text, blank = all NYC;
-- required Starter Snapshot yes/no.
+The preferred first-launch path is:
 
-Blocker:
+Netlify pre-checkout form
+→ unchanged Stripe Payment Link
+→ exact-email match
+→ private subscriber profile
 
-The connected Stripe key still lacks payment_links_write, so these fields have NOT been applied to the live $79 checkout.
+The onboarding receipt contains category, territory, Starter choice, version, plan and submission time. It is rejected when spam/honeypot-triggered, stale, future-dated relative to the subscription baseline, wrong-form, wrong-version, wrong-plan, invalid, or ambiguous.
+
+The join key is exact normalized email within a bounded pre-checkout window. Business name, address and fuzzy matching are intentionally not used.
+
+Stripe custom fields remain supported as an optional future preference source, but payment_links_write is no longer required for first launch.
+
+Netlify Forms is enabled on the existing PermitPlate project. The new form is not yet live because production still serves the older deployment.
 
 ## 10. Subscriber artifact and customer digest
 
@@ -279,12 +288,29 @@ Implemented:
 - deterministic signal keys;
 - deterministic delivery attempt ID;
 - deterministic message identity;
-- provider-observation reconciliation;
 - delivered-key replay suppression;
-- idempotent provider-accepted replay.
+- exact provider-evidence binding to Attempt ID, Message Identity, recipient and artifact fingerprint;
+- immutable provider reconciliation receipts;
+- idempotent provider-accepted replay;
+- bounce/rejection state preservation;
+- conflicting provider-message IDs fail to REVIEW;
+- caller-supplied FINALIZED labels cannot create finalized private state.
+
+Provider ACCEPTED means the configured provider accepted/bound the message event. PermitPlate does not call that proof that the message reached or was read in the recipient's inbox.
+
+Private Delivery State is now derived through the provider-evidence boundary. A FINALIZED row requires:
+
+1. a READY artifact and message;
+2. the exact planned attempt;
+3. valid owner send authorization at transport time;
+4. provider evidence bound to that exact attempt;
+5. consistent event/readback timestamps.
 
 Synthetic first-subscriber NO-SEND canary verifies:
 
+- Netlify pre-checkout preference receipt;
+- unchanged Stripe subscription;
+- exact-email activation;
 - subscription-created baseline;
 - one NORMAL signal;
 - one STARTER signal;
@@ -330,7 +356,7 @@ Private Google Sheet:
 
 PermitPlate NYC Dashboard
 
-Subscriber Profiles was expanded to 20 columns while preserving the original audit fields.
+Subscriber Profiles now has 21 columns while preserving the original audit fields.
 
 Added private fields include:
 
@@ -343,9 +369,12 @@ Added private fields include:
 - Stripe Subscription;
 - Price ID;
 - Profile Fingerprint;
-- Checkout Session.
+- Checkout Session;
+- Preference Receipt ID.
 
-Delivery State was expanded to 16 columns.
+The Preference Receipt ID binds the private subscriber profile to the exact pre-checkout authority that supplied category/territory/Starter preferences.
+
+Delivery State has 16 columns.
 
 Added private fields include:
 
@@ -359,7 +388,9 @@ Added private fields include:
 - Package ID;
 - Authorization ID.
 
-Validation rules were added for Starter boolean, subscription status, delivery status, delivery class and provider status.
+Validation rules exist for Starter boolean, subscription status, delivery status, delivery class and provider status.
+
+Provider-derived rows expose the matched provider receipt to the mapping layer. Provider acceptance time is stored in the legacy Delivered At column, but is not described as inbox-delivery proof.
 
 No fake subscriber or delivery rows were inserted.
 
@@ -367,27 +398,33 @@ No fake subscriber or delivery rows were inserted.
 
 Netlify no longer publishes the repository root in source configuration.
 
-The build now:
+The build:
 
 - creates a dist directory;
 - copies an explicit allowlist of public site files only;
-- excludes pipeline, scoring, state, tests and model implementation;
-- emits build-info.json with source commit and public-file hashes.
+- excludes pipeline, scoring, state, tests and implementation internals;
+- emits build-info.json with source commit and public-file hashes;
+- verifies local href/src/action references;
+- verifies the Netlify form name, honeypot and required preference fields;
+- verifies that public Start/Subscribe CTAs route through /start;
+- verifies that the raw Stripe checkout URL appears only on the post-form handoff page.
 
-A GitHub Actions deploy-ready public artifact was built and independently verified.
+Current verified onboarding deployment candidate:
 
-Verified artifact:
+- source commit: 6b99072631adbc9b1e2bb7e86c02fc7578f335d4
+- artifact ZIP SHA-256: f56cd9bb2718d74b187a98fb9602a799a65979ab4de93726bbcd6a5dae1589d4
+- public-source fingerprint: 6d583455c58f8168b8649570192acb8d56aac0634fce7f014f3d80fa04e5bbed
 
-- source commit: a2d8c43f84a060a55f3fd325d6c50f2fde646cd3
-- artifact ZIP SHA-256: 3d86cc6424307b07be7aeed18c272a313a44d429dcb0bd2d392062c5b4510f9f
+The public onboarding build includes start.html and start-checkout.html.
 
-Netlify production deploy remains stale.
+Current Netlify production deploy remains:
 
-Current known deploy ID:
+- deploy ID: 6aaecade31905a0008c5e43c
+- commit: 57312ded8b2bcb3a95d4970ee0d8d4aadcb3dc0f
 
-6aaecade31905a0008c5e43c
+Netlify Forms is enabled for the project, but the live forms listing is currently empty because the stale production deployment does not contain the new form.
 
-Multiple scoped upload attempts timed out during package/network resolution. Post-attempt project readback showed that the deploy ID did not advance.
+Multiple scoped upload attempts timed out during package/network resolution. Post-attempt readback confirmed that production did not advance.
 
 No successful deploy is claimed.
 
@@ -417,25 +454,35 @@ Proven internally:
 Not yet proven:
 
 1. A real $79 PermitPlate subscriber completing the full production path.
-2. Live checkout preference capture on the current $79 Payment Link.
-3. Provider-backed customer delivery/reconciliation for a genuine subscriber.
-4. The new public-site build running on Netlify production.
+2. The Netlify pre-checkout form running on the live production site.
+3. Provider-backed acceptance/reconciliation for a genuine subscriber.
+4. Next-run duplicate suppression after that genuine provider-backed event.
+5. The verified onboarding public build running on Netlify production.
+
+Stripe Payment Link write permission is not required for these proofs.
 
 ## 17. Remaining external blockers
 
-### Stripe
+### Netlify production deployment
 
-Required permission:
+This is now the primary integration blocker.
 
-payment_links_write
+The existing site is healthy but stale. Netlify Forms is enabled, but live forms remain empty until the onboarding build is deployed.
 
-Until granted, the live subscription Payment Link cannot collect category/territory/Starter preferences directly.
+The native connector can request a deploy handoff but cannot repair repository linkage itself. Scoped runtime upload attempts continue to fail during package/network resolution.
 
-### Netlify
+The connected Desktop Commander device PAAM-L044 is installed but currently offline, so it cannot execute the deploy handoff from the authorized machine at this time.
 
-The existing site is healthy but stale.
+A future deployment may be verified by either:
 
-The native connector can request a deploy handoff but cannot repair the repository linkage, and the scoped runtime upload command continues to fail during external package/network resolution.
+- exact live Netlify commit matching the verified build commit; or
+- exact live public-source/build-info fingerprint matching the verified public artifact.
+
+### Commercial proof
+
+After deployment, the remaining proof is one real paid subscriber completing owner-authorized transport, provider-bound reconciliation, and next-run duplicate suppression.
+
+Stripe payment_links_write is optional and is no longer a first-customer launch blocker.
 
 ## 18. Next commercial proof
 
