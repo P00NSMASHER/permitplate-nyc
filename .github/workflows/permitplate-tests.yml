@@ -60,3 +60,6 @@ jobs:
 
       - name: Run 47-case historical shadow scoring replay
         run: node pipeline/historical-shadow-score-benchmark.test.js
+
+      - name: Run controlled scoring promotion policy regression
+        run: node pipeline/scoring-policy.test.js
