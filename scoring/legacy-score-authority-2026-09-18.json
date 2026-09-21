@@ -1,0 +1,1953 @@
+{
+  "schemaVersion": 1,
+  "authorityId": "PermitPlate-legacy-score-authority-2026-09-18",
+  "authorityKind": "validated-literal-production-snapshot",
+  "sourceSpreadsheetId": "1ufLMFOabKWv1CverT_TAdcK6XNOdEEEiBW9C7qctLmE",
+  "sourceSheet": "Venue Graph",
+  "sourceRange": "A1:AL63",
+  "extractedAt": "2026-09-21T14:48:00Z",
+  "formulaAuthority": "UNAVAILABLE_DO_NOT_INFER",
+  "recordCount": 62,
+  "scoreColumns": [
+    "POS Score",
+    "Insurance Score",
+    "Equipment Score",
+    "Hood/Fire Score",
+    "Waste Score",
+    "Pest Score",
+    "Linen Score",
+    "Distribution Score"
+  ],
+  "records": [
+    {
+      "authorityKey": {
+        "venueKey": "820 FRANKLIN AVE|11225",
+        "camis": "50192367",
+        "slaApplicationId": "NA-0370-26-120315",
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "BUILDOUT / LICENSING",
+      "sourceCount": 2,
+      "sources": [
+        "DOHMH",
+        "SLA"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 83,
+        "Insurance Score": 84,
+        "Equipment Score": 84,
+        "Hood/Fire Score": 84,
+        "Waste Score": 68,
+        "Pest Score": 65,
+        "Linen Score": 65,
+        "Distribution Score": 76
+      },
+      "bestVendorFit": "Insurance",
+      "bestScore": 84,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "MULTI-SOURCE VERIFIED: DOHMH + SLA",
+      "confidence": "HIGH"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "81-07 ROOSEVELT AVE|11372",
+        "camis": "50192372",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 68,
+        "Insurance Score": 65,
+        "Equipment Score": 55,
+        "Hood/Fire Score": 36,
+        "Waste Score": 52,
+        "Pest Score": 50,
+        "Linen Score": 40,
+        "Distribution Score": 58
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 68,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "MEDIUM"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "582 E FORDHAM RD|10458",
+        "camis": "50192375",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "MEDIUM",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 58,
+        "Insurance Score": 55,
+        "Equipment Score": 45,
+        "Hood/Fire Score": 38,
+        "Waste Score": 42,
+        "Pest Score": 40,
+        "Linen Score": 38,
+        "Distribution Score": 40
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 58,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "LOW"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "153 BOWERY|10002",
+        "camis": "50192386",
+        "slaApplicationId": null,
+        "dobJobFiling": "M00692498-P1"
+      },
+      "commercialFit": "HIGH",
+      "stage": "BUILDOUT / LICENSING",
+      "sourceCount": 2,
+      "sources": [
+        "DOHMH",
+        "DOB"
+      ],
+      "workTypes": "General construction; eating/drinking establishment; outdoor BBQ",
+      "scores": {
+        "POS Score": 65,
+        "Insurance Score": 64,
+        "Equipment Score": 100,
+        "Hood/Fire Score": 100,
+        "Waste Score": 58,
+        "Pest Score": 55,
+        "Linen Score": 65,
+        "Distribution Score": 78
+      },
+      "bestVendorFit": "Equipment",
+      "bestScore": 100,
+      "purchaseWindow": "ACTIVE BUILDOUT",
+      "lastUpdated": "2026-09-17T15:16:44-04:00",
+      "intelligenceStatus": "MULTI-SOURCE CURRENT",
+      "confidence": "HIGH"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "31 GRAND ST|11249",
+        "camis": "50192396",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "MEDIUM",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 58,
+        "Insurance Score": 55,
+        "Equipment Score": 45,
+        "Hood/Fire Score": 38,
+        "Waste Score": 42,
+        "Pest Score": 40,
+        "Linen Score": 38,
+        "Distribution Score": 40
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 58,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "LOW"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "1285 1ST AVE|10021",
+        "camis": "50192400",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 68,
+        "Insurance Score": 65,
+        "Equipment Score": 75,
+        "Hood/Fire Score": 66,
+        "Waste Score": 52,
+        "Pest Score": 50,
+        "Linen Score": 58,
+        "Distribution Score": 70
+      },
+      "bestVendorFit": "Equipment",
+      "bestScore": 75,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "MEDIUM"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "7609 5TH AVE|11209",
+        "camis": "50192405",
+        "slaApplicationId": "NA-0240-26-119768",
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "BUILDOUT / LICENSING",
+      "sourceCount": 2,
+      "sources": [
+        "DOHMH",
+        "SLA"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 83,
+        "Insurance Score": 84,
+        "Equipment Score": 84,
+        "Hood/Fire Score": 84,
+        "Waste Score": 68,
+        "Pest Score": 65,
+        "Linen Score": 77,
+        "Distribution Score": 86
+      },
+      "bestVendorFit": "Distribution",
+      "bestScore": 86,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "MULTI-SOURCE VERIFIED: DOHMH + SLA",
+      "confidence": "HIGH"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "47 ADELPHI ST|11205",
+        "camis": "50192408",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 68,
+        "Insurance Score": 65,
+        "Equipment Score": 55,
+        "Hood/Fire Score": 36,
+        "Waste Score": 52,
+        "Pest Score": 50,
+        "Linen Score": 40,
+        "Distribution Score": 58
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 68,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "MEDIUM"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "253-17 NORTHERN BLVD|11362",
+        "camis": "50192409",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 68,
+        "Insurance Score": 65,
+        "Equipment Score": 67,
+        "Hood/Fire Score": 60,
+        "Waste Score": 52,
+        "Pest Score": 50,
+        "Linen Score": 60,
+        "Distribution Score": 68
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 68,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "MEDIUM"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "1590 PARK AVE|10029",
+        "camis": "50192413",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "MEDIUM",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 58,
+        "Insurance Score": 55,
+        "Equipment Score": 45,
+        "Hood/Fire Score": 38,
+        "Waste Score": 42,
+        "Pest Score": 40,
+        "Linen Score": 38,
+        "Distribution Score": 40
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 58,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T05:28:00-04:00",
+      "intelligenceStatus": "DOHMH-only; SHARED-SITE DOB REJECTED",
+      "confidence": "LOW"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "465 4 AVE|11215",
+        "camis": "50192416",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "MEDIUM",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 58,
+        "Insurance Score": 55,
+        "Equipment Score": 45,
+        "Hood/Fire Score": 38,
+        "Waste Score": 42,
+        "Pest Score": 40,
+        "Linen Score": 38,
+        "Distribution Score": 40
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 58,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "LOW"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "182 SPRING ST|10012",
+        "camis": "50192431",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 68,
+        "Insurance Score": 65,
+        "Equipment Score": 63,
+        "Hood/Fire Score": 54,
+        "Waste Score": 52,
+        "Pest Score": 50,
+        "Linen Score": 48,
+        "Distribution Score": 66
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 68,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "MEDIUM"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "47-04 VERNON BLVD|11101",
+        "camis": "50192442",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 68,
+        "Insurance Score": 65,
+        "Equipment Score": 55,
+        "Hood/Fire Score": 48,
+        "Waste Score": 52,
+        "Pest Score": 50,
+        "Linen Score": 48,
+        "Distribution Score": 58
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 68,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "MEDIUM"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "1179 PUGSLEY AVE|10472",
+        "camis": "50192445",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "MEDIUM",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 58,
+        "Insurance Score": 55,
+        "Equipment Score": 45,
+        "Hood/Fire Score": 38,
+        "Waste Score": 42,
+        "Pest Score": 40,
+        "Linen Score": 38,
+        "Distribution Score": 40
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 58,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "LOW"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "1221 AVE OF THE AMERICAS|10036",
+        "camis": "50192446",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "EXCLUDE",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 0,
+        "Insurance Score": 0,
+        "Equipment Score": 0,
+        "Hood/Fire Score": 0,
+        "Waste Score": 0,
+        "Pest Score": 0,
+        "Linen Score": 0,
+        "Distribution Score": 0
+      },
+      "bestVendorFit": "SUPPRESSED",
+      "bestScore": 0,
+      "purchaseWindow": "SUPPRESSED",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "NOT DELIVERABLE",
+      "confidence": "LOW"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "30-73 STEINWAY ST|11103",
+        "camis": "50192450",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "MEDIUM",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 58,
+        "Insurance Score": 55,
+        "Equipment Score": 45,
+        "Hood/Fire Score": 38,
+        "Waste Score": 42,
+        "Pest Score": 40,
+        "Linen Score": 38,
+        "Distribution Score": 40
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 58,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "LOW"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "1457 3RD AVE|10028",
+        "camis": "50192451",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 68,
+        "Insurance Score": 65,
+        "Equipment Score": 63,
+        "Hood/Fire Score": 54,
+        "Waste Score": 52,
+        "Pest Score": 50,
+        "Linen Score": 48,
+        "Distribution Score": 66
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 68,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "MEDIUM"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "90-15 QUEENS BLVD|11373",
+        "camis": "50192452",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "MEDIUM",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 58,
+        "Insurance Score": 55,
+        "Equipment Score": 45,
+        "Hood/Fire Score": 38,
+        "Waste Score": 42,
+        "Pest Score": 40,
+        "Linen Score": 38,
+        "Distribution Score": 40
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 58,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "LOW"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "115 COLUMBIA ST|11201",
+        "camis": "50192454",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "MEDIUM",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 58,
+        "Insurance Score": 55,
+        "Equipment Score": 45,
+        "Hood/Fire Score": 38,
+        "Waste Score": 42,
+        "Pest Score": 40,
+        "Linen Score": 38,
+        "Distribution Score": 40
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 58,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "LOW"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "97-05 ROCKAWAY BLVD|11417",
+        "camis": "50192463",
+        "slaApplicationId": null,
+        "dobJobFiling": "Q01342456-I1; Q01173837-S1"
+      },
+      "commercialFit": "HIGH",
+      "stage": "MULTI-SOURCE NEAR-OPENING",
+      "sourceCount": 2,
+      "sources": [
+        "DOHMH",
+        "DOB"
+      ],
+      "workTypes": "Mechanical; general construction; commercial kitchen; Type I hood; fire suppression; plumbing",
+      "scores": {
+        "POS Score": 55,
+        "Insurance Score": 50,
+        "Equipment Score": 98,
+        "Hood/Fire Score": 96,
+        "Waste Score": 72,
+        "Pest Score": 75,
+        "Linen Score": 80,
+        "Distribution Score": 94
+      },
+      "bestVendorFit": "Equipment",
+      "bestScore": 98,
+      "purchaseWindow": "NEAR OPENING",
+      "lastUpdated": "2026-09-17T15:16:44-04:00",
+      "intelligenceStatus": "MULTI-SOURCE CURRENT",
+      "confidence": "HIGH"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "66-79B FRESH POND RD|11385",
+        "camis": "50192479",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 68,
+        "Insurance Score": 65,
+        "Equipment Score": 75,
+        "Hood/Fire Score": 66,
+        "Waste Score": 52,
+        "Pest Score": 50,
+        "Linen Score": 58,
+        "Distribution Score": 70
+      },
+      "bestVendorFit": "Equipment",
+      "bestScore": 75,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "MEDIUM"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "301 E 91ST ST|10128",
+        "camis": "50192480",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 68,
+        "Insurance Score": 65,
+        "Equipment Score": 67,
+        "Hood/Fire Score": 60,
+        "Waste Score": 52,
+        "Pest Score": 50,
+        "Linen Score": 60,
+        "Distribution Score": 68
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 68,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "MEDIUM"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "123 W 13TH ST|10011",
+        "camis": "50192483",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "EXCLUDE",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 0,
+        "Insurance Score": 0,
+        "Equipment Score": 0,
+        "Hood/Fire Score": 0,
+        "Waste Score": 0,
+        "Pest Score": 0,
+        "Linen Score": 0,
+        "Distribution Score": 0
+      },
+      "bestVendorFit": "SUPPRESSED",
+      "bestScore": 0,
+      "purchaseWindow": "SUPPRESSED",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "NOT DELIVERABLE",
+      "confidence": "LOW"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "456 9TH AVE|10018",
+        "camis": "50192487",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "MEDIUM",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 58,
+        "Insurance Score": 55,
+        "Equipment Score": 45,
+        "Hood/Fire Score": 38,
+        "Waste Score": 42,
+        "Pest Score": 40,
+        "Linen Score": 38,
+        "Distribution Score": 40
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 58,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "LOW"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "173 BLEECKER ST|10012",
+        "camis": "50192488",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "LOW",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 28,
+        "Insurance Score": 25,
+        "Equipment Score": 15,
+        "Hood/Fire Score": 8,
+        "Waste Score": 12,
+        "Pest Score": 10,
+        "Linen Score": 8,
+        "Distribution Score": 10
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 28,
+      "purchaseWindow": "SUPPRESSED",
+      "lastUpdated": "2026-09-18T10:13:58-04:00",
+      "intelligenceStatus": "NOT DELIVERABLE - PREDECESSOR CAMIS OPERATIONAL",
+      "confidence": "HIGH"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "1196 FULTON ST|11216",
+        "camis": "50192493",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 68,
+        "Insurance Score": 65,
+        "Equipment Score": 75,
+        "Hood/Fire Score": 66,
+        "Waste Score": 52,
+        "Pest Score": 50,
+        "Linen Score": 58,
+        "Distribution Score": 70
+      },
+      "bestVendorFit": "Equipment",
+      "bestScore": 75,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "MEDIUM"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "45-08 46TH ST|11104",
+        "camis": "50192495",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 68,
+        "Insurance Score": 65,
+        "Equipment Score": 75,
+        "Hood/Fire Score": 66,
+        "Waste Score": 52,
+        "Pest Score": 50,
+        "Linen Score": 58,
+        "Distribution Score": 70
+      },
+      "bestVendorFit": "Equipment",
+      "bestScore": 75,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "MEDIUM"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "371 COURT ST|11231",
+        "camis": "50192497",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "MEDIUM",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 58,
+        "Insurance Score": 55,
+        "Equipment Score": 45,
+        "Hood/Fire Score": 38,
+        "Waste Score": 42,
+        "Pest Score": 40,
+        "Linen Score": 38,
+        "Distribution Score": 40
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 58,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T14:53:45-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "LOW"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "37-13 UNION ST|11354",
+        "camis": "50192498",
+        "slaApplicationId": null,
+        "dobJobFiling": "Q01426065-I1"
+      },
+      "commercialFit": "HIGH",
+      "stage": "BUILDOUT / LICENSING",
+      "sourceCount": 2,
+      "sources": [
+        "DOHMH",
+        "DOB"
+      ],
+      "workTypes": "General construction; awning",
+      "scores": {
+        "POS Score": 60,
+        "Insurance Score": 59,
+        "Equipment Score": 60,
+        "Hood/Fire Score": 58,
+        "Waste Score": 53,
+        "Pest Score": 50,
+        "Linen Score": 42,
+        "Distribution Score": 61
+      },
+      "bestVendorFit": "Distribution",
+      "bestScore": 61,
+      "purchaseWindow": "ACTIVE BUILDOUT",
+      "lastUpdated": "2026-09-17T15:16:44-04:00",
+      "intelligenceStatus": "MULTI-SOURCE CURRENT",
+      "confidence": "HIGH"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "203-16 NORTHERN BLVD|11361",
+        "camis": null,
+        "slaApplicationId": "NA-0240-26-127628",
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "SLA"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 71,
+        "Insurance Score": 70,
+        "Equipment Score": 62,
+        "Hood/Fire Score": 55,
+        "Waste Score": 47,
+        "Pest Score": 45,
+        "Linen Score": 55,
+        "Distribution Score": 63
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 71,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T15:25:58-04:00",
+      "intelligenceStatus": "SLA-FIRST CURRENT",
+      "confidence": "HIGH"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "830 9TH AVE|10019",
+        "camis": null,
+        "slaApplicationId": "NA-0340-26-127619",
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "SLA"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 71,
+        "Insurance Score": 70,
+        "Equipment Score": 62,
+        "Hood/Fire Score": 55,
+        "Waste Score": 47,
+        "Pest Score": 45,
+        "Linen Score": 55,
+        "Distribution Score": 63
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 71,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T15:25:58-04:00",
+      "intelligenceStatus": "SLA-FIRST CURRENT",
+      "confidence": "HIGH"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "408 E 64TH ST|10065",
+        "camis": null,
+        "slaApplicationId": "NA-0240-26-127424",
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "SLA"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 71,
+        "Insurance Score": 70,
+        "Equipment Score": 62,
+        "Hood/Fire Score": 55,
+        "Waste Score": 47,
+        "Pest Score": 45,
+        "Linen Score": 55,
+        "Distribution Score": 63
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 71,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T15:25:58-04:00",
+      "intelligenceStatus": "SLA-FIRST CURRENT",
+      "confidence": "HIGH"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "400 W 50TH ST|10019",
+        "camis": null,
+        "slaApplicationId": "NA-0267-26-127401",
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "SLA"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 71,
+        "Insurance Score": 70,
+        "Equipment Score": 62,
+        "Hood/Fire Score": 55,
+        "Waste Score": 47,
+        "Pest Score": 45,
+        "Linen Score": 55,
+        "Distribution Score": 63
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 71,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T15:25:58-04:00",
+      "intelligenceStatus": "SLA-FIRST CURRENT",
+      "confidence": "HIGH"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "170 THOMPSON ST|10012",
+        "camis": null,
+        "slaApplicationId": "NA-0340-26-127389",
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "SLA"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 71,
+        "Insurance Score": 70,
+        "Equipment Score": 62,
+        "Hood/Fire Score": 55,
+        "Waste Score": 47,
+        "Pest Score": 45,
+        "Linen Score": 55,
+        "Distribution Score": 63
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 71,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T15:25:58-04:00",
+      "intelligenceStatus": "SLA-FIRST CURRENT",
+      "confidence": "HIGH"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "450 NOSTRAND AVE|11216",
+        "camis": null,
+        "slaApplicationId": "NA-0370-26-127370",
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "SLA"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 71,
+        "Insurance Score": 70,
+        "Equipment Score": 62,
+        "Hood/Fire Score": 55,
+        "Waste Score": 47,
+        "Pest Score": 45,
+        "Linen Score": 55,
+        "Distribution Score": 63
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 71,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T15:25:58-04:00",
+      "intelligenceStatus": "SLA-FIRST CURRENT",
+      "confidence": "HIGH"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "627 FRANKLIN AVE|11238",
+        "camis": null,
+        "slaApplicationId": "NA-0240-26-127359",
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "SLA"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 71,
+        "Insurance Score": 70,
+        "Equipment Score": 62,
+        "Hood/Fire Score": 55,
+        "Waste Score": 47,
+        "Pest Score": 45,
+        "Linen Score": 55,
+        "Distribution Score": 63
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 71,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T15:25:58-04:00",
+      "intelligenceStatus": "SLA-FIRST CURRENT",
+      "confidence": "HIGH"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "365 W 50TH ST|10019",
+        "camis": null,
+        "slaApplicationId": "NA-0340-26-127314",
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "SLA"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 71,
+        "Insurance Score": 70,
+        "Equipment Score": 62,
+        "Hood/Fire Score": 55,
+        "Waste Score": 47,
+        "Pest Score": 45,
+        "Linen Score": 55,
+        "Distribution Score": 63
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 71,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T15:25:58-04:00",
+      "intelligenceStatus": "SLA-FIRST CURRENT",
+      "confidence": "HIGH"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "43-13 BROADWAY|11103",
+        "camis": null,
+        "slaApplicationId": "NA-0240-26-127284",
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "SLA"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 71,
+        "Insurance Score": 70,
+        "Equipment Score": 62,
+        "Hood/Fire Score": 55,
+        "Waste Score": 47,
+        "Pest Score": 45,
+        "Linen Score": 55,
+        "Distribution Score": 63
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 71,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-17T15:25:58-04:00",
+      "intelligenceStatus": "SLA-FIRST CURRENT",
+      "confidence": "HIGH"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "86-06 JAMAICA AVE|11421",
+        "camis": "50192510",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "MEDIUM",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 58,
+        "Insurance Score": 55,
+        "Equipment Score": 45,
+        "Hood/Fire Score": 38,
+        "Waste Score": 42,
+        "Pest Score": 40,
+        "Linen Score": 38,
+        "Distribution Score": 40
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 58,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T07:03:00-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "LOW"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "147 LEWIS AVE|11221",
+        "camis": "50192514",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "MEDIUM",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 58,
+        "Insurance Score": 55,
+        "Equipment Score": 45,
+        "Hood/Fire Score": 38,
+        "Waste Score": 42,
+        "Pest Score": 40,
+        "Linen Score": 38,
+        "Distribution Score": 40
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 58,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T07:03:00-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "LOW"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "1140 BAY ST|10305",
+        "camis": "50192517",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 68,
+        "Insurance Score": 65,
+        "Equipment Score": 55,
+        "Hood/Fire Score": 48,
+        "Waste Score": 52,
+        "Pest Score": 50,
+        "Linen Score": 48,
+        "Distribution Score": 58
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 68,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T07:03:00-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "MEDIUM"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "430 SAINT MARKS PL|10301",
+        "camis": "50192526",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "MEDIUM",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 58,
+        "Insurance Score": 55,
+        "Equipment Score": 45,
+        "Hood/Fire Score": 38,
+        "Waste Score": 42,
+        "Pest Score": 40,
+        "Linen Score": 38,
+        "Distribution Score": 40
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 58,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T07:03:00-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "LOW"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "66-56 MYRTLE AVE|11385",
+        "camis": "50192533",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "MEDIUM",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 58,
+        "Insurance Score": 55,
+        "Equipment Score": 45,
+        "Hood/Fire Score": 38,
+        "Waste Score": 42,
+        "Pest Score": 40,
+        "Linen Score": 38,
+        "Distribution Score": 40
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 58,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T07:03:00-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "LOW"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "907 NEW YORK AVE|11203",
+        "camis": "50192535",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "MEDIUM",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 58,
+        "Insurance Score": 55,
+        "Equipment Score": 45,
+        "Hood/Fire Score": 38,
+        "Waste Score": 42,
+        "Pest Score": 40,
+        "Linen Score": 38,
+        "Distribution Score": 40
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 58,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T07:03:00-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "LOW"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "917 UTICA AVE|11203",
+        "camis": "50192537",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 68,
+        "Insurance Score": 65,
+        "Equipment Score": 75,
+        "Hood/Fire Score": 66,
+        "Waste Score": 52,
+        "Pest Score": 50,
+        "Linen Score": 58,
+        "Distribution Score": 70
+      },
+      "bestVendorFit": "Equipment",
+      "bestScore": 75,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T07:03:00-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "MEDIUM"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "6001 7TH AVE|11220",
+        "camis": "50192542",
+        "slaApplicationId": null,
+        "dobJobFiling": "B01421629-I1; B01421629-S2"
+      },
+      "commercialFit": "HIGH",
+      "stage": "BUILDOUT / LICENSING",
+      "sourceCount": 2,
+      "sources": [
+        "DOHMH",
+        "DOB"
+      ],
+      "workTypes": "General construction; plumbing; take-out restaurant",
+      "scores": {
+        "POS Score": 75,
+        "Insurance Score": 74,
+        "Equipment Score": 100,
+        "Hood/Fire Score": 100,
+        "Waste Score": 68,
+        "Pest Score": 65,
+        "Linen Score": 77,
+        "Distribution Score": 86
+      },
+      "bestVendorFit": "Hood/Fire",
+      "bestScore": 100,
+      "purchaseWindow": "ACTIVE BUILDOUT",
+      "lastUpdated": "2026-09-18T07:03:00-04:00",
+      "intelligenceStatus": "MULTI-SOURCE CURRENT",
+      "confidence": "HIGH"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "1674 BROADWAY|10019",
+        "camis": "50192550",
+        "slaApplicationId": "NA-0340-26-124871",
+        "dobJobFiling": "M01428802-I1; M01428813-I1; M01431925-I1"
+      },
+      "commercialFit": "HIGH",
+      "stage": "BUILDOUT / LICENSING",
+      "sourceCount": 3,
+      "sources": [
+        "DOHMH",
+        "SLA",
+        "DOB"
+      ],
+      "workTypes": "Exterior illuminated signage; identity corroboration",
+      "scores": {
+        "POS Score": 91,
+        "Insurance Score": 92,
+        "Equipment Score": 92,
+        "Hood/Fire Score": 92,
+        "Waste Score": 76,
+        "Pest Score": 73,
+        "Linen Score": 85,
+        "Distribution Score": 89
+      },
+      "bestVendorFit": "Insurance",
+      "bestScore": 92,
+      "purchaseWindow": "ACTIVE BUILDOUT",
+      "lastUpdated": "2026-09-18T07:08:00-04:00",
+      "intelligenceStatus": "MULTI-SOURCE VERIFIED: DOHMH + SLA + DOB IDENTITY",
+      "confidence": "HIGH"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "225 PARK ROW|10007",
+        "camis": "50192551",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 68,
+        "Insurance Score": 65,
+        "Equipment Score": 75,
+        "Hood/Fire Score": 66,
+        "Waste Score": 52,
+        "Pest Score": 50,
+        "Linen Score": 58,
+        "Distribution Score": 70
+      },
+      "bestVendorFit": "Equipment",
+      "bestScore": 75,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T07:03:00-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "MEDIUM"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "79 MOTT ST|10013",
+        "camis": "50192552",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "MEDIUM",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 58,
+        "Insurance Score": 55,
+        "Equipment Score": 45,
+        "Hood/Fire Score": 38,
+        "Waste Score": 42,
+        "Pest Score": 40,
+        "Linen Score": 38,
+        "Distribution Score": 40
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 58,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T07:03:00-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "LOW"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "65-37 99TH ST|11374",
+        "camis": "50192553",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "MEDIUM",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 58,
+        "Insurance Score": 55,
+        "Equipment Score": 45,
+        "Hood/Fire Score": 38,
+        "Waste Score": 42,
+        "Pest Score": 40,
+        "Linen Score": 38,
+        "Distribution Score": 40
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 58,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T07:03:00-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "LOW"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "90-46 161ST ST|11432",
+        "camis": "50192555",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 68,
+        "Insurance Score": 65,
+        "Equipment Score": 75,
+        "Hood/Fire Score": 66,
+        "Waste Score": 52,
+        "Pest Score": 50,
+        "Linen Score": 58,
+        "Distribution Score": 70
+      },
+      "bestVendorFit": "Equipment",
+      "bestScore": 75,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T07:03:00-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "MEDIUM"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "445 GOLD ST|11201",
+        "camis": "50192558",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 68,
+        "Insurance Score": 65,
+        "Equipment Score": 55,
+        "Hood/Fire Score": 48,
+        "Waste Score": 52,
+        "Pest Score": 50,
+        "Linen Score": 48,
+        "Distribution Score": 58
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 68,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T07:03:00-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "MEDIUM"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "25 E 26TH ST|10010",
+        "camis": "50192560",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 68,
+        "Insurance Score": 65,
+        "Equipment Score": 55,
+        "Hood/Fire Score": 36,
+        "Waste Score": 52,
+        "Pest Score": 50,
+        "Linen Score": 40,
+        "Distribution Score": 58
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 68,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T07:03:00-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "MEDIUM"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "730 KELLY ST|10455",
+        "camis": "50192562",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "MEDIUM",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 58,
+        "Insurance Score": 55,
+        "Equipment Score": 45,
+        "Hood/Fire Score": 38,
+        "Waste Score": 42,
+        "Pest Score": 40,
+        "Linen Score": 38,
+        "Distribution Score": 40
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 58,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T07:03:00-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "LOW"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "175-15 ROCKAWAY BLVD|11434",
+        "camis": "50192563",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "MEDIUM",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 58,
+        "Insurance Score": 55,
+        "Equipment Score": 45,
+        "Hood/Fire Score": 38,
+        "Waste Score": 42,
+        "Pest Score": 40,
+        "Linen Score": 38,
+        "Distribution Score": 40
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 58,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T07:03:00-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "LOW"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "3017 CHURCH AVE|11226",
+        "camis": "50192567",
+        "slaApplicationId": null,
+        "dobJobFiling": null
+      },
+      "commercialFit": "MEDIUM",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "DOHMH"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 58,
+        "Insurance Score": 55,
+        "Equipment Score": 45,
+        "Hood/Fire Score": 38,
+        "Waste Score": 42,
+        "Pest Score": 40,
+        "Linen Score": 38,
+        "Distribution Score": 40
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 58,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T07:03:00-04:00",
+      "intelligenceStatus": "DOHMH-only; auxiliary sources healthy",
+      "confidence": "LOW"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "194 GRAND ST|10013",
+        "camis": null,
+        "slaApplicationId": "NA-0340-26-127781",
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "SLA"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 71,
+        "Insurance Score": 70,
+        "Equipment Score": 62,
+        "Hood/Fire Score": 55,
+        "Waste Score": 47,
+        "Pest Score": 45,
+        "Linen Score": 55,
+        "Distribution Score": 63
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 71,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T07:03:00-04:00",
+      "intelligenceStatus": "SLA-FIRST CURRENT",
+      "confidence": "HIGH"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "293 PORT RICHMOND AVE|10302",
+        "camis": null,
+        "slaApplicationId": "NA-0340-26-127746",
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "SLA"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 71,
+        "Insurance Score": 70,
+        "Equipment Score": 62,
+        "Hood/Fire Score": 55,
+        "Waste Score": 47,
+        "Pest Score": 45,
+        "Linen Score": 55,
+        "Distribution Score": 63
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 71,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T07:03:00-04:00",
+      "intelligenceStatus": "SLA-FIRST CURRENT",
+      "confidence": "HIGH"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "1 ORCHARD BEACH RD|10464",
+        "camis": null,
+        "slaApplicationId": "NA-0340-26-127752",
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "SLA"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 71,
+        "Insurance Score": 70,
+        "Equipment Score": 62,
+        "Hood/Fire Score": 55,
+        "Waste Score": 47,
+        "Pest Score": 45,
+        "Linen Score": 55,
+        "Distribution Score": 63
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 71,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T07:03:00-04:00",
+      "intelligenceStatus": "SLA-FIRST CURRENT",
+      "confidence": "HIGH"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "6117 20TH AVE|11204",
+        "camis": null,
+        "slaApplicationId": "NA-0340-26-127743",
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "SLA"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 71,
+        "Insurance Score": 70,
+        "Equipment Score": 62,
+        "Hood/Fire Score": 55,
+        "Waste Score": 47,
+        "Pest Score": 45,
+        "Linen Score": 55,
+        "Distribution Score": 63
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 71,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T07:03:00-04:00",
+      "intelligenceStatus": "SLA-FIRST CURRENT",
+      "confidence": "HIGH"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "3 CLINTON ST|10002",
+        "camis": null,
+        "slaApplicationId": "NA-0240-26-127673",
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "SLA"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 71,
+        "Insurance Score": 70,
+        "Equipment Score": 62,
+        "Hood/Fire Score": 55,
+        "Waste Score": 47,
+        "Pest Score": 45,
+        "Linen Score": 55,
+        "Distribution Score": 63
+      },
+      "bestVendorFit": "POS/payments",
+      "bestScore": 71,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T07:03:00-04:00",
+      "intelligenceStatus": "SLA-FIRST CURRENT",
+      "confidence": "HIGH"
+    },
+    {
+      "authorityKey": {
+        "venueKey": "225 PARK ROW|10038",
+        "camis": null,
+        "slaApplicationId": "NA-0240-26-125279",
+        "dobJobFiling": null
+      },
+      "commercialFit": "HIGH",
+      "stage": "JUST FILED",
+      "sourceCount": 1,
+      "sources": [
+        "SLA"
+      ],
+      "workTypes": null,
+      "scores": {
+        "POS Score": 61,
+        "Insurance Score": 60,
+        "Equipment Score": 72,
+        "Hood/Fire Score": 63,
+        "Waste Score": 37,
+        "Pest Score": 35,
+        "Linen Score": 55,
+        "Distribution Score": 65
+      },
+      "bestVendorFit": "Equipment",
+      "bestScore": 72,
+      "purchaseWindow": "EARLY",
+      "lastUpdated": "2026-09-18T07:08:00-04:00",
+      "intelligenceStatus": "SLA-FIRST CURRENT - ADDRESS ZIP CONFLICT HELD SEPARATE",
+      "confidence": "HIGH"
+    }
+  ]
+}
