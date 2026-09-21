@@ -3,8 +3,9 @@
 const crypto=require('crypto');
 const opportunity=require('./opportunity-ledger');
 const profiles=require('./subscriber-profile');
+const eventTime=require('./event-time');
 
-const SUBSCRIBER_ARTIFACT_VERSION='PermitPlate-subscriber-artifact-v1.0.0';
+const SUBSCRIBER_ARTIFACT_VERSION='PermitPlate-subscriber-artifact-v1.1.0';
 const DAY_MS=24*60*60*1000;
 
 const CSV_HEADERS=Object.freeze([
@@ -14,7 +15,9 @@ const CSV_HEADERS=Object.freeze([
   'POS Score','Insurance Score','Equipment Score','Hood/Fire Score',
   'Waste Score','Pest Score','Linen Score','Distribution Score',
   'Best Vendor Fit','Best Score','Source Systems','Source Record IDs',
-  'Evidence Tags','Source URLs','Package ID'
+  'Evidence Tags','Source URLs','Package ID',
+  'Business Event Date','Business Event Basis','Event Time Status',
+  'Dataset Pull Date','PermitPlate Observed At','PermitPlate First Observed At'
 ]);
 
 function stableStringify(value){
@@ -105,7 +108,7 @@ function rowFromSelection(selection){
     'Address':p.address||'',
     'Borough':p.borough||'',
     'ZIP':p.zip||'',
-    'Stage':p.lifecycleStage||'',
+    ...eventTime.displayFields(p),
     'Commercial Fit':p.commercialFit||'',
     'Selected Category':selection.selectedCategory,
     'Selected Score':selection.selectedScore,
@@ -133,6 +136,12 @@ function emailRowFromCsv(row){
     detectedAt:row['Detected At'],
     headline:[row.Business,row.Address].filter(Boolean).join(' — '),
     stage:row.Stage,
+    businessEventDate:row['Business Event Date'],
+    businessEventBasis:row['Business Event Basis'],
+    eventTimeStatus:row['Event Time Status'],
+    sourcePullDate:row['Dataset Pull Date'],
+    observedAt:row['PermitPlate Observed At'],
+    firstObservedAt:row['PermitPlate First Observed At'],
     category:row['Selected Category'],
     score:row['Selected Score'],
     fit:row['Commercial Fit'],
