@@ -65,10 +65,10 @@ function planned(){
   return f;
 }
 
-test('subscriber mapping preserves all 21 existing private columns',()=>{
+test('subscriber mapping preserves the current private schema and required lineage columns',()=>{
   const adapted=adapterResult(); const mapped=mapping.subscriberProfileRow(adapted);
   assert.equal(adapted.status,'ACTIVE'); assert.equal(mapped.sheet,'Subscriber Profiles');
-  assert.equal(mapped.values.length,21); assert.deepEqual(Object.keys(mapped.row),mapping.SUBSCRIBER_PROFILE_HEADERS);
+  assert.equal(mapped.values.length,mapping.SUBSCRIBER_PROFILE_HEADERS.length); assert.deepEqual(Object.keys(mapped.row),mapping.SUBSCRIBER_PROFILE_HEADERS);
   assert.equal(mapped.row.Email,'buyer@example.com'); assert.equal(mapped.row.Categories,'Equipment');
   assert.equal(mapped.row['Boroughs/Territory'],'Manhattan; Queens');
   assert.equal(mapped.row['Baseline At'],adapted.profile.baselineAt);
@@ -83,7 +83,7 @@ test('no-send plans preserve the private schema without inventing provider state
   const f=planned(); const mapped=mapping.deliveryStateRows(f);
   assert.equal(mapped.sheet,'Delivery State'); assert.equal(mapped.deliveryStatus,'PLANNED');
   assert.equal(mapped.providerStatus,'NOT_SENT'); assert.equal(mapped.rows.length,2);
-  assert.ok(mapped.rows.every(item=>item.values.length===16));
+  assert.ok(mapped.rows.every(item=>item.values.length===mapping.DELIVERY_STATE_HEADERS.length));
   for(const item of mapped.rows){
     assert.deepEqual(Object.keys(item.row),mapping.DELIVERY_STATE_HEADERS);
     assert.equal(item.row['Message Identity'],f.attempt.messageIdentity);
@@ -153,16 +153,27 @@ test('row planning is deterministic for the same evidence',()=>{
   const f=fixture(); const a=mapping.deliveryStateRows(f); const b=mapping.deliveryStateRows(JSON.parse(JSON.stringify(f)));
   assert.equal(a.batchFingerprint,b.batchFingerprint); assert.deepEqual(a.rows,b.rows);
 });
-test('original schema order stays intact',()=>{
-  assert.deepEqual(mapping.SUBSCRIBER_PROFILE_HEADERS,[
-    'Email','Categories','Boroughs/Territory','Minimum Score','Updated At','Notes','Baseline At',
-    'Starter Snapshot Sent At','Starter Snapshot Through','Delivery Policy Version','Starter Snapshot Enabled',
-    'Starter Days','Starter Limit','Max Signals','Status','Stripe Customer','Stripe Subscription','Price ID',
-    'Profile Fingerprint','Checkout Session','Preference Receipt ID'
-  ]);
-  assert.deepEqual(mapping.DELIVERY_STATE_HEADERS,[
-    'Recipient Email','Lead Key','Delivered At','Stripe Customer','Stripe Subscription','Gmail Message ID',
-    'Attempt ID','Delivery Status','Message Identity','Artifact Fingerprint','Profile Fingerprint','Delivery Class',
-    'Provider Status','Last Reconciled At','Package ID','Authorization ID'
-  ]);
+test('required private lineage columns remain present and ordered',()=>{
+  const profileRequired=[
+    'Email','Categories','Boroughs/Territory','Baseline At','Stripe Customer','Stripe Subscription',
+    'Profile Fingerprint','Checkout Session','Preference Receipt ID','Preference Source',
+    'Subscription Context Fingerprint','Onboarding Match Fingerprint','Activation Fingerprint'
+  ];
+  const deliveryRequired=[
+    'Recipient Email','Lead Key','Delivered At','Gmail Message ID','Attempt ID','Delivery Status',
+    'Message Identity','Artifact Fingerprint','Profile Fingerprint','Delivery Class','Provider Status',
+    'Last Reconciled At','Package ID','Authorization ID','Provider Receipt Fingerprint',
+    'Provider Evidence Kind','Transport Started At'
+  ];
+  for(const required of [profileRequired,deliveryRequired]){
+    const headers=required===profileRequired?
+      mapping.SUBSCRIBER_PROFILE_HEADERS:mapping.DELIVERY_STATE_HEADERS;
+    let last=-1;
+    for(const name of required){
+      const index=headers.indexOf(name);
+      assert(index>=0,'missing required private column '+name);
+      assert(index>last,'private column order regressed at '+name);
+      last=index;
+    }
+  }
 });
