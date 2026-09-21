@@ -38,6 +38,7 @@
       <input type="hidden" name="form-name" value="permitplate-onboarding" />
       <input type="hidden" name="plan" value="monthly_79" />
       <input type="hidden" name="onboarding_version" value="permitplate-onboarding-v1" />
+      <input type="hidden" name="activation_ref" id="activation_ref" value="" />
 
       <p class="hidden">
         <label>Leave this field empty <input name="bot-field" /></label>
@@ -94,12 +95,63 @@
       </fieldset>
 
       <div class="form-actions">
-        <button class="cta blue" type="submit" style="border:0;cursor:pointer">Continue to secure checkout</button>
+        <button class="cta blue" type="submit" id="checkout-submit" style="border:0;cursor:pointer">Save preferences & continue to Stripe</button>
         <a href="/" class="cta secondary">Back</a>
       </div>
-      <div class="form-note">Submitting this form does not charge you. Your subscription begins only if you complete the Stripe checkout. Preferences are activated only after they match a valid PermitPlate subscription.</div>
+      <div class="form-note">Submitting this form does not charge you. PermitPlate saves your preferences first, then opens Stripe with this email locked in so your subscription can be matched exactly.</div>
+      <div class="form-note" id="checkout-status" role="status" aria-live="polite"></div>
+      <noscript><div class="notice"><strong>JavaScript is required to start checkout.</strong> PermitPlate uses it to save your preferences before opening Stripe and to bind the same email to your checkout.</div></noscript>
     </form>
   </section>
 </main>
+<script>
+(function(){
+  const form=document.querySelector('form[name="permitplate-onboarding"]');
+  if(!form) return;
+  const submit=document.getElementById('checkout-submit');
+  const status=document.getElementById('checkout-status');
+  const activation=document.getElementById('activation_ref');
+  const stripeBase='https://buy.stripe.com/4gM28r1cL81x8dF9Xj9sk02';
+
+  function makeActivationRef(){
+    const uuid=(window.crypto&&typeof window.crypto.randomUUID==='function')?
+      window.crypto.randomUUID().replace(/-/g,''):
+      Array.from(window.crypto.getRandomValues(new Uint8Array(16)))
+        .map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+    return 'pp_'+uuid;
+  }
+
+  form.addEventListener('submit',async function(event){
+    event.preventDefault();
+    if(!form.reportValidity()) return;
+
+    const email=form.elements.email.value.trim().toLowerCase();
+    const ref=makeActivationRef();
+    activation.value=ref;
+    submit.disabled=true;
+    status.textContent='Saving your preferences…';
+
+    try{
+      const body=new URLSearchParams(new FormData(form));
+      const response=await fetch('/',{
+        method:'POST',
+        headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:body.toString()
+      });
+      if(!response.ok) throw new Error('Preference save failed');
+
+      const checkout=new URL(stripeBase);
+      checkout.searchParams.set('locked_prefilled_email',email);
+      checkout.searchParams.set('client_reference_id',ref);
+      status.textContent='Preferences saved. Opening secure Stripe checkout…';
+      window.location.assign(checkout.toString());
+    }catch(error){
+      activation.value='';
+      submit.disabled=false;
+      status.textContent='We could not safely save your preferences. Please try again; you have not been charged.';
+    }
+  });
+})();
+</script>
 </body>
 </html>
