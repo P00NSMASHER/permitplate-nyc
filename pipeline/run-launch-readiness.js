@@ -76,7 +76,8 @@ async function run(options){
     subscriberCanary,
     publicBuildFailures,
     currentPublicSourceFingerprint,
-    externalEvidence
+    externalEvidence,
+    evaluatedAt:observedAt
   });
 
   return Object.assign({
