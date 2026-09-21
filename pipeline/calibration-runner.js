@@ -11,7 +11,9 @@ const {renderWorkbench}=require('./calibration-workbench');
 const clock=require('./event-time');
 const ROOT=path.resolve(__dirname,'..');
 const INPUT_FILES=['pipeline/shadow-scoring-v3.js','pipeline/shadow-scoring-v4.js','pipeline/event-time.js',
-  'pipeline/commercial-fit.js','model-v7.js','pipeline/candidate-builder.js','pipeline/material-change.js'];
+  'pipeline/commercial-fit.js','model-v7.js','pipeline/candidate-builder.js','pipeline/material-change.js',
+  'pipeline/source-adapters.js','pipeline/calibration-cohort.js','pipeline/calibration-evaluation.js',
+  'pipeline/calibration-workbench.js'];
 const STATE_FILES=['state/detection-ledger.json','state/opportunity-ledger.json'];
 function fileHash(file){return fs.existsSync(file)?createHash('sha256').update(fs.readFileSync(file)).digest('hex'):null;}
 function hashes(files){return Object.fromEntries(files.map(f=>[f,fileHash(path.join(ROOT,f))]));}
