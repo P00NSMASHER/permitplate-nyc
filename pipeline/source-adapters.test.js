@@ -21,8 +21,23 @@ const a = require('./source-adapters');
   assert.equal(row.entityKeys.camis, '50192386');
   assert.equal(row.property.address, '153 BOWERY');
   assert.equal(row.parties.operatorName, 'CRYBABY');
-  assert.equal(row.eventType, 'DOHMH_RESTAURANT_RECORD');
+  assert.equal(row.eventType, 'DOHMH_PRE_PERMIT_EVENT');
   assert(!Object.prototype.hasOwnProperty.call(row, 'leadScore'));
+}
+
+{
+  const row = a.normalizeDohmhRow({
+    camis:'50111111',
+    dba:'NEW APPLICANT',
+    boro:'Queens',
+    building:'1',
+    street:'MAIN ST',
+    inspection_date:'1900-01-01T00:00:00.000',
+    record_date:'2026-09-21T09:00:00.000',
+    inspection_type:''
+  }, {observedAt:'2026-09-21T13:30:00Z'});
+  assert.equal(row.eventType, 'DOHMH_APPLICANT_RECORD');
+  assert.equal(row.sourceEffectiveAt, '2026-09-21T09:00:00.000');
 }
 
 {
@@ -62,7 +77,8 @@ const a = require('./source-adapters');
     status:'Pending'
   }, {observedAt:'2026-09-21T13:30:00Z'});
   assert.equal(row.sourceEntityId, 'SLA_APPLICATION:NA-0000-26-123456');
-  assert.equal(row.property.address, '153 BOWERY GROUND FLOOR');
+  assert.equal(row.property.address, '153 BOWERY');
+  assert.equal(row.property.unit, 'GROUND FLOOR');
   assert.equal(row.parties.dba, 'EXAMPLE');
   assert.equal(row.eventType, 'SLA_PENDING_LICENSE');
 }
