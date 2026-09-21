@@ -72,4 +72,144 @@ const m = require('./model-v7');
   assert.equal(g.eligible, true);
 }
 
+{
+  const r = m.classifySourceObservation({
+    transportOk:true,
+    intendedFullScope:true,
+    sourceId:'tempe-building-permits',
+    connectorConfigHash:'cfg-1',
+    schemaFingerprint:'schema-1',
+    rawPageHashes:['page-1'],
+    cursorClosed:true,
+    publisherCount:0,
+    fetchedCount:0
+  });
+  assert.equal(r.state, 'VERIFIED_EMPTY');
+  assert.equal(r.supportsAbsenceConclusion, true);
+}
+
+{
+  const r = m.classifySourceObservation({
+    transportOk:true,
+    intendedFullScope:true,
+    sourceId:'tempe-building-permits',
+    connectorConfigHash:'cfg-1',
+    schemaFingerprint:'schema-1',
+    rawPageHashes:['page-1'],
+    cursorClosed:true,
+    publisherCount:20,
+    fetchedCount:10
+  });
+  assert.equal(r.state, 'PARTIAL');
+  assert.equal(r.supportsAbsenceConclusion, false);
+}
+
+{
+  const r = m.classifySourceObservation({
+    transportOk:true,
+    intendedFullScope:true,
+    fetchedCount:0
+  });
+  assert.equal(r.state, 'UNKNOWN');
+}
+
+{
+  const r = m.classifySourceObservation({
+    transportOk:true,
+    redirected:true,
+    redirectTarget:'https://data.sf.gov/resource/i98e-djp9.json',
+    fetchedCount:0
+  });
+  assert.equal(r.state, 'SOURCE_MOVED');
+  assert.equal(r.supportsAbsenceConclusion, false);
+}
+
+{
+  const r = m.classifySourceObservation({
+    transportOk:false,
+    fetchedCount:0
+  });
+  assert.equal(r.state, 'SOURCE_UNAVAILABLE');
+}
+
+{
+  const r = m.classifySourceObservation({
+    transportOk:true,
+    intendedFullScope:false,
+    fetchedCount:10
+  });
+  assert.equal(r.state, 'PARTIAL');
+  assert.equal(r.supportsPositiveObservation, true);
+}
+
+{
+  const g = m.absenceMutationGate({
+    action:'CLOSE',
+    observationState:'UNKNOWN',
+    sourceFresh:true,
+    scopeMatches:true,
+    targetObserved:false
+  });
+  assert.equal(g.allowed, false);
+  assert(g.reasons.includes('SOURCE_WINDOW_NOT_COMPLETE'));
+}
+
+{
+  const g = m.absenceMutationGate({
+    action:'CLOSE',
+    observationState:'COMPLETE_NONEMPTY',
+    sourceFresh:true,
+    scopeMatches:true,
+    targetObserved:false
+  });
+  assert.equal(g.allowed, true);
+}
+
+{
+  const change = m.materialChange(
+    {status:'active'},
+    {status:'closed'},
+    {
+      inferredFromAbsence:true,
+      absenceAction:'CLOSE',
+      observationState:'PARTIAL',
+      sourceFresh:true,
+      scopeMatches:true
+    }
+  );
+  assert.equal(change.material, false);
+  assert.equal(change.type, 'UNVERIFIED_ABSENCE');
+}
+
+{
+  const g = m.deliveryGate({
+    resolutionStatus:'RESOLVED',
+    commercialFit:'HIGH',
+    sourceFresh:true,
+    sourceObservationState:'PARTIAL',
+    postBaseline:true,
+    qualifyingReopen:false,
+    vendorScore:80,
+    minimumScore:60,
+    alreadyDeliveredFingerprint:false
+  });
+  assert.equal(g.eligible, true);
+}
+
+{
+  const g = m.deliveryGate({
+    resolutionStatus:'RESOLVED',
+    commercialFit:'HIGH',
+    sourceFresh:true,
+    sourceObservationState:'SOURCE_MOVED',
+    postBaseline:true,
+    qualifyingReopen:false,
+    vendorScore:80,
+    minimumScore:60,
+    alreadyDeliveredFingerprint:false
+  });
+  assert.equal(g.eligible, false);
+  assert(g.reasons.includes('SOURCE_OBSERVATION_NOT_USABLE'));
+}
+
 console.log('PermitPlate Model V7 regression tests passed.');
