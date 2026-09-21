@@ -65,15 +65,27 @@ function directConceptEvidence(candidate) {
   const hits = STRONG_CONCEPT_PATTERNS
     .filter(([,pattern]) => pattern.test(directText))
     .map(([tag]) => tag);
+  const rawHotFood=hits.some((tag) => ['PIZZA','DOUGHNUT_BAKERY','GRILL'].includes(tag));
+  const rawPoke=hits.includes('POKE_BOWL');
+  const rawLightPrep=hits.some((tag) => ['COFFEE','TEA','ICE_CREAM'].includes(tag));
+  const rawRestaurant=hits.some((tag) => ['RESTAURANT','PUB','BISTRO'].includes(tag));
+
+  let archetype='GENERAL_COMMERCIAL';
+  if(rawHotFood) archetype='HOT_FOOD';
+  else if(rawPoke) archetype='POKE_BOWL';
+  else if(rawLightPrep) archetype='LIGHT_PREP';
+  else if(rawRestaurant) archetype='RESTAURANT';
+
   return {
     authority:'DIRECT_SOURCE_TEXT',
     text:directText,
     tags:hits,
     explicit:hits.length > 0,
-    hotFood:hits.some((tag) => ['PIZZA','DOUGHNUT_BAKERY','GRILL','DELI'].includes(tag)),
-    restaurant:hits.some((tag) => ['RESTAURANT','PUB','BISTRO','DINER','SUSHI','LOUNGE'].includes(tag)),
-    pokeBowl:hits.includes('POKE_BOWL'),
-    lightPrep:hits.some((tag) => ['COFFEE','TEA','ICE_CREAM','SANDWICH'].includes(tag))
+    archetype,
+    hotFood:archetype==='HOT_FOOD',
+    restaurant:archetype==='RESTAURANT',
+    pokeBowl:archetype==='POKE_BOWL',
+    lightPrep:archetype==='LIGHT_PREP'
   };
 }
 
