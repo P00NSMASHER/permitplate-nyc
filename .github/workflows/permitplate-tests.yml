@@ -39,3 +39,6 @@ jobs:
 
       - name: Run Socrata reader regression
         run: node pipeline/socrata-reader.test.js
+
+      - name: Run candidate graph regression
+        run: node pipeline/candidate-builder.test.js
