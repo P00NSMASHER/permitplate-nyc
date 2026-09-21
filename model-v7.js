@@ -72,6 +72,7 @@ function stateHash(state) {
 }
 
 function nonnegativeInteger(value) {
+  if (value === null || value === undefined || value === '') return null;
   const n = Number(value);
   return Number.isInteger(n) && n >= 0 ? n : null;
 }
@@ -100,9 +101,20 @@ function classifySourceObservation(receipt) {
     };
   }
 
+  if (r.sourceFresh === false) {
+    return {
+      state: SOURCE_OBSERVATION_STATES.UNKNOWN,
+      supportsPositiveObservation: false,
+      supportsAbsenceConclusion: false,
+      reason: 'SOURCE_NOT_FRESH'
+    };
+  }
+
   const evidenceBound = Boolean(
     r.sourceId &&
     r.connectorConfigHash &&
+    r.observedAt &&
+    r.sourceFresh === true &&
     r.schemaFingerprint &&
     Array.isArray(r.rawPageHashes) &&
     r.rawPageHashes.length > 0 &&
