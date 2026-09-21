@@ -1,0 +1,40 @@
+name: PermitPlate subscriber readiness
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'pipeline/subscriber-profile.js'
+      - 'pipeline/subscriber-artifact.js'
+      - 'pipeline/stripe-subscriber.js'
+      - 'pipeline/run-first-subscriber-canary.js'
+      - '.github/workflows/subscriber-readiness.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  subscriber-readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run first-subscriber NO-SEND canary
+        run: node pipeline/run-first-subscriber-canary.js pipeline/first-subscriber-canary-result.json
+
+      - name: Retain first-subscriber evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: permitplate-first-subscriber-canary
+          path: pipeline/first-subscriber-canary-result.json
+          if-no-files-found: warn
+          retention-days: 30
