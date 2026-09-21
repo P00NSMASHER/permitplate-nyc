@@ -1,0 +1,37 @@
+name: PermitPlate current graph replay
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '37 11 * * *'
+  push:
+    paths:
+      - '.github/workflows/current-graph.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  current-graph:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build current evidence graph
+        run: node pipeline/run-current-graph.js current-graph-result.json
+
+      - name: Retain current graph artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: permitplate-current-graph
+          path: current-graph-result.json
+          if-no-files-found: warn
+          retention-days: 30
