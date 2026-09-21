@@ -8,7 +8,8 @@ const SUBSCRIBER_PROFILE_HEADERS=Object.freeze([
   'Email','Categories','Boroughs/Territory','Minimum Score','Updated At','Notes',
   'Baseline At','Starter Snapshot Sent At','Starter Snapshot Through','Delivery Policy Version',
   'Starter Snapshot Enabled','Starter Days','Starter Limit','Max Signals','Status',
-  'Stripe Customer','Stripe Subscription','Price ID','Profile Fingerprint','Checkout Session'
+  'Stripe Customer','Stripe Subscription','Price ID','Profile Fingerprint','Checkout Session',
+  'Preference Receipt ID'
 ]);
 const DELIVERY_STATE_HEADERS=Object.freeze([
   'Recipient Email','Lead Key','Delivered At','Stripe Customer','Stripe Subscription',
@@ -64,7 +65,8 @@ function subscriberProfileRow(adapterResult){
     'Stripe Subscription':p.stripeSubscriptionId||'',
     'Price ID':p.priceId||'',
     'Profile Fingerprint':adapterResult.profileFingerprint,
-    'Checkout Session':adapterResult.checkoutSessionId
+    'Checkout Session':adapterResult.checkoutSessionId,
+    'Preference Receipt ID':adapterResult.preferenceReceiptId||''
   };
   return {
     mappingVersion:PRIVATE_SHEET_MAPPING_VERSION,
