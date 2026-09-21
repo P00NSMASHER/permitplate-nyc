@@ -79,18 +79,66 @@ function acceptedSla(candidate, recordsById) {
     .filter((record) => record.sourceSystem === 'SLA_PENDING');
 }
 
+function recordEvidenceText(record) {
+  const facts=record && record.facts || {};
+  const parties=record && record.parties || {};
+  return [
+    facts.description,
+    facts.job_description,
+    facts.work_types,
+    parties.dba,
+    parties.legalName
+  ].filter(Boolean).join(' | ');
+}
+
+function acceptedEvidenceText(records) {
+  return (records || []).map(recordEvidenceText).filter(Boolean).join(' | ');
+}
+
+function scoringConceptEvidence(fitReceipt, accepted) {
+  const direct=fitReceipt && fitReceipt.conceptEvidence || {};
+  const text=acceptedEvidenceText(accepted);
+
+  const rawHotFood=direct.hotFood===true ||
+    /PIZZA|PIZZERIA|BAKERY|GRILL|BBQ|BARBECUE|CHICKEN|HOT[ -]?FOOD|COMMERCIAL KITCHEN/i.test(text);
+  const rawPoke=direct.pokeBowl===true || /POKE|BOWL/i.test(text);
+  const rawLightPrep=direct.lightPrep===true ||
+    /COFFEE|TEA|JUICE|FROZEN DESSERT|ICE[ -]?CREAM|LIGHT[ -]?PREP/i.test(text);
+  const rawRestaurant=direct.restaurant===true || /\b(RESTAURANT|PUB|BISTRO)\b/i.test(text);
+
+  let archetype='GENERAL_COMMERCIAL';
+  if(rawHotFood) archetype='HOT_FOOD';
+  else if(rawPoke) archetype='POKE_BOWL';
+  else if(rawLightPrep) archetype='LIGHT_PREP';
+  else if(rawRestaurant) archetype='RESTAURANT';
+
+  return {
+    authority:'DIRECT_AND_ACCEPTED_SOURCE_TEXT',
+    archetype,
+    hotFood:archetype==='HOT_FOOD',
+    restaurant:archetype==='RESTAURANT',
+    pokeBowl:archetype==='POKE_BOWL',
+    lightPrep:archetype==='LIGHT_PREP',
+    sourceText:text
+  };
+}
+
+function acceptedKnownType(records) {
+  const text=acceptedEvidenceText(records);
+  return /RESTAURANT|FOOD\s*&\s*BEVERAGE|CAFE|BAR|TAVERN|LOUNGE|DINER|PIZZA|SUSHI|OMAKASE|EATING\s*&?\s*DRINKING|TAKE[ -]?OUT|COMMERCIAL KITCHEN|BBQ/i.test(text);
+}
+
 function dobScopeFacts(records) {
-  const descriptions = (records || []).map((record) =>
-    String(record && record.facts && record.facts.job_description || '')
-  ).join(' | ');
+  const descriptions = acceptedEvidenceText(records);
   const costs = (records || [])
     .map((record) => Number(record && record.facts && record.facts.initial_cost_number))
     .filter(Number.isFinite);
   return {
     text:descriptions,
     maxCost:costs.length ? Math.max(...costs) : 0,
+    hospitality:/RESTAURANT|EATING\s*&?\s*DRINKING|TAKE[ -]?OUT|COMMERCIAL KITCHEN|FOOD SERVICE/i.test(descriptions),
     equipment:/INTERIOR|BUILDOUT|KITCHEN|EQUIPMENT|PLUMBING|MECHANICAL|COMMERCIAL KITCHEN|TAKE[ -]?OUT/i.test(descriptions),
-    hoodFire:/HOOD|FIRE SUPPRESSION|KITCHEN EXHAUST|COMMERCIAL KITCHEN/i.test(descriptions),
+    hoodFire:/HOOD|FIRE SUPPRESSION|KITCHEN|MECHANICAL|PLUMBING|COMMERCIAL KITCHEN/i.test(descriptions),
     hoodExtra:/PLUMBING|MECHANICAL|PLACE OF ASSEMBLY|COMMERCIAL KITCHEN/i.test(descriptions)
   };
 }
@@ -122,7 +170,9 @@ function deriveInput(candidate, recordsById, observedAt) {
 
   const dobRecords = acceptedDob(candidate, recordsById);
   const slaRecords = acceptedSla(candidate, recordsById);
+  const accepted = acceptedRecords(candidate, recordsById);
   const dob = dobScopeFacts(dobRecords);
+  const concept = scoringConceptEvidence(fitReceipt, accepted);
   return {
     status:'READY',
     fitReceipt,
@@ -132,15 +182,14 @@ function deriveInput(candidate, recordsById, observedAt) {
       materialAgeDays:age,
       sourceCount:Number(candidate.sourceCount),
       publicPhone:publicPhone(candidate.primaryRecord),
-      conceptEvidence:fitReceipt.conceptEvidence || {
-        authority:'DIRECT_SOURCE_TEXT',
-        hotFood:false,restaurant:false,pokeBowl:false,lightPrep:false
-      },
+      conceptEvidence:concept,
       knownCuisineType:knownCuisine(candidate.primaryRecord) ||
-        Boolean(fitReceipt.conceptEvidence && fitReceipt.conceptEvidence.explicit),
+        Boolean(fitReceipt.conceptEvidence && fitReceipt.conceptEvidence.explicit) ||
+        acceptedKnownType(accepted),
       actualDohmhPrePermit:candidate.lifecycleStage === 'HEALTH PRE-PERMIT',
       acceptedSla:slaRecords.length > 0,
-      acceptedDob:dobRecords.length > 0,
+      acceptedDob:dob.hospitality,
+      acceptedDobIdentityOnly:dobRecords.length > 0 && !dob.hospitality,
       directEquipmentDobScope:dob.equipment,
       directHoodFireDobScope:dob.hoodFire,
       directHoodExtraScope:dob.hoodExtra,
@@ -300,6 +349,10 @@ module.exports = {
   acceptedRecords,
   acceptedDob,
   acceptedSla,
+  recordEvidenceText,
+  acceptedEvidenceText,
+  scoringConceptEvidence,
+  acceptedKnownType,
   dobScopeFacts,
   knownCuisine,
   publicPhone,
