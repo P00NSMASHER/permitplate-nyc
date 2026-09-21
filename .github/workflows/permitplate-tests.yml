@@ -79,6 +79,9 @@ jobs:
       - name: Run explicit transport authorization regression
         run: node pipeline/transport-authorization.test.js
 
+      - name: Run launch readiness controller regression
+        run: node pipeline/launch-readiness.test.js
+
       - name: Run commercial fit receipt regression
         run: node pipeline/commercial-fit.test.js
 
