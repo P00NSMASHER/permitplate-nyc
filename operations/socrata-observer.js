@@ -103,10 +103,12 @@ async function readResponse(response) {
 }
 
 function baseReceipt(source, scope, options, observedAt) {
+  const normalizedScope = normalizeScope(scope);
+  const fingerprint = queryFingerprint(source, normalizedScope);
   return {
-    observationId: sha256(stableStringify([
+    observationId: 'OBS:' + sha256(stableStringify([
       source.sourceId,
-      queryFingerprint(source, scope),
+      fingerprint,
       observedAt
     ])).slice(0, 24),
     sourceId: source.sourceId,
@@ -114,7 +116,9 @@ function baseReceipt(source, scope, options, observedAt) {
     sourceDomain: source.domain,
     datasetId: source.datasetId,
     connectorConfigHash: connectorConfigHash(source, options),
-    queryFingerprint: queryFingerprint(source, scope),
+    queryFingerprint: fingerprint,
+    queryScopeHash: fingerprint,
+    queryScope: normalizedScope,
     observedAt,
     sourceFresh: false,
     transportOk: true,
