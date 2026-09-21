@@ -266,11 +266,16 @@ function buildSourceObservation(sourceKey, input) {
       .concat(rows.flatMap((row) => Object.keys(row || {})))
       .filter(Boolean)
   ));
+  const queryScope = inData.queryScope || null;
+  const queryFingerprint = inData.queryFingerprint ||
+    inData.queryScopeHash ||
+    (queryScope ? sha256(stableStringify(queryScope)) : null);
   const receipt = {
     sourceId: config.sourceId,
     connectorConfigHash: configFingerprint(config),
-    queryScopeHash: inData.queryScopeHash || null,
-    queryScope: inData.queryScope || null,
+    queryFingerprint,
+    queryScopeHash: queryFingerprint,
+    queryScope,
     observedAt: inData.observedAt || null,
     sourceFresh: inData.sourceFresh === true,
     transportOk: inData.transportOk,
