@@ -1,30 +1,41 @@
 'use strict';
 
+const {SOURCE_CONFIGS} = require('../pipeline/source-adapters');
+
+function sourceFromAdapter(key, adapterKey, authority, maxFreshnessHours) {
+  const config = SOURCE_CONFIGS[adapterKey];
+  if (!config) throw new Error(`Missing adapter source config: ${adapterKey}`);
+  const url = new URL(config.apiUrl);
+  return Object.freeze({
+    key,
+    adapterKey,
+    sourceId:config.sourceId,
+    domain:url.hostname,
+    datasetId:String(config.sourceId).split(':').pop(),
+    authority,
+    maxFreshnessHours
+  });
+}
+
 const NYC_SOURCE_REGISTRY = Object.freeze({
-  DOHMH: Object.freeze({
-    key: 'DOHMH',
-    sourceId: 'nyc-open-data:43nn-pn8j',
-    domain: 'data.cityofnewyork.us',
-    datasetId: '43nn-pn8j',
-    authority: 'NYC Department of Health and Mental Hygiene',
-    maxFreshnessHours: 72
-  }),
-  DOB: Object.freeze({
-    key: 'DOB',
-    sourceId: 'nyc-open-data:w9ak-ipjd',
-    domain: 'data.cityofnewyork.us',
-    datasetId: 'w9ak-ipjd',
-    authority: 'NYC Department of Buildings',
-    maxFreshnessHours: 168
-  }),
-  SLA: Object.freeze({
-    key: 'SLA',
-    sourceId: 'ny-open-data:f8i8-k2gm',
-    domain: 'data.ny.gov',
-    datasetId: 'f8i8-k2gm',
-    authority: 'New York State Liquor Authority',
-    maxFreshnessHours: 168
-  })
+  DOHMH: sourceFromAdapter(
+    'DOHMH',
+    'DOHMH',
+    'NYC Department of Health and Mental Hygiene',
+    72
+  ),
+  DOB: sourceFromAdapter(
+    'DOB',
+    'DOB_NOW',
+    'NYC Department of Buildings',
+    168
+  ),
+  SLA: sourceFromAdapter(
+    'SLA',
+    'SLA_PENDING',
+    'New York State Liquor Authority',
+    168
+  )
 });
 
 function getSource(key) {
