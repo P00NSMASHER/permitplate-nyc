@@ -16,7 +16,7 @@ const SOURCE_CONFIGS = Object.freeze({
     apiUrl: 'https://data.cityofnewyork.us/resource/43nn-pn8j.json',
     entityKeyFields: ['camis'],
     recordFields: [
-      'camis','dba','boro','building','street','zipcode','cuisine_description',
+      'camis','dba','boro','building','street','zipcode','phone','cuisine_description',
       'inspection_date','action','violation_code','critical_flag','score','grade',
       'grade_date','record_date','inspection_type','bin','bbl','latitude','longitude'
     ]
