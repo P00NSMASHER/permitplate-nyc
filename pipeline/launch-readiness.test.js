@@ -63,7 +63,9 @@ function subscriberCanary(overrides){
       allowed:false,
       failures:['OWNER_AUTHORIZATION_MISSING']
     },
-    artifactFingerprint:'subscriber-canary-fp'
+    artifactFingerprint:'subscriber-canary-fp',
+    preferenceSource:'NETLIFY_PRECHECKOUT_FORM',
+    preferenceReceiptId:'submission_canary'
   },overrides||{});
 }
 function external(overrides){
@@ -72,7 +74,14 @@ function external(overrides){
     observedAt:'2026-09-21T17:40:00Z',
     stripe:{
       paymentLinkWriteAuthorized:false,
-      checkoutPreferenceFieldsVerified:false
+      checkoutPreferenceFieldsVerified:false,
+      paymentLinkActiveVerified:true
+    },
+    preCheckoutOnboarding:{
+      netlifyFormsEnabled:true,
+      sourceFlowImplemented:true,
+      liveFormVerified:false,
+      exactEmailActivationCanaryVerified:true
     },
     netlify:{
       verifiedPublicSourceFingerprint:'public-source-fp',
@@ -91,6 +100,9 @@ function external(overrides){
     evidenceVersion:o.evidenceVersion||base.evidenceVersion,
     observedAt:o.observedAt||base.observedAt,
     stripe:Object.assign({},base.stripe,o.stripe||{}),
+    preCheckoutOnboarding:Object.assign(
+      {},base.preCheckoutOnboarding,o.preCheckoutOnboarding||{}
+    ),
     netlify:Object.assign({},base.netlify,o.netlify||{}),
     customerProof:Object.assign({},base.customerProof,o.customerProof||{})
   };
@@ -121,11 +133,12 @@ function internalInput(overrides){
   assert.equal(out.commerciallyProven,false);
   assert.equal(out.launchState,'EXTERNAL_INTEGRATION_BLOCKED');
   assert.deepEqual(out.internalFailures,[]);
-  assert(out.firstCustomerExternalFailures.includes('stripePaymentLinkWriteAuthorized'));
-  assert(out.firstCustomerExternalFailures.includes('stripeCheckoutPreferenceFieldsVerified'));
+  assert(!out.firstCustomerExternalFailures.includes('stripePaymentLinkWriteAuthorized'));
+  assert(!out.firstCustomerExternalFailures.includes('stripeCheckoutPreferenceFieldsVerified'));
+  assert(out.firstCustomerExternalFailures.includes('preferenceCaptureReady'));
   assert(out.firstCustomerExternalFailures.includes('netlifyProductionDeployVerified'));
   assert(out.firstCustomerExternalFailures.includes('netlifyLiveCommitKnown'));
-  assert(out.recommendedNextActions.includes('GRANT_STRIPE_PAYMENT_LINK_WRITE'));
+  assert(out.recommendedNextActions.includes('DEPLOY_AND_VERIFY_NETLIFY_PRECHECKOUT_FORM'));
   assert(out.recommendedNextActions.includes('DEPLOY_VERIFIED_PUBLIC_ARTIFACT'));
 }
 
@@ -205,9 +218,8 @@ function internalInput(overrides){
 
 {
   const readyExternal=external({
-    stripe:{
-      paymentLinkWriteAuthorized:true,
-      checkoutPreferenceFieldsVerified:true
+    preCheckoutOnboarding:{
+      liveFormVerified:true
     },
     netlify:{
       verifiedPublicSourceFingerprint:'public-source-fp',
@@ -229,9 +241,8 @@ function internalInput(overrides){
 
 {
   const provenExternal=external({
-    stripe:{
-      paymentLinkWriteAuthorized:true,
-      checkoutPreferenceFieldsVerified:true
+    preCheckoutOnboarding:{
+      liveFormVerified:true
     },
     netlify:{
       verifiedPublicSourceFingerprint:'public-source-fp',
@@ -254,6 +265,31 @@ function internalInput(overrides){
   assert.equal(out.launchState,'PAID_CUSTOMER_PROVEN');
   assert.deepEqual(out.firstCustomerExternalFailures,[]);
   assert.deepEqual(out.commercialProofFailures,[]);
+}
+
+{
+  const stripeFieldExternal=external({
+    stripe:{
+      checkoutPreferenceFieldsVerified:true
+    },
+    preCheckoutOnboarding:{
+      netlifyFormsEnabled:true,
+      sourceFlowImplemented:true,
+      liveFormVerified:false,
+      exactEmailActivationCanaryVerified:true
+    },
+    netlify:{
+      verifiedPublicSourceFingerprint:'public-source-fp',
+      verifiedPublicBuildCommit:'build-commit',
+      liveVerifiedCommit:'build-commit',
+      productionDeployVerified:true
+    }
+  });
+  const out=readiness.evaluateLaunchReadiness(internalInput({
+    externalEvidence:stripeFieldExternal
+  }));
+  assert.equal(out.externalGates.preferenceCaptureReady,true);
+  assert.equal(out.firstCustomerOperationallyReady,true);
 }
 
 {
