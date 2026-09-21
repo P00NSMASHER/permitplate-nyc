@@ -26,11 +26,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Test source refresh and material-change boundary
+      - name: Test source refresh, migration, and material-change boundary
         run: |
           mkdir -p verification-output
           set -o pipefail
-          node --test pipeline/source-refresh-regression.test.js | tee verification-output/source-refresh.tap
+          node --test pipeline/source-refresh-regression.test.js pipeline/material-change.test.js | tee verification-output/source-refresh.tap
+      - name: Verify the first-subscriber no-send path
+        run: node pipeline/run-first-subscriber-canary.js verification-output/first-subscriber.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
