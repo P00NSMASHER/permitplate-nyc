@@ -1,0 +1,4 @@
+dist/
+pipeline/*-result.json
+*.log
+.DS_Store
