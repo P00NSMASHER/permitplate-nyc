@@ -8,6 +8,12 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/detection-ledger.yml'
+      - 'pipeline/detection-ledger.js'
+      - 'pipeline/run-detection-ledger.js'
+      - 'pipeline/run-opportunity-packages.js'
+      - 'pipeline/candidate-package.js'
+      - 'pipeline/scoring-policy.js'
+      - 'pipeline/canonical-score-receipt.js'
 
 permissions:
   contents: write
