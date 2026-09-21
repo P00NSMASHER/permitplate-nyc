@@ -394,4 +394,78 @@ const m = require('./model-v7');
   assert.equal(unknownTime.reason, 'EVENT_TIME_UNPROVEN');
 }
 
+{
+  const result = m.applyVerticalEvidenceCeiling({
+    category:'Equipment',
+    score:97,
+    posScore:84,
+    insuranceScore:80,
+    evidenceTags:[]
+  });
+  assert.equal(result.capped, true);
+  assert.equal(result.score, 84);
+  assert.equal(result.reason, 'VERTICAL_EVIDENCE_CEILING');
+}
+
+{
+  const result = m.applyVerticalEvidenceCeiling({
+    category:'Equipment',
+    score:97,
+    posScore:84,
+    insuranceScore:80,
+    evidenceTags:['EQUIPMENT']
+  });
+  assert.equal(result.capped, false);
+  assert.equal(result.score, 97);
+  assert.equal(result.reason, 'DIRECT_VERTICAL_EVIDENCE');
+}
+
+{
+  const result = m.applyVerticalEvidenceCeiling({
+    category:'Hood/Fire',
+    score:95,
+    posScore:80,
+    insuranceScore:82,
+    evidenceTags:['HOT_FOOD_SPECIALIST']
+  });
+  assert.equal(result.capped, false);
+  assert.equal(result.score, 95);
+}
+
+{
+  const result = m.applyVerticalEvidenceCeiling({
+    category:'Hood/Fire',
+    score:95,
+    posScore:80,
+    insuranceScore:82,
+    evidenceTags:[]
+  });
+  assert.equal(result.capped, true);
+  assert.equal(result.score, 82);
+}
+
+{
+  const result = m.applyVerticalEvidenceCeiling({
+    category:'POS',
+    score:91,
+    posScore:91,
+    insuranceScore:70,
+    evidenceTags:[]
+  });
+  assert.equal(result.capped, false);
+  assert.equal(result.score, 91);
+}
+
+{
+  const result = m.applyVerticalEvidenceCeiling({
+    category:'Equipment',
+    score:97,
+    posScore:null,
+    insuranceScore:80,
+    evidenceTags:[]
+  });
+  assert.equal(result.reviewRequired, true);
+  assert.equal(result.reason, 'REFERENCE_SCORES_MISSING');
+}
+
 console.log('PermitPlate Model V7 regression tests passed.');
