@@ -226,6 +226,7 @@ async function observeSocrataQuery(source, scope, options) {
       return {records: [], receipt, classification: model.classifySourceObservation(receipt)};
     }
     receipt.publisherCount = publisherCount;
+    receipt.intendedFullScope = maxRows >= publisherCount;
   } catch (error) {
     const unavailable = unavailableReceipt(receipt, error);
     return {records: [], receipt: unavailable, classification: model.classifySourceObservation(unavailable)};
