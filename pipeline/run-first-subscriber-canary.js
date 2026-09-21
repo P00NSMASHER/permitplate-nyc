@@ -5,6 +5,7 @@ const path=require('path');
 const opportunity=require('./opportunity-ledger');
 const stripeSubscriber=require('./stripe-subscriber');
 const subscriberArtifact=require('./subscriber-artifact');
+const customerMessage=require('./customer-message');
 const privateSheetMapping=require('./private-sheet-mapping');
 const delivery=require('./delivery-plan');
 
@@ -158,6 +159,12 @@ function run(){
   });
   if(first.status!=='READY') throw new Error('subscriber artifact canary failed');
 
+  const message=customerMessage.renderCustomerMessage({
+    artifact:first,
+    reportDate:'2026-09-21'
+  });
+  if(message.status!=='READY') throw new Error('customer message canary failed');
+
   const attempt=delivery.createDeliveryAttempt({
     status:'READY',
     planFingerprint:first.artifactFingerprint,
@@ -205,6 +212,13 @@ function run(){
       emailCsvParity:first.emailRows.map(r=>r.signalKey).join('|')===
         first.csvRows.map(r=>r['Signal Key']).join('|')
     },
+    customerMessage:{
+      status:message.status,
+      subject:message.subject,
+      signalKeys:message.signalKeys,
+      messageFingerprint:message.messageFingerprint,
+      attachmentSha256:message.attachment&&message.attachment.sha256||null
+    },
     plannedAttempt:{
       attemptId:attempt.attemptId,
       messageIdentity:attempt.messageIdentity,
@@ -238,6 +252,9 @@ function run(){
     result.firstArtifact.starterCount===1 &&
     result.firstArtifact.signalCount===2 &&
     result.firstArtifact.emailCsvParity===true &&
+    result.customerMessage.status==='READY' &&
+    result.customerMessage.signalKeys.join('|')===result.firstArtifact.signalKeys.join('|') &&
+    Boolean(result.customerMessage.attachmentSha256) &&
     result.plannedAttempt.state==='PLANNED' &&
     result.privateStatePlan.subscriberProfileColumnCount===20 &&
     result.privateStatePlan.deliveryStateRowCount===2 &&
