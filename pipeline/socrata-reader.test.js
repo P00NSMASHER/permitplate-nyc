@@ -64,7 +64,7 @@ const metadata = {
     assert.equal(batch.observation.fetchedCount, 3);
     assert.equal(batch.observation.cursorClosed, true);
     assert.equal(batch.records.length, 3);
-    assert.equal(batch.observation.rawPageHashes.length, 2);
+    assert.equal(batch.observation.rawPageHashes.length, 3);
     assert(batch.observation.queryScopeHash);
 
     const countCall = fetchFn.calls.find((call) => new URL(call.url).searchParams.get('$select') === 'count(*)');
@@ -94,7 +94,7 @@ const metadata = {
     });
     assert.equal(batch.observation.state, 'VERIFIED_EMPTY');
     assert.equal(batch.observation.supportsAbsenceConclusion, true);
-    assert.equal(batch.observation.rawPageHashes.length, 1);
+    assert.equal(batch.observation.rawPageHashes.length, 2);
   }
 
   // Mid-pagination failure retains the positive first page as PARTIAL.
