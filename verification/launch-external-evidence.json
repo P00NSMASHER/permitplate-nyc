@@ -1,0 +1,27 @@
+{
+  "evidenceVersion": "PermitPlate-external-launch-evidence-v1.0.0",
+  "observedAt": "2026-09-21T17:40:00Z",
+  "stripe": {
+    "account": "acct_1UFCRjDPW8riWrxQ",
+    "paymentLinkId": "plink_1UG3RUDPW8riWrxQpZwHExK2",
+    "priceId": "price_1UFjcWDPW8riWrxQhnrPX6nc",
+    "paymentLinkWriteAuthorized": false,
+    "checkoutPreferenceFieldsVerified": false,
+    "reason": "Connected Stripe key does not currently have payment_links_write."
+  },
+  "netlify": {
+    "siteId": "d968f195-23b5-4b4b-925a-d2ce29a785d0",
+    "currentDeployId": "6aaecade31905a0008c5e43c",
+    "verifiedPublicBuildCommit": "a2d8c43f84a060a55f3fd325d6c50f2fde646cd3",
+    "verifiedPublicBuildArtifactSha256": "3d86cc6424307b07be7aeed18c272a313a44d429dcb0bd2d392062c5b4510f9f",
+    "liveVerifiedCommit": null,
+    "productionDeployVerified": false,
+    "reason": "Scoped Netlify upload attempts timed out and current deploy ID did not advance."
+  },
+  "customerProof": {
+    "realPaidSubscriberEndToEndVerified": false,
+    "providerBackedDeliveryVerified": false,
+    "nextRunDuplicateSuppressionVerifiedForRealSubscriber": false,
+    "reason": "No real paid PermitPlate subscriber has completed provider-backed delivery/reconciliation yet."
+  }
+}
