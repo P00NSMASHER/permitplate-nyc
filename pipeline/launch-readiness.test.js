@@ -87,6 +87,7 @@ function external(overrides){
       verifiedPublicSourceFingerprint:'public-source-fp',
       verifiedPublicBuildCommit:'build-commit',
       liveVerifiedCommit:null,
+      livePublicSourceFingerprint:null,
       productionDeployVerified:false
     },
     customerProof:{
@@ -137,7 +138,7 @@ function internalInput(overrides){
   assert(!out.firstCustomerExternalFailures.includes('stripeCheckoutPreferenceFieldsVerified'));
   assert(out.firstCustomerExternalFailures.includes('preferenceCaptureReady'));
   assert(out.firstCustomerExternalFailures.includes('netlifyProductionDeployVerified'));
-  assert(out.firstCustomerExternalFailures.includes('netlifyLiveCommitKnown'));
+  assert(out.firstCustomerExternalFailures.includes('netlifyLiveBuildIdentityVerified'));
   assert(out.recommendedNextActions.includes('DEPLOY_AND_VERIFY_NETLIFY_PRECHECKOUT_FORM'));
   assert(out.recommendedNextActions.includes('DEPLOY_VERIFIED_PUBLIC_ARTIFACT'));
 }
@@ -237,6 +238,28 @@ function internalInput(overrides){
   assert.equal(out.launchState,'READY_FOR_FIRST_PAID_CUSTOMER');
   assert.deepEqual(out.firstCustomerExternalFailures,[]);
   assert.equal(out.commercialProofFailures.length,3);
+}
+
+{
+  const fingerprintVerifiedExternal=external({
+    preCheckoutOnboarding:{
+      liveFormVerified:true
+    },
+    netlify:{
+      verifiedPublicSourceFingerprint:'public-source-fp',
+      verifiedPublicBuildCommit:'build-commit',
+      liveVerifiedCommit:null,
+      livePublicSourceFingerprint:'public-source-fp',
+      productionDeployVerified:true
+    }
+  });
+  const out=readiness.evaluateLaunchReadiness(internalInput({
+    externalEvidence:fingerprintVerifiedExternal
+  }));
+  assert.equal(out.externalGates.netlifyLiveCommitMatchesVerifiedBuild,false);
+  assert.equal(out.externalGates.netlifyLivePublicSourceMatchesVerifiedBuild,true);
+  assert.equal(out.externalGates.netlifyLiveBuildIdentityVerified,true);
+  assert.equal(out.firstCustomerOperationallyReady,true);
 }
 
 {

@@ -61,6 +61,7 @@ function remediationFor(gate){
     netlifyProductionDeployVerified:'DEPLOY_VERIFIED_PUBLIC_ARTIFACT',
     netlifyLiveCommitKnown:'VERIFY_NETLIFY_LIVE_BUILD_IDENTITY',
     netlifyLiveCommitMatchesVerifiedBuild:'ALIGN_NETLIFY_LIVE_DEPLOY_TO_VERIFIED_BUILD',
+    netlifyLiveBuildIdentityVerified:'VERIFY_NETLIFY_LIVE_BUILD_IDENTITY',
     externalEvidenceFresh:'REFRESH_EXTERNAL_LAUNCH_EVIDENCE',
     realPaidSubscriberEndToEndVerified:'RUN_FIRST_REAL_PAID_SUBSCRIBER_ACCEPTANCE',
     providerBackedDeliveryVerified:'RECONCILE_REAL_PROVIDER_DELIVERY',
@@ -165,6 +166,10 @@ function evaluateLaunchReadiness(input){
       Boolean(netlify.liveVerifiedCommit)&&
       Boolean(netlify.verifiedPublicBuildCommit)&&
       netlify.liveVerifiedCommit===netlify.verifiedPublicBuildCommit,
+    netlifyLivePublicSourceMatchesVerifiedBuild:
+      Boolean(netlify.livePublicSourceFingerprint)&&
+      Boolean(netlify.verifiedPublicSourceFingerprint)&&
+      netlify.livePublicSourceFingerprint===netlify.verifiedPublicSourceFingerprint,
     realPaidSubscriberEndToEndVerified:
       normalizeBool(customerProof.realPaidSubscriberEndToEndVerified),
     providerBackedDeliveryVerified:
@@ -173,14 +178,17 @@ function evaluateLaunchReadiness(input){
       normalizeBool(customerProof.nextRunDuplicateSuppressionVerifiedForRealSubscriber)
   };
 
+  externalGates.netlifyLiveBuildIdentityVerified=
+    externalGates.netlifyLiveCommitMatchesVerifiedBuild ||
+    externalGates.netlifyLivePublicSourceMatchesVerifiedBuild;
+
   const firstCustomerExternalGates={
     externalEvidenceFresh:externalGates.externalEvidenceFresh,
     stripePaymentLinkActiveVerified:externalGates.stripePaymentLinkActiveVerified,
     preferenceCaptureReady:externalGates.preferenceCaptureReady,
     verifiedPublicBuildMatchesCurrentSource:externalGates.verifiedPublicBuildMatchesCurrentSource,
     netlifyProductionDeployVerified:externalGates.netlifyProductionDeployVerified,
-    netlifyLiveCommitKnown:externalGates.netlifyLiveCommitKnown,
-    netlifyLiveCommitMatchesVerifiedBuild:externalGates.netlifyLiveCommitMatchesVerifiedBuild
+    netlifyLiveBuildIdentityVerified:externalGates.netlifyLiveBuildIdentityVerified
   };
 
   const firstCustomerExternalFailures=Object.entries(firstCustomerExternalGates)
@@ -257,6 +265,7 @@ function evaluateLaunchReadiness(input){
       verifiedPublicSourceFingerprint:netlify.verifiedPublicSourceFingerprint||null,
       verifiedPublicBuildCommit:netlify.verifiedPublicBuildCommit||null,
       liveVerifiedCommit:netlify.liveVerifiedCommit||null,
+      livePublicSourceFingerprint:netlify.livePublicSourceFingerprint||null,
       boundaryFailures:publicBuildFailures
     },
     externalEvidenceVersion:external.evidenceVersion||null,

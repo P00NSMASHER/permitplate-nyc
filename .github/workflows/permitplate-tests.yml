@@ -85,6 +85,9 @@ jobs:
       - name: Run explicit transport authorization regression
         run: node pipeline/transport-authorization.test.js
 
+      - name: Run provider reconciliation regression
+        run: node pipeline/provider-reconciliation.test.js
+
       - name: Run launch readiness controller regression
         run: node pipeline/launch-readiness.test.js
 

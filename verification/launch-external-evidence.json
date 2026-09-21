@@ -19,7 +19,8 @@
     "liveVerifiedCommit": "57312ded8b2bcb3a95d4970ee0d8d4aadcb3dc0f",
     "productionDeployVerified": false,
     "reason": "Current production deploy remains commit 57312ded8b2bcb3a95d4970ee0d8d4aadcb3dc0f. The verified deployment candidate is commit 6b99072631adbc9b1e2bb7e86c02fc7578f335d4 and includes the pre-checkout onboarding pages.",
-    "verifiedPublicSourceFingerprint": "6d583455c58f8168b8649570192acb8d56aac0634fce7f014f3d80fa04e5bbed"
+    "verifiedPublicSourceFingerprint": "6d583455c58f8168b8649570192acb8d56aac0634fce7f014f3d80fa04e5bbed",
+    "livePublicSourceFingerprint": null
   },
   "customerProof": {
     "realPaidSubscriberEndToEndVerified": false,

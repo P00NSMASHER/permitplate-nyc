@@ -28,7 +28,7 @@ jobs:
         run: |
           mkdir -p verification-output
           set -o pipefail
-          node --test pipeline/provider-reconciliation.test.js pipeline/private-sheet-mapping.test.js | tee verification-output/reconciliation.tap
+          node --test pipeline/provider-reconciliation.test.js pipeline/private-sheet-mapping-boundary.test.js | tee verification-output/reconciliation.tap
       - name: Preserve the first-subscriber no-send boundary
         run: node pipeline/run-first-subscriber-canary.js verification-output/first-subscriber.json
       - uses: actions/upload-artifact@v4

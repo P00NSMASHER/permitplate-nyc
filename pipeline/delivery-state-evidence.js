@@ -4,8 +4,6 @@ const {instant, attemptErrors, reconcileProviderEvidence} = require('./provider-
 const {validateTransportAuthorization} = require('./transport-authorization');
 const text = value => typeof value === 'string' ? value.trim() : '';
 
-// Pure row-planning boundary. Provider and authorization objects must come from
-// authenticated adapters / the private approval store, never browser input.
 function resolveDeliveryStateEvidence(data) {
   const errors = attemptErrors(data.attempt);
   if (errors.length) throw new Error(errors.join('|'));
@@ -37,8 +35,6 @@ function resolveDeliveryStateEvidence(data) {
   }
   if (!data.transportAuthorization) throw new Error('TRANSPORT_AUTHORIZATION_REQUIRED');
 
-  // Check expiry at the actual original transport time, not a later readback.
-  // The consumed-ID send guard belongs to transport, not replay reconciliation.
   const authorization = validateTransportAuthorization({
     artifact:data.artifact, message:data.message, attempt:data.attempt,
     authorization:data.transportAuthorization, now:data.transportStartedAt

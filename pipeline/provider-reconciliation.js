@@ -41,7 +41,6 @@ function attemptErrors(attempt) {
 }
 
 function reconcileProviderEvidence(attempt, observation, deliveredSignalKeys, options = {}) {
-  // Never mutate a caller's Set: persistence happens only after the caller commits.
   const delivered = new Set(deliveredSignalKeys || []);
   const base = {
     reconciliationVersion: VERSION, delivered, newlyDelivered: [], newlyAccepted: [],
@@ -59,8 +58,6 @@ function reconcileProviderEvidence(attempt, observation, deliveredSignalKeys, op
     return fail(['PROVIDER_STATUS_INVALID']);
   }
   base.providerStatus = o.status;
-  // UNKNOWN is not NOT_SENT and must not release a retry. Provided bindings still
-  // must match, even when the provider's ultimate result is unknown.
   const bindings = [
     ['messageIdentity', text(attempt.messageIdentity), text, 'MESSAGE_IDENTITY_MISMATCH'],
     ['attemptId', text(attempt.attemptId), text, 'PROVIDER_ATTEMPT_MISMATCH'],
