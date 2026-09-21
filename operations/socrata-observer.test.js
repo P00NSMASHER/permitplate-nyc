@@ -56,15 +56,31 @@ const META = {
     const fetchImpl = mockFetch((url) => {
       if (url.pathname.includes('/api/views/')) return response(200, META);
       if (url.searchParams.get('$select') === 'count(*)') return response(200, [{count:'0'}]);
-      throw new Error('data page should not be fetched for verified zero');
+      return response(200, []);
     });
     const result = await observeSocrataQuery(source, {where:"premises_county='NEW YORK'"}, {
       fetchImpl, nowMs:NOW
     });
     assert.equal(result.records.length, 0);
     assert.equal(result.receipt.cursorClosed, true);
-    assert.equal(result.receipt.rawPageHashes.length, 1);
+    assert.equal(result.receipt.rawPageHashes.length, 2);
     assert.equal(result.classification.state, 'VERIFIED_EMPTY');
+  }
+
+  {
+    const source = getSource('SLA');
+    const fetchImpl = mockFetch((url) => {
+      if (url.pathname.includes('/api/views/')) return response(200, META);
+      if (url.searchParams.get('$select') === 'count(*)') return response(200, [{count:'0'}]);
+      return response(200, [{id:'unexpected-row'}]);
+    });
+    const result = await observeSocrataQuery(source, {where:"status='PENDING'"}, {
+      fetchImpl, nowMs:NOW
+    });
+    assert.equal(result.records.length, 1);
+    assert.equal(result.receipt.cursorClosed, false);
+    assert.equal(result.classification.state, 'PARTIAL');
+    assert.equal(result.classification.supportsAbsenceConclusion, false);
   }
 
   {
