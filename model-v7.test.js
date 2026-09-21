@@ -468,4 +468,16 @@ const m = require('./model-v7');
   assert.equal(result.reason, 'REFERENCE_SCORES_MISSING');
 }
 
+{
+  const r = m.classifySourceObservation({
+    transportOk:false,
+    intendedFullScope:true,
+    fetchedCount:5
+  });
+  assert.equal(r.state, 'PARTIAL');
+  assert.equal(r.supportsPositiveObservation, true);
+  assert.equal(r.supportsAbsenceConclusion, false);
+  assert.equal(r.reason, 'PARTIAL_FETCH_BEFORE_FAILURE');
+}
+
 console.log('PermitPlate Model V7 regression tests passed.');
