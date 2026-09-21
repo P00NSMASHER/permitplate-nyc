@@ -23,11 +23,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Verify leakage, label and threshold safeguards
+      - name: Verify leakage, label, source evidence and threshold safeguards
         run: |
           mkdir -p verification-output
           set -o pipefail
-          node --test pipeline/calibration.test.js | tee verification-output/calibration.tap
+          node --test pipeline/calibration*.test.js | tee verification-output/calibration.tap
       - name: Preserve first-subscriber NO_SEND behavior
         run: node pipeline/run-first-subscriber-canary.js verification-output/first-subscriber.json
       - name: Prepare score-blind review kit from complete public-source snapshot
