@@ -122,31 +122,42 @@ This is technical validation, not market validation.
 
 Target path:
 
-Stripe $79 subscription
+PermitPlate pre-checkout form
+→ category + NYC territory + Starter preference
+→ unchanged Stripe $79 subscription
+→ exact-email preference/subscription match
 → subscription.created becomes Baseline At
-→ category preference
-→ NYC territory
-→ Starter yes/no
 → private subscriber profile
 → persisted opportunity filtering
 → deterministic report and CSV
-→ operator-approved transport
-→ provider reconciliation
+→ explicit owner send authorization
+→ provider-bound acceptance/reconciliation
 → private Delivery State
 
 A synthetic NO-SEND canary proves this internal path, including next-run dedupe.
 
-## Checkout improvement ready but blocked
+## Pre-checkout preference capture
 
-The current $79 Payment Link does not yet collect PermitPlate preferences.
+PermitPlate now captures preferences before Stripe instead of depending on Stripe Payment Link custom-field write permission.
 
-Prepared checkout fields:
+The public onboarding source contains:
 
 1. required service-category dropdown;
 2. optional NYC borough/territory text, blank meaning all NYC;
-3. required Starter Snapshot yes/no.
+3. required Starter Snapshot yes/no;
+4. the email the buyer will also use at Stripe;
+5. a Netlify honeypot and version/plan markers.
 
-The connected Stripe key currently lacks payment_links_write, so this live Payment Link change has not been applied.
+After the form is submitted, the buyer continues to the unchanged $79 Stripe Payment Link.
+
+Activation occurs only when:
+
+- the Stripe subscription is valid and active/trialing;
+- the exact checkout email matches a valid recent PermitPlate onboarding receipt;
+- the receipt predates the subscription baseline and is within the bounded matching window;
+- the receipt is not ambiguous, stale, spam, wrong-version, or wrong-plan.
+
+Stripe payment_links_write is therefore optional rather than a first-launch dependency.
 
 No price, billing cadence, or tax change is required.
 
@@ -154,9 +165,11 @@ No price, billing cadence, or tax change is required.
 
 The private PermitPlate Google Sheet has been upgraded.
 
-Subscriber Profiles now includes Starter settings, caps, subscription status, Stripe customer/subscription/price IDs, profile fingerprint, and Checkout Session ID while preserving prior baseline/audit fields.
+Subscriber Profiles now includes Starter settings, caps, subscription status, Stripe customer/subscription/price IDs, profile fingerprint, Checkout Session ID, and the exact Preference Receipt ID while preserving prior baseline/audit fields.
 
-Delivery State now includes delivery status, deterministic Message Identity, artifact/profile fingerprints, NORMAL/STARTER class, provider status, reconciliation timestamp, and Package ID.
+Delivery State now includes delivery status, deterministic Message Identity, artifact/profile fingerprints, NORMAL/STARTER class, provider status, reconciliation timestamp, Package ID, and owner Authorization ID.
+
+Provider ACCEPTED is an authenticated provider event, not a claim of inbox delivery. FINALIZED state is derived from evidence bound to the exact attempt rather than from caller-supplied labels.
 
 No fake customer rows were inserted.
 
@@ -223,9 +236,11 @@ Internally ready:
 
 Externally blocked:
 
-1. Stripe checkout preference fields need payment_links_write permission.
-2. Netlify production deploy is stale and the scoped upload helper still times out.
-3. No real paid subscriber has completed provider-backed delivery/reconciliation.
+1. Netlify production deploy is stale, so the new pre-checkout onboarding form is not yet live even though Forms is enabled.
+2. The scoped Netlify upload helper still times out in the current execution environment; the connected desktop bridge is presently offline.
+3. No real paid subscriber has completed the provider-backed acceptance/reconciliation and next-run dedupe proof.
+
+Stripe Payment Link write permission is no longer required for the first launch.
 
 ## Immediate operating priority
 
