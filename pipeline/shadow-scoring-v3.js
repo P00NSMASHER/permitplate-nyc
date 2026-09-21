@@ -136,7 +136,8 @@ function deriveInput(candidate, recordsById, observedAt) {
         authority:'DIRECT_SOURCE_TEXT',
         hotFood:false,restaurant:false,pokeBowl:false,lightPrep:false
       },
-      knownCuisineType:knownCuisine(candidate.primaryRecord),
+      knownCuisineType:knownCuisine(candidate.primaryRecord) ||
+        Boolean(fitReceipt.conceptEvidence && fitReceipt.conceptEvidence.explicit),
       actualDohmhPrePermit:candidate.lifecycleStage === 'HEALTH PRE-PERMIT',
       acceptedSla:slaRecords.length > 0,
       acceptedDob:dobRecords.length > 0,
