@@ -195,7 +195,9 @@ const dobRow = {
     minimumScore:60
   });
   assert.equal(result.finalDecision, 'REVIEW');
-  assert(result.reasons.includes('PRIMARY_SOURCE_OBSERVATION_NOT_USABLE'));
+  assert(result.reasons.includes('SOURCE_NOT_FRESH'));
+  assert.equal(result.opportunityDecision.sourceObservation.state, 'PARTIAL');
+  assert.equal(result.opportunityDecision.sourceObservation.supportsPositiveObservation, true);
 }
 
 // Exact input replay is deterministic.
