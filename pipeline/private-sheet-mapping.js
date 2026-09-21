@@ -4,19 +4,20 @@ const crypto=require('crypto');
 const delivery=require('./delivery-plan');
 const {resolveDeliveryStateEvidence}=require('./delivery-state-evidence');
 
-const PRIVATE_SHEET_MAPPING_VERSION='PermitPlate-private-sheet-mapping-v1.1.0';
+const PRIVATE_SHEET_MAPPING_VERSION='PermitPlate-private-sheet-mapping-v1.2.0';
 const SUBSCRIBER_PROFILE_HEADERS=Object.freeze([
   'Email','Categories','Boroughs/Territory','Minimum Score','Updated At','Notes',
   'Baseline At','Starter Snapshot Sent At','Starter Snapshot Through','Delivery Policy Version',
   'Starter Snapshot Enabled','Starter Days','Starter Limit','Max Signals','Status',
   'Stripe Customer','Stripe Subscription','Price ID','Profile Fingerprint','Checkout Session',
-  'Preference Receipt ID'
+  'Preference Receipt ID','Preference Source','Subscription Context Fingerprint',
+  'Onboarding Match Fingerprint','Activation Fingerprint'
 ]);
 const DELIVERY_STATE_HEADERS=Object.freeze([
   'Recipient Email','Lead Key','Delivered At','Stripe Customer','Stripe Subscription',
   'Gmail Message ID','Attempt ID','Delivery Status','Message Identity','Artifact Fingerprint',
   'Profile Fingerprint','Delivery Class','Provider Status','Last Reconciled At','Package ID',
-  'Authorization ID'
+  'Authorization ID','Provider Receipt Fingerprint','Provider Evidence Kind','Transport Started At'
 ]);
 
 function stableStringify(value){
@@ -36,10 +37,21 @@ function text(value){
 function rowArray(headers,row){
   return headers.map((header)=>row[header]===undefined?null:row[header]);
 }
-function subscriberProfileRow(adapterResult){
-  if(!adapterResult||adapterResult.status!=='ACTIVE'||!adapterResult.profile){
-    throw new Error('ACTIVE Stripe subscriber adapter result required');
+function subscriberProfileAuthority(input){
+  if(input&&input.status==='ACTIVE'&&input.subscriber&&
+      input.subscriber.status==='ACTIVE'&&input.subscriber.profile){
+    return {adapterResult:input.subscriber,activationResult:input};
   }
+  if(input&&input.status==='ACTIVE'&&input.profile){
+    return {adapterResult:input,activationResult:null};
+  }
+  throw new Error('ACTIVE subscriber activation or adapter result required');
+}
+
+function subscriberProfileRow(input){
+  const authority=subscriberProfileAuthority(input);
+  const adapterResult=authority.adapterResult;
+  const activationResult=authority.activationResult;
   const p=adapterResult.profile;
   const allBoroughs=['Manhattan','Brooklyn','Queens','Bronx','Staten Island'];
   const territory=p.boroughs.length===allBoroughs.length &&
@@ -67,7 +79,15 @@ function subscriberProfileRow(adapterResult){
     'Price ID':p.priceId||'',
     'Profile Fingerprint':adapterResult.profileFingerprint,
     'Checkout Session':adapterResult.checkoutSessionId,
-    'Preference Receipt ID':adapterResult.preferenceReceiptId||''
+    'Preference Receipt ID':adapterResult.preferenceReceiptId||'',
+    'Preference Source':adapterResult.preferenceSource||'',
+    'Subscription Context Fingerprint':
+      adapterResult.subscriptionContextFingerprint||
+      activationResult&&activationResult.stripeContextFingerprint||'',
+    'Onboarding Match Fingerprint':
+      activationResult&&activationResult.onboardingMatchFingerprint||'',
+    'Activation Fingerprint':
+      activationResult&&activationResult.activationFingerprint||''
   };
   return {
     mappingVersion:PRIVATE_SHEET_MAPPING_VERSION,
@@ -127,7 +147,12 @@ function deliveryStateRows(input){
     throw new Error('ARTIFACT_ROW_SIGNAL_SET_MISMATCH');
   }
   const evidence=resolveDeliveryStateEvidence(data);
-  const {deliveryStatus,providerStatus,deliveredAt,providerMessageId,reconciledAt,authorizationId}=evidence;
+  const {
+    deliveryStatus,providerStatus,deliveredAt,providerMessageId,reconciledAt,
+    authorizationId,transportStartedAt
+  }=evidence;
+  const providerReceiptFingerprint=evidence.receipt&&evidence.receipt.receiptFingerprint||'';
+  const providerEvidenceKind=evidence.receipt&&evidence.receipt.evidenceKind||'';
 
   const rows=artifactKeys.map((signalKey)=>{
     const packageInfo=packageMap.get(signalKey);
@@ -148,7 +173,10 @@ function deliveryStateRows(input){
       'Provider Status':providerStatus,
       'Last Reconciled At':reconciledAt,
       'Package ID':packageInfo.packageId,
-      'Authorization ID':authorizationId
+      'Authorization ID':authorizationId,
+      'Provider Receipt Fingerprint':providerReceiptFingerprint,
+      'Provider Evidence Kind':providerEvidenceKind,
+      'Transport Started At':transportStartedAt||''
     };
     return {
       key:text(profile.recipientEmail).toLowerCase()+'|'+signalKey,
@@ -182,6 +210,7 @@ module.exports={
   sha256,
   text,
   rowArray,
+  subscriberProfileAuthority,
   subscriberProfileRow,
   packageBySignal,
   normalizeProviderStatus,
