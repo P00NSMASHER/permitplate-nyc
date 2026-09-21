@@ -147,4 +147,28 @@ function candidate(name, overrides) {
   assert.equal(out.conceptEvidence.hotFood,false);
 }
 
+{
+  const out=f.classifyCommercialFit({candidate:candidate('PAM AND STEVE GUYANESE RESTAURANT AND BAKERY LTD')});
+  assert.equal(out.fit,'HIGH');
+  assert.equal(out.conceptEvidence.archetype,'HOT_FOOD');
+  assert.equal(out.conceptEvidence.hotFood,true);
+  assert.equal(out.conceptEvidence.restaurant,false);
+}
+
+{
+  const out=f.classifyCommercialFit({candidate:candidate('CARNEGIE DINER & CAFE')});
+  assert.equal(out.fit,'HIGH');
+  assert.equal(out.conceptEvidence.archetype,'GENERAL_COMMERCIAL');
+  assert.equal(out.conceptEvidence.hotFood,false);
+  assert.equal(out.conceptEvidence.restaurant,false);
+  assert.equal(out.conceptEvidence.lightPrep,false);
+}
+
+{
+  const out=f.classifyCommercialFit({candidate:candidate('SPITFIRE COFFEE & SANDWICH')});
+  assert.equal(out.fit,'HIGH');
+  assert.equal(out.conceptEvidence.archetype,'LIGHT_PREP');
+  assert.equal(out.conceptEvidence.lightPrep,true);
+}
+
 console.log('PermitPlate commercial-fit receipt regression tests passed.');
