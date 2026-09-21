@@ -1,93 +1,236 @@
 # PermitPlate Business Model V7
-Updated: 2026-09-19
+
+Updated: 2026-09-21
 
 ## Product definition
-PermitPlate is a public change-intelligence product for B2B sales teams.
 
-The unit of value is not a permit row or "lead." It is an evidence-backed material change attached to the correct real-world business/project, scored for the buyer's service category and delivered with source lineage.
+PermitPlate is evidence-backed public change intelligence for vendors that sell into businesses while those businesses are opening, licensing, building out, or materially changing.
+
+The customer does not pay for a raw permit list. The customer pays for the right business, the meaningful change, the relevance to what they sell, and the official evidence behind it.
 
 Current production market: NYC restaurant vendors.
 
-## Current offer
-### NYC Restaurant Watch — $79/month
-- Current self-serve Stripe offer.
-- DOHMH core with conservatively matched current/relevant NY SLA and NYC DOB evidence.
-- Post-baseline new or materially changed signals.
-- Vendor-specific prioritization.
-- Why Now, Watch Next, identity confidence, evidence strength and source lineage.
+## Current self-serve offer
 
-### Founder-reviewed Custom Territory Pilot
-- Used to validate a new service category, territory, public-source combination or buyer workflow before automating it.
-- Scope/price agreed before work begins.
-- No market is described as production coverage until source rights, freshness, matching precision and buyer usefulness are validated.
+NYC Restaurant Watch remains $79/month.
+
+Target output:
+
+- post-baseline new or materially changed opportunities;
+- optional labeled prior-seven-day Starter Snapshot;
+- vendor-category score;
+- borough filtering;
+- commercial fit;
+- lifecycle stage;
+- source systems and record IDs;
+- official source URLs;
+- CRM-ready report/CSV;
+- exactly-once delivery state.
+
+Initial categories:
+
+- POS/payments
+- Insurance
+- Restaurant Equipment
+- Hood/Fire Suppression
+- Waste/Hauling
+- Pest Control
+- Linen/Laundry
+- Food Distribution
+
+## What the actual product now does
+
+The current deterministic engine performs:
+
+1. live source-health verification;
+2. query-scoped source receipts;
+3. conservative identity/project resolution;
+4. cross-CAMIS predecessor suppression;
+5. current candidate-graph construction;
+6. evidence-backed commercial-fit classification;
+7. canonical vendor-category scoring;
+8. persistent first-detection/material-change tracking;
+9. production-authorized candidate packaging;
+10. persistent opportunity history;
+11. subscriber baseline/territory/category filtering;
+12. optional Starter Snapshot selection;
+13. deterministic report/CSV generation;
+14. deterministic attempt/message identity;
+15. private delivery-state planning and reconciliation.
+
+This is materially different from the earlier workbook/prompt-centric product.
 
 ## Ideal customer
-A local or regional B2B sales team that:
-1. sells into businesses/projects before opening or during buildout/change,
-2. can make meaningful gross profit from one customer,
-3. currently pays reps to research public records, drive territories, or discover projects manually,
-4. has a defined service territory and category,
-5. benefits from being early rather than simply having a larger list.
 
-Initial NYC categories: POS/payments, Insurance, Equipment, Hood/Fire, Waste, Pest, Linen, Distribution.
+A local or regional NYC vendor whose sales team benefits from learning about restaurant openings/buildouts before ordinary prospect lists catch up.
 
-## Value proposition
-"Tell me what materially changed in my territory, why it matters to what I sell, and show me the public evidence."
+Strong buyers usually:
 
-This is intentionally different from:
-- generic business directories,
-- raw permit feeds,
-- scraped lead lists,
-- purchase-intent claims,
-- opaque AI lead scores.
+- earn enough gross profit from one account to justify $79/month;
+- have a defined territory;
+- sell during pre-opening/buildout/licensing;
+- otherwise pay reps to research manually;
+- value source evidence over opaque intent claims.
+
+## Painful problem
+
+Reps often discover a restaurant too late, spend time on false positives, or chase a building-level permit that is not actually tied to the target operator.
+
+PermitPlate reduces that waste by failing closed on ambiguous identity and delivering changes rather than a giant undifferentiated list.
+
+## Customer value unit
+
+A useful signal should answer:
+
+- Who is this?
+- What materially changed?
+- Why now?
+- How relevant is it to what I sell?
+- How strong is the identity/evidence?
+- Which official records prove it?
 
 ## Product moat
-1. Stable entity/project identity across changing public records.
-2. Conservative entity resolution that fails closed on ambiguous joins.
-3. Append-only source-event lineage.
-4. Material-change/reopen logic.
-5. Typed source-observation receipts that distinguish verified completeness from outage, movement, partial coverage, and unknown state.
-6. Fail-closed absence handling so a bad/empty fetch cannot silently erase an opportunity.
-7. Vendor-specific deterministic scoring.
-8. Deterministic Opportunity Decision receipts with replay fingerprints and explicit reasons.
-9. Observed Facts vs PermitPlate Inference.
-10. Customer feedback dispositions without hidden black-box retraining.
-11. Versioned market/source models so each city/vertical can be audited separately.
 
-## Expansion strategy
-Do not expand because a dataset exists. A new market must pass:
-- public-source rights / permitted use review,
-- source freshness and availability test,
-- normalized schema,
-- entity-resolution benchmark,
-- material-change replay corpus,
-- false-join review,
-- buyer-specific scoring rules,
-- at least one sample Opportunity Brief that is meaningfully better than raw source browsing,
-- evidence of willingness to pay or repeated workflow use.
+1. Proof-carrying source windows.
+2. Conservative cross-source identity.
+3. Persistent baseline that prevents backlog leakage.
+4. Canonical scoring with replay and adversarial tests.
+5. Persistent production-authorized opportunity history.
+6. Subscriber-specific deterministic artifacts.
+7. Exactly-once delivery semantics.
+8. Private customer state separated from public product code.
+9. Safe static deployment boundary.
 
-## Validation metrics
-Primary:
-- % delivered signals marked Investigate,
-- % Already knew,
-- % Irrelevant,
-- % Watch,
-- correction / false-join rate,
-- materially changed signal rate,
-- source verification failure rate,
-- subscriber retention / repeat-pilot intent.
+## Validated current scale
 
-Secondary:
-- time from public event to PermitPlate detection,
-- number of source systems per entity,
-- proportion of signals reopened by new evidence,
-- CSV/CRM export usage,
-- revenue per monitored territory/category.
+Recent live graph:
 
-## Pricing logic
-Keep the $79/month founding NYC feed aligned with the existing Stripe product while validation continues.
-Use custom founder-reviewed pilots for higher-value or new-market buyers before building self-serve expansion.
-Team/multi-territory pricing should be introduced only after customer usage proves the workflow and the source model can support the promised coverage.
+- approximately 4,104 current candidates;
+- 82 cross-CAMIS operational conflicts suppressed;
+- all promised source windows must be complete before delivery;
+- canonical scoring covers the full current graph.
 
-## Current strategic constraint
-The core decision boundary has now begun moving from prompt orchestration into deterministic application code: V7.1 implements typed source-observation classification, fail-closed absence handling, and replayable Opportunity Decision receipts with regression coverage. The remaining product gap is connector adoption and durable persistence: every production source still needs to emit the required receipt metadata and delivery operations must reach 100% receipt enforcement before PermitPlate can claim verified-complete negative coverage. The website must not claim automation, coverage or precision that this rollout has not proven.
+Scoring has passed:
+
+- 47-case canonical historical replay;
+- 13 of 13 current literal-authority overlap parity;
+- adversarial evidence/scoring invariants.
+
+This is technical validation, not market validation.
+
+## Subscriber activation model
+
+Target path:
+
+Stripe $79 subscription
+→ subscription.created becomes Baseline At
+→ category preference
+→ NYC territory
+→ Starter yes/no
+→ private subscriber profile
+→ persisted opportunity filtering
+→ deterministic report and CSV
+→ operator-approved transport
+→ provider reconciliation
+→ private Delivery State
+
+A synthetic NO-SEND canary proves this internal path, including next-run dedupe.
+
+## Checkout improvement ready but blocked
+
+The current $79 Payment Link does not yet collect PermitPlate preferences.
+
+Prepared checkout fields:
+
+1. required service-category dropdown;
+2. optional NYC borough/territory text, blank meaning all NYC;
+3. required Starter Snapshot yes/no.
+
+The connected Stripe key currently lacks payment_links_write, so this live Payment Link change has not been applied.
+
+No price, billing cadence, or tax change is required.
+
+## Private production state
+
+The private PermitPlate Google Sheet has been upgraded.
+
+Subscriber Profiles now includes Starter settings, caps, subscription status, Stripe customer/subscription/price IDs, profile fingerprint, and Checkout Session ID while preserving prior baseline/audit fields.
+
+Delivery State now includes delivery status, deterministic Message Identity, artifact/profile fingerprints, NORMAL/STARTER class, provider status, reconciliation timestamp, and Package ID.
+
+No fake customer rows were inserted.
+
+## Pricing
+
+Keep the founding self-serve price at $79/month until real usage supports a pricing change.
+
+Do not add pricing complexity before paid-customer proof.
+
+Possible later packaging, only after usage evidence:
+
+- team or multi-territory plans;
+- more frequent delivery;
+- CRM integrations;
+- premium category-specific intelligence;
+- additional jurisdictions.
+
+## Founder-reviewed pilots
+
+Use custom pilots for buyers/categories/markets outside the validated self-serve model.
+
+A pilot should have an explicit buyer problem, source scope, territory/category, output, and price before work begins.
+
+Do not describe a new market as production coverage until its source, matching, scoring, and buyer usefulness are validated.
+
+## Validation metrics after launch
+
+Most important:
+
+- percent of delivered opportunities investigated;
+- irrelevant rate;
+- already-known rate;
+- false-join/correction rate;
+- source-window failure rate;
+- delivered opportunities per subscriber;
+- voluntarily reported conversation/customer outcomes;
+- retention;
+- cancellation reason.
+
+Technical metrics remain necessary but are not substitutes for customer value.
+
+## What PermitPlate should not claim
+
+Do not claim guaranteed purchases, private purchase intent, guaranteed opening dates, complete coverage during unavailable/partial source windows, same-site permits as same-business evidence without proof, or a proven paid-customer delivery before one actually occurs.
+
+## Current launch state
+
+Internally ready:
+
+- NYC official source ingestion;
+- completeness receipts;
+- candidate graph;
+- identity/corroboration gates;
+- commercial fit;
+- canonical scoring;
+- persistent detection state;
+- persistent opportunity state;
+- subscriber profile contract;
+- deterministic report/CSV;
+- exactly-once delivery planning;
+- private subscriber/delivery schema;
+- synthetic first-subscriber NO-SEND acceptance;
+- deploy-safe public-site artifact.
+
+Externally blocked:
+
+1. Stripe checkout preference fields need payment_links_write permission.
+2. Netlify production deploy is stale and the scoped upload helper still times out.
+3. No real paid subscriber has completed provider-backed delivery/reconciliation.
+
+## Immediate operating priority
+
+Do not expand geography.
+
+The next commercial milestone is one genuine $79 subscriber completing preference capture, receiving an operator-approved PermitPlate artifact, and reconciling provider/delivery state with zero duplicate delivery on the next run.
+
+That event moves PermitPlate from technically launch-ready to commercially proven.
