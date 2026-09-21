@@ -13,7 +13,8 @@ const SUBSCRIBER_PROFILE_HEADERS=Object.freeze([
 const DELIVERY_STATE_HEADERS=Object.freeze([
   'Recipient Email','Lead Key','Delivered At','Stripe Customer','Stripe Subscription',
   'Gmail Message ID','Attempt ID','Delivery Status','Message Identity','Artifact Fingerprint',
-  'Profile Fingerprint','Delivery Class','Provider Status','Last Reconciled At','Package ID'
+  'Profile Fingerprint','Delivery Class','Provider Status','Last Reconciled At','Package ID',
+  'Authorization ID'
 ]);
 
 function stableStringify(value){
@@ -140,6 +141,15 @@ function deliveryStateRows(input){
     data.gmailMessageId
   );
   const reconciledAt=text(data.reconciledAt||provider.reconciledAt);
+  const authorizationId=text(
+    data.transportAuthorization&&data.transportAuthorization.authorizationId
+  );
+  const transportState=
+    providerStatus!=='NOT_SENT' ||
+    ['PENDING','FINALIZED','REJECTED'].includes(deliveryStatus);
+  if(transportState&&!authorizationId){
+    throw new Error('TRANSPORT_AUTHORIZATION_REQUIRED');
+  }
 
   const rows=artifactKeys.map((signalKey)=>{
     const packageInfo=packageMap.get(signalKey)||{};
@@ -158,7 +168,8 @@ function deliveryStateRows(input){
       'Delivery Class':packageInfo.deliveryClass,
       'Provider Status':providerStatus,
       'Last Reconciled At':reconciledAt,
-      'Package ID':packageInfo.packageId
+      'Package ID':packageInfo.packageId,
+      'Authorization ID':authorizationId
     };
     return {
       key:text(profile.recipientEmail).toLowerCase()+'|'+signalKey,
