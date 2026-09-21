@@ -5,6 +5,7 @@ const path=require('path');
 const opportunity=require('./opportunity-ledger');
 const stripeSubscriber=require('./stripe-subscriber');
 const subscriberArtifact=require('./subscriber-artifact');
+const privateSheetMapping=require('./private-sheet-mapping');
 const delivery=require('./delivery-plan');
 
 const RUNNER_VERSION='PermitPlate-first-subscriber-canary-v1.0.0';
@@ -163,6 +164,16 @@ function run(){
     signals:first.signalKeys.map((signalKey)=>({signalKey}))
   },stripe.profile.recipientEmail);
 
+  const profileSheetPlan=privateSheetMapping.subscriberProfileRow(stripe);
+  const deliverySheetPlan=privateSheetMapping.deliveryStateRows({
+    artifact:first,
+    attempt,
+    profile:{
+      profile:stripe.profile,
+      profileFingerprint:stripe.profileFingerprint
+    }
+  });
+
   const replay=subscriberArtifact.buildSubscriberArtifact({
     opportunityLedger:ledger,
     profile:{
@@ -200,6 +211,18 @@ function run(){
       state:attempt.state,
       signalKeys:attempt.signalKeys
     },
+    privateStatePlan:{
+      subscriberProfileSheet:profileSheetPlan.sheet,
+      subscriberProfileColumnCount:profileSheetPlan.values.length,
+      subscriberProfileRowFingerprint:profileSheetPlan.rowFingerprint,
+      deliveryStateSheet:deliverySheetPlan.sheet,
+      deliveryStateRowCount:deliverySheetPlan.rows.length,
+      deliveryStateColumnCount:deliverySheetPlan.rows[0]?
+        deliverySheetPlan.rows[0].values.length:0,
+      deliveryStatus:deliverySheetPlan.deliveryStatus,
+      providerStatus:deliverySheetPlan.providerStatus,
+      deliveryStateBatchFingerprint:deliverySheetPlan.batchFingerprint
+    },
     replayArtifact:{
       status:replay.status,
       signalCount:replay.signalCount,
@@ -216,6 +239,11 @@ function run(){
     result.firstArtifact.signalCount===2 &&
     result.firstArtifact.emailCsvParity===true &&
     result.plannedAttempt.state==='PLANNED' &&
+    result.privateStatePlan.subscriberProfileColumnCount===20 &&
+    result.privateStatePlan.deliveryStateRowCount===2 &&
+    result.privateStatePlan.deliveryStateColumnCount===15 &&
+    result.privateStatePlan.deliveryStatus==='PLANNED' &&
+    result.privateStatePlan.providerStatus==='NOT_SENT' &&
     result.replayArtifact.signalCount===0 &&
     result.replayArtifact.alreadyDeliveredCount===2 &&
     result.externalSendCalls===0
