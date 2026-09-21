@@ -42,6 +42,7 @@ function boundReceipts(candidates, detections, scoreOverrides) {
       changeFingerprint:fp,
       graphDigest:GRAPH_DIGEST,
       scorerVersion:'PermitPlate-score-fixture-v1',
+      productionAuthorized:true,
       scores:{
         POS:80,
         Insurance:75,
@@ -164,6 +165,23 @@ function plan(candidates, profileOverrides, receiptOverrides) {
   });
   assert.equal(result.signals.length,0);
   assert(result.reviews[0].reasons.includes('SCORE_GRAPH_MISMATCH'));
+}
+
+// A canary/shadow score receipt can never reach customer delivery.
+{
+  const c = candidate('canary-score');
+  const bound = boundReceipts([c], null, {
+    'canary-score':{productionAuthorized:false}
+  });
+  const result = p.planCustomerDelivery({
+    graph:{graphState:'COMPLETE',graphDigest:GRAPH_DIGEST,candidates:[c]},
+    profile:{subscriberId:'sub-1',baselineAt:BASELINE,category:'POS',minimumScore:0},
+    detectionReceipts:bound.detectionReceipts,
+    scoreReceipts:bound.scoreReceipts
+  });
+  assert.equal(result.signals.length,0);
+  assert.equal(result.reviews.length,1);
+  assert(result.reviews[0].reasons.includes('SCORE_NOT_PRODUCTION_AUTHORIZED'));
 }
 
 // Candidate suppression and profile/threshold filters cannot be overridden by score.
