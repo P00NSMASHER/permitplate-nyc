@@ -185,7 +185,8 @@ function planCustomerDelivery(input) {
         reason.includes('RECEIPT') ||
         reason.includes('MISMATCH') ||
         reason.includes('INVALID') ||
-        reason.includes('MISSING')
+        reason.includes('MISSING') ||
+        reason.includes('NOT_PRODUCTION_AUTHORIZED')
       );
       (hardReview ? reviews : excluded).push({
         entityId: candidate.entityId,
