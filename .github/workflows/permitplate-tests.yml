@@ -64,6 +64,9 @@ jobs:
       - name: Run subscriber artifact no-send regression
         run: node pipeline/subscriber-artifact.test.js
 
+      - name: Run Stripe subscriber adapter regression
+        run: node pipeline/stripe-subscriber.test.js
+
       - name: Run commercial fit receipt regression
         run: node pipeline/commercial-fit.test.js
 
