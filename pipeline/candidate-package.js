@@ -105,11 +105,25 @@ function buildCandidatePackage(input){
   return payload;
 }
 
+function candidateForDelivery(candidate,packageReceipt){
+  if(!packageReceipt||packageReceipt.status!=='READY_FOR_PROFILE_MATCHING'){
+    throw new Error('READY candidate package required');
+  }
+  if(!packageReceipt.detectionReceiptId||!packageReceipt.scoreReceiptId){
+    throw new Error('candidate package receipt bindings missing');
+  }
+  return Object.assign({},candidate||{},{
+    detectionReceiptId:packageReceipt.detectionReceiptId,
+    scoreReceiptId:packageReceipt.scoreReceiptId
+  });
+}
+
 module.exports={
   CANDIDATE_PACKAGE_VERSION,
   stableStringify,
   sha256,
   detectionTime,
   validateDetection,
-  buildCandidatePackage
+  buildCandidatePackage,
+  candidateForDelivery
 };
