@@ -93,7 +93,7 @@ function attempt(a){
   assert.equal(mapped.deliveryStatus,'PLANNED');
   assert.equal(mapped.providerStatus,'NOT_SENT');
   assert.equal(mapped.rows.length,2);
-  assert(mapped.rows.every(item=>item.values.length===15));
+  assert(mapped.rows.every(item=>item.values.length===16));
   assert(mapped.rows.every(item=>
     JSON.stringify(Object.keys(item.row))===JSON.stringify(mapping.DELIVERY_STATE_HEADERS)
   ));
@@ -118,13 +118,15 @@ function attempt(a){
       providerMessageId:'gmail-message-1',
       acceptedAt:'2026-09-21T18:00:00Z',
       reconciledAt:'2026-09-21T18:01:00Z'
-    }
+    },
+    transportAuthorization:{authorizationId:'AUTH:approved-1'}
   });
   assert.equal(mapped.deliveryStatus,'FINALIZED');
   assert.equal(mapped.providerStatus,'ACCEPTED');
   assert(mapped.rows.every(item=>item.row['Gmail Message ID']==='gmail-message-1'));
   assert(mapped.rows.every(item=>item.row['Delivered At']==='2026-09-21T18:00:00Z'));
   assert(mapped.rows.every(item=>item.row['Last Reconciled At']==='2026-09-21T18:01:00Z'));
+  assert(mapped.rows.every(item=>item.row['Authorization ID']==='AUTH:approved-1'));
 }
 
 {
@@ -135,7 +137,8 @@ function attempt(a){
     artifact:a,
     attempt:att,
     profile:{profile:adapted.profile,profileFingerprint:adapted.profileFingerprint},
-    providerObservation:{status:'REJECTED',providerMessageId:'provider-reject-1'}
+    providerObservation:{status:'REJECTED',providerMessageId:'provider-reject-1'},
+    transportAuthorization:{authorizationId:'AUTH:approved-2'}
   });
   assert.equal(mapped.deliveryStatus,'REJECTED');
   assert.equal(mapped.providerStatus,'REJECTED');
@@ -184,6 +187,25 @@ function attempt(a){
   const adapted=adapterResult();
   const a=artifact();
   const att=attempt(a);
+  assert.throws(
+    ()=>mapping.deliveryStateRows({
+      artifact:a,
+      attempt:att,
+      profile:{profile:adapted.profile,profileFingerprint:adapted.profileFingerprint},
+      providerObservation:{
+        status:'ACCEPTED',
+        providerMessageId:'gmail-message-1',
+        acceptedAt:'2026-09-21T18:00:00Z'
+      }
+    }),
+    /TRANSPORT_AUTHORIZATION_REQUIRED/
+  );
+}
+
+{
+  const adapted=adapterResult();
+  const a=artifact();
+  const att=attempt(a);
   const first=mapping.deliveryStateRows({
     artifact:a,attempt:att,
     profile:{profile:adapted.profile,profileFingerprint:adapted.profileFingerprint}
@@ -209,7 +231,8 @@ assert.deepEqual(mapping.SUBSCRIBER_PROFILE_HEADERS,[
 assert.deepEqual(mapping.DELIVERY_STATE_HEADERS,[
   'Recipient Email','Lead Key','Delivered At','Stripe Customer','Stripe Subscription',
   'Gmail Message ID','Attempt ID','Delivery Status','Message Identity','Artifact Fingerprint',
-  'Profile Fingerprint','Delivery Class','Provider Status','Last Reconciled At','Package ID'
+  'Profile Fingerprint','Delivery Class','Provider Status','Last Reconciled At','Package ID',
+  'Authorization ID'
 ]);
 
 console.log('PermitPlate private sheet mapping tests passed.');
