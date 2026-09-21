@@ -118,6 +118,7 @@ function checkoutSubscriptionContext(input){
 
   const email=recipientEmail(session);
   if(!email) failures.push('CHECKOUT_EMAIL_MISSING');
+  const clientReferenceId=text(session.client_reference_id)||null;
 
   const actualPriceId=priceId(subscription);
   const expectedPriceId=text(data.expectedPriceId);
@@ -131,7 +132,8 @@ function checkoutSubscriptionContext(input){
       email:email||null,
       baselineAt:baselineAt||null,
       subscriptionStatus:status||null,
-      priceId:actualPriceId||null
+      priceId:actualPriceId||null,
+      clientReferenceId
     });
   }
 
@@ -143,6 +145,7 @@ function checkoutSubscriptionContext(input){
     subscriptionId:subId,
     customerId:customerId(session,subscription),
     email,
+    clientReferenceId,
     baselineAt,
     subscriptionStatus:status,
     priceId:actualPriceId
