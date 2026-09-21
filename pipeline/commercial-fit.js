@@ -27,7 +27,7 @@ const STRONG_CONCEPT_PATTERNS = Object.freeze([
 
 const EXCLUDE_PATTERNS = Object.freeze([
   ['RESIDENCE', /\bRESIDENCE\b/i],
-  ['CORPORATE_FLOOR', /\b(?:1ST|2ND|3RD|[4-9]TH|1\dTH|2\dTH|3\dTH|4\dTH|5\dTH)\s+(?:FL|FLOOR)\b/i],
+  ['CORPORATE_FLOOR', /\b\d{1,2}(?:ST|ND|RD|TH)\s+(?:FL|FLOOR)\b/i],
   ['OFFICE_CAFETERIA', /\bOFFICE\b.*\bCAFETERIA\b|\bEMPLOYEE\b.*\bCAFETERIA\b/i]
 ]);
 
