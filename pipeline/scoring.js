@@ -61,19 +61,25 @@ function directConceptFlags(input) {
   };
 }
 
+function authorityNumber(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
 function validateInput(input) {
   const errors = [];
   const fit = String(input && input.commercialFit || '').toUpperCase();
   if (fit !== 'EXCLUDE' && !(fit in FIT)) errors.push('COMMERCIAL_FIT_UNPROVEN');
 
-  const stage = Number(input && input.stageNumber);
-  if (!STAGE_WEIGHTS[stage]) errors.push('STAGE_UNPROVEN');
+  const stage = authorityNumber(input && input.stageNumber);
+  if (stage === null || !STAGE_WEIGHTS[stage]) errors.push('STAGE_UNPROVEN');
 
-  const age = Number(input && input.materialAgeDays);
-  if (!Number.isFinite(age) || age < 0) errors.push('MATERIAL_AGE_UNPROVEN');
+  const age = authorityNumber(input && input.materialAgeDays);
+  if (age === null || age < 0) errors.push('MATERIAL_AGE_UNPROVEN');
 
-  const count = Number(input && input.sourceCount);
-  if (!Number.isInteger(count) || count < 1) errors.push('SOURCE_COUNT_INVALID');
+  const count = authorityNumber(input && input.sourceCount);
+  if (count === null || !Number.isInteger(count) || count < 1) errors.push('SOURCE_COUNT_INVALID');
 
   if (input && input.strictVenueLinkedHospitalityDob === true &&
       input.buildingLevelUnmatchedDob === true) {
@@ -270,6 +276,7 @@ module.exports = {
   recency,
   corroboration,
   directConceptFlags,
+  authorityNumber,
   validateInput,
   computeScores,
   selectBestVendor
