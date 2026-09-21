@@ -3,9 +3,10 @@
 const crypto = require('crypto');
 const legacyReceipt = require('./scoring-receipt');
 const canonicalReceipt = require('./canonical-score-receipt');
+const promotionRecord = require('../scoring/canonical-v3-promotion-record.json');
 
 const SCORING_POLICY_VERSION = 'PermitPlate-scoring-policy-v1.0.0';
-const PRODUCTION_SCORING_MODE = 'LEGACY_LITERAL';
+const PRODUCTION_SCORING_MODE = 'CANONICAL_V3_WITH_LEGACY_FALLBACK';
 const DOCUMENTED_LEGACY_ANOMALIES = Object.freeze(['50192386','50192550']);
 
 function stableStringify(value) {
@@ -79,58 +80,136 @@ function evaluateCanonicalPromotionEvidence(input) {
   };
 }
 
+function validatePromotionRecord(record) {
+  const r=record || {};
+  const failures=[];
+  if (r.status!=='APPROVED_FOR_INTERNAL_PRODUCTION_SCORING') failures.push('PROMOTION_RECORD_NOT_APPROVED');
+  if (r.policyVersion!==SCORING_POLICY_VERSION) failures.push('PROMOTION_RECORD_POLICY_VERSION_MISMATCH');
+  if (r.targetProductionMode!==PRODUCTION_SCORING_MODE) failures.push('PROMOTION_RECORD_MODE_MISMATCH');
+  if (r.rollbackMode!=='LEGACY_LITERAL') failures.push('PROMOTION_RECORD_ROLLBACK_INVALID');
+  if (r.externalTransportAllowed!==false) failures.push('PROMOTION_RECORD_EXTERNAL_TRANSPORT_NOT_DISABLED');
+  if (r.transportMode!=='NO_SEND') failures.push('PROMOTION_RECORD_TRANSPORT_MODE_INVALID');
+  if (stableStringify(normalizeIds(r.referenceCanary&&r.referenceCanary.documentedLegacyAnomalyIds)) !==
+      stableStringify(DOCUMENTED_LEGACY_ANOMALIES)) {
+    failures.push('PROMOTION_RECORD_ANOMALY_SET_MISMATCH');
+  }
+  return {
+    valid:failures.length===0,
+    failures,
+    promotionRecordId:r.promotionRecordId || null
+  };
+}
+
+function authorizeCanonicalReceipt(canaryReceipt,promotion) {
+  const recordCheck=validatePromotionRecord(promotionRecord);
+  const failures=[];
+  if (!promotion || promotion.canaryReady!==true) failures.push('FRESH_PROMOTION_EVIDENCE_NOT_READY');
+  if (!recordCheck.valid) failures.push(...recordCheck.failures);
+  if (!canaryReceipt || canaryReceipt.status!=='CANARY_SCORED') failures.push('CANONICAL_CANARY_RECEIPT_INVALID');
+  if (canaryReceipt && canaryReceipt.productionAuthorized!==false) failures.push('CANONICAL_CANARY_AUTHORIZATION_STATE_INVALID');
+  if (canaryReceipt && promotion &&
+      canaryReceipt.policyEvidenceFingerprint!==promotion.evidenceFingerprint) {
+    failures.push('CANONICAL_POLICY_EVIDENCE_FINGERPRINT_MISMATCH');
+  }
+  if (canaryReceipt &&
+      promotionRecord.canonicalScoringVersion!==canaryReceipt.scorerVersion) {
+    failures.push('PROMOTION_RECORD_SCORER_VERSION_MISMATCH');
+  }
+  if (failures.length) {
+    return {authorized:false,failures,receipt:null,promotionRecordId:recordCheck.promotionRecordId};
+  }
+
+  const base=Object.assign({},canaryReceipt,{
+    status:'SCORED',
+    authorityMode:'CANONICAL_V3_PRODUCTION',
+    productionAuthorized:true,
+    promotionRecordId:promotionRecord.promotionRecordId,
+    promotionEvidenceFingerprint:promotion.evidenceFingerprint,
+    canaryScoreReceiptId:canaryReceipt.scoreReceiptId
+  });
+  base.scoreReceiptId='SCORE:'+sha256(stableStringify({
+    receiptVersion:base.receiptVersion,
+    authorityMode:base.authorityMode,
+    promotionRecordId:base.promotionRecordId,
+    promotionEvidenceFingerprint:base.promotionEvidenceFingerprint,
+    canaryScoreReceiptId:base.canaryScoreReceiptId,
+    entityId:base.entityId,
+    graphDigest:base.graphDigest,
+    changeFingerprint:base.changeFingerprint,
+    scorerVersion:base.scorerVersion,
+    scores:base.scores,
+    bestVendorFit:base.bestVendorFit,
+    bestScore:base.bestScore
+  })).slice(0,24);
+  return {
+    authorized:true,
+    failures:[],
+    receipt:base,
+    promotionRecordId:promotionRecord.promotionRecordId
+  };
+}
+
 function scoreCandidateWithPolicy(input) {
   const data = input || {};
   const candidate = data.candidate || {};
+  const promotion = evaluateCanonicalPromotionEvidence(data.promotionEvidence || {});
+
+  const canonicalCanary = promotion.canaryReady ?
+    canonicalReceipt.buildCanonicalCanaryScoreReceipt({
+      candidate,
+      graphDigest:data.graphDigest,
+      recordsById:data.recordsById,
+      sourceRecords:data.sourceRecords,
+      observedAt:data.observedAt,
+      policyEvidenceFingerprint:promotion.evidenceFingerprint
+    }) : null;
+
+  if (PRODUCTION_SCORING_MODE==='CANONICAL_V3_WITH_LEGACY_FALLBACK' &&
+      canonicalCanary && canonicalCanary.status==='CANARY_SCORED') {
+    const authorized=authorizeCanonicalReceipt(canonicalCanary,promotion);
+    if (authorized.authorized) {
+      return {
+        policyVersion:SCORING_POLICY_VERSION,
+        selectedMode:'CANONICAL_V3_PRODUCTION',
+        productionAuthorized:true,
+        receipt:authorized.receipt,
+        fallbackReason:null,
+        promotion,
+        promotionRecordId:authorized.promotionRecordId
+      };
+    }
+  }
+
   const legacy = legacyReceipt.buildScoreReceipt({
     candidate,
     graphDigest:data.graphDigest,
     scoredAt:data.observedAt
   });
-
   if (legacy.status === 'SCORED' && legacy.productionAuthorized === true) {
     return {
       policyVersion:SCORING_POLICY_VERSION,
       selectedMode:'LEGACY_LITERAL',
       productionAuthorized:true,
       receipt:legacy,
-      fallbackReason:null
-    };
-  }
-
-  const promotion = evaluateCanonicalPromotionEvidence(data.promotionEvidence || {});
-  if (!promotion.canaryReady) {
-    return {
-      policyVersion:SCORING_POLICY_VERSION,
-      selectedMode:'REVIEW',
-      productionAuthorized:false,
-      receipt:null,
-      fallbackReason:'NO_VALID_LEGACY_AUTHORITY_AND_CANARY_GATE_NOT_READY',
-      legacyErrors:legacy.errors || [],
+      fallbackReason:promotion.canaryReady ?
+        'CANONICAL_PRODUCTION_AUTHORIZATION_FAILED_LEGACY_FALLBACK' :
+        'CANONICAL_GATE_NOT_READY_LEGACY_FALLBACK',
       promotion
     };
   }
 
-  const canonical = canonicalReceipt.buildCanonicalCanaryScoreReceipt({
-    candidate,
-    graphDigest:data.graphDigest,
-    recordsById:data.recordsById,
-    sourceRecords:data.sourceRecords,
-    observedAt:data.observedAt,
-    policyEvidenceFingerprint:promotion.evidenceFingerprint
-  });
-
   return {
     policyVersion:SCORING_POLICY_VERSION,
-    selectedMode:canonical.status === 'CANARY_SCORED' ? 'CANONICAL_V3_CANARY' : 'REVIEW',
+    selectedMode:'REVIEW',
     productionAuthorized:false,
-    receipt:canonical.status === 'CANARY_SCORED' ? canonical : null,
-    fallbackReason:canonical.status === 'CANARY_SCORED' ?
-      'LEGACY_AUTHORITY_UNAVAILABLE_CANONICAL_CANARY_ONLY' :
-      'CANONICAL_CANARY_SCORE_FAILED',
+    receipt:null,
+    fallbackReason:promotion.canaryReady ?
+      'CANONICAL_AUTHORIZATION_FAILED_AND_NO_VALID_LEGACY_AUTHORITY' :
+      'CANONICAL_GATE_NOT_READY_AND_NO_VALID_LEGACY_AUTHORITY',
     legacyErrors:legacy.errors || [],
-    canonicalErrors:canonical.errors || [],
-    promotion
+    canonicalErrors:canonicalCanary&&canonicalCanary.errors || [],
+    promotion,
+    promotionRecordValidation:validatePromotionRecord(promotionRecord)
   };
 }
 
@@ -142,5 +221,7 @@ module.exports = {
   sha256,
   normalizeIds,
   evaluateCanonicalPromotionEvidence,
+  validatePromotionRecord,
+  authorizeCanonicalReceipt,
   scoreCandidateWithPolicy
 };
