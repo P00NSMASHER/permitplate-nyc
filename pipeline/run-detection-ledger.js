@@ -6,8 +6,9 @@ const crypto=require('crypto');
 const {scanBatches}=require('./run-source-health');
 const {buildCurrentGraph}=require('./candidate-builder');
 const detection=require('./detection-ledger');
+const materialChange=require('./material-change');
 
-const RUNNER_VERSION='PermitPlate-detection-ledger-runner-v1.0.0';
+const RUNNER_VERSION='PermitPlate-detection-ledger-runner-v1.1.0';
 
 function stableStringify(value){
   if(Array.isArray(value)) return '['+value.map(stableStringify).join(',')+']';
@@ -26,8 +27,11 @@ function inc(obj,key){
 }
 function readLedger(filePath){
   if(!fs.existsSync(filePath)) return null;
+  // Preserve malformed/uninitialized contents for the validation boundary. Do not
+  // silently turn an existing history with a missing header into a fresh baseline.
   const parsed=JSON.parse(fs.readFileSync(filePath,'utf8'));
-  return parsed&&parsed.initializedAt?parsed:null;
+  if(!parsed||typeof parsed!=='object'||Array.isArray(parsed)) throw new Error('LEDGER_FILE_INVALID');
+  return parsed;
 }
 function stateCounts(ledger){
   const out={};
@@ -55,6 +59,9 @@ async function run(options){
 
   const summary={
     runnerVersion:RUNNER_VERSION,
+    materialityVersion:materialChange.VERSION,
+    materialityMetrics:advanced.materialityMetrics||null,
+    reviewReceiptCount:(advanced.reviewReceipts||[]).length,
     observedAt,
     graphState:graph.graphState,
     graphDigest:graph.graphDigest||null,
@@ -97,11 +104,4 @@ if(require.main===module){
   main().catch((error)=>{console.error(error);process.exit(1);});
 }
 
-module.exports={
-  RUNNER_VERSION,
-  stableStringify,
-  sha256,
-  readLedger,
-  stateCounts,
-  run
-};
+module.exports={RUNNER_VERSION,stableStringify,sha256,readLedger,stateCounts,run};
