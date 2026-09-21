@@ -108,7 +108,8 @@ function internalInput(overrides){
     subscriberCanary:subscriberCanary(),
     publicBuildFailures:[],
     currentPublicSourceFingerprint:'public-source-fp',
-    externalEvidence:external()
+    externalEvidence:external(),
+    evaluatedAt:'2026-09-21T18:00:00Z'
   };
   return Object.assign(input,overrides||{});
 }
@@ -124,6 +125,8 @@ function internalInput(overrides){
   assert(out.firstCustomerExternalFailures.includes('stripeCheckoutPreferenceFieldsVerified'));
   assert(out.firstCustomerExternalFailures.includes('netlifyProductionDeployVerified'));
   assert(out.firstCustomerExternalFailures.includes('netlifyLiveCommitKnown'));
+  assert(out.recommendedNextActions.includes('GRANT_STRIPE_PAYMENT_LINK_WRITE'));
+  assert(out.recommendedNextActions.includes('DEPLOY_VERIFIED_PUBLIC_ARTIFACT'));
 }
 
 {
@@ -188,6 +191,16 @@ function internalInput(overrides){
   assert.equal(out.internalReady,true);
   assert.equal(out.launchState,'EXTERNAL_INTEGRATION_BLOCKED');
   assert(out.firstCustomerExternalFailures.includes('verifiedPublicBuildMatchesCurrentSource'));
+}
+
+{
+  const out=readiness.evaluateLaunchReadiness(internalInput({
+    externalEvidence:external({observedAt:'2026-09-19T12:00:00Z'})
+  }));
+  assert.equal(out.internalReady,true);
+  assert.equal(out.launchState,'EXTERNAL_INTEGRATION_BLOCKED');
+  assert(out.firstCustomerExternalFailures.includes('externalEvidenceFresh'));
+  assert(out.recommendedNextActions.includes('REFRESH_EXTERNAL_LAUNCH_EVIDENCE'));
 }
 
 {
