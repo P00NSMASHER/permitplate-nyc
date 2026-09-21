@@ -32,7 +32,7 @@
   <div class="eyebrow"><span class="dot"></span> SET UP YOUR FEED</div>
   <section class="start-card">
     <h1>Tell us what you sell.</h1>
-    <p class="intro">Choose the signals that matter to you. Your $79/month Stripe checkout comes next.</p>
+    <p class="intro">Set your category and territory first. Then complete the $79/month Stripe checkout with the same email.</p>
 
     <form class="setup-form" name="permitplate-onboarding" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/start-checkout">
       <input type="hidden" name="form-name" value="permitplate-onboarding" />
@@ -46,7 +46,7 @@
       <div class="field">
         <label for="email">Email used for Stripe checkout</label>
         <input id="email" name="email" type="email" autocomplete="email" required maxlength="254" />
-        <div class="help">Use the same email on the next Stripe screen so your preferences can be matched to your subscription.</div>
+        <div class="help">This is only used to match your saved preferences to the subscription you create on Stripe.</div>
       </div>
 
       <div class="field">
@@ -66,8 +66,22 @@
 
       <div class="field">
         <label for="territory">NYC borough(s) you cover</label>
-        <input id="territory" name="territory" type="text" maxlength="120" placeholder="Example: Manhattan, Brooklyn" />
-        <div class="help">Leave blank for all five boroughs.</div>
+        <input id="territory" name="territory" type="text" maxlength="120"
+          list="territory-options"
+          pattern="\s*(Manhattan|Brooklyn|Queens|Bronx|Staten Island)(\s*,\s*(Manhattan|Brooklyn|Queens|Bronx|Staten Island))*\s*"
+          placeholder="Example: Manhattan, Brooklyn"
+          aria-describedby="territory-help" />
+        <datalist id="territory-options">
+          <option value="Manhattan"></option>
+          <option value="Brooklyn"></option>
+          <option value="Queens"></option>
+          <option value="Bronx"></option>
+          <option value="Staten Island"></option>
+          <option value="Manhattan, Brooklyn"></option>
+          <option value="Manhattan, Brooklyn, Queens"></option>
+          <option value="Brooklyn, Queens"></option>
+        </datalist>
+        <div class="help" id="territory-help">Leave blank for all five boroughs. If you enter more than one, use commas and the exact borough names shown above.</div>
       </div>
 
       <fieldset style="border:0;padding:0;margin:0">
