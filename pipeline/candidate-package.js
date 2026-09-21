@@ -85,6 +85,30 @@ function buildCandidatePackage(input){
     entityId:candidate.entityId||null,
     graphDigest:graph.graphDigest||null,
     changeFingerprint:detection.changeFingerprint,
+    projectSignalId:candidate.projectSignal&&candidate.projectSignal.signalId||
+      candidate.projectSignalId||null,
+    businessName:candidate.canonicalName||null,
+    address:candidate.address||null,
+    borough:candidate.borough||null,
+    zip:candidate.zip||null,
+    lifecycleStage:candidate.lifecycleStage||null,
+    sourceFirstEffectiveAt:candidate.sourceFirstEffectiveAt||null,
+    sourceLatestEffectiveAt:candidate.sourceLatestEffectiveAt||null,
+    sourceSystems:Array.isArray(candidate.sourceSystems)?candidate.sourceSystems.slice().sort():[],
+    sourceRecordIds:candidate.projectSignal&&
+      Array.isArray(candidate.projectSignal.sourceRecordIds)?
+        candidate.projectSignal.sourceRecordIds.slice():[],
+    sourceUrls:candidate.projectSignal&&candidate.projectSignal.provenance&&
+      Array.isArray(candidate.projectSignal.provenance.sourceUrls)?
+        Array.from(new Set(candidate.projectSignal.provenance.sourceUrls)).sort():[],
+    commercialEvidence:Array.isArray(candidate.commercialEvidence)?
+      candidate.commercialEvidence.map((item)=>({
+        tag:item&&item.tag||null,
+        sourceSystem:item&&item.sourceSystem||null,
+        sourceRecordId:item&&item.sourceRecordId||null,
+        sourceUrl:item&&item.sourceUrl||null,
+        matchedPatterns:Array.isArray(item&&item.matchedPatterns)?item.matchedPatterns.slice():[]
+      })):[],
     detectionReceiptId:data.detectionReceipt&&data.detectionReceipt.receiptId||null,
     detectionReceipt:data.detectionReceipt||null,
     detectionClass:data.detectionReceipt&&data.detectionReceipt.detectionClass||null,
