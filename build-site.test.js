@@ -32,7 +32,10 @@ try{
   const info=build.build();
   assert.equal(build.validateAllowlist().length,0);
   assert.equal(info.publicFileCount,build.PUBLIC_FILES.length);
-  assert.equal(info.sourceCommit,'local');
+  assert.equal(
+    info.sourceCommit,
+    process.env.COMMIT_REF||process.env.GITHUB_SHA||'local'
+  );
 
   const deployed=fs.readdirSync(build.OUT).sort();
   assert.deepEqual(
