@@ -168,14 +168,18 @@ function evaluateLaunchReadiness(input){
     },
     scoring:{
       productionMode:scoringPolicy.PRODUCTION_SCORING_MODE,
-      coverageRate:current.shadow&&current.shadow.coverageRate??null,
-      currentOverlap:current.benchmark&&current.benchmark.overlap??null,
+      coverageRate:current.shadow&&current.shadow.coverageRate!=null?
+        current.shadow.coverageRate:null,
+      currentOverlap:current.benchmark&&current.benchmark.overlap!=null?
+        current.benchmark.overlap:null,
       currentExactAllCategoryRowRate:
-        current.benchmark&&current.benchmark.exactAllCategoryRowRate??null,
+        current.benchmark&&current.benchmark.exactAllCategoryRowRate!=null?
+          current.benchmark.exactAllCategoryRowRate:null,
       currentBestFitAgreementRate:
-        current.benchmark&&current.benchmark.bestFitAgreementRate??null,
-      historicalRecordCount:historical.recordCount??null,
-      historicalExactRowRate:historical.exactRowRate??null
+        current.benchmark&&current.benchmark.bestFitAgreementRate!=null?
+          current.benchmark.bestFitAgreementRate:null,
+      historicalRecordCount:historical.recordCount!=null?historical.recordCount:null,
+      historicalExactRowRate:historical.exactRowRate!=null?historical.exactRowRate:null
     },
     detection:{
       valid:detValidation.valid,
@@ -191,7 +195,8 @@ function evaluateLaunchReadiness(input){
     },
     subscriberCanary:{
       passed:subscriberCanary.passed===true,
-      externalSendCalls:subscriberCanary.externalSendCalls??null,
+      externalSendCalls:subscriberCanary.externalSendCalls!=null?
+        subscriberCanary.externalSendCalls:null,
       transportPreflight:subscriberCanary.transportPreflight||null,
       artifactFingerprint:subscriberCanary.artifactFingerprint||null
     },
