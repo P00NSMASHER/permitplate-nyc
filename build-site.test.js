@@ -7,7 +7,7 @@ const build=require('./build-site');
 
 function localReferences(html){
   const refs=[];
-  const regex=/(?:href|src)=["']([^"'#]+)["']/gi;
+  const regex=/(?:href|src|action)=["']([^"'#]+)["']/gi;
   let match;
   while((match=regex.exec(html))) refs.push(match[1]);
   return refs;
@@ -62,6 +62,29 @@ try{
       );
     }
   }
+
+  const startHtml=fs.readFileSync(path.join(build.OUT,'start.html'),'utf8');
+  assert(startHtml.includes('name="permitplate-onboarding"'));
+  assert(startHtml.includes('data-netlify="true"'));
+  assert(startHtml.includes('netlify-honeypot="bot-field"'));
+  assert(startHtml.includes('name="form-name" value="permitplate-onboarding"'));
+  assert(startHtml.includes('action="/start-checkout"'));
+  assert(startHtml.includes('name="email"'));
+  assert(startHtml.includes('name="category"'));
+  assert(startHtml.includes('name="starter"'));
+
+  const stripeUrl='https://buy.stripe.com/4gM28r1cL81x8dF9Xj9sk02';
+  const stripeOccurrences=[];
+  for(const file of build.PUBLIC_FILES.filter((name)=>name.endsWith('.html'))){
+    const html=fs.readFileSync(path.join(build.OUT,file),'utf8');
+    const count=html.split(stripeUrl).length-1;
+    if(count) stripeOccurrences.push({file,count});
+  }
+  assert.deepEqual(stripeOccurrences,[{file:'start-checkout.html',count:2}]);
+
+  const handoff=fs.readFileSync(path.join(build.OUT,'start-checkout.html'),'utf8');
+  assert(handoff.includes('http-equiv="refresh"'));
+  assert(handoff.includes(stripeUrl));
 
   const manifest=JSON.parse(fs.readFileSync(path.join(build.OUT,'build-info.json'),'utf8'));
   assert.equal(manifest.publicFileCount,build.PUBLIC_FILES.length);
