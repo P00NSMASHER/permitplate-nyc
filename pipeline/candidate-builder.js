@@ -2,6 +2,7 @@
 
 const crypto = require('crypto');
 const project = require('./project-signal');
+const materialChange = require('./material-change');
 
 const CANDIDATE_BUILDER_VERSION = 'PermitPlate-candidate-builder-v1.0.0';
 
@@ -48,6 +49,8 @@ function bestNonblank(records, getter) {
   }
   return null;
 }
+
+function normalizedAddress(value) { return norm(value); }
 
 function groupDohmhByCamis(records) {
   const groups = new Map();
@@ -107,10 +110,6 @@ function buildDohmhCandidates(records) {
     (timeMs(b.sourceLatestEffectiveAt) ?? -Infinity) - (timeMs(a.sourceLatestEffectiveAt) ?? -Infinity) ||
     a.entityId.localeCompare(b.entityId)
   );
-}
-
-function normalizedAddress(value) {
-  return norm(value);
 }
 
 function indexRecordsByAddress(records) {
@@ -234,6 +233,7 @@ function buildCurrentGraph(input) {
     entityId: candidate.entityId,
     stage: candidate.lifecycleStage,
     sourceRecordIds: candidate.projectSignal && candidate.projectSignal.sourceRecordIds || [],
+    materialFingerprint: materialChange.describe(candidate).fingerprint,
     suppressed: candidate.deliverySuppressed,
     suppressionReasons: candidate.suppressionReasons
   })).sort((a, b) => a.entityId.localeCompare(b.entityId))));

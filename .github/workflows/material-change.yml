@@ -1,0 +1,45 @@
+name: PermitPlate material-change boundary
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    paths:
+      - 'pipeline/material-change*'
+      - 'pipeline/source-refresh-regression.test.js'
+      - 'pipeline/project-signal.js'
+      - 'pipeline/candidate-builder.js'
+      - 'pipeline/detection-ledger.js'
+      - 'pipeline/delivery-plan.js'
+      - 'pipeline/run-detection-ledger.js'
+      - 'pipeline/run-materiality-canary.js'
+      - '.github/workflows/material-change.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  semantic-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test source refresh, migration, and material-change boundary
+        run: |
+          mkdir -p verification-output
+          set -o pipefail
+          node --test pipeline/source-refresh-regression.test.js pipeline/material-change.test.js | tee verification-output/source-refresh.tap
+      - name: Verify the first-subscriber no-send path
+        run: node pipeline/run-first-subscriber-canary.js verification-output/first-subscriber.json
+      - name: Check live graph migration without persisting production state
+        run: node pipeline/run-materiality-canary.js verification-output/materiality-live-readonly.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: permitplate-material-change
+          path: verification-output/
+          retention-days: 14
