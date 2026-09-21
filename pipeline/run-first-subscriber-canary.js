@@ -258,7 +258,7 @@ function run(){
     result.plannedAttempt.state==='PLANNED' &&
     result.privateStatePlan.subscriberProfileColumnCount===20 &&
     result.privateStatePlan.deliveryStateRowCount===2 &&
-    result.privateStatePlan.deliveryStateColumnCount===15 &&
+    result.privateStatePlan.deliveryStateColumnCount===16 &&
     result.privateStatePlan.deliveryStatus==='PLANNED' &&
     result.privateStatePlan.providerStatus==='NOT_SENT' &&
     result.replayArtifact.signalCount===0 &&
