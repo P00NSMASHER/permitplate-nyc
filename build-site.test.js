@@ -89,6 +89,32 @@ try{
   assert(siteJs.includes("'locked_prefilled_email'"));
   assert(siteJs.includes("'client_reference_id'"));
 
+  const homeHtml=fs.readFileSync(path.join(build.OUT,'index.html'),'utf8');
+  assert(homeHtml.includes('data-source-freshness'));
+  assert(homeHtml.includes('data-product-build'));
+  for(const overstated of [
+    'NYC RESTAURANT OPENING INTELLIGENCE',
+    'NYC restaurant openings worth researching now',
+    'New opening activity',
+    'NYC restaurant opening monitoring'
+  ]){
+    assert.equal(homeHtml.includes(overstated),false,'overstated public claim: '+overstated);
+  }
+  assert(siteJs.includes("fetch('/build-info.json'"));
+  assert(siteJs.includes('upstream metadata only'));
+  assert(siteJs.includes('Product build identity unavailable'));
+
+  const methodologyHtml=fs.readFileSync(path.join(build.OUT,'methodology.html'),'utf8');
+  const sampleHtml=fs.readFileSync(path.join(build.OUT,'sample.html'),'utf8');
+  const termsHtml=fs.readFileSync(path.join(build.OUT,'terms.html'),'utf8');
+  assert(methodologyHtml.includes('DOHMH RECORD DATE'));
+  assert(methodologyHtml.includes('<strong>Detected</strong>'));
+  assert(methodologyHtml.includes('<strong>Source updated</strong>'));
+  assert(sampleHtml.includes('SNAPSHOT SEPTEMBER 18, 2026 · MODEL V7'));
+  assert(sampleHtml.includes('not treated as a filing or opening date'));
+  assert(termsHtml.includes('<strong>Source updated</strong>'));
+  assert(termsHtml.includes('<strong>Product build</strong>'));
+
   const handoff=fs.readFileSync(path.join(build.OUT,'start-checkout.html'),'utf8');
   assert(!handoff.includes('http-equiv="refresh"'));
   assert(!handoff.includes(stripeUrl));
