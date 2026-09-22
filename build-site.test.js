@@ -99,6 +99,8 @@ try{
   const manifest=JSON.parse(fs.readFileSync(path.join(build.OUT,'build-info.json'),'utf8'));
   assert.equal(manifest.publicFileCount,build.PUBLIC_FILES.length);
   assert.equal(manifest.files.length,build.PUBLIC_FILES.length);
+  assert.equal(manifest.publicSourceFingerprint,build.publicSourceFingerprint(manifest.files));
+  assert.match(manifest.publicSourceFingerprint,/^[0-9a-f]{64}$/);
   assert(manifest.files.every((item)=>/^[0-9a-f]{64}$/.test(item.sha256)));
   assert(manifest.files.every((item)=>item.bytes>0));
 
