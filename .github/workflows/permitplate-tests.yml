@@ -28,6 +28,9 @@ jobs:
       - name: Verify public conversion copy and onboarding constraints
         run: node pipeline/public-conversion.test.js
 
+      - name: Verify retired legacy offers stay denylisted
+        run: node operations/legacy-offer-retirement.test.js
+
       - name: Run model regression
         run: node model-v7.test.js
 
