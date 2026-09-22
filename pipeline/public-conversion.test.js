@@ -17,10 +17,12 @@ assert(sample.includes('<tr><td>Hood/Fire</td><td>93</td></tr>'));
 assert(!sample.includes('<tr><td>Hood/Fire</td><td>100</td></tr>'));
 assert(sample.includes('current canonical Equipment priority is 100 and Hood/Fire is 93'));
 
-assert.equal(start.split(stripeUrl).length-1,1);
+assert.equal(start.split(stripeUrl).length-1,0);
 assert(start.includes('Choose your feed inside secure Stripe Checkout.'));
 assert(start.includes('Activation stays fail-closed.'));
-assert(start.includes('Stripe is the authoritative onboarding record.'));
+assert(start.includes('Stripe will be the authoritative onboarding record.'));
+assert(start.includes('Checkout activation is temporarily blocked.'));
+assert(start.includes('No payment can start from this page'));
 assert(start.includes('vendor category'));
 assert(start.includes('NYC territory'));
 assert(start.includes('Starter Snapshot preference'));
