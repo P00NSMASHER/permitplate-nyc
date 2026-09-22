@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "issue": 20,
+  "decision": "RETIRE",
+  "supported": false,
+  "status": "PENDING_STRIPE_DEACTIVATION",
+  "observed_at": "2026-09-22",
+  "stripe": {
+    "livemode": true,
+    "payment_link_id": "plink_1UGl34DPW8riWrxQVsFBUh7V",
+    "offer_metadata": "permitplate_5_lead_pilot",
+    "observed_active": true,
+    "unsafe_fulfillment_promise": "5 leads delivered to the checkout email within 1 business day"
+  },
+  "production_contract": {
+    "bound_to_current_readiness_controller": false,
+    "bound_to_current_subscriber_activation": false,
+    "bound_to_current_fulfillment_reconciliation": false
+  },
+  "retirement_acceptance": {
+    "stripe_active_must_be_false": true,
+    "customer_contact_required": false,
+    "must_not_reappear_in_customer_facing_code": true,
+    "reactivation_requires_explicit_readiness_and_fulfillment_contract": true
+  },
+  "notes": "This offer is not an intentionally supported PermitPlate product. Do not reactivate, relink, or recreate it unless a future change explicitly defines its own readiness, source scope, category/territory intake, fulfillment SLA, identity/scoring gates, and NO_SEND acceptance test."
+}
