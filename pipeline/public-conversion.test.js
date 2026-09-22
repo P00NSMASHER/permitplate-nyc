@@ -14,7 +14,8 @@ const siteCss=fs.readFileSync(path.join(root,'site.css'),'utf8');
 assert(sample.includes('<tr><td>Equipment</td><td>100</td></tr>'));
 assert(sample.includes('<tr><td>Hood/Fire</td><td>93</td></tr>'));
 assert(!sample.includes('<tr><td>Hood/Fire</td><td>100</td></tr>'));
-assert(sample.includes('current canonical Equipment priority is 100 and Hood/Fire is 93'));
+assert(sample.includes('in the September 18, 2026 Model V7 snapshot, Equipment priority is 100 and Hood/Fire is 93'));
+assert(sample.includes('SNAPSHOT SEPTEMBER 18, 2026 · MODEL V7'));
 
 assert(start.includes('name="territory"'));
 assert(start.includes('list="territory-options"'));
