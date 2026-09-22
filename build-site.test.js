@@ -71,9 +71,11 @@ try{
 
   const startHtml=fs.readFileSync(path.join(build.OUT,'start.html'),'utf8');
   const stripeUrl='https://buy.stripe.com/4gM28r1cL81x8dF9Xj9sk02';
-  assert.equal(startHtml.split(stripeUrl).length-1,1);
-  assert(startHtml.includes('Stripe is the authoritative onboarding record.'));
+  assert.equal(startHtml.split(stripeUrl).length-1,0);
+  assert(startHtml.includes('Stripe will be the authoritative onboarding record.'));
   assert(startHtml.includes('Activation stays fail-closed.'));
+  assert(startHtml.includes('Checkout activation is temporarily blocked.'));
+  assert(startHtml.includes('No payment can start from this page'));
   assert(!startHtml.includes('<form'));
   assert(!startHtml.includes('activation_ref'));
   assert(!startHtml.includes('locked_prefilled_email'));
@@ -85,7 +87,7 @@ try{
     const count=html.split(stripeUrl).length-1;
     if(count) stripeOccurrences.push({file,count});
   }
-  assert.deepEqual(stripeOccurrences,[{file:'start.html',count:1}]);
+  assert.deepEqual(stripeOccurrences,[]);
 
   const siteJs=fs.readFileSync(path.join(build.OUT,'site.js'),'utf8');
   assert(!siteJs.includes(stripeUrl));
