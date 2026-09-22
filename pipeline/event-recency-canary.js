@@ -61,10 +61,10 @@ function evaluate(graph,batches,observedAt){
     promotionStatus:'SHADOW_ONLY_NOT_PROMOTED'
   };
 }
-async function run(){
-  const statePath=path.join(__dirname,'..','state','detection-ledger.json');
+async function run(options={}){
+  const statePath=options.statePath||path.join(__dirname,'..','state','detection-ledger.json');
   const before=fs.readFileSync(statePath);
-  const {observedAt,batches}=await scanBatches();
+  const {observedAt,batches}=await scanBatches(options.nowIso);
   const graph=buildCurrentGraph({dohmhBatch:batches.DOHMH,slaBatch:batches.SLA_PENDING,dobBatch:batches.DOB_NOW,reviewedIdentityBridges:[]});
   const result=evaluate(graph,batches,observedAt);
   result.originalStateUnchanged=before.equals(fs.readFileSync(statePath));
@@ -73,7 +73,8 @@ async function run(){
   return result;
 }
 if(require.main===module){
-  run().then(result=>{
+  const statePath=process.argv[3]||undefined;
+  run({statePath}).then(result=>{
     if(process.argv[2]){const out=path.resolve(process.argv[2]);fs.mkdirSync(path.dirname(out),{recursive:true});fs.writeFileSync(out,JSON.stringify(result,null,2)+'\n');}
     console.log(JSON.stringify(result,null,2));if(!result.passed) process.exitCode=1;
   }).catch(error=>{console.error(error);process.exitCode=1;});

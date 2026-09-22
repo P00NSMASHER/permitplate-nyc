@@ -52,7 +52,8 @@ async function run(options={}) {
 }
 
 if(require.main===module) {
-  run().then(result=>{
+  const statePath=process.argv[3]||undefined;
+  run({statePath}).then(result=>{
     const output=process.argv[2];
     if(output){fs.mkdirSync(path.dirname(path.resolve(output)),{recursive:true});fs.writeFileSync(output,JSON.stringify(result,null,2)+'\n');}
     console.log(JSON.stringify(result,null,2));
