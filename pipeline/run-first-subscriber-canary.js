@@ -4,14 +4,13 @@ const fs=require('fs');
 const path=require('path');
 const opportunity=require('./opportunity-ledger');
 const stripeSubscriber=require('./stripe-subscriber');
-const subscriberActivation=require('./subscriber-activation');
 const subscriberArtifact=require('./subscriber-artifact');
 const customerMessage=require('./customer-message');
 const transportAuthorization=require('./transport-authorization');
 const privateSheetMapping=require('./private-sheet-mapping');
 const delivery=require('./delivery-plan');
 
-const RUNNER_VERSION='PermitPlate-first-subscriber-canary-v1.0.0';
+const RUNNER_VERSION='PermitPlate-first-subscriber-canary-v1.1.0';
 
 function packageReceipt(id,overrides){
   const base={
@@ -119,10 +118,14 @@ function checkoutSession(){
     created:Date.parse('2026-09-21T15:55:00Z')/1000,
     customer:'cus_canary',
     customer_details:{email:'canary@permitplate.invalid'},
-    client_reference_id:'pp_canaryactivation000000000000000000',
+    client_reference_id:null,
     metadata:{project:'permitplate_nyc',plan:'monthly_79'},
     subscription:'sub_canary',
-    custom_fields:[]
+    custom_fields:[
+      {key:'category',type:'dropdown',optional:false,dropdown:{value:'equipment'}},
+      {key:'territory',type:'dropdown',optional:false,dropdown:{value:'Manhattan'}},
+      {key:'starter',type:'dropdown',optional:false,dropdown:{value:'yes'}}
+    ]
   };
 }
 function subscription(){
@@ -137,36 +140,15 @@ function subscription(){
   };
 }
 
-function onboardingSubmission(){
-  return {
-    id:'submission_canary',
-    form_name:'permitplate-onboarding',
-    created_at:'2026-09-21T15:58:00Z',
-    data:{
-      'form-name':'permitplate-onboarding',
-      onboarding_version:'permitplate-onboarding-v1',
-      plan:'monthly_79',
-      email:'canary@permitplate.invalid',
-      activation_ref:'pp_canaryactivation000000000000000000',
-      category:'equipment',
-      territory:'Manhattan',
-      starter:'yes',
-      'bot-field':''
-    }
-  };
-}
-
 function run(){
-  const activation=subscriberActivation.activateFromNetlifyPreferences({
+  const stripe=stripeSubscriber.profileFromCheckout({
     session:checkoutSession(),
     subscription:subscription(),
-    submissions:[onboardingSubmission()],
     expectedPriceId:'price_1UFjcWDPW8riWrxQhnrPX6nc'
   });
-  if(activation.status!=='ACTIVE'){
-    throw new Error('Subscriber activation canary failed: '+activation.failures.join(','));
+  if(stripe.status!=='ACTIVE'){
+    throw new Error('Stripe subscriber canary failed: '+stripe.failures.join(','));
   }
-  const stripe=activation.subscriber;
 
   const ledger=buildCanaryOpportunityLedger();
   const first=subscriberArtifact.buildSubscriberArtifact({
@@ -201,7 +183,7 @@ function run(){
     now:'2026-09-21T17:10:00Z'
   });
 
-  const profileSheetPlan=privateSheetMapping.subscriberProfileRow(activation);
+  const profileSheetPlan=privateSheetMapping.subscriberProfileRow(stripe);
   const deliverySheetPlan=privateSheetMapping.deliveryStateRows({
     artifact:first,
     attempt,
@@ -230,10 +212,7 @@ function run(){
     subscriptionId:stripe.subscriptionId,
     preferenceSource:stripe.preferenceSource,
     preferenceReceiptId:stripe.preferenceReceiptId,
-    onboardingSubmissionId:activation.onboardingSubmissionId,
-    activationReference:activation.activationReference,
-    stripeClientReferenceId:activation.stripeClientReferenceId,
-    onboardingMatchFingerprint:activation.onboardingMatchFingerprint,
+    checkoutEmail:stripe.profile.recipientEmail,
     baselineAt:stripe.profile.baselineAt,
     profileFingerprint:stripe.profileFingerprint,
     opportunityLedgerFingerprint:ledger.ledgerFingerprint,
@@ -298,11 +277,11 @@ function run(){
     result.plannedAttempt.state==='PLANNED' &&
     result.transportPreflight.allowed===false &&
     result.transportPreflight.failures.includes('OWNER_AUTHORIZATION_MISSING') &&
-    result.preferenceSource==='NETLIFY_PRECHECKOUT_FORM' &&
-    result.preferenceReceiptId==='submission_canary' &&
-    result.onboardingSubmissionId==='submission_canary' &&
-    result.activationReference==='pp_canaryactivation000000000000000000' &&
-    result.stripeClientReferenceId===result.activationReference &&
+    result.preferenceSource==='STRIPE_CUSTOM_FIELDS' &&
+    result.preferenceReceiptId===result.checkoutSessionId &&
+    result.checkoutSessionId==='cs_canary_permitplate' &&
+    result.subscriptionId==='sub_canary' &&
+    result.checkoutEmail==='canary@permitplate.invalid' &&
     result.privateStatePlan.subscriberProfileColumnCount===25 &&
     result.privateStatePlan.deliveryStateRowCount===2 &&
     result.privateStatePlan.deliveryStateColumnCount===19 &&
@@ -333,6 +312,5 @@ module.exports={
   buildCanaryOpportunityLedger,
   checkoutSession,
   subscription,
-  onboardingSubmission,
   run
 };

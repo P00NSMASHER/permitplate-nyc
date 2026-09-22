@@ -3,7 +3,7 @@
 const crypto=require('crypto');
 const profiles=require('./subscriber-profile');
 
-const STRIPE_SUBSCRIBER_ADAPTER_VERSION='PermitPlate-stripe-subscriber-v1.1.0';
+const STRIPE_SUBSCRIBER_ADAPTER_VERSION='PermitPlate-stripe-subscriber-v1.2.0';
 const PERMITPLATE_PAYMENT_LINK='plink_1UG3RUDPW8riWrxQpZwHExK2';
 
 function stableStringify(value){
@@ -37,6 +37,25 @@ function customFieldValue(session,key){
   if(type==='numeric') return field.numeric&&field.numeric.value!=null?
     String(field.numeric.value):null;
   return null;
+}
+function normalizeCheckoutTerritory(value){
+  const raw=text(value);
+  if(!raw) return null;
+  const direct=profiles.canonicalBorough(raw);
+  if(direct) return direct;
+  const key=raw.toUpperCase().replace(/[^A-Z]/g,'');
+  if(key==='ALLNYC') return 'ALL NYC';
+
+  let remaining=key;
+  const matched=[];
+  for(const borough of profiles.BOROUGH_ORDER){
+    const token=borough.toUpperCase().replace(/[^A-Z]/g,'');
+    if(remaining.startsWith(token)){
+      matched.push(borough);
+      remaining=remaining.slice(token.length);
+    }
+  }
+  return !remaining&&matched.length?matched.join(', '):null;
 }
 function subscriptionId(value){
   if(!value) return null;
@@ -225,10 +244,13 @@ function profileFromCheckout(input){
 
   const session=data.session||{};
   const category=customFieldValue(session,'category');
-  const territory=customFieldValue(session,'territory')||'ALL NYC';
+  const territoryRaw=customFieldValue(session,'territory');
+  const territory=normalizeCheckoutTerritory(territoryRaw);
   const starterRaw=customFieldValue(session,'starter');
   const failures=[];
   if(!category) failures.push('CATEGORY_CUSTOM_FIELD_MISSING');
+  if(!territoryRaw) failures.push('TERRITORY_CUSTOM_FIELD_MISSING');
+  else if(!territory) failures.push('TERRITORY_CUSTOM_FIELD_INVALID');
   if(!['yes','no'].includes(text(starterRaw).toLowerCase())){
     failures.push('STARTER_CUSTOM_FIELD_MISSING');
   }
@@ -301,6 +323,7 @@ module.exports={
   text,
   unixIso,
   customFieldValue,
+  normalizeCheckoutTerritory,
   subscriptionId,
   customerId,
   priceId,
