@@ -2,7 +2,6 @@
 
 const assert=require('assert');
 const mapping=require('./private-sheet-mapping');
-const activation=require('./subscriber-activation');
 const stripe=require('./stripe-subscriber');
 const delivery=require('./delivery-plan');
 const transport=require('./transport-authorization');
@@ -17,10 +16,14 @@ function session(){
     payment_status:'paid',
     customer:'cus_mapping',
     customer_details:{email:'buyer@example.com'},
-    client_reference_id:'pp_mappingfixture000000000000000000',
+    client_reference_id:null,
     metadata:{project:'permitplate_nyc'},
     subscription:'sub_mapping',
-    custom_fields:[]
+    custom_fields:[
+      {key:'category',type:'dropdown',optional:false,dropdown:{value:'equipment'}},
+      {key:'territory',type:'dropdown',optional:false,dropdown:{value:'ManhattanQueens'}},
+      {key:'starter',type:'dropdown',optional:false,dropdown:{value:'yes'}}
+    ]
   };
 }
 function subscription(){
@@ -34,29 +37,10 @@ function subscription(){
     items:{data:[{price:{id:'price_1UFjcWDPW8riWrxQhnrPX6nc'}}]}
   };
 }
-function form(){
-  return {
-    id:'submission_mapping',
-    form_name:'permitplate-onboarding',
-    created_at:new Date((1790003600-120)*1000).toISOString(),
-    data:{
-      'form-name':'permitplate-onboarding',
-      onboarding_version:'permitplate-onboarding-v1',
-      plan:'monthly_79',
-      email:'buyer@example.com',
-      activation_ref:'pp_mappingfixture000000000000000000',
-      category:'equipment',
-      territory:'Manhattan, Queens',
-      starter:'yes',
-      'bot-field':''
-    }
-  };
-}
 function activationResult(){
-  return activation.activateFromNetlifyPreferences({
+  return stripe.profileFromCheckout({
     session:session(),
     subscription:subscription(),
-    submissions:[form()],
     expectedPriceId:'price_1UFjcWDPW8riWrxQhnrPX6nc'
   });
 }
@@ -125,22 +109,19 @@ function acceptedObservation(a,att){
   assert.equal(mapped.row.Email,'buyer@example.com');
   assert.equal(mapped.row.Categories,'Equipment');
   assert.equal(mapped.row['Boroughs/Territory'],'Manhattan; Queens');
-  assert.equal(mapped.row['Baseline At'],activated.subscriber.profile.baselineAt);
+  assert.equal(mapped.row['Baseline At'],activated.profile.baselineAt);
   assert.equal(mapped.row['Starter Snapshot Enabled'],true);
   assert.equal(mapped.row['Stripe Subscription'],'sub_mapping');
-  assert.equal(mapped.row['Profile Fingerprint'],activated.subscriber.profileFingerprint);
+  assert.equal(mapped.row['Profile Fingerprint'],activated.profileFingerprint);
   assert.equal(mapped.row['Delivery Policy Version'],delivery.DELIVERY_PLANNER_VERSION);
-  assert.equal(mapped.row['Preference Receipt ID'],'submission_mapping');
-  assert.equal(mapped.row['Preference Source'],'NETLIFY_PRECHECKOUT_FORM');
+  assert.equal(mapped.row['Preference Receipt ID'],'cs_mapping');
+  assert.equal(mapped.row['Preference Source'],'STRIPE_CUSTOM_FIELDS');
   assert.equal(
     mapped.row['Subscription Context Fingerprint'],
-    activated.subscriber.subscriptionContextFingerprint
+    activated.subscriptionContextFingerprint
   );
-  assert.equal(
-    mapped.row['Onboarding Match Fingerprint'],
-    activated.onboardingMatchFingerprint
-  );
-  assert.equal(mapped.row['Activation Fingerprint'],activated.activationFingerprint);
+  assert.equal(mapped.row['Onboarding Match Fingerprint'],'');
+  assert.equal(mapped.row['Activation Fingerprint'],'');
   assert.match(mapped.rowFingerprint,/^[0-9a-f]{64}$/);
 }
 
@@ -152,8 +133,8 @@ function acceptedObservation(a,att){
     artifact:a,
     attempt:att,
     profile:{
-      profile:activated.subscriber.profile,
-      profileFingerprint:activated.subscriber.profileFingerprint
+      profile:activated.profile,
+      profileFingerprint:activated.profileFingerprint
     }
   });
   assert.equal(mapped.sheet,'Delivery State');
@@ -188,8 +169,8 @@ function acceptedObservation(a,att){
     attempt:att,
     message:msg,
     profile:{
-      profile:activated.subscriber.profile,
-      profileFingerprint:activated.subscriber.profileFingerprint
+      profile:activated.profile,
+      profileFingerprint:activated.profileFingerprint
     },
     providerObservation:acceptedObservation(a,att),
     transportAuthorization:auth,
@@ -224,8 +205,8 @@ function acceptedObservation(a,att){
     attempt:att,
     message:msg,
     profile:{
-      profile:activated.subscriber.profile,
-      profileFingerprint:activated.subscriber.profileFingerprint
+      profile:activated.profile,
+      profileFingerprint:activated.profileFingerprint
     },
     providerObservation:{
       status:'REJECTED',
@@ -258,8 +239,8 @@ function acceptedObservation(a,att){
       artifact:a,
       attempt:Object.assign({},att,{recipient:'other@example.com'}),
       profile:{
-        profile:activated.subscriber.profile,
-        profileFingerprint:activated.subscriber.profileFingerprint
+        profile:activated.profile,
+        profileFingerprint:activated.profileFingerprint
       }
     }),
     /ATTEMPT_RECIPIENT_PROFILE_MISMATCH/
@@ -269,8 +250,8 @@ function acceptedObservation(a,att){
       artifact:a,
       attempt:Object.assign({},att,{planFingerprint:'wrong'}),
       profile:{
-        profile:activated.subscriber.profile,
-        profileFingerprint:activated.subscriber.profileFingerprint
+        profile:activated.profile,
+        profileFingerprint:activated.profileFingerprint
       }
     }),
     /ATTEMPT_ARTIFACT_FINGERPRINT_MISMATCH/
@@ -286,8 +267,8 @@ function acceptedObservation(a,att){
       artifact:a,
       attempt:att,
       profile:{
-        profile:activated.subscriber.profile,
-        profileFingerprint:activated.subscriber.profileFingerprint
+        profile:activated.profile,
+        profileFingerprint:activated.profileFingerprint
       },
       deliveryStatus:'FINALIZED'
     }),
@@ -306,8 +287,8 @@ function acceptedObservation(a,att){
       attempt:att,
       message:msg,
       profile:{
-        profile:activated.subscriber.profile,
-        profileFingerprint:activated.subscriber.profileFingerprint
+        profile:activated.profile,
+        profileFingerprint:activated.profileFingerprint
       },
       providerObservation:acceptedObservation(a,att),
       transportStartedAt:'2026-09-21T17:00:00Z',
@@ -331,8 +312,8 @@ function acceptedObservation(a,att){
       attempt:att,
       message:msg,
       profile:{
-        profile:activated.subscriber.profile,
-        profileFingerprint:activated.subscriber.profileFingerprint
+        profile:activated.profile,
+        profileFingerprint:activated.profileFingerprint
       },
       providerObservation:bad,
       transportAuthorization:auth,
@@ -350,16 +331,16 @@ function acceptedObservation(a,att){
   const first=mapping.deliveryStateRows({
     artifact:a,attempt:att,
     profile:{
-      profile:activated.subscriber.profile,
-      profileFingerprint:activated.subscriber.profileFingerprint
+      profile:activated.profile,
+      profileFingerprint:activated.profileFingerprint
     }
   });
   const second=mapping.deliveryStateRows({
     artifact:JSON.parse(JSON.stringify(a)),
     attempt:JSON.parse(JSON.stringify(att)),
     profile:{
-      profile:JSON.parse(JSON.stringify(activated.subscriber.profile)),
-      profileFingerprint:activated.subscriber.profileFingerprint
+      profile:JSON.parse(JSON.stringify(activated.profile)),
+      profileFingerprint:activated.profileFingerprint
     }
   });
   assert.equal(first.batchFingerprint,second.batchFingerprint);
