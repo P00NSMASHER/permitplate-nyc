@@ -23,8 +23,8 @@ function session(overrides){
         dropdown:{value:'equipment'}
       },
       {
-        key:'territory',type:'text',optional:true,
-        text:{value:'Manhattan, Brooklyn'}
+        key:'territory',type:'dropdown',optional:false,
+        dropdown:{value:'ManhattanBrooklyn'}
       },
       {
         key:'starter',type:'dropdown',optional:false,
