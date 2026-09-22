@@ -24,7 +24,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: permitplate-private-state-\${{ vars.PERMITPLATE_STATE_REPO }}
+  group: permitplate-private-state-${{ vars.PERMITPLATE_STATE_REPO }}
   cancel-in-progress: false
 
 jobs:
@@ -32,8 +32,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      STATE_REPO: \${{ vars.PERMITPLATE_STATE_REPO }}
-      PRIVATE_STATE_DIR: \${{ github.workspace }}/.private-state
+      STATE_REPO: ${{ vars.PERMITPLATE_STATE_REPO }}
+      PRIVATE_STATE_DIR: ${{ github.workspace }}/.private-state
     steps:
       - name: Check out public repository
         uses: actions/checkout@v4
@@ -45,11 +45,11 @@ jobs:
 
       - name: Require private durable state
         env:
-          GH_TOKEN: \${{ secrets.PERMITPLATE_STATE_TOKEN }}
+          GH_TOKEN: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
         run: |
           set -euo pipefail
           test -n "$STATE_REPO" || { echo "PERMITPLATE_STATE_REPO repository variable is required."; exit 1; }
-          test -n "\${GH_TOKEN:-}" || { echo "PERMITPLATE_STATE_TOKEN secret is required."; exit 1; }
+          test -n "${GH_TOKEN:-}" || { echo "PERMITPLATE_STATE_TOKEN secret is required."; exit 1; }
           test "$STATE_REPO" != "$GITHUB_REPOSITORY" || { echo "Operational state must not target the public application repository."; exit 1; }
           repo_visibility="$(gh api "repos/$STATE_REPO" --jq '.visibility')"
           test "$repo_visibility" = "private" || { echo "PERMITPLATE_STATE_REPO must resolve to a private GitHub repository."; exit 1; }
@@ -57,8 +57,8 @@ jobs:
       - name: Check out private state repository read-only
         uses: actions/checkout@v4
         with:
-          repository: \${{ vars.PERMITPLATE_STATE_REPO }}
-          token: \${{ secrets.PERMITPLATE_STATE_TOKEN }}
+          repository: ${{ vars.PERMITPLATE_STATE_REPO }}
+          token: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
           ref: main
           path: .private-state
           fetch-depth: 1
