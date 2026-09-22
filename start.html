@@ -6,87 +6,28 @@
 <meta name="theme-color" content="#07111f" />
 <meta name="robots" content="noindex,nofollow" />
 <title>Start PermitPlate NYC</title>
-<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-<link rel="stylesheet" href="/site.css" />
+<link rel="icon" href="/permitplate-nyc/favicon.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="/permitplate-nyc/site.css" />
 </head>
 <body>
-<nav class="nav"><div class="shell navin"><a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>PermitPlate NYC</span></a></div></nav>
+<nav class="nav"><div class="shell navin"><a class="brand" href="/permitplate-nyc/"><span class="mark" aria-hidden="true"></span><span>PermitPlate NYC</span></a></div></nav>
 <main class="start-shell">
   <div class="eyebrow"><span class="dot"></span> SET UP YOUR FEED</div>
   <section class="start-card">
-    <h1>Tell us what you sell.</h1>
-    <p class="intro">Set your category and territory first. Then complete the $79/month Stripe checkout with the same email.</p>
+    <h1>Choose your feed inside secure Stripe Checkout.</h1>
+    <p class="intro">PermitPlate uses one $79/month Stripe subscription checkout. Before Stripe can complete payment, it must collect your vendor category, NYC territory, Starter Snapshot preference, and checkout email.</p>
 
-    <form class="setup-form" name="permitplate-onboarding" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/start-checkout">
-      <input type="hidden" name="form-name" value="permitplate-onboarding" />
-      <input type="hidden" name="plan" value="monthly_79" />
-      <input type="hidden" name="onboarding_version" value="permitplate-onboarding-v1" />
-      <input type="hidden" name="activation_ref" id="activation_ref" value="" />
+    <div class="notice">
+      <strong>Activation stays fail-closed.</strong>
+      PermitPlate will not activate a subscriber unless the completed Stripe Checkout Session matches the expected PermitPlate payment link and price, contains all required feed preferences, and resolves to an eligible subscription and checkout email.
+    </div>
 
-      <p class="hidden">
-        <label>Leave this field empty <input name="bot-field" /></label>
-      </p>
-
-      <div class="field">
-        <label for="email">Email used for Stripe checkout</label>
-        <input id="email" name="email" type="email" autocomplete="email" required maxlength="254" />
-        <div class="help">This is only used to match your saved preferences to the subscription you create on Stripe.</div>
-      </div>
-
-      <div class="field">
-        <label for="category">What do you sell or service?</label>
-        <select id="category" name="category" required>
-          <option value="" selected disabled>Select one</option>
-          <option value="pos">POS / payments</option>
-          <option value="insurance">Insurance</option>
-          <option value="equipment">Restaurant equipment</option>
-          <option value="hoodfire">Hood / fire suppression</option>
-          <option value="waste">Waste / hauling</option>
-          <option value="pest">Pest control</option>
-          <option value="linen">Linen / laundry</option>
-          <option value="distribution">Food distribution</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="territory">NYC borough(s) you cover</label>
-        <input id="territory" name="territory" type="text" maxlength="120"
-          list="territory-options"
-          pattern="\s*(Manhattan|Brooklyn|Queens|Bronx|Staten Island)(\s*,\s*(Manhattan|Brooklyn|Queens|Bronx|Staten Island))*\s*"
-          placeholder="Example: Manhattan, Brooklyn"
-          aria-describedby="territory-help" />
-        <datalist id="territory-options">
-          <option value="Manhattan"></option>
-          <option value="Brooklyn"></option>
-          <option value="Queens"></option>
-          <option value="Bronx"></option>
-          <option value="Staten Island"></option>
-          <option value="Manhattan, Brooklyn"></option>
-          <option value="Manhattan, Brooklyn, Queens"></option>
-          <option value="Brooklyn, Queens"></option>
-        </datalist>
-        <div class="help" id="territory-help">Leave blank for all five boroughs. If you enter more than one, use commas and the exact borough names shown above.</div>
-      </div>
-
-      <fieldset class="start-fieldset">
-        <legend class="fieldset-title">Include a Starter Snapshot?</legend>
-        <div class="help starter-help">Up to 10 qualifying opportunities PermitPlate detected in the seven days before your subscription. They stay clearly labeled as Starter items.</div>
-        <div class="radios">
-          <label class="radio"><input type="radio" name="starter" value="yes" checked required /> <span><strong>Yes</strong> — include recent opportunities</span></label>
-          <label class="radio"><input type="radio" name="starter" value="no" required /> <span><strong>No</strong> — only activity after I subscribe</span></label>
-        </div>
-      </fieldset>
-
-      <div class="form-actions">
-        <button class="cta blue js-checkout-submit" type="submit" id="checkout-submit">Save preferences & continue to Stripe</button>
-        <a href="/" class="cta secondary">Back</a>
-      </div>
-      <div class="form-note">Submitting this form does not charge you. PermitPlate saves your preferences first, then opens Stripe with this email locked in so your subscription can be matched exactly.</div>
-      <div class="form-note" id="checkout-status" role="status" aria-live="polite"></div>
-      <noscript><div class="notice"><strong>JavaScript is required to start checkout.</strong> PermitPlate uses it to save your preferences before opening Stripe and to bind the same email to your checkout. No charge can start from this page while JavaScript is disabled.</div></noscript>
-    </form>
+    <div class="form-actions">
+      <a class="cta blue" href="https://buy.stripe.com/4gM28r1cL81x8dF9Xj9sk02">Continue to secure Stripe checkout</a>
+      <a href="/permitplate-nyc/" class="cta secondary">Back</a>
+    </div>
+    <div class="form-note">Stripe is the authoritative onboarding record. PermitPlate does not store pre-checkout customer preferences in this public GitHub repository.</div>
   </section>
 </main>
-<script src="/site.js" defer></script>
 </body>
 </html>
