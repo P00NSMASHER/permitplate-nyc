@@ -15,21 +15,27 @@ on:
       - 'pipeline/run-first-subscriber-canary.js'
       - 'pipeline/detection-ledger.js'
       - 'pipeline/opportunity-ledger.js'
-      - 'state/detection-ledger.json'
-      - 'state/opportunity-ledger.json'
       - 'verification/launch-external-evidence.json'
       - 'build-site.js'
       - '.github/workflows/launch-readiness.yml'
+      - '.github/workflows/detection-ledger.yml'
 
 permissions:
   contents: read
+
+concurrency:
+  group: permitplate-private-state-\${{ vars.PERMITPLATE_STATE_REPO }}
+  cancel-in-progress: false
 
 jobs:
   launch-readiness:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      STATE_REPO: \${{ vars.PERMITPLATE_STATE_REPO }}
+      PRIVATE_STATE_DIR: \${{ github.workspace }}/.private-state
     steps:
-      - name: Check out repository
+      - name: Check out public repository
         uses: actions/checkout@v4
 
       - name: Set up Node
@@ -37,8 +43,35 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Run live launch readiness controller
-        run: node pipeline/run-launch-readiness.js pipeline/launch-readiness-result.json
+      - name: Require private durable state
+        env:
+          GH_TOKEN: \${{ secrets.PERMITPLATE_STATE_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$STATE_REPO" || { echo "PERMITPLATE_STATE_REPO repository variable is required."; exit 1; }
+          test -n "\${GH_TOKEN:-}" || { echo "PERMITPLATE_STATE_TOKEN secret is required."; exit 1; }
+          test "$STATE_REPO" != "$GITHUB_REPOSITORY" || { echo "Operational state must not target the public application repository."; exit 1; }
+          repo_visibility="$(gh api "repos/$STATE_REPO" --jq '.visibility')"
+          test "$repo_visibility" = "private" || { echo "PERMITPLATE_STATE_REPO must resolve to a private GitHub repository."; exit 1; }
+
+      - name: Check out private state repository read-only
+        uses: actions/checkout@v4
+        with:
+          repository: \${{ vars.PERMITPLATE_STATE_REPO }}
+          token: \${{ secrets.PERMITPLATE_STATE_TOKEN }}
+          ref: main
+          path: .private-state
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Require initialized private ledgers
+        run: |
+          set -euo pipefail
+          test -f "$PRIVATE_STATE_DIR/state/detection-ledger.json" || { echo "Private detection ledger is not initialized."; exit 1; }
+          test -f "$PRIVATE_STATE_DIR/state/opportunity-ledger.json" || { echo "Private opportunity ledger is not initialized."; exit 1; }
+
+      - name: Run live launch readiness controller against private state
+        run: node pipeline/run-launch-readiness.js pipeline/launch-readiness-result.json "$PRIVATE_STATE_DIR/state/detection-ledger.json" "$PRIVATE_STATE_DIR/state/opportunity-ledger.json"
 
       - name: Retain launch readiness evidence
         if: always()

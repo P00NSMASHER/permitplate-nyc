@@ -64,6 +64,9 @@ jobs:
       - name: Run persistent opportunity ledger regression
         run: node pipeline/opportunity-ledger.test.js
 
+      - name: Verify private operational state boundary
+        run: node pipeline/private-state-boundary.test.js
+
       - name: Run subscriber profile contract regression
         run: node pipeline/subscriber-profile.test.js
 

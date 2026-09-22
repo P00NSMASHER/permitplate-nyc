@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/detection-ledger.yml'
+      - '.github/workflows/launch-readiness.yml'
       - 'pipeline/detection-ledger.js'
       - 'pipeline/run-detection-ledger.js'
       - 'pipeline/run-opportunity-packages.js'
@@ -16,52 +17,247 @@ on:
       - 'pipeline/candidate-package.js'
       - 'pipeline/scoring-policy.js'
       - 'pipeline/canonical-score-receipt.js'
+      - 'pipeline/launch-readiness.js'
+      - 'pipeline/run-launch-readiness.js'
+      - 'pipeline/private-state-boundary.test.js'
+      - 'operations/PRIVATE_STATE_MIGRATION.md'
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: permitplate-private-state-\${{ vars.PERMITPLATE_STATE_REPO }}
+  cancel-in-progress: false
 
 jobs:
   detection-ledger:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
+    env:
+      STATE_REPO: \${{ vars.PERMITPLATE_STATE_REPO }}
+      PRIVATE_STATE_DIR: \${{ github.workspace }}/.private-state
+      ARTIFACT_DIR: \${{ runner.temp }}/permitplate-state-run
     steps:
-      - name: Check out repository
+      - name: Check out public code and migration history
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
-      - name: Advance detection ledger from complete live graph
-        run: node pipeline/run-detection-ledger.js state/detection-ledger.json pipeline/detection-ledger-run-result.json
-
-      - name: Build scored opportunity packages for customer-eligible detections
-        run: node pipeline/run-opportunity-packages.js pipeline/detection-ledger-run-result.json pipeline/opportunity-packages-result.json
-
-      - name: Append production-authorized packages to opportunity ledger
-        run: node pipeline/run-opportunity-ledger.js pipeline/opportunity-packages-result.json state/opportunity-ledger.json pipeline/opportunity-ledger-run-result.json
-
-      - name: Commit detection and opportunity state atomically
+      - name: Require private durable state
+        env:
+          GH_TOKEN: \${{ secrets.PERMITPLATE_STATE_TOKEN }}
         run: |
-          if git diff --quiet -- state/detection-ledger.json state/opportunity-ledger.json; then
-            echo "PermitPlate state unchanged."
+          set -euo pipefail
+          test -n "$STATE_REPO" || { echo "PERMITPLATE_STATE_REPO repository variable is required."; exit 1; }
+          test -n "\${GH_TOKEN:-}" || { echo "PERMITPLATE_STATE_TOKEN secret is required."; exit 1; }
+          test "$STATE_REPO" != "$GITHUB_REPOSITORY" || { echo "Operational state must not target the public application repository."; exit 1; }
+          repo_visibility="$(gh api "repos/$STATE_REPO" --jq '.visibility')"
+          test "$repo_visibility" = "private" || { echo "PERMITPLATE_STATE_REPO must resolve to a private GitHub repository."; exit 1; }
+
+      - name: Check out private state repository
+        uses: actions/checkout@v4
+        with:
+          repository: \${{ vars.PERMITPLATE_STATE_REPO }}
+          token: \${{ secrets.PERMITPLATE_STATE_TOKEN }}
+          ref: main
+          path: .private-state
+          fetch-depth: 1
+
+      - name: Seed private ledgers from latest intact public history when needed
+        shell: bash
+        run: |
+          set -euo pipefail
+          detection_path="$PRIVATE_STATE_DIR/state/detection-ledger.json"
+          opportunity_path="$PRIVATE_STATE_DIR/state/opportunity-ledger.json"
+
+          if [[ -f "$detection_path" || -f "$opportunity_path" ]]; then
+            [[ -f "$detection_path" && -f "$opportunity_path" ]] || {
+              echo "Private state is partial; both ledgers must exist or both must be absent."
+              exit 1
+            }
+            echo "Private PermitPlate ledgers already initialized."
             exit 0
           fi
-          git config user.name "PermitPlate Detection Bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add state/detection-ledger.json state/opportunity-ledger.json
-          git commit -m "state: advance PermitPlate detection and opportunity ledgers [skip ci]"
-          git push
 
-      - name: Retain detection evidence
+          source_commit=""
+          while IFS= read -r sha; do
+            if git cat-file -e "$sha:state/detection-ledger.json" 2>/dev/null &&
+               git cat-file -e "$sha:state/opportunity-ledger.json" 2>/dev/null; then
+              source_commit="$sha"
+              break
+            fi
+          done < <(git rev-list HEAD -- state/detection-ledger.json state/opportunity-ledger.json)
+
+          test -n "$source_commit" || {
+            echo "No intact historical PermitPlate ledger pair was found; refusing to bootstrap a fresh baseline."
+            exit 1
+          }
+
+          mkdir -p "$PRIVATE_STATE_DIR/state"
+          git show "$source_commit:state/detection-ledger.json" > "$detection_path"
+          git show "$source_commit:state/opportunity-ledger.json" > "$opportunity_path"
+
+          node - "$detection_path" "$opportunity_path" <<'NODE'
+          const fs=require('fs');
+          const detection=require('./pipeline/detection-ledger');
+          const opportunity=require('./pipeline/opportunity-ledger');
+          const detectionLedger=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+          const opportunityLedger=JSON.parse(fs.readFileSync(process.argv[3],'utf8'));
+          const detectionValidation=detection.validateLedger(detectionLedger);
+          const opportunityValidation=opportunity.validateLedger(opportunityLedger);
+          if(!detectionValidation.valid){
+            throw new Error('DETECTION_MIGRATION_SOURCE_INVALID:'+detectionValidation.errors.join(','));
+          }
+          if(!opportunityValidation.valid){
+            throw new Error('OPPORTUNITY_MIGRATION_SOURCE_INVALID:'+opportunityValidation.errors.join(','));
+          }
+          if(!detectionLedger.initializedAt || !opportunityLedger.initializedAt){
+            throw new Error('MIGRATION_SOURCE_NOT_INITIALIZED');
+          }
+          NODE
+
+          git -C "$PRIVATE_STATE_DIR" config user.name "PermitPlate State Bot"
+          git -C "$PRIVATE_STATE_DIR" config user.email "actions@users.noreply.github.com"
+          git -C "$PRIVATE_STATE_DIR" add state/detection-ledger.json state/opportunity-ledger.json
+          git -C "$PRIVATE_STATE_DIR" commit -m "state: seed PermitPlate ledgers from public history $source_commit"
+          git -C "$PRIVATE_STATE_DIR" push origin HEAD:main
+          echo "Seeded private state from public historical commit $source_commit."
+
+      - name: Advance detection ledger from complete live graph
+        run: |
+          set -euo pipefail
+          mkdir -p "$ARTIFACT_DIR"
+          node pipeline/run-detection-ledger.js \
+            "$PRIVATE_STATE_DIR/state/detection-ledger.json" \
+            "$ARTIFACT_DIR/detection-ledger-run-result.json" >/dev/null
+
+      - name: Build scored opportunity packages for customer-eligible detections
+        run: |
+          set -euo pipefail
+          node pipeline/run-opportunity-packages.js \
+            "$ARTIFACT_DIR/detection-ledger-run-result.json" \
+            "$ARTIFACT_DIR/opportunity-packages-result.json" >/dev/null
+
+      - name: Append production-authorized packages to private opportunity ledger
+        run: |
+          set -euo pipefail
+          node pipeline/run-opportunity-ledger.js \
+            "$ARTIFACT_DIR/opportunity-packages-result.json" \
+            "$PRIVATE_STATE_DIR/state/opportunity-ledger.json" \
+            "$ARTIFACT_DIR/opportunity-ledger-run-result.json" >/dev/null
+
+      - name: Commit private detection and opportunity state atomically
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git -C "$PRIVATE_STATE_DIR" diff --quiet -- state/detection-ledger.json state/opportunity-ledger.json; then
+            echo "PermitPlate private state unchanged."
+            exit 0
+          fi
+          git -C "$PRIVATE_STATE_DIR" config user.name "PermitPlate State Bot"
+          git -C "$PRIVATE_STATE_DIR" config user.email "actions@users.noreply.github.com"
+          git -C "$PRIVATE_STATE_DIR" add state/detection-ledger.json state/opportunity-ledger.json
+          git -C "$PRIVATE_STATE_DIR" commit -m "state: advance PermitPlate operational ledgers ($GITHUB_RUN_ID)"
+          git -C "$PRIVATE_STATE_DIR" push origin HEAD:main
+
+      - name: Re-run launch readiness against committed private state
+        run: |
+          set -euo pipefail
+          node pipeline/run-launch-readiness.js \
+            "$ARTIFACT_DIR/launch-readiness-result.json" \
+            "$PRIVATE_STATE_DIR/state/detection-ledger.json" \
+            "$PRIVATE_STATE_DIR/state/opportunity-ledger.json" >/dev/null
+
+      - name: Build non-sensitive public verification evidence
+        if: always()
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const path=require('path');
+          const dir=process.env.ARTIFACT_DIR;
+          fs.mkdirSync(dir,{recursive:true});
+          function read(name){
+            const file=path.join(dir,name);
+            return fs.existsSync(file)?JSON.parse(fs.readFileSync(file,'utf8')):null;
+          }
+          const detection=read('detection-ledger-run-result.json');
+          const packages=read('opportunity-packages-result.json');
+          const opportunity=read('opportunity-ledger-run-result.json');
+          const launch=read('launch-readiness-result.json');
+          const evidence={
+            evidenceVersion:'PermitPlate-private-state-public-evidence-v1.0.0',
+            detection:detection?{
+              runnerVersion:detection.runnerVersion,
+              materialityVersion:detection.materialityVersion,
+              observedAt:detection.observedAt,
+              graphState:detection.graphState,
+              graphDigest:detection.graphDigest,
+              candidateCount:detection.candidateCount,
+              priorLedgerInitialized:detection.priorLedgerInitialized,
+              committed:detection.committed,
+              reason:detection.reason,
+              receiptCount:detection.receiptCount,
+              customerEligibleReceiptCount:detection.customerEligibleReceiptCount,
+              receiptClasses:detection.receiptClasses,
+              ledgerFingerprint:detection.ledgerFingerprint,
+              stateCounts:detection.stateCounts,
+              artifactFingerprint:detection.artifactFingerprint
+            }:null,
+            packages:packages?{
+              runnerVersion:packages.runnerVersion,
+              passed:packages.passed,
+              reason:packages.reason,
+              detectionArtifactFingerprint:packages.detectionArtifactFingerprint,
+              detectionObservedAt:packages.detectionObservedAt,
+              detectionGraphDigest:packages.detectionGraphDigest,
+              detectionCustomerEligibleCount:packages.detectionCustomerEligibleCount,
+              promotionEvidenceFingerprint:packages.promotionEvidenceFingerprint,
+              productionScoringMode:packages.productionScoringMode,
+              packageCount:packages.packageCount,
+              readyCount:packages.readyCount,
+              reviewCount:packages.reviewCount,
+              artifactFingerprint:packages.artifactFingerprint
+            }:null,
+            opportunity:opportunity?{
+              runnerVersion:opportunity.runnerVersion,
+              observedAt:opportunity.observedAt,
+              committed:opportunity.committed,
+              reason:opportunity.reason,
+              priorLedgerInitialized:opportunity.priorLedgerInitialized,
+              packageArtifactFingerprint:opportunity.packageArtifactFingerprint,
+              packageCount:opportunity.packageCount,
+              readyCount:opportunity.readyCount,
+              reviewCount:opportunity.reviewCount,
+              addedCount:opportunity.addedCount,
+              totalEntries:opportunity.totalEntries,
+              ledgerFingerprint:opportunity.ledgerFingerprint
+            }:null,
+            launch:launch?{
+              runnerVersion:launch.runnerVersion,
+              observedAt:launch.observedAt,
+              launchState:launch.launchState,
+              internalReady:launch.internalReady,
+              firstCustomerOperationallyReady:launch.firstCustomerOperationallyReady,
+              commerciallyProven:launch.commerciallyProven,
+              criticalPathClass:launch.criticalPathClass,
+              readinessFingerprint:launch.readinessFingerprint
+            }:null
+          };
+          const out=path.join(dir,'public-verification.json');
+          fs.writeFileSync(out,JSON.stringify(evidence,null,2)+'\n');
+          console.log(JSON.stringify(evidence,null,2));
+          NODE
+
+      - name: Retain aggregate verification evidence only
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: permitplate-detection-ledger
-          path: |
-            pipeline/detection-ledger-run-result.json
-            pipeline/opportunity-packages-result.json
-            pipeline/opportunity-ledger-run-result.json
+          name: permitplate-private-state-verification
+          path: \${{ runner.temp }}/permitplate-state-run/public-verification.json
           if-no-files-found: warn
           retention-days: 30
