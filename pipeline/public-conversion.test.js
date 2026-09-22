@@ -7,44 +7,41 @@ const path=require('path');
 const root=path.join(__dirname,'..');
 const sample=fs.readFileSync(path.join(root,'sample.html'),'utf8');
 const start=fs.readFileSync(path.join(root,'start.html'),'utf8');
-const fallback=fs.readFileSync(path.join(root,'start-checkout.html'),'utf8');
+const index=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const siteJs=fs.readFileSync(path.join(root,'site.js'),'utf8');
-const siteCss=fs.readFileSync(path.join(root,'site.css'),'utf8');
+
+const stripeUrl='https://buy.stripe.com/4gM28r1cL81x8dF9Xj9sk02';
 
 assert(sample.includes('<tr><td>Equipment</td><td>100</td></tr>'));
 assert(sample.includes('<tr><td>Hood/Fire</td><td>93</td></tr>'));
 assert(!sample.includes('<tr><td>Hood/Fire</td><td>100</td></tr>'));
 assert(sample.includes('current canonical Equipment priority is 100 and Hood/Fire is 93'));
 
-assert(start.includes('name="territory"'));
-assert(start.includes('list="territory-options"'));
-assert(start.includes('pattern="\\s*(Manhattan|Brooklyn|Queens|Bronx|Staten Island)'));
-for(const borough of ['Manhattan','Brooklyn','Queens','Bronx','Staten Island']){
-  assert(start.includes('<option value="'+borough+'"></option>'));
-}
-assert(start.includes('Leave blank for all five boroughs.'));
-assert(start.includes('use commas and the exact borough names shown above'));
-assert(start.includes('Submitting this form does not charge you.'));
-assert(start.includes('name="activation_ref"'));
-assert(start.includes('<script src="/site.js" defer></script>'));
+assert.equal(start.split(stripeUrl).length-1,1);
+assert(start.includes('Choose your feed inside secure Stripe Checkout.'));
+assert(start.includes('Activation stays fail-closed.'));
+assert(start.includes('Stripe is the authoritative onboarding record.'));
+assert(start.includes('vendor category'));
+assert(start.includes('NYC territory'));
+assert(start.includes('Starter Snapshot preference'));
+assert(start.includes('checkout email'));
+assert(!start.includes('<form'));
+assert(!/netlify/i.test(start));
+assert(!start.includes('activation_ref'));
+assert(!start.includes('client_reference_id'));
+assert(!start.includes('locked_prefilled_email'));
 assert(!/<script>([\s\S]*?)<\/script>/.test(start));
 assert(!start.includes('<style>'));
 assert(!start.includes(' style='));
-assert(siteJs.includes("fetch('/',{"));
-assert(siteJs.includes("'locked_prefilled_email'"));
-assert(siteJs.includes("'client_reference_id'"));
-assert(siteJs.includes("'pp_'+window.crypto.randomUUID()"));
-assert(siteJs.includes('window.location.assign(checkout.toString())'));
-assert(siteJs.includes('document.documentElement.classList.add(\'js-ready\')'));
-assert(siteJs.includes('you have not been charged'));
-assert(siteCss.includes('.js-checkout-submit{display:none'));
-assert(siteCss.includes('.js-ready .js-checkout-submit{display:inline-flex'));
 
-assert(!fallback.includes('<style>'));
-assert(!fallback.includes(' style='));
-assert(!fallback.includes('http-equiv="refresh"'));
-assert(!fallback.includes('buy.stripe.com'));
-assert(fallback.includes('CHECKOUT NOT STARTED'));
-assert(fallback.includes('Return to PermitPlate setup'));
+assert(index.includes('https://p00nsmasher.github.io/permitplate-nyc/'));
+assert(index.includes('/permitplate-nyc/start.html'));
+assert(!index.includes('permitplate-nyc.netlify.app'));
 
-console.log('PermitPlate public conversion copy regression tests passed.');
+assert(!siteJs.includes(stripeUrl));
+assert(!siteJs.includes('permitplate-onboarding'));
+assert(!siteJs.includes('client_reference_id'));
+assert(!siteJs.includes('window.location.assign'));
+assert(siteJs.includes('data.cityofnewyork.us'));
+
+console.log('PermitPlate GitHub Pages conversion regression tests passed.');
