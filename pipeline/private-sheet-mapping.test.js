@@ -114,7 +114,7 @@ function acceptedObservation(a,att){
   assert.equal(mapped.row['Stripe Subscription'],'sub_mapping');
   assert.equal(mapped.row['Profile Fingerprint'],activated.profileFingerprint);
   assert.equal(mapped.row['Delivery Policy Version'],delivery.DELIVERY_PLANNER_VERSION);
-  assert.equal(mapped.row['Preference Receipt ID'],'cs_mapping');
+  assert.equal(mapped.row['Preference Receipt ID'],'cs_mapping_test');
   assert.equal(mapped.row['Preference Source'],'STRIPE_CUSTOM_FIELDS');
   assert.equal(
     mapped.row['Subscription Context Fingerprint'],
