@@ -32,6 +32,13 @@ function sha256File(filePath){
   hash.update(fs.readFileSync(filePath));
   return hash.digest('hex');
 }
+function publicSourceFingerprint(files){
+  const lines=(files||[]).slice()
+    .sort((a,b)=>a.path<b.path?-1:a.path>b.path?1:0)
+    .map((item)=>item.path+':'+item.sha256)
+    .join('\n');
+  return crypto.createHash('sha256').update(lines).digest('hex');
+}
 
 function validateAllowlist(){
   const failures=[];
@@ -80,6 +87,7 @@ function build(){
     deployContext:process.env.CONTEXT||process.env.DEPLOY_CONTEXT||'local',
     builtAt:new Date().toISOString(),
     publicFileCount:files.length,
+    publicSourceFingerprint:publicSourceFingerprint(files),
     files
   };
   fs.writeFileSync(
@@ -111,6 +119,7 @@ module.exports={
   ROOT,
   OUT,
   sha256File,
+  publicSourceFingerprint,
   validateAllowlist,
   build
 };
