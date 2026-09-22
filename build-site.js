@@ -9,8 +9,6 @@ const OUT=path.join(ROOT,'dist');
 
 const PUBLIC_FILES=Object.freeze([
   '404.html',
-  '_headers',
-  '_redirects',
   'apple-touch-icon.png',
   'favicon.svg',
   'index.html',
@@ -25,7 +23,6 @@ const PUBLIC_FILES=Object.freeze([
   'site.css',
   'site.js',
   'start.html',
-  'start-checkout.html',
   'sitemap.xml',
   'terms.html'
 ]);
