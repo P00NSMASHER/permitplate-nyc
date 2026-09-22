@@ -1,14 +1,29 @@
 (function(){
-  const el=document.querySelector('[data-source-freshness]');
-  if(!el) return;
-  fetch('https://data.cityofnewyork.us/api/views/43nn-pn8j',{headers:{Accept:'application/json'}})
-    .then(r=>{if(!r.ok) throw new Error(); return r.json();})
-    .then(meta=>{
-      const raw=Number(meta.rowsUpdatedAt||0); if(!raw) throw new Error();
-      const d=new Date(raw*1000);
-      el.textContent='DOHMH source last updated '+new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit',timeZone:'America/New_York',timeZoneName:'short'}).format(d);
-    })
-    .catch(()=>{el.textContent='source freshness checked during processing';});
+  const sourceEl=document.querySelector('[data-source-freshness]');
+  const buildEl=document.querySelector('[data-product-build]');
+  const formatter=new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit',timeZone:'America/New_York',timeZoneName:'short'});
+
+  if(sourceEl){
+    fetch('https://data.cityofnewyork.us/api/views/43nn-pn8j',{headers:{Accept:'application/json'}})
+      .then(r=>{if(!r.ok) throw new Error(); return r.json();})
+      .then(meta=>{
+        const raw=Number(meta.rowsUpdatedAt||0); if(!raw) throw new Error();
+        sourceEl.textContent='Source updated '+formatter.format(new Date(raw*1000))+' · upstream metadata only; not a filing/opening or product-build date';
+      })
+      .catch(()=>{sourceEl.textContent='Source freshness unavailable · no product-build inference';});
+  }
+
+  if(buildEl){
+    fetch('/build-info.json',{cache:'no-store'})
+      .then(r=>{if(!r.ok) throw new Error(); return r.json();})
+      .then(info=>{
+        const commit=String(info.sourceCommit||'');
+        const builtAt=new Date(info.builtAt||'');
+        if(!/^[0-9a-f]{40}$/i.test(commit)||Number.isNaN(builtAt.getTime())) throw new Error();
+        buildEl.textContent='Product build '+formatter.format(builtAt)+' · commit '+commit.slice(0,7);
+      })
+      .catch(()=>{buildEl.textContent='Product build identity unavailable · source freshness does not imply build freshness';});
+  }
 })();
 
 (function(){
