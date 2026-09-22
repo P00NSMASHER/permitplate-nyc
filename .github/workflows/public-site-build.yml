@@ -1,4 +1,4 @@
-name: PermitPlate public site build
+name: PermitPlate GitHub Pages
 
 on:
   workflow_dispatch:
@@ -7,10 +7,7 @@ on:
     paths:
       - 'build-site.js'
       - 'build-site.test.js'
-      - 'netlify.toml'
       - '404.html'
-      - '_headers'
-      - '_redirects'
       - 'apple-touch-icon.png'
       - 'favicon.svg'
       - 'index.html'
@@ -25,18 +22,26 @@ on:
       - 'site.css'
       - 'site.js'
       - 'start.html'
-      - 'start-checkout.html'
       - 'sitemap.xml'
       - 'terms.html'
       - '.github/workflows/public-site-build.yml'
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: permitplate-github-pages
+  cancel-in-progress: false
 
 jobs:
-  public-build:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -46,19 +51,62 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Verify deployment boundary
+      - name: Verify public deployment boundary
         run: node build-site.test.js
 
-      - name: Build public site
+      - name: Build exact public artifact
         run: node build-site.js
         env:
           COMMIT_REF: ${{ github.sha }}
-          CONTEXT: production-candidate
+          CONTEXT: github-pages
 
-      - name: Upload deploy-ready public site
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist/
+
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Verify live commit and artifact fingerprint
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+          EXPECTED_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          expected="dist/build-info.json"
+          rm -f live-build-info.json
+          for attempt in {1..12}; do
+            if curl -fsSL "${PAGE_URL%/}/build-info.json?commit=${EXPECTED_COMMIT}&attempt=${attempt}" -o live-build-info.tmp; then
+              if EXPECTED_COMMIT="${EXPECTED_COMMIT}" node - <<'NODE'
+          const fs=require('fs');
+          const expected=JSON.parse(fs.readFileSync('dist/build-info.json','utf8'));
+          const live=JSON.parse(fs.readFileSync('live-build-info.tmp','utf8'));
+          if(live.sourceCommit!==process.env.EXPECTED_COMMIT) process.exit(1);
+          if(live.sourceCommit!==expected.sourceCommit) process.exit(1);
+          if(live.publicSourceFingerprint!==expected.publicSourceFingerprint) process.exit(1);
+          NODE
+              then
+                mv live-build-info.tmp live-build-info.json
+                exit 0
+              fi
+            fi
+            sleep 5
+          done
+          echo "GitHub Pages live build identity did not match the deployed artifact." >&2
+          exit 1
+
+      - name: Retain live deployment identity
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: permitplate-public-site-${{ github.sha }}
-          path: dist/
-          if-no-files-found: error
+          name: permitplate-github-pages-identity-${{ github.sha }}
+          path: |
+            dist/build-info.json
+            live-build-info.json
+          if-no-files-found: warn
           retention-days: 30
