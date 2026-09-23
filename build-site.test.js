@@ -93,14 +93,15 @@ try{
 
   const startHtml=fs.readFileSync(path.join(build.OUT,'start.html'),'utf8');
   const stripeUrl='https://buy.stripe.com/4gM28r1cL81x8dF9Xj9sk02';
-  assert.equal(startHtml.split(stripeUrl).length-1,1);
-  assert(startHtml.includes('Stripe will be the authoritative onboarding record.'));
-  assert(startHtml.includes('Activation stays fail-closed.'));
-  assert(startHtml.includes('Continue to secure Stripe Checkout'));
+  assert.equal(startHtml.includes(stripeUrl),false);
+  assert(startHtml.includes('Paid enrollment stays fail-closed.'));
+  assert(startHtml.includes('Self-serve checkout remains paused'));
+  assert(startHtml.includes('Request launch access'));
+  assert(startHtml.includes('does not create a subscription or authorize a charge'));
   assert(startHtml.includes('vendor category'));
   assert(startHtml.includes('NYC territory'));
   assert(startHtml.includes('Starter Snapshot preference'));
-  assert(startHtml.includes('checkout email'));
+  assert(startHtml.includes('No payment is collected at this stage.'));
   assert(!startHtml.includes('temporarily blocked'));
   assert(!startHtml.includes('<form'));
   assert(!startHtml.includes('activation_ref'));
@@ -113,7 +114,7 @@ try{
     const count=html.split(stripeUrl).length-1;
     if(count) stripeOccurrences.push({file,count});
   }
-  assert.deepEqual(stripeOccurrences,[{file:'start.html',count:1}]);
+  assert.deepEqual(stripeOccurrences,[]);
 
   const siteJs=fs.readFileSync(path.join(build.OUT,'site.js'),'utf8');
   assert(!siteJs.includes(stripeUrl));
@@ -126,6 +127,7 @@ try{
   assert(indexHtml.includes('data-source-freshness'));
   assert(indexHtml.includes('data-product-build'));
   assert(indexHtml.includes('Some days may have no report.'));
+  assert(indexHtml.includes('No payment collected yet'));
   for(const overstated of [
     'NYC RESTAURANT OPENING INTELLIGENCE',
     'NYC restaurant openings worth researching now',

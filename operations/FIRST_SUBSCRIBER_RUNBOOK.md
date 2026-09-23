@@ -6,9 +6,11 @@ This runbook is for the controlled first-customer acceptance. It does not author
 
 1. Configure the private state repository and scoped credentials in `PRIVATE_STATE_MIGRATION.md`.
 2. Confirm the current source run is complete. Never fulfill from a partial or unavailable source graph.
-3. Confirm the public build identity matches the deployed GitHub Pages commit.
-4. Confirm the live Stripe Payment Link still requires category, territory, and Starter fields.
-5. Confirm the Stripe customer portal remains active with cancellation at period end.
+3. Confirm current production scoring authority can create authorized packages; a complete graph or green unit tests alone are not enough.
+4. Confirm the launch-readiness controller reports `firstCustomerOperationallyReady: true`.
+5. Confirm the public build identity matches the deployed GitHub Pages commit.
+6. Reactivate the Stripe Payment Link only after steps 1–5 pass, then confirm it still requires category, territory, and Starter fields.
+7. Confirm the Stripe customer portal remains active with cancellation at period end.
 
 ## On completed checkout
 

@@ -34,6 +34,6 @@
     "refund": "First subscription payment refundable within seven calendar days",
     "limitations": "Research priority only; no purchase-intent, opening-probability, exclusivity, or outcome guarantee"
   },
-  "release_stage": "Ready for controlled first paid subscriber acceptance",
+  "release_stage": "Controlled launch staged; paid acceptance remains fail-closed",
   "commercial_proof": "Not claimed until a real paid subscriber, provider-backed delivery, and next-run duplicate suppression are verified"
 }

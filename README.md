@@ -4,15 +4,17 @@ PermitPlate converts selected official NYC restaurant applicant, licensing, buil
 
 Canonical site: <https://p00nsmasher.github.io/permitplate-nyc/>
 
-## Customer offer
+## Planned customer offer
 
-- $79/month through Stripe-hosted Checkout
+- $79/month through Stripe-hosted Checkout once the live release gate passes
 - one supported vendor category and NYC territory
 - up to 25 qualifying signals per brief
 - optional labeled seven-day Starter Snapshot, capped at 10
 - delivery when qualifying activity is available; some days may have no report
 - cancel at period end through the Stripe customer portal
 - seven-day first-payment refund window
+
+Self-serve checkout is currently paused. The public site accepts launch-access requests without collecting payment while live scoring authority, private operational state, and GitHub Pages deployment remain blocked.
 
 Scores prioritize research. They are not purchase intent, opening probability, or guaranteed leads.
 
@@ -31,7 +33,7 @@ node build-site.js
 ## Production boundaries
 
 - GitHub Pages is the only canonical public host.
-- Stripe Checkout is the payment and preference authority.
+- Stripe Checkout is the payment and preference authority when paid enrollment is open.
 - Operational detection and opportunity ledgers belong in a dedicated private repository.
 - Customer artifacts require explicit owner send authorization and provider reconciliation.
 - Source-partial or source-unavailable runs fail closed.
@@ -47,3 +49,5 @@ See:
 ## Readiness language
 
 The controlled first-subscriber state and commercial-proof state are deliberately separate. Do not describe PermitPlate as commercially proven until a genuine paid subscriber has completed provider-backed delivery/reconciliation and the next run has verified duplicate suppression.
+
+Do not reactivate the Payment Link or restore a payable public CTA until the launch-readiness controller reports `firstCustomerOperationallyReady: true` against initialized private state and a verified live Pages build.
