@@ -2,6 +2,7 @@
 
 const model = require('../model-v7');
 const commercialFit = require('./commercial-fit');
+const {timestampMs} = require('./timestamp');
 
 const SHADOW_SCORING_VERSION = 'permitplate-shadow-score-v3-2026-09-21';
 const CATEGORIES = Object.freeze([
@@ -30,9 +31,9 @@ function stageNumber(stage) {
 }
 
 function ageDays(effectiveAt, observedAt) {
-  const a = Date.parse(String(effectiveAt || ''));
-  const b = Date.parse(String(observedAt || ''));
-  if (!Number.isFinite(a) || !Number.isFinite(b) || b < a) return null;
+  const a = timestampMs(effectiveAt);
+  const b = timestampMs(observedAt);
+  if (a === null || b === null || b < a) return null;
   return (b - a) / (24 * 60 * 60 * 1000);
 }
 

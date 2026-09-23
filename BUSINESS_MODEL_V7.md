@@ -1,251 +1,133 @@
-# PermitPlate Business Model V7
+# PermitPlate NYC business model
 
-Updated: 2026-09-21
+Version: 8.0
+Updated: September 23, 2026
 
-## Product definition
+## Product promise
 
-PermitPlate is evidence-backed public change intelligence for vendors that sell into businesses while those businesses are opening, licensing, building out, or materially changing.
+PermitPlate helps companies that sell to restaurants decide which NYC projects deserve research now. It converts selected official applicant, licensing, buildout, pre-permit, and material-change records into short evidence-first briefs.
 
-The customer does not pay for a raw permit list. The customer pays for the right business, the meaningful change, the relevance to what they sell, and the official evidence behind it.
+PermitPlate does not sell purchase intent, opening predictions, exclusive leads, or guaranteed daily volume. A signal means the cited public evidence may justify research; it does not mean the business will open, needs a vendor, or will buy.
 
-Current production market: NYC restaurant vendors.
+## Target customer
 
-## Current self-serve offer
+The self-serve plan supports one of eight vendor categories:
 
-NYC Restaurant Watch remains $79/month.
+- POS and payments;
+- insurance;
+- equipment;
+- hood and fire;
+- waste;
+- pest control;
+- linen;
+- distribution.
 
-Target output:
+The buyer chooses all NYC, one borough, or a supported borough combination. Multi-category, custom-market, and consulting work remain separately scoped founder-reviewed engagements.
 
-- post-baseline new or materially changed opportunities;
-- optional labeled prior-seven-day Starter Snapshot;
-- vendor-category score;
-- borough filtering;
-- commercial fit;
+## Offer and price
+
+The self-serve plan is $79 per month with no setup fee. It renews until canceled. Customers can use the Stripe-hosted customer portal to update account or payment details, view invoices, and cancel at the end of the billing period.
+
+The first subscription payment has a voluntary seven-calendar-day refund window. Confirmed duplicate charges, charges after an effective cancellation, and confirmed billing errors are refunded.
+
+Keep this price and a single self-serve tier until real customer usage supports different packaging.
+
+## What the customer receives
+
+A qualifying brief can include:
+
+- business name and normalized NYC venue;
 - lifecycle stage;
-- source systems and record IDs;
-- official source URLs;
-- CRM-ready report/CSV;
-- exactly-once delivery state.
+- What Changed;
+- Observed Facts;
+- PermitPlate interpretation / Why Now;
+- Watch Next;
+- source IDs and official links;
+- identity and evidence confidence;
+- category-specific research priority;
+- a CRM-safe CSV that uses the same ordered signal set.
 
-Initial categories:
+Reports are produced when qualifying activity is available for the subscriber's category and territory. Some days may have no report. A brief is capped at 25 signals.
 
-- POS/payments
-- Insurance
-- Restaurant Equipment
-- Hood/Fire Suppression
-- Waste/Hauling
-- Pest Control
-- Linen/Laundry
-- Food Distribution
+The normal feed begins at the Stripe subscription baseline. An optional first-fulfillment Starter Snapshot may include up to 10 still-active opportunities first detected during the prior seven days. Starter items are always labeled as active before the customer joined.
 
-## What the actual product now does
+## Public-source scope
 
-The current deterministic engine performs:
+NYC DOHMH is the core restaurant source. NYC DOB and New York State Liquor Authority records may add corroborating evidence when source status, identity, recency, and venue-matching gates pass.
 
-1. live source-health verification;
-2. query-scoped source receipts;
-3. conservative identity/project resolution;
-4. cross-CAMIS predecessor suppression;
-5. current candidate-graph construction;
-6. evidence-backed commercial-fit classification;
-7. canonical vendor-category scoring;
-8. persistent first-detection/material-change tracking;
-9. production-authorized candidate packaging;
-10. persistent opportunity history;
-11. subscriber baseline/territory/category filtering;
-12. optional Starter Snapshot selection;
-13. deterministic report/CSV generation;
-14. deterministic attempt/message identity;
-15. private delivery-state planning and reconciliation.
+Public records may be delayed, corrected, incomplete, duplicated, or unavailable. Partial or unavailable source windows fail closed: they cannot support absence conclusions or state advancement that would require a complete source window.
 
-This is materially different from the earlier workbook/prompt-centric product.
+## Stripe-authoritative onboarding
 
-## Ideal customer
+The active Stripe Payment Link is the payment and preference authority. Checkout requires:
 
-A local or regional NYC vendor whose sales team benefits from learning about restaurant openings/buildouts before ordinary prospect lists catch up.
+1. one supported vendor category;
+2. one supported NYC territory;
+3. Starter Snapshot yes/no;
+4. checkout email and business name.
 
-Strong buyers usually:
+Activation requires the expected Payment Link and price, a completed paid subscription checkout, an active or trialing subscription, valid project metadata, checkout email, and all three required preference fields. The completed Checkout Session ID is the preference receipt. Missing or invalid values fail closed.
 
-- earn enough gross profit from one account to justify $79/month;
-- have a defined territory;
-- sell during pre-opening/buildout/licensing;
-- otherwise pay reps to research manually;
-- value source evidence over opaque intent claims.
+The separate Netlify onboarding form and exact-email preference join are retired. No customer preference is written to the public repository.
 
-## Painful problem
+## Delivery controls
 
-Reps often discover a restaurant too late, spend time on false positives, or chase a building-level permit that is not actually tied to the target operator.
+Customer artifacts are deterministic from the validated source graph, subscriber profile, persisted opportunity state, and delivered keys.
 
-PermitPlate reduces that waste by failing closed on ambiguous identity and delivering changes rather than a giant undifferentiated list.
+No external send is authorized merely because an artifact exists. The delivery path requires explicit owner authorization bound to the exact message identity, recipient, and artifact. Provider acceptance must reconcile to that exact attempt before delivery state can finalize. Provider acceptance is not described as inbox delivery.
 
-## Customer value unit
+## Private operational state
 
-A useful signal should answer:
+Detection and opportunity ledgers must not advance in the public application repository. Scheduled workflows read and write a dedicated private state repository using the configuration documented in `operations/PRIVATE_STATE_MIGRATION.md`.
 
-- Who is this?
-- What materially changed?
-- Why now?
-- How relevant is it to what I sell?
-- How strong is the identity/evidence?
-- Which official records prove it?
+Until that private repository and its scoped credentials are configured, stateful workflows fail closed. The public repository retains only aggregate counts, gate states, and cryptographic fingerprints.
 
-## Product moat
+## Metrics after launch
 
-1. Proof-carrying source windows.
-2. Conservative cross-source identity.
-3. Persistent baseline that prevents backlog leakage.
-4. Canonical scoring with replay and adversarial tests.
-5. Persistent production-authorized opportunity history.
-6. Subscriber-specific deterministic artifacts.
-7. Exactly-once delivery semantics.
-8. Private customer state separated from public product code.
-9. Safe static deployment boundary.
+Customer-value metrics:
 
-## Validated current scale
-
-Recent live graph:
-
-- approximately 4,104 current candidates;
-- 82 cross-CAMIS operational conflicts suppressed;
-- all promised source windows must be complete before delivery;
-- canonical scoring covers the full current graph.
-
-Scoring has passed:
-
-- 47-case canonical historical replay;
-- 13 of 13 current literal-authority overlap parity;
-- adversarial evidence/scoring invariants.
-
-This is technical validation, not market validation.
-
-## Subscriber activation model
-
-Target path:
-
-PermitPlate pre-checkout form
-→ category + NYC territory + Starter preference
-→ unchanged Stripe $79 subscription
-→ exact-email preference/subscription match
-→ subscription.created becomes Baseline At
-→ private subscriber profile
-→ persisted opportunity filtering
-→ deterministic report and CSV
-→ explicit owner send authorization
-→ provider-bound acceptance/reconciliation
-→ private Delivery State
-
-A synthetic NO-SEND canary proves this internal path, including next-run dedupe.
-
-## Pre-checkout preference capture
-
-PermitPlate now captures preferences before Stripe instead of depending on Stripe Payment Link custom-field write permission.
-
-The public onboarding source contains:
-
-1. required service-category dropdown;
-2. optional NYC borough/territory text, blank meaning all NYC;
-3. required Starter Snapshot yes/no;
-4. the email the buyer will also use at Stripe;
-5. a Netlify honeypot and version/plan markers.
-
-After the form is submitted, the buyer continues to the unchanged $79 Stripe Payment Link.
-
-Activation occurs only when:
-
-- the Stripe subscription is valid and active/trialing;
-- the exact checkout email matches a valid recent PermitPlate onboarding receipt;
-- the receipt predates the subscription baseline and is within the bounded matching window;
-- the receipt is not ambiguous, stale, spam, wrong-version, or wrong-plan.
-
-Stripe payment_links_write is therefore optional rather than a first-launch dependency.
-
-No price, billing cadence, or tax change is required.
-
-## Private production state
-
-The private PermitPlate Google Sheet has been upgraded.
-
-Subscriber Profiles now includes Starter settings, caps, subscription status, Stripe customer/subscription/price IDs, profile fingerprint, Checkout Session ID, and the exact Preference Receipt ID while preserving prior baseline/audit fields.
-
-Delivery State now includes delivery status, deterministic Message Identity, artifact/profile fingerprints, NORMAL/STARTER class, provider status, reconciliation timestamp, Package ID, and owner Authorization ID.
-
-Provider ACCEPTED is an authenticated provider event, not a claim of inbox delivery. FINALIZED state is derived from evidence bound to the exact attempt rather than from caller-supplied labels.
-
-No fake customer rows were inserted.
-
-## Pricing
-
-Keep the founding self-serve price at $79/month until real usage supports a pricing change.
-
-Do not add pricing complexity before paid-customer proof.
-
-Possible later packaging, only after usage evidence:
-
-- team or multi-territory plans;
-- more frequent delivery;
-- CRM integrations;
-- premium category-specific intelligence;
-- additional jurisdictions.
-
-## Founder-reviewed pilots
-
-Use custom pilots for buyers/categories/markets outside the validated self-serve model.
-
-A pilot should have an explicit buyer problem, source scope, territory/category, output, and price before work begins.
-
-Do not describe a new market as production coverage until its source, matching, scoring, and buyer usefulness are validated.
-
-## Validation metrics after launch
-
-Most important:
-
-- percent of delivered opportunities investigated;
+- investigated rate;
 - irrelevant rate;
 - already-known rate;
-- false-join/correction rate;
-- source-window failure rate;
-- delivered opportunities per subscriber;
-- voluntarily reported conversation/customer outcomes;
-- retention;
-- cancellation reason.
+- false-join or correction rate;
+- voluntarily reported conversations and wins;
+- retention and cancellation reason.
 
-Technical metrics remain necessary but are not substitutes for customer value.
+Operational metrics:
 
-## What PermitPlate should not claim
+- source-window completeness;
+- artifact and provider acceptance rate;
+- duplicate-suppression rate;
+- delivery reconciliation failures;
+- time from qualifying evidence to reviewed brief.
 
-Do not claim guaranteed purchases, private purchase intent, guaranteed opening dates, complete coverage during unavailable/partial source windows, same-site permits as same-business evidence without proof, or a proven paid-customer delivery before one actually occurs.
+Technical success does not substitute for customer value.
 
-## Current launch state
+## Launch state
 
-Internally ready:
+Verified in deterministic tests and NO-SEND canaries:
 
-- NYC official source ingestion;
-- completeness receipts;
-- candidate graph;
-- identity/corroboration gates;
-- commercial fit;
-- canonical scoring;
-- persistent detection state;
-- persistent opportunity state;
-- subscriber profile contract;
-- deterministic report/CSV;
+- source normalization and completeness receipts;
+- conservative graph building and evidence joins;
+- event-time and material-change rules;
+- eight-category scoring and frozen historical benchmark;
+- detection and opportunity ledger semantics;
+- Stripe custom-field subscriber activation;
+- deterministic report/CSV generation;
 - exactly-once delivery planning;
-- private subscriber/delivery schema;
-- synthetic first-subscriber NO-SEND acceptance;
-- deploy-safe public-site artifact.
+- private-state and public-build boundaries;
+- explicit send authorization and provider reconciliation.
 
-Externally blocked:
+Live commerce configuration verified September 23, 2026:
 
-1. Netlify production deploy is stale, so the new pre-checkout onboarding form is not yet live even though Forms is enabled.
-2. The scoped Netlify upload helper still times out in the current execution environment; the connected desktop bridge is presently offline.
-3. No real paid subscriber has completed the provider-backed acceptance/reconciliation and next-run dedupe proof.
+- active $79/month Stripe subscription checkout;
+- required category, territory, and Starter fields;
+- truthful product description and variable-cadence language;
+- Stripe-hosted customer portal with cancellation;
+- one controlled public checkout entry point.
 
-Stripe Payment Link write permission is no longer required for the first launch.
+The correct commercialization label is **ready for a controlled first paid subscriber**. PermitPlate is not commercially proven until one genuine subscriber completes provider-backed delivery/reconciliation and the next run proves duplicate suppression.
 
-## Immediate operating priority
+## Immediate priority
 
-Do not expand geography.
-
-The next commercial milestone is one genuine $79 subscriber completing preference capture, receiving an operator-approved PermitPlate artifact, and reconciling provider/delivery state with zero duplicate delivery on the next run.
-
-That event moves PermitPlate from technically launch-ready to commercially proven.
+Do not expand geography or add pricing complexity. Configure the private state boundary, run one paid-subscriber acceptance with explicit owner review, reconcile the provider receipt, and verify that the next run emits no duplicate signal.

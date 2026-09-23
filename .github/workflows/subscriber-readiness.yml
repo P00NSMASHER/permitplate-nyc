@@ -8,12 +8,12 @@ on:
       - 'pipeline/subscriber-profile.js'
       - 'pipeline/subscriber-artifact.js'
       - 'pipeline/stripe-subscriber.js'
-      - 'pipeline/netlify-onboarding.js'
-      - 'pipeline/subscriber-activation.js'
       - 'pipeline/private-sheet-mapping.js'
       - 'pipeline/customer-message.js'
       - 'pipeline/transport-authorization.js'
       - 'pipeline/run-first-subscriber-canary.js'
+      - 'pipeline/run-subscriber-intake.js'
+      - 'pipeline/run-subscriber-intake.test.js'
       - '.github/workflows/subscriber-readiness.yml'
 
 permissions:
@@ -34,6 +34,9 @@ jobs:
 
       - name: Run first-subscriber NO-SEND canary
         run: node pipeline/run-first-subscriber-canary.js pipeline/first-subscriber-canary-result.json
+
+      - name: Verify private first-subscriber intake runner
+        run: node pipeline/run-subscriber-intake.test.js
 
       - name: Retain first-subscriber evidence
         if: always()

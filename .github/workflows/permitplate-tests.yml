@@ -25,7 +25,7 @@ jobs:
       - name: Verify public deployment boundary
         run: node build-site.test.js
 
-      - name: Verify public conversion copy and onboarding constraints
+      - name: Verify GitHub Pages checkout and conversion constraints
         run: node pipeline/public-conversion.test.js
 
       - name: Verify retired legacy offers stay denylisted
@@ -67,6 +67,9 @@ jobs:
       - name: Run persistent opportunity ledger regression
         run: node pipeline/opportunity-ledger.test.js
 
+      - name: Verify private operational state boundary
+        run: node pipeline/private-state-boundary.test.js
+
       - name: Run subscriber profile contract regression
         run: node pipeline/subscriber-profile.test.js
 
@@ -76,11 +79,9 @@ jobs:
       - name: Run Stripe subscriber adapter regression
         run: node pipeline/stripe-subscriber.test.js
 
-      - name: Run Netlify onboarding receipt regression
-        run: node pipeline/netlify-onboarding.test.js
+      - name: Run private first-subscriber intake regression
+        run: node pipeline/run-subscriber-intake.test.js
 
-      - name: Run Netlify-to-Stripe subscriber activation regression
-        run: node pipeline/subscriber-activation.test.js
 
       - name: Run private sheet mapping regression
         run: node pipeline/private-sheet-mapping.test.js

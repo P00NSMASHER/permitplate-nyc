@@ -64,32 +64,28 @@ function subscriberCanary(overrides){
       failures:['OWNER_AUTHORIZATION_MISSING']
     },
     artifactFingerprint:'subscriber-canary-fp',
-    preferenceSource:'NETLIFY_PRECHECKOUT_FORM',
-    preferenceReceiptId:'submission_canary',
-    activationReference:'pp_canaryactivation000000000000000000',
-    stripeClientReferenceId:'pp_canaryactivation000000000000000000'
+    preferenceSource:'STRIPE_CUSTOM_FIELDS',
+    preferenceReceiptId:'cs_canary_permitplate',
+    checkoutSessionId:'cs_canary_permitplate',
+    subscriptionId:'sub_canary',
+    checkoutEmail:'canary@permitplate.invalid'
   },overrides||{});
 }
 function external(overrides){
   const base={
-    evidenceVersion:'PermitPlate-external-launch-evidence-v1.0.0',
+    evidenceVersion:'PermitPlate-external-launch-evidence-v1.1.0',
     observedAt:'2026-09-21T17:40:00Z',
     stripe:{
-      paymentLinkWriteAuthorized:false,
       checkoutPreferenceFieldsVerified:false,
-      paymentLinkActiveVerified:true
+      checkoutPreferenceFieldKeys:[],
+      paymentLinkActiveVerified:true,
+      customerPortalActiveVerified:false,
+      customerPortalCancellationMode:null
     },
-    preCheckoutOnboarding:{
-      netlifyFormsEnabled:true,
-      sourceFlowImplemented:true,
-      liveFormVerified:false,
-      exactEmailActivationCanaryVerified:true,
-      activationReferenceFieldVerified:false,
-      exactReferenceActivationCanaryVerified:true
-    },
-    netlify:{
-      verifiedPublicSourceFingerprint:'public-source-fp',
-      verifiedPublicBuildCommit:'build-commit',
+    githubPages:{
+      enabled:false,
+      verifiedPublicSourceFingerprint:null,
+      verifiedPublicBuildCommit:null,
       liveVerifiedCommit:null,
       livePublicSourceFingerprint:null,
       productionDeployVerified:false
@@ -105,12 +101,31 @@ function external(overrides){
     evidenceVersion:o.evidenceVersion||base.evidenceVersion,
     observedAt:o.observedAt||base.observedAt,
     stripe:Object.assign({},base.stripe,o.stripe||{}),
-    preCheckoutOnboarding:Object.assign(
-      {},base.preCheckoutOnboarding,o.preCheckoutOnboarding||{}
-    ),
-    netlify:Object.assign({},base.netlify,o.netlify||{}),
+    githubPages:Object.assign({},base.githubPages,o.githubPages||{}),
     customerProof:Object.assign({},base.customerProof,o.customerProof||{})
   };
+}
+function readyExternal(overrides){
+  const o=overrides||{};
+  return external({
+    stripe:Object.assign({
+      checkoutPreferenceFieldsVerified:true,
+      checkoutPreferenceFieldKeys:['category','starter','territory'],
+      paymentLinkActiveVerified:true,
+      customerPortalActiveVerified:true,
+      customerPortalCancellationMode:'at_period_end'
+    },o.stripe||{}),
+    githubPages:Object.assign({
+      enabled:true,
+      verifiedPublicSourceFingerprint:'public-source-fp',
+      verifiedPublicBuildCommit:'build-commit',
+      liveVerifiedCommit:'build-commit',
+      livePublicSourceFingerprint:'public-source-fp',
+      productionDeployVerified:true
+    },o.githubPages||{}),
+    customerProof:Object.assign({},o.customerProof||{}),
+    observedAt:o.observedAt
+  });
 }
 function internalInput(overrides){
   const g=graph();
@@ -138,22 +153,24 @@ function internalInput(overrides){
   assert.equal(out.commerciallyProven,false);
   assert.equal(out.launchState,'EXTERNAL_INTEGRATION_BLOCKED');
   assert.deepEqual(out.internalFailures,[]);
-  assert(!out.firstCustomerExternalFailures.includes('stripePaymentLinkWriteAuthorized'));
-  assert(!out.firstCustomerExternalFailures.includes('stripeCheckoutPreferenceFieldsVerified'));
   assert(out.firstCustomerExternalFailures.includes('preferenceCaptureReady'));
-  assert(out.firstCustomerExternalFailures.includes('netlifyProductionDeployVerified'));
-  assert(out.firstCustomerExternalFailures.includes('netlifyLiveBuildIdentityVerified'));
+  assert(out.firstCustomerExternalFailures.includes('stripeCustomerPortalActiveVerified'));
+  assert(out.firstCustomerExternalFailures.includes('stripeCustomerPortalCancellationVerified'));
+  assert(out.firstCustomerExternalFailures.includes('githubPagesEnabled'));
+  assert(out.firstCustomerExternalFailures.includes('verifiedPublicBuildMatchesCurrentSource'));
+  assert(out.firstCustomerExternalFailures.includes('githubPagesProductionDeployVerified'));
+  assert(out.firstCustomerExternalFailures.includes('githubPagesLiveBuildIdentityVerified'));
   assert.equal(out.criticalPathClass,'EXTERNAL_INTEGRATION');
-  assert(out.recommendedNextActions.includes('DEPLOY_AND_VERIFY_NETLIFY_PRECHECKOUT_FORM'));
-  assert(out.recommendedNextActions.includes('DEPLOY_VERIFIED_PUBLIC_ARTIFACT'));
+  assert(out.recommendedNextActions.includes('APPLY_AND_VERIFY_STRIPE_CHECKOUT_PREFERENCES'));
+  assert(out.recommendedNextActions.includes('CONFIGURE_AND_VERIFY_STRIPE_CUSTOMER_PORTAL'));
+  assert(out.recommendedNextActions.includes('ENABLE_GITHUB_PAGES_ACTIONS_SOURCE'));
+  assert(out.recommendedNextActions.includes('DEPLOY_VERIFIED_PUBLIC_ARTIFACT_TO_GITHUB_PAGES'));
   assert(!out.recommendedNextActions.includes('RUN_FIRST_REAL_PAID_SUBSCRIBER_ACCEPTANCE'));
   assert(out.deferredBlockers.some((item)=>item.class==='COMMERCIAL_PROOF'));
 }
 
 {
-  const input=internalInput({
-    graph:graph('PARTIAL')
-  });
+  const input=internalInput({graph:graph('PARTIAL')});
   input.graph.graphDigest='graph-launch-1';
   const out=readiness.evaluateLaunchReadiness(input);
   assert.equal(out.internalReady,false);
@@ -161,7 +178,7 @@ function internalInput(overrides){
   assert.equal(out.criticalPathClass,'INTERNAL');
   assert(out.internalFailures.includes('graphComplete'));
   assert(out.criticalPathBlockers.every((item)=>item.class==='INTERNAL'));
-  assert(!out.recommendedNextActions.includes('DEPLOY_VERIFIED_PUBLIC_ARTIFACT'));
+  assert(!out.recommendedNextActions.includes('DEPLOY_VERIFIED_PUBLIC_ARTIFACT_TO_GITHUB_PAGES'));
 }
 
 {
@@ -207,8 +224,8 @@ function internalInput(overrides){
 {
   const input=internalInput({
     currentPublicSourceFingerprint:'current-source',
-    externalEvidence:external({
-      netlify:{verifiedPublicSourceFingerprint:'old-source'}
+    externalEvidence:readyExternal({
+      githubPages:{verifiedPublicSourceFingerprint:'old-source'}
     })
   });
   const out=readiness.evaluateLaunchReadiness(input);
@@ -219,7 +236,7 @@ function internalInput(overrides){
 
 {
   const out=readiness.evaluateLaunchReadiness(internalInput({
-    externalEvidence:external({observedAt:'2026-09-19T12:00:00Z'})
+    externalEvidence:readyExternal({observedAt:'2026-09-19T12:00:00Z'})
   }));
   assert.equal(out.internalReady,true);
   assert.equal(out.launchState,'EXTERNAL_INTEGRATION_BLOCKED');
@@ -228,20 +245,8 @@ function internalInput(overrides){
 }
 
 {
-  const readyExternal=external({
-    preCheckoutOnboarding:{
-      liveFormVerified:true,
-      activationReferenceFieldVerified:true
-    },
-    netlify:{
-      verifiedPublicSourceFingerprint:'public-source-fp',
-      verifiedPublicBuildCommit:'build-commit',
-      liveVerifiedCommit:'build-commit',
-      productionDeployVerified:true
-    }
-  });
   const out=readiness.evaluateLaunchReadiness(internalInput({
-    externalEvidence:readyExternal
+    externalEvidence:readyExternal()
   }));
   assert.equal(out.internalReady,true);
   assert.equal(out.firstCustomerOperationallyReady,true);
@@ -251,52 +256,33 @@ function internalInput(overrides){
   assert.equal(out.commercialProofFailures.length,3);
   assert.equal(out.criticalPathClass,'COMMERCIAL_PROOF');
   assert(out.recommendedNextActions.includes('RUN_FIRST_REAL_PAID_SUBSCRIBER_ACCEPTANCE'));
-  assert(!out.recommendedNextActions.includes('DEPLOY_VERIFIED_PUBLIC_ARTIFACT'));
+  assert(!out.recommendedNextActions.includes('DEPLOY_VERIFIED_PUBLIC_ARTIFACT_TO_GITHUB_PAGES'));
 }
 
 {
-  const fingerprintVerifiedExternal=external({
-    preCheckoutOnboarding:{
-      liveFormVerified:true,
-      activationReferenceFieldVerified:true
-    },
-    netlify:{
-      verifiedPublicSourceFingerprint:'public-source-fp',
-      verifiedPublicBuildCommit:'build-commit',
-      liveVerifiedCommit:null,
-      livePublicSourceFingerprint:'public-source-fp',
-      productionDeployVerified:true
-    }
-  });
   const out=readiness.evaluateLaunchReadiness(internalInput({
-    externalEvidence:fingerprintVerifiedExternal
+    externalEvidence:readyExternal({
+      githubPages:{
+        liveVerifiedCommit:null,
+        livePublicSourceFingerprint:'public-source-fp'
+      }
+    })
   }));
-  assert.equal(out.externalGates.netlifyLiveCommitMatchesVerifiedBuild,false);
-  assert.equal(out.externalGates.netlifyLivePublicSourceMatchesVerifiedBuild,true);
-  assert.equal(out.externalGates.netlifyLiveBuildIdentityVerified,true);
+  assert.equal(out.externalGates.githubPagesLiveCommitMatchesVerifiedBuild,false);
+  assert.equal(out.externalGates.githubPagesLivePublicSourceMatchesVerifiedBuild,true);
+  assert.equal(out.externalGates.githubPagesLiveBuildIdentityVerified,true);
   assert.equal(out.firstCustomerOperationallyReady,true);
 }
 
 {
-  const provenExternal=external({
-    preCheckoutOnboarding:{
-      liveFormVerified:true,
-      activationReferenceFieldVerified:true
-    },
-    netlify:{
-      verifiedPublicSourceFingerprint:'public-source-fp',
-      verifiedPublicBuildCommit:'build-commit',
-      liveVerifiedCommit:'build-commit',
-      productionDeployVerified:true
-    },
-    customerProof:{
-      realPaidSubscriberEndToEndVerified:true,
-      providerBackedDeliveryVerified:true,
-      nextRunDuplicateSuppressionVerifiedForRealSubscriber:true
-    }
-  });
   const out=readiness.evaluateLaunchReadiness(internalInput({
-    externalEvidence:provenExternal
+    externalEvidence:readyExternal({
+      customerProof:{
+        realPaidSubscriberEndToEndVerified:true,
+        providerBackedDeliveryVerified:true,
+        nextRunDuplicateSuppressionVerifiedForRealSubscriber:true
+      }
+    })
   }));
   assert.equal(out.internalReady,true);
   assert.equal(out.firstCustomerOperationallyReady,true);
@@ -310,34 +296,33 @@ function internalInput(overrides){
 }
 
 {
-  const stripeFieldExternal=external({
-    stripe:{
-      checkoutPreferenceFieldsVerified:true
-    },
-    preCheckoutOnboarding:{
-      netlifyFormsEnabled:true,
-      sourceFlowImplemented:true,
-      liveFormVerified:false,
-      exactEmailActivationCanaryVerified:true
-    },
-    netlify:{
-      verifiedPublicSourceFingerprint:'public-source-fp',
-      verifiedPublicBuildCommit:'build-commit',
-      liveVerifiedCommit:'build-commit',
-      productionDeployVerified:true
-    }
+  const missingFieldKey=readyExternal({
+    stripe:{checkoutPreferenceFieldKeys:['category','starter']}
   });
   const out=readiness.evaluateLaunchReadiness(internalInput({
-    externalEvidence:stripeFieldExternal
+    externalEvidence:missingFieldKey
   }));
-  assert.equal(out.externalGates.preferenceCaptureReady,true);
-  assert.equal(out.firstCustomerOperationallyReady,true);
+  assert.equal(out.externalGates.stripeCheckoutPreferenceFieldsVerified,false);
+  assert.equal(out.externalGates.preferenceCaptureReady,false);
+  assert(out.firstCustomerExternalFailures.includes('preferenceCaptureReady'));
+}
+
+{
+  const missingPortalCancellation=readyExternal({
+    stripe:{customerPortalCancellationMode:'immediately'}
+  });
+  const out=readiness.evaluateLaunchReadiness(internalInput({
+    externalEvidence:missingPortalCancellation
+  }));
+  assert.equal(out.externalGates.stripeCustomerPortalActiveVerified,true);
+  assert.equal(out.externalGates.stripeCustomerPortalCancellationVerified,false);
+  assert(out.firstCustomerExternalFailures.includes('stripeCustomerPortalCancellationVerified'));
 }
 
 {
   const input=internalInput({
     subscriberCanary:subscriberCanary({
-      stripeClientReferenceId:'pp_otherreference00000000000000000000'
+      preferenceReceiptId:'cs_other'
     })
   });
   const out=readiness.evaluateLaunchReadiness(input);

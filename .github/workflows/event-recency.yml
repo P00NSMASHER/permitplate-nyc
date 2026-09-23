@@ -22,6 +22,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -36,8 +38,50 @@ jobs:
           node --test pipeline/event-*.test.js | tee verification-output/event-time.tap
       - name: Prove finished first-subscriber output stays NO_SEND
         run: node pipeline/run-first-subscriber-canary.js verification-output/first-subscriber.json
+      - name: Recover historical state snapshot for pull-request verification
+        if: github.event_name == 'pull_request'
+        run: |
+          set -euo pipefail
+          source_commit=""
+          while IFS= read -r sha; do
+            if git cat-file -e "$sha:state/detection-ledger.json" 2>/dev/null &&
+               git cat-file -e "$sha:state/opportunity-ledger.json" 2>/dev/null; then
+              source_commit="$sha"
+              break
+            fi
+          done < <(git rev-list HEAD -- state/detection-ledger.json state/opportunity-ledger.json)
+          test -n "$source_commit" || { echo "No intact historical ledger pair available for PR verification."; exit 1; }
+          git show "$source_commit:state/detection-ledger.json" > "$RUNNER_TEMP/permitplate-detection-ledger.json"
+
+      - name: Read detection state from private durable store on trusted runs
+        if: github.event_name != 'pull_request'
+        env:
+          STATE_REPO: ${{ vars.PERMITPLATE_STATE_REPO }}
+          GH_TOKEN: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$STATE_REPO" || { echo "PERMITPLATE_STATE_REPO repository variable is required."; exit 1; }
+          test -n "${GH_TOKEN:-}" || { echo "PERMITPLATE_STATE_TOKEN secret is required."; exit 1; }
+          test "$STATE_REPO" != "$GITHUB_REPOSITORY" || { echo "Operational state must not target the public application repository."; exit 1; }
+          repo_visibility="$(gh api "repos/$STATE_REPO" --jq '.visibility')"
+          test "$repo_visibility" = "private" || { echo "PERMITPLATE_STATE_REPO must resolve to a private GitHub repository."; exit 1; }
+          gh api \
+            -H "Accept: application/vnd.github.raw+json" \
+            "repos/$STATE_REPO/contents/state/detection-ledger.json?ref=main" \
+            > "$RUNNER_TEMP/permitplate-detection-ledger.json"
+
+      - name: Validate read-only detection snapshot
+        run: |
+          node - "$RUNNER_TEMP/permitplate-detection-ledger.json" <<'NODE'
+          const fs=require('fs');
+          const detection=require('./pipeline/detection-ledger');
+          const ledger=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+          const validation=detection.validateLedger(ledger);
+          if(!validation.valid) throw new Error('DETECTION_READONLY_STATE_INVALID:'+validation.errors.join(','));
+          NODE
+
       - name: Compare the unpromoted scorer on a live read-only source snapshot
-        run: node pipeline/event-recency-canary.js verification-output/live-event-recency.json
+        run: node pipeline/event-recency-canary.js verification-output/live-event-recency.json "$RUNNER_TEMP/permitplate-detection-ledger.json"
       - uses: actions/upload-artifact@v4
         if: always()
         with:

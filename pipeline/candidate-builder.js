@@ -3,6 +3,7 @@
 const crypto = require('crypto');
 const project = require('./project-signal');
 const materialChange = require('./material-change');
+const {timestampMs} = require('./timestamp');
 
 const CANDIDATE_BUILDER_VERSION = 'PermitPlate-candidate-builder-v1.0.0';
 
@@ -15,9 +16,7 @@ function norm(value) {
 }
 
 function timeMs(value) {
-  if (!value) return null;
-  const ms = Date.parse(String(value));
-  return Number.isFinite(ms) ? ms : null;
+  return timestampMs(value);
 }
 
 function sha256(value) {
