@@ -36,7 +36,7 @@ jobs:
     env:
       STATE_REPO: ${{ vars.PERMITPLATE_STATE_REPO }}
       PRIVATE_STATE_DIR: ${{ github.workspace }}/.private-state
-      ARTIFACT_DIR: ${{ runner.temp }}/permitplate-state-run
+      ARTIFACT_DIR: ${{ github.workspace }}/.permitplate-state-run
     steps:
       - name: Check out public code and migration history
         uses: actions/checkout@v4
@@ -258,6 +258,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: permitplate-private-state-verification
-          path: ${{ runner.temp }}/permitplate-state-run/public-verification.json
+          path: ${{ env.ARTIFACT_DIR }}/public-verification.json
           if-no-files-found: warn
           retention-days: 30
