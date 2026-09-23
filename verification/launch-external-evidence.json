@@ -1,55 +1,38 @@
 {
-  "evidenceVersion": "PermitPlate-external-launch-evidence-v1.0.0",
-  "observedAt": "2026-09-21T18:54:25Z",
+  "evidenceVersion": "PermitPlate-external-launch-evidence-v1.2.0",
+  "observedAt": "2026-09-23T06:45:53Z",
   "stripe": {
     "account": "acct_1UFCRjDPW8riWrxQ",
     "paymentLinkId": "plink_1UG3RUDPW8riWrxQpZwHExK2",
     "priceId": "price_1UFjcWDPW8riWrxQhnrPX6nc",
-    "paymentLinkWriteAuthorized": false,
-    "checkoutPreferenceFieldsVerified": false,
-    "reason": "Connected Stripe key does not currently have payment_links_write.",
     "paymentLinkActiveVerified": true,
-    "preferenceCaptureMode": "NETLIFY_PRECHECKOUT_FORM"
+    "checkoutPreferenceFieldsVerified": true,
+    "checkoutPreferenceFieldKeys": [
+      "category",
+      "starter",
+      "territory"
+    ],
+    "preferenceCaptureMode": "STRIPE_CUSTOM_FIELDS",
+    "paymentLinkWriteAuthorized": true,
+    "customerPortalConfigurationId": "bpc_1UIjo3DPW8riWrxQI0WUAWaU",
+    "customerPortalActiveVerified": true,
+    "customerPortalCancellationMode": "at_period_end",
+    "reason": "The live Payment Link is active and visibly requires category, territory, and Starter dropdowns before payment. The product description states the evidence scope and variable cadence. The default live customer portal supports billing updates, invoice history, and cancellation at period end."
   },
-  "netlify": {
-    "siteId": "d968f195-23b5-4b4b-925a-d2ce29a785d0",
-    "currentDeployId": "6aaecade31905a0008c5e43c",
-    "verifiedPublicBuildCommit": "dfc974bfdd06ce2c35d90e2151bb1d7d43baf4ef",
-    "verifiedPublicBuildArtifactSha256": "6445167d2755ddce82c360df4a650889f710b5a72becdfa4f0265f547a97cbea",
-    "liveVerifiedCommit": "57312ded8b2bcb3a95d4970ee0d8d4aadcb3dc0f",
+  "githubPages": {
+    "canonicalUrl": "https://p00nsmasher.github.io/permitplate-nyc/",
+    "enabled": false,
+    "verifiedPublicBuildCommit": null,
+    "verifiedPublicSourceFingerprint": null,
+    "liveVerifiedCommit": null,
+    "livePublicSourceFingerprint": null,
     "productionDeployVerified": false,
-    "reason": "Current production deploy remains commit 57312ded8b2bcb3a95d4970ee0d8d4aadcb3dc0f. Verified deployment candidate dfc974bfdd06ce2c35d90e2151bb1d7d43baf4ef matches current public source fingerprint a290a637666a3f459c59c80543bb3560b8a3eaf1841e3bd36b357d3d6e1a4578; scoped runtime upload remains blocked by npm DNS resolution.",
-    "verifiedPublicSourceFingerprint": "a290a637666a3f459c59c80543bb3560b8a3eaf1841e3bd36b357d3d6e1a4578",
-    "livePublicSourceFingerprint": null
+    "reason": "Repository metadata reported has_pages=false when issue #18 was inspected. The GitHub Pages workflow is source-controlled, but the repository must be enabled for GitHub Actions Pages before a production deploy can be verified."
   },
   "customerProof": {
     "realPaidSubscriberEndToEndVerified": false,
     "providerBackedDeliveryVerified": false,
     "nextRunDuplicateSuppressionVerifiedForRealSubscriber": false,
     "reason": "No real paid PermitPlate subscriber has completed provider-backed delivery/reconciliation yet."
-  },
-  "preCheckoutOnboarding": {
-    "mode": "NETLIFY_FORM_THEN_STRIPE",
-    "formName": "permitplate-onboarding",
-    "netlifyFormsEnabled": true,
-    "sourceFlowImplemented": true,
-    "liveFormVerified": true,
-    "exactEmailActivationCanaryVerified": true,
-    "baselineAuthority": "STRIPE_SUBSCRIPTION_CREATED",
-    "reason": "Current live Netlify form is registered but predates the activation_ref field. Source and synthetic activation canary now require activation_ref == Stripe client_reference_id with the checkout email locked. Live field verification waits on deployment of the current public bundle.",
-    "liveFormId": "6ab1726645d634000824cdd9",
-    "liveFormSubmissionCount": 0,
-    "liveFormFields": [
-      "plan",
-      "onboarding_version",
-      "bot-field",
-      "email",
-      "category",
-      "territory",
-      "starter"
-    ],
-    "correlationMode": "LOCKED_PREFILLED_EMAIL_PLUS_CLIENT_REFERENCE_ID",
-    "activationReferenceFieldVerified": false,
-    "exactReferenceActivationCanaryVerified": true
   }
 }
