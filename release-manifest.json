@@ -1,5 +1,5 @@
 {
-  "release": "PermitPlate first-customer launch v8",
+  "release": "PermitPlate founder-curated launch v9",
   "date": "2026-09-23",
   "target_repository": "P00NSMASHER/permitplate-nyc",
   "deployment": {
@@ -12,6 +12,7 @@
     "public_entry": "start.html",
     "provider": "Stripe hosted Checkout",
     "price": "$79/month",
+    "launch_mode": "FOUNDER_CURATED_NO_SCORE_V1",
     "required_preferences": [
       "vendor category",
       "NYC territory",
@@ -27,13 +28,13 @@
     ]
   },
   "customer_contract": {
-    "product": "Source-linked NYC restaurant applicant, licensing, buildout, pre-permit, and material-change research briefs",
-    "delivery": "When qualifying activity is available; some days may have no report",
-    "max_signals_per_brief": 25,
+    "product": "Founder-reviewed NYC restaurant research briefs built from official records",
+    "delivery": "Weekly; first brief within five business days; a no-matches note is sent when nothing credible qualifies",
+    "max_signals_per_brief": 10,
     "starter_snapshot": "Optional, clearly labeled, up to 10 still-active records first detected during the prior seven days",
     "refund": "First subscription payment refundable within seven calendar days",
-    "limitations": "Research priority only; no purchase-intent, opening-probability, exclusivity, or outcome guarantee"
+    "limitations": "Research starting points only; no scores, purchase-intent, opening-probability, exclusivity, or outcome guarantee"
   },
-  "release_stage": "Controlled launch staged; paid acceptance remains fail-closed",
+  "release_stage": "Founder-curated first-customer launch",
   "commercial_proof": "Not claimed until a real paid subscriber, provider-backed delivery, and next-run duplicate suppression are verified"
 }

@@ -98,6 +98,9 @@ jobs:
       - name: Run launch readiness controller regression
         run: node pipeline/launch-readiness.test.js
 
+      - name: Run founder-curated paid offer regression
+        run: node pipeline/founder-curated-offer.test.js
+
       - name: Run commercial fit receipt regression
         run: node pipeline/commercial-fit.test.js
 

@@ -5,50 +5,66 @@ const fs=require('fs');
 const path=require('path');
 
 const root=path.join(__dirname,'..');
-const sample=fs.readFileSync(path.join(root,'sample.html'),'utf8');
-const start=fs.readFileSync(path.join(root,'start.html'),'utf8');
-const index=fs.readFileSync(path.join(root,'index.html'),'utf8');
-const siteJs=fs.readFileSync(path.join(root,'site.js'),'utf8');
-
+const read=(name)=>fs.readFileSync(path.join(root,name),'utf8');
+const index=read('index.html');
+const sample=read('sample.html');
+const start=read('start.html');
+const methodology=read('methodology.html');
+const terms=read('terms.html');
+const refunds=read('refunds.html');
+const siteJs=read('site.js');
+const manifest=JSON.parse(read('release-manifest.json'));
 const stripeUrl='https://buy.stripe.com/4gM28r1cL81x8dF9Xj9sk02';
 
-assert(sample.includes('<tr><td>Equipment</td><td>100</td></tr>'));
-assert(sample.includes('<tr><td>Hood/Fire</td><td>93</td></tr>'));
-assert(!sample.includes('<tr><td>Hood/Fire</td><td>100</td></tr>'));
-assert(sample.includes('September 18, 2026 Model V7 snapshot, Equipment priority is 100 and Hood/Fire is 93'));
-assert(sample.includes('not treated as a filing or opening date'));
+assert.equal(manifest.checkout.price,'$79/month');
+assert.equal(manifest.checkout.launch_mode,'FOUNDER_CURATED_NO_SCORE_V1');
+assert.equal(manifest.customer_contract.max_signals_per_brief,10);
+assert(manifest.customer_contract.delivery.includes('five business days'));
 
-assert.equal(start.includes(stripeUrl),false);
-assert(start.includes('Tell us where your team sells.'));
-assert(start.includes('Paid enrollment stays fail-closed.'));
-assert(start.includes('Self-serve checkout remains paused'));
-assert(start.includes('Request launch access'));
-assert(start.includes('does not create a subscription or authorize a charge'));
-assert(start.includes('vendor category'));
-assert(start.includes('NYC territory'));
-assert(start.includes('Starter Snapshot preference'));
-assert(start.includes('No payment is collected at this stage.'));
-assert(!start.includes('temporarily blocked'));
+assert(index.includes('Start for $79/month'));
+assert(index.toLowerCase().includes('weekly founder-reviewed brief'));
+assert(index.toLowerCase().includes('up to 10 matching signals'));
+assert(index.includes('7-day first-payment refund'));
+assert(index.includes('/permitplate-nyc/start.html'));
+assert(!index.includes(stripeUrl));
+
+assert(start.includes(stripeUrl));
+assert(start.includes('Continue to secure checkout'));
+assert(start.includes('Choose what you sell and where you work'));
+assert(start.includes('One vendor category'));
+assert(start.includes('One NYC territory'));
+assert(start.toLowerCase().includes('weekly founder-reviewed brief'));
+assert(start.includes('7-day first-payment refund'));
+assert(!start.includes('paused'));
+assert(!start.includes('No payment'));
 assert(!start.includes('<form'));
 assert(!/netlify/i.test(start));
-assert(!start.includes('activation_ref'));
-assert(!start.includes('client_reference_id'));
-assert(!start.includes('locked_prefilled_email'));
-assert(!/<script>([\s\S]*?)<\/script>/.test(start));
-assert(!start.includes('<style>'));
-assert(!start.includes(' style='));
 
-assert(index.includes('https://p00nsmasher.github.io/permitplate-nyc/'));
-assert(index.includes('/permitplate-nyc/start.html'));
-assert(!index.includes('permitplate-nyc.netlify.app'));
+assert(sample.includes('fictional examples · not current leads'));
+assert(sample.includes('Why it matters'));
+assert(sample.includes('Evidence included'));
+assert(!sample.includes('Equipment priority'));
+assert(!sample.includes('<td>100</td>'));
+
+assert(methodology.includes('paid brief does not use or show a model score'));
+assert(methodology.includes('at least one direct official source link'));
+assert(terms.includes('weekly brief contains up to 10 matching signals'));
+assert(terms.includes('prepared within five business days'));
+assert(refunds.includes('within seven calendar days'));
+
+for(const stale of [
+  'Request launch access','Self-serve checkout remains paused','No payment collected yet',
+  'Paid enrollment stays fail-closed','Up to 25 qualifying signals'
+]){
+  for(const [name,html] of Object.entries({index,start,sample,methodology,terms,refunds})){
+    assert.equal(html.includes(stale),false,name+' contains stale launch copy: '+stale);
+  }
+}
 
 assert(!siteJs.includes(stripeUrl));
-assert(!siteJs.includes('permitplate-onboarding'));
 assert(!siteJs.includes('client_reference_id'));
-assert(!siteJs.includes('window.location.assign'));
-assert(siteJs.includes('data.cityofnewyork.us'));
+assert(siteJs.includes('data-menu-toggle'));
 assert(siteJs.includes("fetch('/permitplate-nyc/build-info.json'"));
 assert(siteJs.includes('upstream metadata only'));
-assert(siteJs.includes('Public build identity unavailable'));
 
-console.log('PermitPlate GitHub Pages conversion regression tests passed.');
+console.log('PermitPlate payment and conversion regression tests passed.');

@@ -71,6 +71,19 @@ function subscriberCanary(overrides){
     checkoutEmail:'canary@permitplate.invalid'
   },overrides||{});
 }
+function curatedCanary(overrides){
+  return Object.assign({
+    launchMode:'FOUNDER_CURATED_NO_SCORE_V1',
+    passed:true,
+    scoreFree:true,
+    externalSendCalls:0,
+    artifactFingerprint:'curated-canary-fp',
+    transportPreflight:{
+      allowed:false,
+      failures:['OWNER_AUTHORIZATION_MISSING']
+    }
+  },overrides||{});
+}
 function external(overrides){
   const base={
     evidenceVersion:'PermitPlate-external-launch-evidence-v1.1.0',
@@ -104,6 +117,38 @@ function external(overrides){
     githubPages:Object.assign({},base.githubPages,o.githubPages||{}),
     customerProof:Object.assign({},base.customerProof,o.customerProof||{})
   };
+}
+
+{
+  const input=internalInput({
+    launchMode:'FOUNDER_CURATED_NO_SCORE_V1',
+    curatedCanary:curatedCanary(),
+    curatedFulfillmentRunbookPresent:true,
+    currentScoring:currentScoring({
+      shadow:{coverageRate:1},
+      benchmark:{overlap:0,exactAllCategoryRowRate:0,bestFitAgreementRate:0}
+    })
+  });
+  input.detectionLedger=JSON.parse(JSON.stringify(input.detectionLedger));
+  input.detectionLedger.graphDigest='older-graph';
+  input.detectionLedger.ledgerFingerprint=detection.ledgerFingerprint(input.detectionLedger);
+  const out=readiness.evaluateLaunchReadiness(input);
+  assert.equal(out.launchMode,'FOUNDER_CURATED_NO_SCORE_V1');
+  assert.equal(out.internalReady,true);
+  assert.equal(out.diagnosticGates.currentScoreOverlapSufficient,false);
+  assert.equal(out.diagnosticGates.detectionGraphMatchesCurrent,false);
+  assert.equal(out.launchState,'EXTERNAL_INTEGRATION_BLOCKED');
+}
+
+{
+  const out=readiness.evaluateLaunchReadiness(internalInput({
+    launchMode:'FOUNDER_CURATED_NO_SCORE_V1',
+    curatedCanary:curatedCanary({scoreFree:false}),
+    curatedFulfillmentRunbookPresent:true
+  }));
+  assert.equal(out.internalReady,false);
+  assert(out.internalFailures.includes('curatedCanaryScoreFree'));
+  assert(out.recommendedNextActions.includes('REMOVE_SCORING_FROM_PAID_OFFER'));
 }
 function readyExternal(overrides){
   const o=overrides||{};

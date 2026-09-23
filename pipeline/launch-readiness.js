@@ -9,7 +9,8 @@ const scoringPolicy=require('./scoring-policy');
 const firstSubscriber=require('./run-first-subscriber-canary');
 const publicBuild=require('../build-site');
 
-const LAUNCH_READINESS_VERSION='PermitPlate-launch-readiness-v1.4.0';
+const LAUNCH_READINESS_VERSION='PermitPlate-launch-readiness-v1.5.0';
+const CURATED_LAUNCH_MODE='FOUNDER_CURATED_NO_SCORE_V1';
 const EXTERNAL_EVIDENCE_MAX_AGE_MS=24*60*60*1000;
 
 function stableStringify(value){
@@ -65,6 +66,12 @@ function remediationFor(gate){
     githubPagesLiveCommitMatchesVerifiedBuild:'ALIGN_GITHUB_PAGES_LIVE_DEPLOY_TO_VERIFIED_BUILD',
     githubPagesLiveBuildIdentityVerified:'VERIFY_GITHUB_PAGES_LIVE_BUILD_IDENTITY',
     externalEvidenceFresh:'REFRESH_EXTERNAL_LAUNCH_EVIDENCE',
+    curatedLaunchModeVerified:'SET_FOUNDER_CURATED_LAUNCH_MODE',
+    curatedCanaryPassed:'FIX_FOUNDER_CURATED_CANARY',
+    curatedCanaryNoSend:'RESTORE_CURATED_CANARY_NO_SEND',
+    curatedCanaryScoreFree:'REMOVE_SCORING_FROM_PAID_OFFER',
+    curatedCanaryStopsWithoutOwnerAuth:'RESTORE_OWNER_SEND_AUTHORIZATION_GATE',
+    curatedFulfillmentRunbookPresent:'ADD_FOUNDER_CURATED_FULFILLMENT_RUNBOOK',
     realPaidSubscriberEndToEndVerified:'RUN_FIRST_REAL_PAID_SUBSCRIBER_ACCEPTANCE',
     providerBackedDeliveryVerified:'RECONCILE_REAL_PROVIDER_DELIVERY',
     nextRunDuplicateSuppressionVerifiedForRealSubscriber:'VERIFY_REAL_NEXT_RUN_DEDUPE'
@@ -85,6 +92,9 @@ function evaluateLaunchReadiness(input){
   const publicBuildFailures=Array.isArray(data.publicBuildFailures)?data.publicBuildFailures:[];
   const currentPublicSourceFingerprint=data.currentPublicSourceFingerprint||null;
   const evaluatedAt=data.evaluatedAt||new Date().toISOString();
+  const launchMode=data.launchMode||'SCORED_AUTOMATION_V3';
+  const curatedMode=launchMode===CURATED_LAUNCH_MODE;
+  const curatedCanary=data.curatedCanary||{};
 
   const detValidation=detection.validateLedger(detectionLedger);
   const oppValidation=opportunity.validateLedger(opportunityLedger);
@@ -92,7 +102,7 @@ function evaluateLaunchReadiness(input){
   const currentCandidateCount=Number(graph.metrics&&graph.metrics.candidateCount||
     (graph.candidates||[]).length||0);
 
-  const internalGates={
+  const scoredInternalGates={
     graphComplete:graph.graphState==='COMPLETE',
     graphHasDigest:Boolean(graph.graphDigest),
     scoringCoverage:Number(current.shadow&&current.shadow.coverageRate)===1,
@@ -131,6 +141,41 @@ function evaluateLaunchReadiness(input){
       subscriberCanary.preferenceReceiptId===subscriberCanary.checkoutSessionId,
     publicBuildBoundaryClean:publicBuildFailures.length===0
   };
+
+  const curatedInternalGates={
+    graphComplete:graph.graphState==='COMPLETE',
+    graphHasDigest:Boolean(graph.graphDigest),
+    detectionLedgerValid:detValidation.valid===true,
+    opportunityLedgerValid:oppValidation.valid===true,
+    curatedLaunchModeVerified:curatedCanary.launchMode===CURATED_LAUNCH_MODE,
+    curatedCanaryPassed:curatedCanary.passed===true,
+    curatedCanaryNoSend:Number(curatedCanary.externalSendCalls)===0,
+    curatedCanaryScoreFree:curatedCanary.scoreFree===true,
+    curatedCanaryStopsWithoutOwnerAuth:
+      curatedCanary.transportPreflight&&
+      curatedCanary.transportPreflight.allowed===false&&
+      (curatedCanary.transportPreflight.failures||[])
+        .includes('OWNER_AUTHORIZATION_MISSING'),
+    curatedFulfillmentRunbookPresent:data.curatedFulfillmentRunbookPresent===true,
+    publicBuildBoundaryClean:publicBuildFailures.length===0
+  };
+  const internalGates=curatedMode?curatedInternalGates:scoredInternalGates;
+  const diagnosticGates=curatedMode?{
+    scoringCoverage:scoredInternalGates.scoringCoverage,
+    currentScoreOverlapSufficient:scoredInternalGates.currentScoreOverlapSufficient,
+    currentCategoryParity:scoredInternalGates.currentCategoryParity,
+    currentBestFitParity:scoredInternalGates.currentBestFitParity,
+    historicalSampleSufficient:scoredInternalGates.historicalSampleSufficient,
+    historicalCategoryParity:scoredInternalGates.historicalCategoryParity,
+    historicalFitParity:scoredInternalGates.historicalFitParity,
+    historicalBestFitParity:scoredInternalGates.historicalBestFitParity,
+    historicalNoUnexpectedMismatch:scoredInternalGates.historicalNoUnexpectedMismatch,
+    canonicalPromotionGate:scoredInternalGates.canonicalPromotionGate,
+    productionScoringMode:scoredInternalGates.productionScoringMode,
+    detectionGraphMatchesCurrent:scoredInternalGates.detectionGraphMatchesCurrent,
+    detectionPresentCountMatchesCurrent:scoredInternalGates.detectionPresentCountMatchesCurrent,
+    subscriberCanaryPassed:scoredInternalGates.subscriberCanaryPassed
+  }:{};
 
   const internalFailures=Object.entries(internalGates)
     .filter(([,passed])=>passed!==true)
@@ -244,6 +289,7 @@ function evaluateLaunchReadiness(input){
 
   const result={
     readinessVersion:LAUNCH_READINESS_VERSION,
+    launchMode,
     launchState,
     internalReady,
     firstCustomerOperationallyReady,
@@ -287,6 +333,14 @@ function evaluateLaunchReadiness(input){
       transportPreflight:subscriberCanary.transportPreflight||null,
       artifactFingerprint:subscriberCanary.artifactFingerprint||null
     },
+    curatedCanary:{
+      passed:curatedCanary.passed===true,
+      scoreFree:curatedCanary.scoreFree===true,
+      externalSendCalls:curatedCanary.externalSendCalls!=null?
+        curatedCanary.externalSendCalls:null,
+      transportPreflight:curatedCanary.transportPreflight||null,
+      artifactFingerprint:curatedCanary.artifactFingerprint||null
+    },
     publicBuild:{
       currentPublicSourceFingerprint,
       verifiedPublicSourceFingerprint:githubPages.verifiedPublicSourceFingerprint||null,
@@ -302,6 +356,7 @@ function evaluateLaunchReadiness(input){
       timeMs(external.observedAt)!==null&&timeMs(evaluatedAt)!==null?
         timeMs(evaluatedAt)-timeMs(external.observedAt):null,
     internalGates,
+    diagnosticGates,
     internalFailures,
     externalGates,
     firstCustomerExternalFailures,
@@ -320,6 +375,7 @@ function evaluateLaunchReadiness(input){
 
 module.exports={
   LAUNCH_READINESS_VERSION,
+  CURATED_LAUNCH_MODE,
   stableStringify,
   sha256,
   countBy,

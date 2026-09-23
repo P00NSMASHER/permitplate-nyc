@@ -4,19 +4,21 @@ PermitPlate converts selected official NYC restaurant applicant, licensing, buil
 
 Canonical site: <https://p00nsmasher.github.io/permitplate-nyc/>
 
-## Planned customer offer
+## Customer offer
 
-- $79/month through Stripe-hosted Checkout once the live release gate passes
+- $79/month through Stripe-hosted Checkout
 - one supported vendor category and NYC territory
-- up to 25 qualifying signals per brief
+- one founder-reviewed brief each week, with up to 10 matching signals
+- first brief within five business days
 - optional labeled seven-day Starter Snapshot, capped at 10
-- delivery when qualifying activity is available; some days may have no report
+- a no-matches note when nothing credible qualifies
 - cancel at period end through the Stripe customer portal
 - seven-day first-payment refund window
 
-Self-serve checkout is currently paused. The public site accepts launch-access requests without collecting payment while the live scoring release gate is resolved. Private operational state and the GitHub Pages deployment are configured and verified.
-
-Scores prioritize research. They are not purchase intent, opening probability, or guaranteed leads.
+The launch offer is manually curated and does not depend on a model score.
+Automated scoring remains a research system and is not part of the customer
+promise. Signals are research starting points, not purchase intent, opening
+probability, or guaranteed leads.
 
 ## Local verification
 
@@ -44,10 +46,13 @@ See:
 - [system contract](MODEL_V7.md)
 - [private state migration](operations/PRIVATE_STATE_MIGRATION.md)
 - [first-subscriber runbook](operations/FIRST_SUBSCRIBER_RUNBOOK.md)
+- [founder-curated fulfillment](operations/FOUNDER_CURATED_FULFILLMENT.md)
 - [delivery verification](operations/DELIVERY_VERIFICATION_RUNBOOK.md)
 
 ## Readiness language
 
 The controlled first-subscriber state and commercial-proof state are deliberately separate. Do not describe PermitPlate as commercially proven until a genuine paid subscriber has completed provider-backed delivery/reconciliation and the next run has verified duplicate suppression.
 
-Do not reactivate the Payment Link or restore a payable public CTA until the launch-readiness controller reports `firstCustomerOperationallyReady: true` against initialized private state and a verified live Pages build.
+Do not activate the Payment Link until the launch-readiness controller reports
+`firstCustomerOperationallyReady: true` for the founder-curated launch mode,
+against initialized private state and a verified live Pages build.
