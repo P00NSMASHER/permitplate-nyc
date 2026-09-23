@@ -14,7 +14,7 @@ Canonical site: <https://p00nsmasher.github.io/permitplate-nyc/>
 - cancel at period end through the Stripe customer portal
 - seven-day first-payment refund window
 
-Self-serve checkout is currently paused. The public site accepts launch-access requests without collecting payment while live scoring authority, private operational state, and GitHub Pages deployment remain blocked.
+Self-serve checkout is currently paused. The public site accepts launch-access requests without collecting payment while the live scoring release gate is resolved. Private operational state and the GitHub Pages deployment are configured and verified.
 
 Scores prioritize research. They are not purchase intent, opening probability, or guaranteed leads.
 
