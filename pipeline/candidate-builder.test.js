@@ -39,6 +39,19 @@ const currentApplicant = dohmh({
   inspection_date:'1900-01-01T00:00:00.000',
   record_date:'2026-09-18T12:00:00.000'
 });
+
+// Zone-less Socrata timestamps are UTC regardless of the runner's local timezone.
+{
+  assert.equal(
+    builder.timeMs('2026-09-18T12:00:00.000'),
+    Date.parse('2026-09-18T12:00:00.000Z')
+  );
+  assert.equal(
+    builder.timeMs('2026-09-18T12:00:00-04:00'),
+    Date.parse('2026-09-18T16:00:00.000Z')
+  );
+  assert.equal(builder.timeMs('not-a-date'),null);
+}
 const predecessorPrepermit = dohmh({
   camis:'50184059',
   dba:'OLDER OPERATOR',

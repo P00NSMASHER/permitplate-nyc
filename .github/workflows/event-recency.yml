@@ -59,4 +59,32 @@ jobs:
           STATE_REPO: ${{ vars.PERMITPLATE_STATE_REPO }}
           GH_TOKEN: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
         run: |
-          set -euo pipeóÝ9æÚ$z{-®éÜj×RÖç–2óÂöÆö3ãÂ÷W&ÃàÐ¢ÇW&ÃãÆÆö3æ‡GG3¢ò÷ç6Ö6†W"æv—F‡V"æ–ò÷W&Ö—GÆFRÖç–2÷6×ÆRæ‡FÖÃÂöÆö3ãÂ÷W&ÃàÐ¢ÇW&ÃãÆÆö3æ‡GG3¢ò÷ç6Ö6†W"æv—F‡V"æ–ò÷W&Ö—GÆFRÖç–2öÖWF†öFöÆöw’æ‡FÖÃÂöÆö3ãÂ÷W&ÃàÐ¢ÇW&ÃãÆÆö3æ‡GG3¢ò÷ç6Ö6†W"æv—F‡V"æ–ò÷W&Ö—GÆFRÖç–2÷FW&×2æ‡FÖÃÂöÆö3ãÂ÷W&ÃàÐ¢ÇW&ÃãÆÆö3æ‡GG3¢ò÷ç6Ö6†W"æv—F‡V"æ–ò÷W&Ö—GÆFRÖç–2÷&—f7’æ‡FÖÃÂöÆö3ãÂ÷W&ÃàÐ¢ÇW&ÃãÆÆö3æ‡GG3¢ò÷ç6Ö6†W"æv—F‡V"æ–ò÷W&Ö—GÆFRÖç–2÷&VgVæG2æ‡FÖÃÂöÆö3ãÂ÷W&ÃàÐ£Â÷W&Ç6WCàÐ
+          set -euo pipefail
+          test -n "$STATE_REPO" || { echo "PERMITPLATE_STATE_REPO repository variable is required."; exit 1; }
+          test -n "${GH_TOKEN:-}" || { echo "PERMITPLATE_STATE_TOKEN secret is required."; exit 1; }
+          test "$STATE_REPO" != "$GITHUB_REPOSITORY" || { echo "Operational state must not target the public application repository."; exit 1; }
+          repo_visibility="$(gh api "repos/$STATE_REPO" --jq '.visibility')"
+          test "$repo_visibility" = "private" || { echo "PERMITPLATE_STATE_REPO must resolve to a private GitHub repository."; exit 1; }
+          gh api \
+            -H "Accept: application/vnd.github.raw+json" \
+            "repos/$STATE_REPO/contents/state/detection-ledger.json?ref=main" \
+            > "$RUNNER_TEMP/permitplate-detection-ledger.json"
+
+      - name: Validate read-only detection snapshot
+        run: |
+          node - "$RUNNER_TEMP/permitplate-detection-ledger.json" <<'NODE'
+          const fs=require('fs');
+          const detection=require('./pipeline/detection-ledger');
+          const ledger=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+          const validation=detection.validateLedger(ledger);
+          if(!validation.valid) throw new Error('DETECTION_READONLY_STATE_INVALID:'+validation.errors.join(','));
+          NODE
+
+      - name: Compare the unpromoted scorer on a live read-only source snapshot
+        run: node pipeline/event-recency-canary.js verification-output/live-event-recency.json "$RUNNER_TEMP/permitplate-detection-ledger.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: permitplate-event-recency
+          path: verification-output/
+          retention-days: 14

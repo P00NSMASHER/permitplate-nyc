@@ -95,7 +95,9 @@ async function run(options){
 async function main(){
   const outputPath=process.argv[2]||
     path.join(__dirname,'launch-readiness-result.json');
-  const result=await run();
+  const detectionPath=process.argv[3]||undefined;
+  const opportunityPath=process.argv[4]||undefined;
+  const result=await run({detectionPath,opportunityPath});
   fs.writeFileSync(outputPath,JSON.stringify(result,null,2)+'\n');
   console.log(JSON.stringify(result,null,2));
   if(!result.internalReady) process.exitCode=1;

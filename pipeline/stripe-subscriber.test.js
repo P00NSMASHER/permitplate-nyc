@@ -23,8 +23,8 @@ function session(overrides){
         dropdown:{value:'equipment'}
       },
       {
-        key:'territory',type:'text',optional:true,
-        text:{value:'Manhattan, Brooklyn'}
+        key:'territory',type:'dropdown',optional:false,
+        dropdown:{value:'ManhattanBrooklyn'}
       },
       {
         key:'starter',type:'dropdown',optional:false,
@@ -79,7 +79,7 @@ function subscription(overrides){
     session:session({
       custom_fields:[
         {key:'category',type:'dropdown',dropdown:{value:'pos'}},
-        {key:'territory',type:'text',text:{value:''}},
+        {key:'territory',type:'dropdown',dropdown:{value:'AllNYC'}},
         {key:'starter',type:'dropdown',dropdown:{value:'no'}}
       ]
     }),
@@ -94,7 +94,9 @@ function subscription(overrides){
 
 {
   assert.equal(s.customFieldValue(session(),'category'),'equipment');
-  assert.equal(s.customFieldValue(session(),'territory'),'Manhattan, Brooklyn');
+  assert.equal(s.customFieldValue(session(),'territory'),'ManhattanBrooklyn');
+  assert.equal(s.normalizeCheckoutTerritory('ManhattanBrooklyn'),'Manhattan, Brooklyn');
+  assert.equal(s.normalizeCheckoutTerritory('AllNYC'),'ALL NYC');
   assert.equal(s.customFieldValue({custom_fields:[
     {key:'n',type:'numeric',numeric:{value:'42'}}
   ]},'n'),'42');
@@ -160,6 +162,31 @@ function subscription(overrides){
 }
 
 {
+  const fields=session().custom_fields.filter((field)=>field.key!=='territory');
+  const out=s.profileFromCheckout({
+    session:session({custom_fields:fields}),
+    subscription:subscription()
+  });
+  assert.equal(out.status,'REVIEW');
+  assert(out.failures.includes('TERRITORY_CUSTOM_FIELD_MISSING'));
+}
+
+{
+  const fields=session().custom_fields.map((field)=>
+    field.key==='territory'?
+      {key:'territory',type:'dropdown',dropdown:{value:'UnknownTerritory'}}:
+      field
+  );
+  const out=s.profileFromCheckout({
+    session:session({custom_fields:fields}),
+    subscription:subscription()
+  });
+  assert.equal(out.status,'REVIEW');
+  assert(out.failures.includes('TERRITORY_CUSTOM_FIELD_INVALID'));
+}
+
+
+{
   const out=s.profileFromCheckout({
     session:session({metadata:{project:'other'}}),
     subscription:subscription({metadata:{project:'other'}})
@@ -222,14 +249,14 @@ function subscription(overrides){
       starterLimit:10,
       maxSignals:25
     },
-    preferenceSource:'NETLIFY_PRECHECKOUT_FORM',
+    preferenceSource:'EXTERNAL_PREFERENCE_RECEIPT',
     preferenceReceiptId:'submission_123'
   });
   assert.equal(out.status,'ACTIVE');
   assert.deepEqual(out.profile.categories,['Equipment']);
   assert.deepEqual(out.profile.boroughs,['Manhattan','Brooklyn']);
   assert.equal(out.profile.starterSnapshotEnabled,true);
-  assert.equal(out.preferenceSource,'NETLIFY_PRECHECKOUT_FORM');
+  assert.equal(out.preferenceSource,'EXTERNAL_PREFERENCE_RECEIPT');
   assert.equal(out.preferenceReceiptId,'submission_123');
 }
 
@@ -248,7 +275,7 @@ function subscription(overrides){
     session:session({custom_fields:[]}),
     subscription:subscription(),
     preferences:{category:'Unknown',starterSnapshotEnabled:true},
-    preferenceSource:'NETLIFY_PRECHECKOUT_FORM',
+    preferenceSource:'EXTERNAL_PREFERENCE_RECEIPT',
     preferenceReceiptId:'submission_bad'
   });
   assert.equal(out.status,'REVIEW');

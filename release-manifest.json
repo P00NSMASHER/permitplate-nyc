@@ -1,31 +1,39 @@
 {
-  "release": "PermitPlate public-product truth alignment v6",
-  "date": "2026-09-18",
-  "deploy_triggered_at": "2026-09-18T14:16:16-04:00",
-  "deploy_trigger_reason": "P0-A exact-source continuous-deploy verification",
-  "target_site_id": "d968f195-23b5-4b4b-925a-d2ce29a785d0",
-  "target_repo": "P00NSMASHER/permitplate-nyc",
-  "checkout": "https://buy.stripe.com/4gM28r1cL81x8dF9Xj9sk02",
-  "price": "$79/month",
-  "purpose": "Align customer-facing homepage, methodology, sample, terms, and privacy with the committed PermitPlate production engine while preserving existing static assets, security headers, redirects, checkout, and refund policy.",
-  "source_truth": [
-    "DOHMH core official feed",
-    "current/relevant NY SLA pending-license and NYC DOB build/permit evidence only under strict matching rules",
-    "commercial-fit suppression",
-    "four lifecycle stages",
-    "eight deterministic vendor-specific prioritization scores",
-    "Observed Facts vs PermitPlate Inference",
-    "baseline plus labeled up-to-10 prior-seven-day Starter Snapshot",
-    "CRM-ready CSV with nonempty digests when technically supported"
-  ],
-  "changed_files": {
-    "index.html": "1ddecf3957f17e1d55038a56429fd5543629a685",
-    "methodology.html": "1f52183c5795caa0bce7b1a73ad2142b0cf05391",
-    "sample.html": "bd1945b2486fc63951e2c20f96b2267f6e44fd79",
-    "terms.html": "bb1f39dbf2717ab54c39d2a7192fd72498e414be",
-    "privacy.html": "2ee0ab425b1c93cc994f2518a10d71e803faeb41"
+  "release": "PermitPlate first-customer launch v8",
+  "date": "2026-09-23",
+  "target_repository": "P00NSMASHER/permitplate-nyc",
+  "deployment": {
+    "provider": "GitHub Pages",
+    "url": "https://p00nsmasher.github.io/permitplate-nyc/",
+    "build_identity": "build-info.json",
+    "public_boundary": "explicit allowlist"
   },
-  "unchanged_customer_policy": "refunds.html",
-  "unchanged_security": "_headers",
-  "notes": "Scores are prioritization aids, not probabilities or purchase-intent predictions. Not every signal is multi-source."
+  "checkout": {
+    "public_entry": "start.html",
+    "provider": "Stripe hosted Checkout",
+    "price": "$79/month",
+    "required_preferences": [
+      "vendor category",
+      "NYC territory",
+      "Starter Snapshot preference"
+    ]
+  },
+  "customer_portal": {
+    "provider": "Stripe hosted customer portal",
+    "capabilities": [
+      "update billing details",
+      "view invoice history",
+      "cancel at period end"
+    ]
+  },
+  "customer_contract": {
+    "product": "Source-linked NYC restaurant applicant, licensing, buildout, pre-permit, and material-change research briefs",
+    "delivery": "When qualifying activity is available; some days may have no report",
+    "max_signals_per_brief": 25,
+    "starter_snapshot": "Optional, clearly labeled, up to 10 still-active records first detected during the prior seven days",
+    "refund": "First subscription payment refundable within seven calendar days",
+    "limitations": "Research priority only; no purchase-intent, opening-probability, exclusivity, or outcome guarantee"
+  },
+  "release_stage": "Ready for controlled first paid subscriber acceptance",
+  "commercial_proof": "Not claimed until a real paid subscriber, provider-backed delivery, and next-run duplicate suppression are verified"
 }
