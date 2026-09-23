@@ -44,7 +44,7 @@ Operational ledgers belong in the private state repository described in `operati
 
 ## Stripe subscriber activation
 
-The production path is:
+The production path applies only after the launch-readiness controller authorizes paid enrollment. While readiness is blocked, the Payment Link and public payable CTA remain inactive. The eventual production path is:
 
 - completed PermitPlate Stripe Checkout;
 - expected Payment Link and price;
@@ -76,7 +76,7 @@ Caller-supplied FINALIZED state cannot authorize delivery. Provider evidence mus
 
 The canonical site is GitHub Pages at `https://p00nsmasher.github.io/permitplate-nyc/`. The Pages workflow builds the artifact, deploys it, and verifies live `build-info.json` against the source commit and aggregate public-source fingerprint.
 
-All local absolute links must remain under `/permitplate-nyc/`. The public conversion regression ensures only `start.html` contains the active Stripe Payment Link and that the browser cannot bypass required Stripe preferences.
+All local absolute links must remain under `/permitplate-nyc/`. The public conversion regression ensures no payable Stripe URL is present while launch readiness is blocked. When paid enrollment is later authorized, the release procedure must restore the Payment Link only after its required Stripe preferences and exact public build are reverified.
 
 ## Readiness states
 

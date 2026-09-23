@@ -26,7 +26,7 @@ The buyer chooses all NYC, one borough, or a supported borough combination. Mult
 
 ## Offer and price
 
-The self-serve plan is $79 per month with no setup fee. It renews until canceled. Customers can use the Stripe-hosted customer portal to update account or payment details, view invoices, and cancel at the end of the billing period.
+The planned self-serve plan is $79 per month with no setup fee. Once paid enrollment is open, it renews until canceled. Customers can use the Stripe-hosted customer portal to update account or payment details, view invoices, and cancel at the end of the billing period.
 
 The first subscription payment has a voluntary seven-calendar-day refund window. Confirmed duplicate charges, charges after an effective cancellation, and confirmed billing errors are refunded.
 
@@ -59,7 +59,7 @@ Public records may be delayed, corrected, incomplete, duplicated, or unavailable
 
 ## Stripe-authoritative onboarding
 
-The active Stripe Payment Link is the payment and preference authority. Checkout requires:
+The Stripe Payment Link is the payment and preference authority when paid enrollment is open. It must remain inactive while launch readiness is blocked. Checkout requires:
 
 1. one supported vendor category;
 2. one supported NYC territory;
@@ -67,6 +67,8 @@ The active Stripe Payment Link is the payment and preference authority. Checkout
 4. checkout email and business name.
 
 Activation requires the expected Payment Link and price, a completed paid subscription checkout, an active or trialing subscription, valid project metadata, checkout email, and all three required preference fields. The completed Checkout Session ID is the preference receipt. Missing or invalid values fail closed.
+
+The public sales surface must never collect payment unless launch readiness confirms current production scoring authority, initialized private state, an exact verified public build, and an active preference-complete Payment Link.
 
 The separate Netlify onboarding form and exact-email preference join are retired. No customer preference is written to the public repository.
 

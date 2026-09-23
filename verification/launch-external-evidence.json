@@ -1,11 +1,11 @@
 {
   "evidenceVersion": "PermitPlate-external-launch-evidence-v1.2.0",
-  "observedAt": "2026-09-23T06:45:53Z",
+  "observedAt": "2026-09-23T08:48:56Z",
   "stripe": {
     "account": "acct_1UFCRjDPW8riWrxQ",
     "paymentLinkId": "plink_1UG3RUDPW8riWrxQpZwHExK2",
     "priceId": "price_1UFjcWDPW8riWrxQhnrPX6nc",
-    "paymentLinkActiveVerified": true,
+    "paymentLinkActiveVerified": false,
     "checkoutPreferenceFieldsVerified": true,
     "checkoutPreferenceFieldKeys": [
       "category",
@@ -17,7 +17,7 @@
     "customerPortalConfigurationId": "bpc_1UIjo3DPW8riWrxQI0WUAWaU",
     "customerPortalActiveVerified": true,
     "customerPortalCancellationMode": "at_period_end",
-    "reason": "The live Payment Link is active and visibly requires category, territory, and Starter dropdowns before payment. The product description states the evidence scope and variable cadence. The default live customer portal supports billing updates, invoice history, and cancellation at period end."
+    "reason": "The Payment Link has the required category, territory, and Starter dropdowns but is intentionally inactive while production fulfillment and public deployment readiness remain blocked. The default live customer portal supports billing updates, invoice history, and cancellation at period end."
   },
   "githubPages": {
     "canonicalUrl": "https://p00nsmasher.github.io/permitplate-nyc/",
