@@ -5,66 +5,64 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://data.cityofnewyork.us; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta name="theme-color" content="#071522" />
-  <meta name="robots" content="noindex,nofollow" />
-  <meta name="description" content="Request controlled launch access to PermitPlate NYC restaurant project briefs." />
-  <title>Request launch access — PermitPlate NYC</title>
+  <meta name="theme-color" content="#190b12" />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
+  <meta name="description" content="Start a PermitPlate NYC membership for $79/month through secure Stripe checkout." />
+  <title>Start your membership — PermitPlate NYC</title>
+  <link rel="canonical" href="https://p00nsmasher.github.io/permitplate-nyc/start.html" />
   <link rel="icon" href="/permitplate-nyc/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/permitplate-nyc/apple-touch-icon.png" />
+  <link rel="manifest" href="/permitplate-nyc/manifest.webmanifest" />
   <link rel="stylesheet" href="/permitplate-nyc/site.css" />
 </head>
-<body>
+<body class="checkout-page">
   <a class="skip-link" href="#main">Skip to content</a>
-  <nav class="nav" aria-label="Checkout navigation">
+  <div class="announcement">Secure checkout is handled by Stripe · 7-day first-payment refund</div>
+  <nav class="nav" aria-label="Main navigation">
     <div class="shell navin">
-      <a class="brand" href="/permitplate-nyc/" aria-label="PermitPlate NYC home"><span class="mark" aria-hidden="true"><span></span></span><span>PermitPlate <b>NYC</b></span></a>
-      <div class="navlinks"><a href="/permitplate-nyc/sample.html">Sample</a><a href="/permitplate-nyc/terms.html">Terms</a></div>
+      <a class="brand" href="/permitplate-nyc/"><span class="brand-mark" aria-hidden="true"></span><span>PermitPlate <small>NYC</small></span></a>
+      <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" data-menu-toggle><span></span><span></span><span></span></button>
+      <div class="navlinks" data-menu><a href="/permitplate-nyc/">Home</a><a href="/permitplate-nyc/sample.html">Sample</a><a href="/permitplate-nyc/methodology.html">Method</a><a href="/permitplate-nyc/refunds.html">Refunds</a></div>
     </div>
   </nav>
 
-  <main class="start-shell" id="main">
-    <div class="eyebrow"><span class="pulse" aria-hidden="true"></span> Controlled launch</div>
-    <section class="start-card" aria-labelledby="start-title">
-      <div class="start-grid">
-        <div class="start-copy">
-          <div class="label">FIRST CUSTOMER COHORT</div>
-          <h1 id="start-title">Tell us where your team sells.</h1>
-          <p class="intro">PermitPlate is accepting launch-access requests while the final live fulfillment gates are verified. No payment is collected at this stage.</p>
-
-          <div class="checkout-steps" aria-label="Checkout preferences">
-            <div class="checkout-step"><span>01</span><div><b>Your vendor category</b><small>POS, insurance, equipment, hood/fire, waste, pest, linen, or distribution.</small></div></div>
-            <div class="checkout-step"><span>02</span><div><b>Your NYC territory</b><small>All five boroughs, one borough, or a supported multi-borough combination.</small></div></div>
-            <div class="checkout-step"><span>03</span><div><b>Your Starter Snapshot preference</b><small>Choose whether the first brief may include up to 10 clearly labeled records first detected in the prior seven days.</small></div></div>
-          </div>
-
-          <div class="notice"><strong>Paid enrollment stays fail-closed.</strong> Self-serve checkout remains paused until the live scoring authority, private operational state, and public deployment all pass the release gate. Approved launch customers will receive the same scope and terms shown here before any payment is requested.</div>
+  <main id="main" class="checkout-wrap">
+    <div class="shell checkout-grid">
+      <section class="checkout-copy">
+        <div class="eyebrow">Ready when you are</div>
+        <h1>Start with a sharper list.</h1>
+        <p>Choose what you sell and where you work. Your first founder-reviewed brief arrives within five business days.</p>
+        <div class="steps-row" aria-label="What happens after checkout">
+          <article class="mini-step"><span>Step 1</span><strong>Choose</strong><p>Select one vendor category and your NYC territory in Stripe.</p></article>
+          <article class="mini-step"><span>Step 2</span><strong>We review</strong><p>The founder checks current official records and removes weak matches.</p></article>
+          <article class="mini-step"><span>Step 3</span><strong>You receive</strong><p>Get up to 10 source-linked signals, or a clear no-matches note.</p></article>
         </div>
+        <picture class="image-gloss checkout-image">
+          <source media="(max-width:700px)" srcset="/permitplate-nyc/assets/images/storefront-renovation-small.webp" />
+          <img src="/permitplate-nyc/assets/images/storefront-renovation-large.webp" width="1448" height="1086" alt="A New York City restaurant storefront being renovated" loading="lazy" />
+        </picture>
+      </section>
 
-        <aside class="checkout-panel" aria-label="Subscription summary">
-          <div class="plan-label">PERMITPLATE NYC · PLANNED MONTHLY OFFER</div>
-          <h2>Source-linked restaurant project briefs</h2>
-          <p>Delivered when qualifying activity is available for your category and territory. Some days may have no report.</p>
-          <div class="checkout-facts">
-            <div><span>Subscription</span><b>$79/month</b></div>
-            <div><span>Setup fee</span><b>None</b></div>
-            <div><span>Cancellation</span><b>Any time</b></div>
-            <div><span>First-payment refund</span><b>Within 7 days</b></div>
-          </div>
-          <a class="cta cta-inverse" href="mailto:jayp19386@gmail.com?subject=PermitPlate%20launch%20access&amp;body=Company%3A%0AVendor%20category%3A%0ANYC%20territory%3A%0AStarter%20Snapshot%20preference%3A">Request launch access <span aria-hidden="true">→</span></a>
-          <p class="form-note">Email your company, vendor category, NYC territory, and Starter Snapshot preference. This request does not create a subscription or authorize a charge.</p>
-        </aside>
-      </div>
-    </section>
-
-    <div class="start-trust">
-      <span>Research intelligence—not guaranteed leads</span>
-      <a href="/permitplate-nyc/refunds.html">Refund policy</a>
-      <a href="/permitplate-nyc/privacy.html">Privacy</a>
-      <a href="mailto:jayp19386@gmail.com">Questions? Email support</a>
+      <aside class="checkout-card" aria-label="PermitPlate checkout summary">
+        <div class="price-label">PermitPlate NYC membership</div>
+        <div class="price"><strong>$79</strong><span>USD<br />each month</span></div>
+        <ul>
+          <li>One vendor category</li>
+          <li>One NYC territory</li>
+          <li>Weekly founder-reviewed brief</li>
+          <li>Up to 10 matching signals</li>
+          <li>Official links with every item</li>
+          <li>First brief within 5 business days</li>
+        </ul>
+        <a class="button button-primary button-wide" href="https://buy.stripe.com/4gM28r1cL81x8dF9Xj9sk02" rel="noopener">Continue to secure checkout <span class="arrow" aria-hidden="true">→</span></a>
+        <p class="checkout-legal">Checkout opens on Stripe. By subscribing, you agree to the <a href="/permitplate-nyc/terms.html">Terms</a>. Read the <a href="/permitplate-nyc/refunds.html">refund policy</a> and <a href="/permitplate-nyc/privacy.html">privacy notice</a>.</p>
+      </aside>
     </div>
   </main>
 
   <footer class="footer">
-    <div class="shell footer-bottom"><p>PermitPlate is an independent business research service. Verify official sources before outreach. Not affiliated with or endorsed by New York City or New York State.</p><span>© 2026 PermitPlate NYC</span></div>
+    <div class="shell footer-bottom"><p>Questions before checkout? Email <a href="mailto:jayp19386@gmail.com">jayp19386@gmail.com</a>. Never email card details or passwords.</p><span>Payments by Stripe</span></div>
   </footer>
+  <script src="/permitplate-nyc/site.js" defer></script>
 </body>
 </html>

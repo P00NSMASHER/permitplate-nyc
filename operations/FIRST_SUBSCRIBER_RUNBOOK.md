@@ -1,5 +1,9 @@
 # First paid subscriber runbook
 
+> Legacy scored-automation acceptance path. This is not the current paid launch
+> offer. For `FOUNDER_CURATED_NO_SCORE_V1`, use
+> `operations/FOUNDER_CURATED_FULFILLMENT.md`.
+
 This runbook is for the controlled first-customer acceptance. It does not authorize an external send by itself.
 
 ## Before accepting a customer

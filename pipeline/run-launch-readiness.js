@@ -10,8 +10,9 @@ const scoringPolicy=require('./scoring-policy');
 const firstSubscriber=require('./run-first-subscriber-canary');
 const publicBuild=require('../build-site');
 const readiness=require('./launch-readiness');
+const curatedCanary=require('./run-founder-curated-canary');
 
-const RUNNER_VERSION='PermitPlate-launch-readiness-runner-v1.0.0';
+const RUNNER_VERSION='PermitPlate-launch-readiness-runner-v1.1.0';
 
 function readJson(filePath){
   return JSON.parse(fs.readFileSync(filePath,'utf8'));
@@ -63,6 +64,11 @@ async function run(options){
   const opportunityLedger=readJson(opportunityPath);
   const externalEvidence=readJson(externalEvidencePath);
   const subscriberCanary=firstSubscriber.run();
+  const founderCuratedCanary=curatedCanary.run();
+  const manifest=readJson(path.join(__dirname,'..','release-manifest.json'));
+  const curatedFulfillmentRunbookPresent=fs.existsSync(
+    path.join(__dirname,'..','operations','FOUNDER_CURATED_FULFILLMENT.md')
+  );
   const publicBuildFailures=publicBuild.validateAllowlist();
   const currentPublicSourceFingerprint=readiness.publicSourceFingerprint();
 
@@ -74,6 +80,9 @@ async function run(options){
     detectionLedger,
     opportunityLedger,
     subscriberCanary,
+    curatedCanary:founderCuratedCanary,
+    launchMode:manifest.checkout&&manifest.checkout.launch_mode,
+    curatedFulfillmentRunbookPresent,
     publicBuildFailures,
     currentPublicSourceFingerprint,
     externalEvidence,

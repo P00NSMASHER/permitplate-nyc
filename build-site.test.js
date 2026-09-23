@@ -6,12 +6,17 @@ const path=require('path');
 const build=require('./build-site');
 
 const PROJECT_PREFIX='/permitplate-nyc/';
+const STRIPE_URL='https://buy.stripe.com/4gM28r1cL81x8dF9Xj9sk02';
 
 function localReferences(html){
   const refs=[];
-  const regex=/(?:href|src|action)=["']([^"'#]+)["']/gi;
+  const regex=/(?:href|src|action|srcset)=["']([^"'#]+)["']/gi;
   let match;
-  while((match=regex.exec(html))) refs.push(match[1]);
+  while((match=regex.exec(html))){
+    for(const candidate of match[1].split(',').map((part)=>part.trim().split(/\s+/)[0])){
+      if(candidate) refs.push(candidate);
+    }
+  }
   return refs;
 }
 function resolvePublicRef(ref){
@@ -20,137 +25,110 @@ function resolvePublicRef(ref){
     /^(?:mailto|tel|data|javascript):/i.test(ref) ||
     ref.startsWith('//')
   ) return null;
-
   const clean=ref.split('?')[0].split('#')[0];
   if(!clean||clean===PROJECT_PREFIX) return 'index.html';
-
   let relative=clean;
   if(relative.startsWith(PROJECT_PREFIX)) relative=relative.slice(PROJECT_PREFIX.length);
   relative=relative.replace(/^\.\//,'').replace(/^\//,'');
-  if(!relative) return 'index.html';
-  return relative;
+  return relative||'index.html';
 }
 
 try{
   const info=build.build();
   assert.equal(build.validateAllowlist().length,0);
   assert.equal(info.publicFileCount,build.PUBLIC_FILES.length);
-  assert.equal(
-    info.sourceCommit,
-    process.env.COMMIT_REF||process.env.GITHUB_SHA||'local'
-  );
+  assert.equal(info.sourceCommit,process.env.COMMIT_REF||process.env.GITHUB_SHA||'local');
 
-  const deployed=fs.readdirSync(build.OUT).sort();
   assert.deepEqual(
-    deployed,
+    build.listFilesRecursive(build.OUT),
     build.PUBLIC_FILES.concat(['build-info.json']).sort()
   );
-
   for(const forbidden of [
-    'pipeline','operations','state','scoring','model-v7.js',
-    'model-v7.test.js','BUSINESS_MODEL_V7.md','MODEL_V7.md',
-    '_headers','_redirects','netlify.toml','start-checkout.html'
+    'pipeline','operations','state','scoring','model-v7.js','model-v7.test.js',
+    'BUSINESS_MODEL_V7.md','MODEL_V7.md','_headers','_redirects','netlify.toml'
   ]){
     assert.equal(fs.existsSync(path.join(build.OUT,forbidden)),false,forbidden+' leaked into dist');
   }
 
-  for(const file of build.PUBLIC_FILES.filter((name)=>name.endsWith('.html'))){
+  const htmlFiles=build.PUBLIC_FILES.filter((name)=>name.endsWith('.html'));
+  for(const file of htmlFiles){
     const html=fs.readFileSync(path.join(build.OUT,file),'utf8');
     assert(!/netlify/i.test(html),file+' still contains Netlify coupling');
     assert(!html.includes('data-netlify'),file+' still contains Netlify Forms');
-    assert(
-      html.includes('http-equiv="Content-Security-Policy"'),
-      file+' is missing its Content Security Policy'
-    );
-    assert(
-      html.includes('default-src \'self\''),
-      file+' is missing a restrictive default CSP source'
-    );
-    assert(
-      html.includes('object-src \'none\''),
-      file+' does not disable embedded objects'
-    );
-    assert(
-      html.includes('name="referrer" content="strict-origin-when-cross-origin"'),
-      file+' is missing its referrer policy'
-    );
+    assert(html.includes('http-equiv="Content-Security-Policy"'),file+' is missing CSP');
+    assert(html.includes("default-src 'self'"),file+' is missing restrictive default-src');
+    assert(html.includes("object-src 'none'"),file+' does not disable objects');
+    assert(html.includes('name="referrer" content="strict-origin-when-cross-origin"'),file+' is missing referrer policy');
+    assert(!html.includes(' style='),file+' contains inline styling');
+    assert(!/<script>([\s\S]*?)<\/script>/.test(html),file+' contains inline script');
     for(const ref of localReferences(html)){
       if(ref.startsWith('/')&&!ref.startsWith('//')){
-        assert(
-          ref.startsWith(PROJECT_PREFIX),
-          file+' contains a domain-root reference that escapes the GitHub Pages project: '+ref
-        );
+        assert(ref.startsWith(PROJECT_PREFIX),file+' escapes the GitHub Pages project: '+ref);
       }
       const resolved=resolvePublicRef(ref);
       if(!resolved) continue;
-      assert.equal(
-        fs.existsSync(path.join(build.OUT,resolved)),
-        true,
-        file+' references missing public asset '+ref+' -> '+resolved
-      );
+      assert.equal(fs.existsSync(path.join(build.OUT,resolved)),true,file+' references missing '+ref);
     }
   }
 
-  const startHtml=fs.readFileSync(path.join(build.OUT,'start.html'),'utf8');
-  const stripeUrl='https://buy.stripe.com/4gM28r1cL81x8dF9Xj9sk02';
-  assert.equal(startHtml.includes(stripeUrl),false);
-  assert(startHtml.includes('Paid enrollment stays fail-closed.'));
-  assert(startHtml.includes('Self-serve checkout remains paused'));
-  assert(startHtml.includes('Request launch access'));
-  assert(startHtml.includes('does not create a subscription or authorize a charge'));
-  assert(startHtml.includes('vendor category'));
-  assert(startHtml.includes('NYC territory'));
-  assert(startHtml.includes('Starter Snapshot preference'));
-  assert(startHtml.includes('No payment is collected at this stage.'));
-  assert(!startHtml.includes('temporarily blocked'));
-  assert(!startHtml.includes('<form'));
-  assert(!startHtml.includes('activation_ref'));
-  assert(!startHtml.includes('locked_prefilled_email'));
-  assert(!startHtml.includes('client_reference_id'));
+  const index=fs.readFileSync(path.join(build.OUT,'index.html'),'utf8');
+  assert(index.includes('Good timing starts with a'));
+  assert(index.includes('Founder reviewed'));
+  assert(index.includes('Up to 10'));
+  assert(index.includes('First brief in 5 business days'));
+  assert(index.includes('data-source-freshness'));
+  assert(index.includes('data-product-build'));
+  assert((index.match(/<img /g)||[]).length>=6,'homepage should use all six image scenes');
+  assert((index.match(/assets\/images\//g)||[]).length>=12,'homepage needs responsive image variants');
+  for(const stale of [
+    'Request launch access','No payment collected yet','Self-serve checkout remains paused',
+    'Up to 25 qualifying signals','Equipment priority','MODEL V7'
+  ]) assert.equal(index.includes(stale),false,'stale public claim: '+stale);
+
+  const start=fs.readFileSync(path.join(build.OUT,'start.html'),'utf8');
+  assert(start.includes(STRIPE_URL));
+  assert.equal(start.split(STRIPE_URL).length-1,1);
+  assert(start.includes('Continue to secure checkout'));
+  assert(start.includes('First brief within 5 business days'));
+  assert(start.includes('7-day first-payment refund'));
+  assert(start.includes('rel="noopener"'));
+  assert(!start.includes('<form'));
 
   const stripeOccurrences=[];
-  for(const file of build.PUBLIC_FILES.filter((name)=>name.endsWith('.html'))){
+  for(const file of htmlFiles){
     const html=fs.readFileSync(path.join(build.OUT,file),'utf8');
-    const count=html.split(stripeUrl).length-1;
+    const count=html.split(STRIPE_URL).length-1;
     if(count) stripeOccurrences.push({file,count});
   }
-  assert.deepEqual(stripeOccurrences,[]);
+  assert.deepEqual(stripeOccurrences,[{file:'start.html',count:1}]);
+
+  const methodology=fs.readFileSync(path.join(build.OUT,'methodology.html'),'utf8');
+  const terms=fs.readFileSync(path.join(build.OUT,'terms.html'),'utf8');
+  const welcome=fs.readFileSync(path.join(build.OUT,'welcome.html'),'utf8');
+  assert(methodology.includes('paid brief does not use or show a model score'));
+  assert(methodology.includes('Source updated'));
+  assert(methodology.includes('PermitPlate reviewed'));
+  assert(terms.includes('weekly brief contains up to 10 matching signals'));
+  assert(terms.includes('costs $79 USD per month'));
+  assert(welcome.includes('name="robots" content="noindex,nofollow"'));
+  assert(welcome.includes('within five business days'));
 
   const siteJs=fs.readFileSync(path.join(build.OUT,'site.js'),'utf8');
-  assert(!siteJs.includes(stripeUrl));
-  assert(!siteJs.includes('permitplate-onboarding'));
-  assert(!siteJs.includes('client_reference_id'));
-
-  const indexHtml=fs.readFileSync(path.join(build.OUT,'index.html'),'utf8');
-  assert(indexHtml.includes('https://p00nsmasher.github.io/permitplate-nyc/'));
-  assert(!indexHtml.includes('permitplate-nyc.netlify.app'));
-  assert(indexHtml.includes('data-source-freshness'));
-  assert(indexHtml.includes('data-product-build'));
-  assert(indexHtml.includes('Some days may have no report.'));
-  assert(indexHtml.includes('No payment collected yet'));
-  for(const overstated of [
-    'NYC RESTAURANT OPENING INTELLIGENCE',
-    'NYC restaurant openings worth researching now',
-    'New opening activity',
-    'NYC restaurant opening monitoring'
-  ]){
-    assert.equal(indexHtml.includes(overstated),false,'overstated public claim: '+overstated);
-  }
-
+  assert(!siteJs.includes(STRIPE_URL));
   assert(siteJs.includes("fetch('/permitplate-nyc/build-info.json'"));
   assert(siteJs.includes('upstream metadata only'));
   assert(siteJs.includes('Public build identity unavailable'));
 
-  const methodologyHtml=fs.readFileSync(path.join(build.OUT,'methodology.html'),'utf8');
-  const sampleHtml=fs.readFileSync(path.join(build.OUT,'sample.html'),'utf8');
-  const termsHtml=fs.readFileSync(path.join(build.OUT,'terms.html'),'utf8');
-  assert(methodologyHtml.includes('DOHMH RECORD DATE'));
-  assert(methodologyHtml.includes('<strong>Detected</strong>'));
-  assert(methodologyHtml.includes('<strong>Source updated</strong>'));
-  assert(sampleHtml.includes('SNAPSHOT SEPTEMBER 18, 2026 · MODEL V7'));
-  assert(sampleHtml.includes('not treated as a filing or opening date'));
-  assert(termsHtml.includes('<strong>Source updated</strong>'));
-  assert(termsHtml.includes('<strong>Product build</strong>'));
+  for(const asset of [
+    'assets/fonts/newsreader-latin-variable.woff2',
+    'assets/fonts/familjen-grotesk-latin.woff2',
+    'assets/images/hero-restaurant-large.webp',
+    'assets/images/research-desk-large.webp',
+    'assets/images/kitchen-install-large.webp',
+    'assets/images/pos-commissioning-large.webp',
+    'assets/images/storefront-renovation-large.webp',
+    'assets/images/service-operations-large.webp'
+  ]) assert(fs.statSync(path.join(build.OUT,asset)).size>1000,asset+' is empty');
 
   const manifest=JSON.parse(fs.readFileSync(path.join(build.OUT,'build-info.json'),'utf8'));
   assert.equal(manifest.publicFileCount,build.PUBLIC_FILES.length);
