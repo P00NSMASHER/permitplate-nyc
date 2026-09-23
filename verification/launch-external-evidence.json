@@ -1,11 +1,11 @@
 {
-  "evidenceVersion": "PermitPlate-external-launch-evidence-v1.2.0",
-  "observedAt": "2026-09-23T09:37:32Z",
+  "evidenceVersion": "PermitPlate-external-launch-evidence-v1.3.0",
+  "observedAt": "2026-09-23T14:15:03Z",
   "stripe": {
     "account": "acct_1UFCRjDPW8riWrxQ",
     "paymentLinkId": "plink_1UG3RUDPW8riWrxQpZwHExK2",
     "priceId": "price_1UFjcWDPW8riWrxQhnrPX6nc",
-    "paymentLinkActiveVerified": false,
+    "paymentLinkActiveVerified": true,
     "checkoutPreferenceFieldsVerified": true,
     "checkoutPreferenceFieldKeys": [
       "category",
@@ -17,17 +17,17 @@
     "customerPortalConfigurationId": "bpc_1UIjo3DPW8riWrxQI0WUAWaU",
     "customerPortalActiveVerified": true,
     "customerPortalCancellationMode": "at_period_end",
-    "reason": "Live Stripe verification at 2026-09-23T09:37:32Z confirmed that the Payment Link has the required category, territory, and Starter dropdowns and remains intentionally inactive while scoring readiness is blocked. The default live customer portal remains active with billing updates, invoice history, and cancellation at period end."
+    "reason": "Live Stripe verification at 2026-09-23T14:15:03Z confirmed that the $79 monthly Payment Link is active, uses Managed Payments with automatic tax, captures business name plus the required category, territory, and Starter Snapshot preferences, and redirects successful purchases to the PermitPlate welcome page. The default live customer portal remains active with billing updates, invoice history, and cancellation at period end."
   },
   "githubPages": {
     "canonicalUrl": "https://p00nsmasher.github.io/permitplate-nyc/",
     "enabled": true,
-    "verifiedPublicBuildCommit": "67f04e8127fd2812e74f7ee5db20a850e67755e5",
-    "verifiedPublicSourceFingerprint": "9ec21530245799335e4be5e01ebe63bdd988e0795bd913a51ac8f035989ab95f",
-    "liveVerifiedCommit": "67f04e8127fd2812e74f7ee5db20a850e67755e5",
-    "livePublicSourceFingerprint": "9ec21530245799335e4be5e01ebe63bdd988e0795bd913a51ac8f035989ab95f",
+    "verifiedPublicBuildCommit": "1424b6a1874324e6c30a9c55e30162e76636b51c",
+    "verifiedPublicSourceFingerprint": "764639f85e9ebd6b27fe82a5d1450705a772ebe511be2bdd8806e50c85c1c921",
+    "liveVerifiedCommit": "1424b6a1874324e6c30a9c55e30162e76636b51c",
+    "livePublicSourceFingerprint": "764639f85e9ebd6b27fe82a5d1450705a772ebe511be2bdd8806e50c85c1c921",
     "productionDeployVerified": true,
-    "reason": "GitHub Pages is configured with GitHub Actions as its source. PermitPlate GitHub Pages run 35845689415 completed successfully, and the live build-info.json returned commit 67f04e8127fd2812e74f7ee5db20a850e67755e5 with the matching public-source fingerprint."
+    "reason": "GitHub Pages is configured with GitHub Actions as its source. PermitPlate GitHub Pages run 35867761517 completed successfully, and the live build-info.json returned commit 1424b6a1874324e6c30a9c55e30162e76636b51c with public-source fingerprint 764639f85e9ebd6b27fe82a5d1450705a772ebe511be2bdd8806e50c85c1c921. The redesigned site and live checkout handoff were also visually verified."
   },
   "customerProof": {
     "realPaidSubscriberEndToEndVerified": false,

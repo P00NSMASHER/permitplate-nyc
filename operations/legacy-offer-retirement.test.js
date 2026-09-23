@@ -43,7 +43,10 @@ const textExtensions = new Set([
 function walk(dir) {
   const hits = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name === '.git' || entry.name === 'node_modules') continue;
+    // dist is a disposable build output. Another test intentionally rebuilds and
+    // removes it, so scanning it here would race when the suite runs in parallel.
+    // The source allowlist is scanned below and the build boundary has its own test.
+    if (entry.name === '.git' || entry.name === 'node_modules' || entry.name === 'dist') continue;
     const full = path.join(dir, entry.name);
     const rel = path.normalize(path.relative(ROOT, full));
 
