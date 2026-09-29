@@ -1,0 +1,168 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "PA Entity Lookup x402",
+    "version": "1.0.0",
+    "description": "Pay-per-call Pennsylvania registered business entity lookup backed by Pennsylvania Department of State public data.",
+    "x-guidance": "Use GET /api/pa-entity with q set to a business name or search phrase. Add limit from 1 to 25. Unpaid requests return an x402 v2 challenge; after payment the endpoint returns matching Pennsylvania registrations."
+  },
+  "paths": {
+    "/api/pa-entity": {
+      "get": {
+        "operationId": "searchPennsylvaniaBusinesses",
+        "summary": "Search Pennsylvania registered business entities",
+        "tags": [
+          "Business Data",
+          "Pennsylvania"
+        ],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.005000"
+          },
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "network": "eip155:8453",
+          "payTo": "0xCAbE50F47B12F2dc77eC46a4b69C5085bE156B7f"
+        },
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "description": "Business name or search text.",
+            "schema": {
+              "type": "string",
+              "minLength": 2
+            },
+            "example": "OpenAI"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum matches to return.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 25,
+              "default": 10
+            },
+            "example": 5
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paid registry lookup result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "query": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "businessName": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "filingNumber": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "registrationType": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "address1": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "address2": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "city": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "state": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "zip": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "county": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "source": {
+                      "type": "string"
+                    },
+                    "paid": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "query",
+                    "count",
+                    "results",
+                    "source",
+                    "paid"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query."
+          },
+          "402": {
+            "description": "Payment Required"
+          },
+          "502": {
+            "description": "Pennsylvania public-data source unavailable; payment is not settled."
+          },
+          "503": {
+            "description": "Payment verifier or settlement service unavailable."
+          }
+        }
+      }
+    }
+  }
+}
