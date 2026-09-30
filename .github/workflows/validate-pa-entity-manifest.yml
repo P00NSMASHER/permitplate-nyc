@@ -18,7 +18,7 @@ jobs:
           git clone --depth 1 https://github.com/MikeyPetrillo/Agent402.git /tmp/agent402
           cp x402-manifest.json /tmp/agent402/pa-entity-manifest.json
           cd /tmp/agent402
-          npm ci --ignore-scripts --no-audit --no-fund
+          npm ci --no-audit --no-fund
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
           import { normaliseManifestTools } from './src/x402-index.js';
