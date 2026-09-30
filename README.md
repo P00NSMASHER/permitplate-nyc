@@ -49,6 +49,10 @@ See:
 - [founder-curated fulfillment](operations/FOUNDER_CURATED_FULFILLMENT.md)
 - [delivery verification](operations/DELIVERY_VERIFICATION_RUNBOOK.md)
 
+## Related x402 service
+
+This repository also carries the deployment history for the separate [PA Entity Lookup x402 seller](docs/PA_ENTITY_X402.md), a $0.005 USDC pay-per-call Pennsylvania business-registry lookup for autonomous agents. It is operationally separate from the PermitPlate customer offer.
+
 ## Readiness language
 
 The controlled first-subscriber state and commercial-proof state are deliberately separate. Do not describe PermitPlate as commercially proven until a genuine paid subscriber has completed provider-backed delivery/reconciliation and the next run has verified duplicate suppression.
