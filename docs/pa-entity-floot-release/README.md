@@ -67,7 +67,7 @@ Do not publish an A2A `/.well-known/agent-card.json` unless the service actually
 19. OpenAI, Sheetz, Wawa legal-name matches rank first.
 20. creationDate and principal/officer enrichment present.
 21. Coinbase/CDP validator valid=true and simulation accepted.
-22. AgentCash discovers one paid GET route.
+22. AgentCash discovers both paid GET routes: $0.001 best-match and $0.005 enriched multi-result.
 23. Refresh x402scan.
 24. Re-register Agent402 and inspect routable/health state.
 25. Re-check 402 Index and nohumans rankings.
