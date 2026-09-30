@@ -2,18 +2,26 @@
 
 Use this tool for Pennsylvania business-registry lookup, company identity resolution, legal-entity enrichment, vendor/customer verification, due diligence, filing-number lookup, registration-type lookup, creation-date lookup, and registered-address/county confirmation.
 
-Paid endpoint:
+Choose one of two paid endpoints:
+
+Low-cost best match:
+
+GET https://pa-entity-x402.floot.app/_api/pa-entity-one?q=NAME
+
+Price: $0.001 USDC per successful settled call. Returns at most one highest-ranked entity.
+
+Multi-result enriched search:
 
 GET https://pa-entity-x402.floot.app/_api/pa-business?q=NAME&limit=10
 
-Price: $0.005 USDC per successful settled call.
+Price: $0.005 USDC per successful settled call. Returns up to 25 ranked candidates.
 Protocol: x402 v2.
 Network: Base mainnet (eip155:8453).
 
 ## Input
 
-- q: required company name or distinctive name fragment, 2-120 characters.
-- limit: optional integer 1-25, default 10.
+- q: required on both endpoints; company name or distinctive name fragment, 2-120 characters.
+- limit: only on /_api/pa-business; optional integer 1-25, default 10.
 
 ## Matching
 
