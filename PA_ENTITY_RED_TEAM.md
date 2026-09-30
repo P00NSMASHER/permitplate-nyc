@@ -477,3 +477,172 @@ Do not market “Current Business Entities” as a legal conclusion that an enti
 `/.well-known/security.txt` is currently absent.
 
 If Floot permits a raw static file, publish an RFC 9116-style file using a **project/public URL** contact surface rather than a personal email. This is optional trust hardening after buyer-blocking discovery/payment issues are fixed.
+
+
+---
+
+## P1 — Internal product cannibalization: a live $0.001 sibling undercuts the $0.005 tool
+
+Marketplace red-team readback found a second active nohumans listing using the same receiving wallet:
+
+- `Pennsylvania Business Registry — Best Match x402`
+- price: **$0.001**
+- endpoint: `https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI`
+- status: verified
+- probe history at audit time: 9/9 passing
+- third-party payers: 0
+
+This is not automatically bad. A cheap single-best-match tool can be a useful acquisition funnel. But it overlaps heavily with the $0.005 Floot tool's current value proposition.
+
+### Risk
+
+A cost-sensitive agent needing ordinary company identity resolution may choose the $0.001 tool every time, leaving the $0.005 multi-result seller with no reason to exist.
+
+### Fix / product segmentation
+
+Do **not** delete the cheaper sibling blindly.
+
+Make the products clearly different:
+
+- **$0.001 Best Match**: one ranked entity, minimal identity fields, fastest/cheapest resolution.
+- **$0.005 Entity Enrichment**: multiple ranked candidates + creation date + county code + source-published principal/officer roles + richer provenance.
+
+Discovery copy for the $0.005 tool should emphasize multi-candidate disambiguation and richer enrichment, not just “business lookup.”
+
+Re-evaluate both prices only after real buyer data exists.
+
+---
+
+## P1 — Marketplace trust claims have drifted from current live fields
+
+### 402 Index
+
+Current readback for service `2a92dcd4-206a-42ad-b6e5-e457635bb75a` shows:
+
+- `health_status: healthy`
+- `status: active`
+- `approval_reason: domain-verified`
+- but `domain_verified: 0`
+- `verified: 0`
+- `x402_payment_valid: null`
+
+Therefore public documentation should **not** state “domain verified” as a current fact until 402 Index exposes a consistent verification field again.
+
+### Market402
+
+Current operator lookup:
+
+`https://market402.com/op/pa-entity-x402.floot.app.json`
+
+returns HTTP 404:
+
+```json
+{
+  "ok": false,
+  "code": "unknown_operator",
+  "action": "see /operators.json; get listed via POST /submit"
+}
+```
+
+The earlier submission/self-test did not result in a live operator record. “Queued on Market402” should not be represented as a durable listing/verification state.
+
+### Fix
+
+After the production routing/payment fixes:
+
+1. re-submit to Market402 once;
+2. verify a real operator/listing record exists before claiming marketplace presence;
+3. re-read 402 Index and report exactly what its current fields say;
+4. distinguish `active/healthy` from `verified` and from `paid verified`.
+
+---
+
+## P2 — Shared payTo wallet weakens per-endpoint attribution
+
+nohumans reports the receiving wallet is shared by **3 active listings** and explicitly warns its on-chain counts are wallet-level, not endpoint-level.
+
+At audit time the shared wallet still had:
+
+- 30d tx count: 0
+- unique payers: 0
+- volume: $0
+
+### Risk
+
+Once payments begin, wallet-only analytics cannot reliably tell which product earned a transfer when multiple services have compatible prices/amounts.
+
+### Fix
+
+Do not split wallets yet solely for analytics; a new wallet would reset trust/history and add operational complexity.
+
+Instead:
+
+- retain service-level facilitator/resource stats where available;
+- retain settle/payment receipts and resource URL in an internal ledger;
+- use unique price points only when product economics justify them, not merely as tracking tags;
+- if meaningful volume develops across multiple tools, then evaluate dedicated receiving wallets per product/operator.
+
+Never add wallet-level counts across listings; that double-counts the same transfers.
+
+---
+
+## P2 — true402 listing is stale relative to current seller metadata
+
+Current true402 record is still based on the older provider-specific `x402-service.json` manifest:
+
+- `x402: "1.0"`
+- endpoint is correct and parameterized
+- registered at 07:55 UTC
+- lastSeen around 08:01 UTC
+- transactions: 0
+- trustScore: 0
+
+The live seller itself is x402 v2; this “1.0” is true402's custom manifest version, not proof that the payment protocol is v1. Still, the record has not refreshed with later positioning/enrichment work.
+
+### Fix
+
+After the canonical manifest/V2 deploy, re-register/refresh true402 and verify the new readback before relying on it as a discovery channel.
+
+---
+
+## Current marketplace truth at red-team time
+
+### nohumans main $0.005 listing
+
+- status: verified
+- score: ~0.884
+- probes: 13/18 passed
+- consecutive failures: 0
+- x402 v2 observed correctly
+- Base USDC / payTo / $0.005 all match
+- evidence tier: `probe_only`
+- paid verified: false
+- distinct payers: 0
+
+### nohumans $0.001 best-match sibling
+
+- status: verified
+- score: 1.0
+- probes: 9/9 passed
+- paid verified: false
+- distinct payers: 0
+
+### Agent402
+
+Current readback improved to health **0.5** but remains:
+
+- `routable: false`
+- `routerDispatchReason: crawl_failed`
+- current error is an HTTP 403 from the host during crawl
+- the OpenAPI-declared paid route is still visible and has a recent live verification timestamp
+
+This reinforces the P0 canonical-manifest fix; the seller is not absent, it is being excluded because the discovery crawl is unhealthy.
+
+### PayAI
+
+- settlements: 0
+- unique buyers: 0
+- volume: $0
+- reported reliability: 100
+
+Revenue remains **$0.00**.
