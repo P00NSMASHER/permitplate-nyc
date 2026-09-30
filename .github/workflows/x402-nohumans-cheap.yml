@@ -1,0 +1,20 @@
+name: register cheap SKU on nohumans
+
+on:
+  push:
+    paths:
+      - '.github/workflows/x402-nohumans-cheap.yml'
+
+jobs:
+  register:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Submit without free sample
+        shell: bash
+        run: |
+          ENDPOINT='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI'
+          DESC='Low-friction Pennsylvania company identity lookup by business name. Returns one best-ranked legal-entity registry record with filing number, registration type, registered address, city, ZIP, and county for $0.001 USDC.'
+          curl -sS -w '\nHTTP_STATUS=%{http_code}\n' -X POST 'https://api.nohumans.directory/v1/listings' \
+            -H 'content-type: application/json' \
+            --data "$(jq -nc --arg endpoint "$ENDPOINT" --arg description "$DESC" '{name:"PA Entity Best Match x402",description:$description,endpoint_url:$endpoint,category:"data.company",price_amount:0.001,price_currency:"USDC",chains:["base"],request_schema:{type:"object",required:["q"],properties:{q:{type:"string",minLength:2,example:"OpenAI",description:"Pennsylvania business name or distinctive fragment"}}},response_schema:{type:"object",required:["query","found","match","source","paid"],properties:{query:{type:"string"},found:{type:"boolean"},match:{type:["object","null"]},source:{type:"string"},paid:{type:"boolean"}}}}')"
