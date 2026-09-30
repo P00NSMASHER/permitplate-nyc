@@ -1,0 +1,41 @@
+name: x402 independent evidence
+
+on:
+  push:
+    paths:
+      - '.github/workflows/x402-independent-evidence.yml'
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Generate free third-party evidence and read status
+        shell: bash
+        run: |
+          set +e
+          HOST='pa-entity-x402.floot.app'
+          ENDPOINT='https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
+
+          echo '=== SCVD preflight ==='
+          curl -sS -i -X POST 'https://scvd.store/api/preflight/v1'             -H 'content-type: application/json'             --data "$(jq -nc --arg url "$ENDPOINT" '{url:$url}')"
+
+          echo
+          echo '=== SCVD before-you-pay ==='
+          curl -sS -i -X POST 'https://scvd.store/api/before-you-pay/v1'             -H 'content-type: application/json'             --data "$(jq -nc --arg url "$ENDPOINT" '{url:$url}')"
+
+          echo
+          echo '=== SCVD look ==='
+          curl -sS -i -X POST 'https://scvd.store/api/look/v1'             -H 'content-type: application/json'             --data "$(jq -nc --arg url "$ENDPOINT" '{url:$url}')"
+
+          echo
+          echo '=== Market402 operator JSON ==='
+          curl -sS -i --max-time 20 "https://market402.com/op/$HOST.json"
+
+          echo
+          echo '=== Market402 badge ==='
+          curl -sS -i --max-time 20 "https://market402.com/badge/$HOST"
+
+          echo
+          echo '=== nohumans ==='
+          curl -sS --max-time 20 'https://api.nohumans.directory/v1/listings/958fd262-287'
