@@ -1,0 +1,35 @@
+name: x402 wallet receipt check
+
+on:
+  push:
+    paths:
+      - '.github/workflows/x402-wallet-receipts.yml'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Check Base USDC receipts
+        shell: bash
+        run: |
+          set -euo pipefail
+          WALLET='0x708f7b52b56eafd7fc1de65fc7752ed732914021'
+          USDC='0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'
+
+          echo '=== Blockscout token transfers ==='
+          curl -sS "https://base.blockscout.com/api/v2/addresses/$WALLET/token-transfers?type=ERC-20&filter=to" -o /tmp/transfers.json
+          jq '{
+            next_page_params,
+            items: [.items[] | select((.token.address_hash // .token.address // "") | ascii_downcase == "'$USDC'") | {
+              timestamp,
+              tx_hash: (.transaction_hash // .tx_hash),
+              from: (.from.hash // .from),
+              to: (.to.hash // .to),
+              total,
+              token
+            }]
+          }' /tmp/transfers.json
+
+          echo '=== Address counters/balance ==='
+          curl -sS "https://base.blockscout.com/api/v2/addresses/$WALLET" | jq .
