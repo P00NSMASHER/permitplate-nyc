@@ -1,0 +1,125 @@
+name: validate PA Entity production patch
+
+on:
+  push:
+    paths:
+      - 'patches/pa-entity-floot/**'
+      - 'x402-manifest.json'
+      - '.github/workflows/validate-pa-entity-production-patch.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Unit-test payment state and query validation
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import {
+            normaliseQuery, parseLimit, classifyVerify, classifySettle, shouldIssueFresh402
+          } from './patches/pa-entity-floot/payment_state.mjs';
+
+          const eq=(a,b,m)=>{ if(JSON.stringify(a)!==JSON.stringify(b)) throw new Error(m+'\n'+JSON.stringify(a)+' != '+JSON.stringify(b)); };
+          const ok=(v,m)=>{ if(!v) throw new Error(m); };
+
+          ok(normaliseQuery('OpenAI').ok, 'OpenAI should validate');
+          eq(normaliseQuery('%_'), {ok:false,reason:'query_too_short'}, 'wildcard-only query must fail');
+          eq(normaliseQuery('A'), {ok:false,reason:'query_too_short'}, '1-char query must fail');
+          eq(normaliseQuery('A'.repeat(201)), {ok:false,reason:'query_too_long'}, 'oversized query must fail');
+          eq(parseLimit(undefined), {ok:true,value:10}, 'default limit');
+          eq(parseLimit('25'), {ok:true,value:25}, 'max limit');
+          eq(parseLimit('10garbage'), {ok:false,reason:'invalid_limit'}, 'partial integer must fail');
+          eq(parseLimit('26'), {ok:false,reason:'invalid_limit'}, 'over-limit must fail');
+
+          const valid=classifyVerify(200,{isValid:true});
+          ok(valid.kind==='valid','verify valid');
+          const invalid=classifyVerify(400,{isValid:false,invalidReason:'invalid_payload'});
+          ok(invalid.kind==='invalid' && shouldIssueFresh402(invalid),'structured invalid verify should 402');
+          const outage=classifyVerify(503,{title:'upstream unavailable'});
+          ok(outage.kind==='unavailable' && !shouldIssueFresh402(outage),'verifier outage must not 402');
+
+          const pending=classifySettle(409,{success:false,errorReason:'settlement_pending'});
+          ok(pending.kind==='unresolved' && !shouldIssueFresh402(pending),'pending must reuse same payment');
+          const dup=classifySettle(409,{success:false,errorReason:'duplicate_settlement'});
+          ok(dup.kind==='unresolved' && !shouldIssueFresh402(dup),'duplicate must reuse same payment');
+          const settled=classifySettle(200,{success:true,transaction:'0xabc'});
+          ok(settled.kind==='settled','settlement success');
+          const terminal=classifySettle(400,{success:false,errorReason:'invalid_exact_evm_insufficient_balance'});
+          ok(terminal.kind==='terminal_failure' && shouldIssueFresh402(terminal),'terminal payment failure can 402');
+
+          console.log('PATCH_UNIT_TESTS=PASS');
+          NODE
+
+      - name: Verify PayAI real invalid-payload semantics
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { classifyVerify } from './patches/pa-entity-floot/payment_state.mjs';
+
+          const requirements={
+            scheme:'exact',
+            network:'eip155:8453',
+            amount:'5000',
+            asset:'0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+            payTo:'0x708f7b52b56eafd7fc1de65fc7752ed732914021',
+            maxTimeoutSeconds:60,
+            extra:{name:'USD Coin',version:'2'}
+          };
+          const res=await fetch('https://facilitator.payai.network/verify',{
+            method:'POST',
+            headers:{'content-type':'application/json'},
+            body:JSON.stringify({x402Version:2,paymentPayload:{},paymentRequirements:requirements})
+          });
+          const body=await res.json();
+          const c=classifyVerify(res.status,body);
+          console.log('PAYAI_STATUS',res.status,JSON.stringify(body),JSON.stringify(c));
+          if(c.kind!=='invalid' || c.reason!=='invalid_payload') throw new Error('PayAI invalid payload classification mismatch');
+          console.log('PAYAI_INVALID_CLASSIFICATION=PASS');
+          NODE
+
+      - name: Compare manifest fixture to live 402 terms
+        shell: bash
+        run: |
+          curl -fsS -D /tmp/h -o /tmp/b -w '%{http_code}'             'https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1' > /tmp/status
+          test "$(cat /tmp/status)" = "402"
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+
+          const headers=fs.readFileSync('/tmp/h','utf8');
+          const body=JSON.parse(fs.readFileSync('/tmp/b','utf8'));
+          const fixture=JSON.parse(fs.readFileSync('x402-manifest.json','utf8'));
+          const m=headers.match(/^payment-required:\s*(\S+)/im);
+          if(!m) throw new Error('missing PAYMENT-REQUIRED');
+          const raw=m[1].replace(/-/g,'+').replace(/_/g,'/');
+          const decoded=JSON.parse(Buffer.from(raw+'='.repeat((4-raw.length%4)%4),'base64').toString());
+
+          const fields=['scheme','network','amount','asset','payTo','maxTimeoutSeconds'];
+          for(const k of fields){
+            if(decoded.accepts?.[0]?.[k] !== fixture.accepts?.[0]?.[k]){
+              throw new Error('fixture/live mismatch '+k+': '+decoded.accepts?.[0]?.[k]+' != '+fixture.accepts?.[0]?.[k]);
+            }
+          }
+          if(decoded.accepts?.[0]?.extra?.name!=='USD Coin' || fixture.accepts?.[0]?.extra?.name!=='USD Coin'){
+            throw new Error('USDC EIP-712 domain mismatch');
+          }
+          if(body.x402Version!==2 || decoded.x402Version!==2) throw new Error('live v2 mismatch');
+          console.log('LIVE_MANIFEST_PARITY=PASS');
+          NODE
+
+      - name: Confirm current red-team defects remain reproducible pre-deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          ORIGIN='https://pa-entity-x402.floot.app'
+          for p in '/.well-known/x402' '/.well-known/x402.json' '/.well-known/x402-services.json'; do
+            code=$(curl -sS -o /tmp/b -w '%{http_code}' "$ORIGIN$p")
+            echo "$p=$code"
+            test "$code" = "403"
+          done
+          ctype=$(curl -sS -D /tmp/h -o /tmp/skill "$ORIGIN/skill.md" >/dev/null; awk 'BEGIN{IGNORECASE=1}/^content-type:/{print $2}' /tmp/h | tr -d '\r')
+          echo "skill content-type=$ctype"
+          grep -qi '<!DOCTYPE html' /tmp/skill
+          echo 'PREDEPLOY_DEFECTS_REPRODUCED=PASS'
