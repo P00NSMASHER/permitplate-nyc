@@ -1,0 +1,69 @@
+name: audit cheap x402 buyer search rank
+
+on:
+  push:
+    paths:
+      - '.github/workflows/x402-buyer-rank-audit.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Query nohumans buyer search
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT='x402-buyer-rank-audit.json'
+          ID='64403ef1-4ad'
+          python3 - <<'PY'
+          import json, urllib.parse, urllib.request
+          listing_id='64403ef1-4ad'
+          queries=[
+            'Pennsylvania business registry',
+            'Pennsylvania company identity',
+            'Pennsylvania legal entity enrichment',
+            'Pennsylvania vendor verification',
+            'Pennsylvania business registration lookup',
+            'Pennsylvania company due diligence',
+            'find Pennsylvania filing number by company name',
+            'verify Pennsylvania company registered address'
+          ]
+          out=[]
+          for q in queries:
+              url='https://api.nohumans.directory/v1/discover?'+urllib.parse.urlencode({
+                  'q':q,'max_price':'0.01','limit':'20'
+              })
+              with urllib.request.urlopen(url, timeout=20) as r:
+                  data=json.load(r)
+              rows=data.get('results',[])
+              rank=next((i+1 for i,x in enumerate(rows) if x.get('id')==listing_id),0)
+              out.append({
+                  'query':q,
+                  'rank':rank,
+                  'count':data.get('count'),
+                  'top5':[{
+                      'id':x.get('id'),
+                      'name':x.get('name'),
+                      'status':x.get('status'),
+                      'score':x.get('score'),
+                      'price':x.get('price_amount'),
+                      'paid_verified':x.get('paid_verified')
+                  } for x in rows[:5]]
+              })
+          with open('x402-buyer-rank-audit.json','w') as f:
+              json.dump({'listing_id':listing_id,'queries':out},f,indent=2)
+          print(json.dumps(out,indent=2))
+          PY
+      - name: Commit audit
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add x402-buyer-rank-audit.json
+          git commit -m 'Record x402 buyer search ranks' || exit 0
+          git push
