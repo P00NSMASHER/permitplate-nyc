@@ -1,0 +1,46 @@
+name: validate dual-route Agent402 manifest
+
+on:
+  push:
+    paths:
+      - '.github/workflows/validate-pa-entity-agent402-dual.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse staged two-route catalogue with Agent402
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/MikeyPetrillo/Agent402.git /tmp/agent402
+          cp docs/pa-entity-floot-release/x402-catalog.json /tmp/agent402/pa-dual.json
+          cd /tmp/agent402
+          npm ci --no-audit --no-fund
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { normaliseManifestTools } from './src/x402-index.js';
+
+          const origin='https://pa-entity-x402.floot.app';
+          const manifest=JSON.parse(fs.readFileSync('./pa-dual.json','utf8'));
+          const tools=normaliseManifestTools(manifest,origin);
+          console.log(JSON.stringify(tools,null,2));
+
+          if (tools.length !== 2) throw new Error(`expected 2 tools, got ${tools.length}`);
+          const main=tools.find(t=>String(t.route).startsWith('/_api/pa-business'));
+          const best=tools.find(t=>String(t.route).startsWith('/_api/pa-entity-one'));
+          if (!main || !best) throw new Error('missing expected routes');
+          const checks={
+            mainPrice:Number(String(main.price).replace('$',''))===0.005,
+            bestPrice:Number(String(best.price).replace('$',''))===0.001,
+            mainNetwork:main.networks?.includes('eip155:8453'),
+            bestNetwork:best.networks?.includes('eip155:8453'),
+            mainPayTo:main.payToByNetwork?.['eip155:8453']==='0x708f7b52b56eafd7fc1de65fc7752ed732914021',
+            bestPayTo:best.payToByNetwork?.['eip155:8453']==='0x708f7b52b56eafd7fc1de65fc7752ed732914021',
+          };
+          console.log('CHECKS',JSON.stringify(checks));
+          if(Object.values(checks).some(v=>!v)) throw new Error('dual manifest compatibility failed');
+          console.log('AGENT402_DUAL_ROUTE_COMPATIBLE=true');
+          NODE
