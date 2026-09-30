@@ -1,0 +1,61 @@
+name: register x402Scout
+
+on:
+  push:
+    paths:
+      - '.github/workflows/x402-scout-register.yml'
+
+jobs:
+  register:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Register both PA entity SKUs
+        shell: bash
+        run: |
+          set +e
+          CHEAP='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI'
+          DEEP='https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
+
+          echo '=== cheap ==='
+          curl -sS -w '\nHTTP_STATUS=%{http_code}\n' -X POST 'https://x402scout.com/register'             -H 'content-type: application/json'             --data "$(jq -nc --arg url "$CHEAP" '{
+              name:"Pennsylvania Business Registry — Best Match x402",
+              url:$url,
+              price_usd:0.001,
+              category:"data",
+              description:"Pennsylvania business registry lookup by company name. Returns one best-ranked legal-entity record with filing number, registration type, registered address, city, ZIP, and county for company identity, vendor verification, due diligence, and lead enrichment.",
+              network:"base-mainnet"
+            }')"
+
+          echo
+          echo '=== deep ==='
+          curl -sS -w '\nHTTP_STATUS=%{http_code}\n' -X POST 'https://x402scout.com/register'             -H 'content-type: application/json'             --data "$(jq -nc --arg url "$DEEP" '{
+              name:"PA Entity Lookup x402 — Multi Result",
+              url:$url,
+              price_usd:0.005,
+              category:"data",
+              description:"Pennsylvania business-registry search by company name. Returns multiple candidate legal-entity records for disambiguation, including filing number, registration type, address, city, ZIP, and county.",
+              network:"base-mainnet"
+            }')"
+
+          echo
+          echo '=== discovery readback ==='
+          curl -sS 'https://x402scout.com/.well-known/x402-discovery' > /tmp/discovery.json
+          python3 - <<'PY'
+          import json
+          data=json.load(open('/tmp/discovery.json'))
+          blob=json.dumps(data)
+          for needle in ['pa-entity-one','pa-entity-x402.floot.app','Pennsylvania Business Registry','PA Entity Lookup']:
+              print(needle, needle.lower() in blob.lower())
+          # print matching structures without dumping entire catalog
+          def walk(x):
+              if isinstance(x, dict):
+                  s=json.dumps(x)
+                  if 'pa-entity-one' in s or 'pa-entity-x402.floot.app' in s:
+                      print(json.dumps(x,indent=2)[:7000])
+                      return
+                  for v in x.values(): walk(v)
+              elif isinstance(x,list):
+                  for v in x: walk(v)
+          walk(data)
+          PY
