@@ -51,7 +51,14 @@ See:
 
 ## Related x402 service
 
-This repository also carries the deployment history for the separate [PA Entity Lookup x402 seller](docs/PA_ENTITY_X402.md), a $0.005 USDC pay-per-call Pennsylvania business-registry lookup for autonomous agents. It is operationally separate from the PermitPlate customer offer.
+This repository also carries the deployment history for the separate [PA Entity Lookup x402 seller](docs/PA_ENTITY_X402.md), a pay-per-call Pennsylvania business-registry service for autonomous agents. It is operationally separate from the PermitPlate customer offer.
+
+- **$0.001 USDC — Pennsylvania Business Registry: Best Match:** resolves a company name to one best-ranked Pennsylvania legal-entity record with filing number, registration type, registered address, city, ZIP, and county. Intended for company identity, vendor/customer verification, due diligence, business-registration lookup, registered-address verification, and lead enrichment.
+- **$0.005 USDC — PA Entity Lookup: Multi Result:** returns multiple Pennsylvania registry candidates when an agent needs name disambiguation rather than a single best match.
+- Both use x402 v2 on Base USDC with no per-buyer account or API key.
+- Machine discovery, independent directory status, example calls, and the canonical live endpoints are documented in [docs/PA_ENTITY_X402.md](docs/PA_ENTITY_X402.md).
+
+Current revenue reporting is deliberately strict: directory registrations, unpaid 402 probes, and operator tests are not counted as buyer revenue.
 
 ## Readiness language
 
