@@ -1,4 +1,4 @@
-name: x402 Agent402 recrawl
+name: x402 Agent402 crawler diagnostics
 
 on:
   push:
@@ -6,23 +6,27 @@ on:
       - '.github/workflows/x402-agent402-recrawl.yml'
 
 jobs:
-  recrawl:
+  diagnose:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Re-register and verify Agent402 seller
+      - name: Reproduce Agent402 crawler requests
         shell: bash
         run: |
           set +e
           ORIGIN='https://pa-entity-x402.floot.app'
+          UA='Mozilla/5.0 (compatible; Agent402/1.0; +https://agent402.tools/crawler)'
 
-          echo '=== re-register ==='
-          curl -sS -i -X POST 'https://agent402.tools/api/index/register'             -H 'content-type: application/json'             --data "$(jq -nc --arg origin "$ORIGIN" '{origin:$origin}')"
+          for path in '/' '/robots.txt' '/.well-known/x402' '/.well-known/x402-service.json' '/openapi.json' '/llms.txt' '/_api/pa-business?q=OpenAI&limit=1'
+          do
+            echo
+            echo "=== $path / default curl ==="
+            curl -sS -o /tmp/body -D /tmp/headers --max-time 20 "$ORIGIN$path"
+            head -30 /tmp/headers
+            head -c 500 /tmp/body; echo
 
-          echo
-          echo '=== seller readback ==='
-          curl -sS 'https://agent402.tools/api/index?seller=pa-entity-x402.floot.app' | jq .
-
-          echo
-          echo '=== buyer-intent route ==='
-          curl -sS -G 'https://agent402.tools/api/route'             --data-urlencode 'q=Pennsylvania business registry company identity lookup'             --data-urlencode 'network=base' | jq .
+            echo "=== $path / Agent402 UA ==="
+            curl -sS -o /tmp/body -D /tmp/headers --max-time 20               -H "User-Agent: $UA"               -H 'Accept: text/html,application/xhtml+xml,*/*'               "$ORIGIN$path"
+            head -30 /tmp/headers
+            head -c 500 /tmp/body; echo
+          done
