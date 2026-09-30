@@ -1,0 +1,53 @@
+name: x402 agent-tools contact-safe submit
+
+on:
+  push:
+    paths:
+      - '.github/workflows/x402-agenttools-contact.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Submit with non-personal project contact
+        shell: bash
+        run: |
+          set +e
+          RESULT='x402-agenttools-result.txt'
+          : > "$RESULT"
+          ENDPOINT='https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
+          ORIGIN='https://pa-entity-x402.floot.app'
+          NAME='Pennsylvania Business Registry — Entity Lookup x402'
+          DESC='Pennsylvania business registry and legal-entity enrichment by company name. Returns filing number, registration type, registered address, city, ZIP, and county for company identity, vendor/customer verification, due diligence, and lead enrichment.'
+
+          try_post () {
+            label="$1"
+            payload="$2"
+            echo "=== $label ===" | tee -a "$RESULT"
+            code=$(curl -sS -o /tmp/body -w '%{http_code}' -X POST               'https://agent-tools.cloud/api/v1/submit'               -H 'content-type: application/json'               --data "$payload")
+            echo "HTTP $code" | tee -a "$RESULT"
+            cat /tmp/body | tee -a "$RESULT"
+            echo | tee -a "$RESULT"
+            echo | tee -a "$RESULT"
+            echo "$code"
+          }
+
+          code=$(try_post 'contact as project URL string'             "$(jq -nc --arg name "$NAME" --arg url "$ENDPOINT" --arg description "$DESC" --arg contact "$ORIGIN"               '{type:"x402",name:$name,url:$url,description:$description,contact:$contact}')" | tail -1)
+
+          if [[ ! "$code" =~ ^2 ]]; then
+            try_post 'contact as project URL object'               "$(jq -nc --arg name "$NAME" --arg url "$ENDPOINT" --arg description "$DESC" --arg contact "$ORIGIN"                 '{type:"x402",name:$name,url:$url,description:$description,contact:{url:$contact}}')" >/dev/null
+          fi
+
+      - name: Commit result
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add x402-agenttools-result.txt
+          git commit -m 'Record agent-tools.cloud submission result' || exit 0
+          git push
