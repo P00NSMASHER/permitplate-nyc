@@ -1,0 +1,21 @@
+name: claim nohumans cheap sku
+
+on:
+  push:
+    paths:
+      - '.github/workflows/x402-claim-nohumans.yml'
+
+jobs:
+  claim:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read claim instructions
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '=== listing ==='
+          curl -sS -i 'https://api.nohumans.directory/v1/listings/64403ef1-4ad'
+          echo
+          echo '=== claim ==='
+          curl -sS -i 'https://api.nohumans.directory/v1/listings/64403ef1-4ad/claim'
