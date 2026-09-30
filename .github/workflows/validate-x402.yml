@@ -1,0 +1,27 @@
+name: Validate x402 discovery
+
+on:
+  push:
+    paths:
+      - '.github/workflows/validate-x402.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      TARGET_URL: https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s
+    steps:
+      - name: Validate AgentCash discovery
+        run: npx -y @agentcash/discovery@latest discover "$TARGET_URL"
+      - name: Check AgentCash discovery
+        run: npx -y @agentcash/discovery@latest check "$TARGET_URL"
+      - name: Verify unpaid route returns 402 before query validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(curl -sS -o /tmp/body.txt -D /tmp/headers.txt -w '%{http_code}' "$TARGET_URL/api/pa-business")"
+          cat /tmp/headers.txt
+          cat /tmp/body.txt
+          test "$status" = "402"
+          grep -qi '^payment-required:' /tmp/headers.txt
