@@ -1,0 +1,37 @@
+{
+  "name": "PA Entity Lookup x402",
+  "description": "Paid Pennsylvania business registry and company identity lookup for autonomous agents.",
+  "url": "https://pa-entity-x402.floot.app",
+  "version": "2.0.0",
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false,
+    "stateTransitionHistory": false
+  },
+  "defaultInputModes": [
+    "application/json",
+    "text/plain"
+  ],
+  "defaultOutputModes": [
+    "application/json"
+  ],
+  "skills": [
+    {
+      "id": "pennsylvania-business-registry",
+      "name": "Pennsylvania business registry lookup",
+      "description": "Resolve Pennsylvania company names to structured Department of State registration facts and source-published principal/officer roles.",
+      "tags": [
+        "pennsylvania-business-registry",
+        "company-identity",
+        "legal-entity",
+        "vendor-verification",
+        "due-diligence"
+      ],
+      "examples": [
+        "OpenAI",
+        "Sheetz",
+        "Wawa"
+      ]
+    }
+  ]
+}
