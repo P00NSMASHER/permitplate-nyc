@@ -624,9 +624,14 @@ export async function handle({ request }: { request: Request }) {
   try {
     paymentPayload = decodePayment(signature)
   } catch (error) {
-    return paymentRequired(
-      error instanceof Error ? error.message : 'invalid_payment_header'
-    )
+    const message = error instanceof Error ? error.message : ''
+    const reason =
+      message === 'payment_header_too_large'
+        ? 'payment_header_too_large'
+        : message === 'invalid_payment_payload'
+          ? 'invalid_payment_payload'
+          : 'invalid_payment_header'
+    return paymentRequired(reason)
   }
 
   const url = new URL(request.url)
