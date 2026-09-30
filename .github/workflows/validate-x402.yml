@@ -1,4 +1,4 @@
-name: Validate x402 discovery
+name: Validate and register x402 seller
 
 on:
   push:
@@ -6,9 +6,9 @@ on:
       - '.github/workflows/validate-x402.yml'
 
 jobs:
-  validate:
+  validate-register:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     env:
       TARGET_URL: https://pa-entity-x402.floot.app
     steps:
@@ -23,7 +23,11 @@ jobs:
           spec="$(curl -fsS "$TARGET_URL/openapi.json")"
           printf '%s' "$spec" | grep -q '"x-payment-info"'
           status="$(curl -sS -o /tmp/body.txt -D /tmp/headers.txt -w '%{http_code}' "$TARGET_URL/_api/pa-business")"
-          cat /tmp/headers.txt
-          cat /tmp/body.txt
           test "$status" = "402"
           grep -qi '^payment-required:' /tmp/headers.txt
+      - name: Register origin on x402scan with SIWX
+        run: >
+          npx -y agentcash@latest fetch
+          https://x402scan.com/api/x402/registry/register-origin
+          -m POST
+          -b '{"origin":"https://pa-entity-x402.floot.app"}'
