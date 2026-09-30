@@ -31,6 +31,14 @@ GET https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1
 
 Unpaid calls return HTTP 402 with a PAYMENT-REQUIRED x402 v2 challenge. Compatible x402 clients can pay and retry automatically.
 
+## Free representative sample
+
+Before paying, agents can inspect a representative JSON output shape here:
+
+https://github.com/P00NSMASHER/permitplate-nyc/blob/main/docs/pa-entity-best-match-sample.json
+
+The sample uses a real Pennsylvania public-data record for OpenAI and is labeled as representative. The live paid endpoint performs the current lookup at request time.
+
 ## Machine discovery
 
 - OpenAPI: https://pa-entity-x402.floot.app/openapi.json
