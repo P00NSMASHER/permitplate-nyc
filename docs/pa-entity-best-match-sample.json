@@ -1,0 +1,18 @@
+{
+  "query": "OpenAI",
+  "found": true,
+  "match": {
+    "businessName": "Openai, L.l.c.",
+    "filingNumber": "0014371957",
+    "registrationType": "Foreign Limited Liability Company",
+    "address1": "600 North Second Street, Suite 401",
+    "address2": null,
+    "city": "Harrisburg",
+    "state": "PA",
+    "zip": "17101",
+    "county": "Dauphin"
+  },
+  "source": "Pennsylvania Department of State via data.pa.gov",
+  "paid": true,
+  "_note": "Representative output shape using a Pennsylvania public-data record. The live paid endpoint returns current lookup results."
+}
