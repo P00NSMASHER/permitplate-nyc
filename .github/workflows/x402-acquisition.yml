@@ -150,3 +150,5 @@ jobs:
           git add x402-acquisition-results.txt
           git commit -m 'Record x402 acquisition results' || exit 0
           git push
+
+# x402-body-compatible
