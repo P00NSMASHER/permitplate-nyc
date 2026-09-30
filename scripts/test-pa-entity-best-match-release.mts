@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import {
   handle,
+  normalizeCreationDate,
   paymentDocument,
 } from '../docs/pa-entity-floot-release/pa-entity-one_GET.ts'
 
@@ -55,6 +56,9 @@ assert.equal(doc.accepts[0].amount, '1000')
 assert.equal(doc.accepts[0].network, 'eip155:8453')
 assert.equal(doc.accepts[0].extra.name, 'USD Coin')
 assert.deepEqual(doc.extensions.bazaar.info.input.queryParams, { q: 'OpenAI' })
+assert.equal(normalizeCreationDate('1753-01-01T00:00:00.000'), null)
+assert.equal(normalizeCreationDate('1768-04-01T00:00:00.000'), '1768-04-01')
+assert.equal(normalizeCreationDate('2025-04-23T00:00:00.000'), '2025-04-23')
 
 {
   const res = await handle({ request: req() })
