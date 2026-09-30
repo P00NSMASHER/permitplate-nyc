@@ -1,0 +1,82 @@
+name: optimize nohumans buyer positioning
+
+on:
+  push:
+    paths:
+      - '.github/workflows/x402-nohumans-positioning.yml'
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update canonical cheap listing
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          REPO='P00NSMASHER/permitplate-nyc'
+          ID='64403ef1-4ad'
+
+          TOKEN="$(curl -fsSL             -H "Authorization: Bearer $GH_TOKEN"             -H 'Accept: application/vnd.github+json'             "https://api.github.com/repos/$REPO/actions/jobs/109821295622/logs"             | python3 -c 'import re,sys; s=sys.stdin.read(); m=re.search(r"\"claim_token\":\"([0-9a-f]{40,})\"",s); print(m.group(1) if m else "")')"
+          test -n "$TOKEN"
+          echo "::add-mask::$TOKEN"
+
+          NAME='Pennsylvania Business Registry — Best Match x402'
+          DESC='Pennsylvania business registry lookup and company identity resolver by company name. Find a Pennsylvania filing number, legal-entity registration type, registered address, city, ZIP, and county. Built for Pennsylvania company due diligence, vendor/customer verification, legal-entity enrichment, business-registration lookup, registered-address verification, and lead enrichment. Returns one best-ranked legal entity for $0.001 USDC.'
+
+          curl -fsSL -X PATCH             "https://api.nohumans.directory/v1/listings/$ID"             -H 'content-type: application/json'             -H "x-claim-token: $TOKEN"             --data "$(jq -nc --arg name "$NAME" --arg description "$DESC" '{name:$name,description:$description,category:"data.company"}')"
+
+          sleep 8
+
+      - name: Recheck semantic search ranks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, urllib.parse, urllib.request
+          listing_id='64403ef1-4ad'
+          queries=[
+            'Pennsylvania business registry',
+            'Pennsylvania company identity',
+            'Pennsylvania legal entity enrichment',
+            'Pennsylvania vendor verification',
+            'Pennsylvania business registration lookup',
+            'Pennsylvania company due diligence',
+            'find Pennsylvania filing number by company name',
+            'verify Pennsylvania company registered address'
+          ]
+          out=[]
+          for q in queries:
+              url='https://api.nohumans.directory/v1/discover?'+urllib.parse.urlencode({
+                  'q':q,'max_price':'0.01','limit':'20'
+              })
+              with urllib.request.urlopen(url, timeout=20) as r:
+                  data=json.load(r)
+              rows=data.get('results',[])
+              rank=next((i+1 for i,x in enumerate(rows) if x.get('id')==listing_id),0)
+              out.append({'query':q,'rank':rank,'top5':[
+                  {'id':x.get('id'),'name':x.get('name'),'price':x.get('price_amount'),
+                   'status':x.get('status'),'score':x.get('score'),'paid_verified':x.get('paid_verified')}
+                  for x in rows[:5]
+              ]})
+          with open('x402-buyer-rank-after-positioning.json','w') as f:
+              json.dump({'listing_id':listing_id,'queries':out},f,indent=2)
+          print(json.dumps(out,indent=2))
+          PY
+
+      - name: Commit rank result
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add x402-buyer-rank-after-positioning.json
+          git commit -m 'Measure x402 rank after buyer-intent positioning' || exit 0
+          git push
