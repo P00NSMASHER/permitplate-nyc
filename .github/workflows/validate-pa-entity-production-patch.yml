@@ -83,7 +83,7 @@ jobs:
       - name: Compare manifest fixture to live 402 terms
         shell: bash
         run: |
-          curl -fsS -D /tmp/h -o /tmp/b -w '%{http_code}'             'https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1' > /tmp/status
+          curl -sS -D /tmp/h -o /tmp/b -w '%{http_code}'             'https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1' > /tmp/status
           test "$(cat /tmp/status)" = "402"
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
