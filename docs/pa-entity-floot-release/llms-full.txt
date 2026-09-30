@@ -1,0 +1,161 @@
+# PA Entity Lookup x402 — Full Agent Reference
+
+Canonical origin: https://pa-entity-x402.floot.app
+
+## Purpose
+
+Resolve Pennsylvania business names into structured Pennsylvania Department of State registration records for machine-to-machine company identity, legal-entity enrichment, vendor/customer verification, due diligence, and lead enrichment.
+
+## Paid endpoint
+
+GET https://pa-entity-x402.floot.app/_api/pa-business?q=NAME&limit=10
+
+Price: $0.005 USDC per successful settled lookup.
+Protocol: x402 v2.
+Network: Base mainnet (eip155:8453).
+Asset: Base USDC.
+Payment recipient: 0x708f7b52b56eafd7fc1de65fc7752ed732914021.
+
+## Input contract
+
+q:
+- required string
+- 2-120 characters
+- Pennsylvania company name or distinctive legal-name fragment
+
+limit:
+- optional integer
+- 1-25
+- default 10
+
+The service removes SQL wildcard characters from the search term, rejects control-only/too-short queries, uses strict integer parsing for limit, and will not contact the payment facilitator for an invalid paid retry.
+
+## Matching strategy
+
+1. Case-insensitive starts-with query against business_name.
+2. Rank normalized legal-name matches first, ignoring common suffixes such as LLC or Inc.
+3. Run a broader contains query only when the starts-with result set does not fill the requested limit.
+4. Deduplicate by filing number before returning results.
+
+This avoids whole-record search false positives such as a company matching only because its address contains a brand name.
+
+## Entity fields
+
+Each result preserves:
+
+- businessName
+- filingNumber
+- registrationType
+- address1
+- address2
+- city
+- state
+- zip
+- county
+
+and adds:
+
+- creationDate
+- countyCode
+- principals[]
+
+Each principals entry contains:
+- role
+- firstName
+- middleName
+- lastName
+
+Exact duplicate principal rows are removed. Missing names are not inferred.
+
+The top-level enrichment.principals field is "complete" when principal enrichment succeeded and "unavailable" if the secondary enrichment query failed while the base registry result remained deliverable.
+
+## Payment-state behavior
+
+Unpaid request:
+- HTTP 402
+- PAYMENT-REQUIRED present
+- no-store
+
+Invalid PAYMENT-SIGNATURE:
+- HTTP 402
+- machine-readable invalid-payment reason
+- never misreported as a verifier outage
+
+Verifier transport/outage:
+- HTTP 503
+- Retry-After
+- no fresh PAYMENT-REQUIRED
+- retrySamePayment=true
+
+Primary PA registry failure:
+- HTTP 502
+- no settlement attempted
+
+Settlement pending, duplicate settlement, transient 429, or transient facilitator failure:
+- retry the identical settlement body a bounded number of times
+- if still unresolved, HTTP 503 + Retry-After
+- no fresh PAYMENT-REQUIRED
+- caller should retry the same PAYMENT-SIGNATURE
+
+Successful settlement:
+- HTTP 200
+- PAYMENT-RESPONSE present
+- x402-settled:true
+- paid:true
+
+## Representative source records
+
+OpenAI:
+- Openai, L.l.c.
+- filing 0014371957
+- creation date 2025-04-23
+- Foreign Limited Liability Company
+
+Sheetz:
+- Sheetz, Inc.
+- filing 0000326968
+- creation date 1969-12-11
+- source publishes Governor, President, Vice President, and Secretary roles
+
+Wawa:
+- Wawa, Inc.
+- filing 0000233685
+- creation date 1933-08-08
+- source publishes multiple Governor/officer roles including CEO, President, CFO, Treasurer, Vice President, Secretary, and Assistant Secretary
+
+## Limitations
+
+This API does not establish:
+- current good standing
+- sanctions status
+- a risk score
+- legitimacy
+- current legal authority of a listed principal/officer
+
+It returns factual public registry records and source-published role/name rows.
+
+## Discovery
+
+OpenAPI:
+https://pa-entity-x402.floot.app/openapi.json
+
+llms.txt:
+https://pa-entity-x402.floot.app/llms.txt
+
+Durable skill document:
+https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/main/PA_ENTITY_SKILL.md
+
+x402 JSON alias:
+https://pa-entity-x402.floot.app/.well-known/x402.json
+
+x402 services alias:
+https://pa-entity-x402.floot.app/.well-known/x402-services.json
+
+Service manifest:
+https://pa-entity-x402.floot.app/.well-known/x402-service.json
+
+Catalog:
+https://pa-entity-x402.floot.app/.well-known/x402-catalog.json
+
+Agent card:
+https://pa-entity-x402.floot.app/.well-known/agent-card.json
