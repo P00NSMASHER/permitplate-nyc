@@ -6,11 +6,21 @@ Canonical origin: https://pa-entity-x402.floot.app
 
 Resolve Pennsylvania business names into structured Pennsylvania Department of State registration records for machine-to-machine company identity, legal-entity enrichment, vendor/customer verification, due diligence, and lead enrichment.
 
-## Paid endpoint
+## Paid endpoints
+
+### $0.001 best match
+
+GET https://pa-entity-x402.floot.app/_api/pa-entity-one?q=NAME
+
+Returns at most one highest-ranked Pennsylvania legal-entity result using the same enriched result schema.
+
+### $0.005 enriched search
 
 GET https://pa-entity-x402.floot.app/_api/pa-business?q=NAME&limit=10
 
-Price: $0.005 USDC per successful settled lookup.
+Returns up to 25 ranked entity candidates.
+
+Prices apply per successful settled lookup.
 Protocol: x402 v2.
 Network: Base mainnet (eip155:8453).
 Asset: Base USDC.
@@ -24,9 +34,12 @@ q:
 - Pennsylvania company name or distinctive legal-name fragment
 
 limit:
+- accepted only by /_api/pa-business
 - optional integer
 - 1-25
 - default 10
+
+/_api/pa-entity-one is fixed at one returned match.
 
 The service removes SQL wildcard characters from the search term, rejects control-only/too-short queries, uses strict integer parsing for limit, and will not contact the payment facilitator for an invalid paid retry.
 
