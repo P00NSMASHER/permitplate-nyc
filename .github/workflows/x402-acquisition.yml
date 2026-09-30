@@ -1,0 +1,50 @@
+name: x402 acquisition batch
+
+on:
+  push:
+    paths:
+      - '.github/workflows/x402-acquisition.yml'
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Expand free discovery
+        shell: bash
+        run: |
+          set +e
+          ENDPOINT='https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
+          ORIGIN='https://pa-entity-x402.floot.app'
+          NAME='PA Entity Lookup x402'
+          DESC='Company identity and legal-entity enrichment for Pennsylvania businesses by company name. Returns filing number, registration type, registered address, city, ZIP, and county for vendor verification, due diligence, and lead enrichment.'
+          CONTACT='https://pa-entity-x402.floot.app'
+
+          echo '=== agent-tools.cloud submission with project contact URL ==='
+          curl -sS -i -X POST 'https://agent-tools.cloud/api/v1/submit' \
+            -H 'content-type: application/json' \
+            --data "$(jq -nc --arg url "$ENDPOINT" --arg name "$NAME" --arg description "$DESC" --arg contact "$CONTACT" '{type:"x402",url:$url,name:$name,description:$description,contact:$contact}')"
+
+          echo
+          echo '=== agent-tools.cloud schema ==='
+          curl -sS 'https://agent-tools.cloud/openapi.json' | jq '.paths["/api/v1/submit"].post.requestBody.content["application/json"].schema // .components.schemas' | head -c 12000
+
+          echo
+          echo '=== Agents.NET schema ==='
+          curl -sS 'https://agents.net/openapi.json' | jq '.paths["/api/agents/submit"].post.requestBody.content["application/json"].schema // .components.schemas' | head -c 16000
+
+          echo
+          echo '=== nohumans current listing ==='
+          curl -sS 'https://api.nohumans.directory/v1/listings/958fd262-287' | jq '{status,score,probe_count,probes_passed,consecutive_failures,last_probed_at_iso,next_check_by_iso,paid_verified,distinct_payers,sample_query,evidence_note}'
+
+          echo
+          echo '=== true402 current listing ==='
+          curl -sS 'https://true402.dev/api/v1/services/ca9c2ed8-930c-4d55-920c-f87a858bb045' | jq '{id,url,reputation}'
+
+          echo
+          echo '=== 402 Index listing ==='
+          curl -sS 'https://402index.io/api/v1/services/2a92dcd4-206a-42ad-b6e5-e457635bb75a' | jq '{id,name,status,health_status,approval_reason,reliability_score,last_checked,domain_verified,x402_payment_valid}'
+
+          echo
+          echo '=== Market402 public search probe ==='
+          curl -sS 'https://market402.com/api/services?search=PA%20Entity%20Lookup%20x402' | head -c 12000
