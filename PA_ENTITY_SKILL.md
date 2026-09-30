@@ -1,83 +1,55 @@
 # PA Entity Lookup x402
 
-Resolve Pennsylvania business names into structured Pennsylvania Department of State registration records.
+Use this tool for Pennsylvania business-registry lookup, company identity resolution, legal-entity enrichment, vendor/customer verification, due diligence, filing-number lookup, registration-type lookup, creation-date lookup, and registered-address/county confirmation.
 
-## Best uses
-
-Use this tool for:
-- Pennsylvania business registry lookup
-- company identity resolution
-- legal-entity enrichment
-- vendor or customer verification
-- filing-number lookup
-- registration-type lookup
-- registered-address confirmation
-- city / ZIP / county confirmation
-- due diligence support
-- lead enrichment
-
-Do not use this tool as legal advice, a sanctions screen, a risk score, or proof of current good standing unless the underlying Pennsylvania source explicitly establishes that fact.
-
-## Paid endpoint
+Paid endpoint:
 
 GET https://pa-entity-x402.floot.app/_api/pa-business?q=NAME&limit=10
 
-Price: $0.005 USDC per successful paid lookup
-Protocol: x402 v2
-Network: Base mainnet (eip155:8453)
-Asset: Base USDC
+Price: $0.005 USDC per successful settled call.
+Protocol: x402 v2.
+Network: Base mainnet (eip155:8453).
 
 ## Input
 
-- q: required business name or distinctive name fragment
-- limit: optional integer from 1 to 25, default 10
+- q: required company name or distinctive name fragment, 2-120 characters.
+- limit: optional integer 1-25, default 10.
 
-Matching is case-insensitive against the Pennsylvania business-name field. Exact normalized legal-name matches are ranked ahead of starts-with and broader substring matches.
+## Matching
 
-## Example
+The service queries the Pennsylvania business_name field case-insensitively.
+It uses a fast starts-with search first and a broader contains search only when needed.
+Normalized legal-name matches are ranked before broader matches.
 
-GET https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1
+## Output
 
-Representative paid response:
+Each result preserves the original fields:
 
-```json
-{
-  "query": "OpenAI",
-  "count": 1,
-  "results": [
-    {
-      "businessName": "Openai, L.l.c.",
-      "filingNumber": "0014371957",
-      "registrationType": "Foreign Limited Liability Company",
-      "address1": "600 North Second Street, Suite 401",
-      "address2": null,
-      "city": "Harrisburg",
-      "state": "PA",
-      "zip": "17101",
-      "county": "Dauphin"
-    }
-  ],
-  "source": "Pennsylvania Department of State via data.pa.gov",
-  "paid": true
-}
-```
+- businessName
+- filingNumber
+- registrationType
+- address1
+- address2
+- city
+- state
+- zip
+- county
 
-## Machine discovery
+and adds:
 
-- OpenAPI: https://pa-entity-x402.floot.app/openapi.json
-- LLM guide: https://pa-entity-x402.floot.app/llms.txt
-- Full guide: https://pa-entity-x402.floot.app/llms-full.txt
-- Canonical x402 manifest: https://pa-entity-x402.floot.app/.well-known/x402
-- x402 catalog: https://pa-entity-x402.floot.app/.well-known/x402-catalog.json
+- creationDate
+- countyCode
+- principals[] with source-published role, firstName, middleName, lastName
 
-## Payment behavior
+The response also reports whether principal enrichment completed.
 
-An unpaid request returns HTTP 402 with a PAYMENT-REQUIRED x402 v2 challenge.
+## Limitations
 
-A compatible buyer should:
-1. read PAYMENT-REQUIRED;
-2. authorize the requested Base USDC payment;
-3. retry the same request with the payment signature;
-4. read PAYMENT-RESPONSE after successful settlement.
+The Pennsylvania source does not by itself establish current good standing, sanctions status, legal authority, risk score, or a legitimacy verdict. Principal/officer rows are source-published records and should not be treated as independent proof of current management authority.
 
-If settlement is unresolved or pending, retry the same payment/request instead of creating a second payment.
+## Payment recovery
+
+If settlement is unresolved, retry the same request with the same PAYMENT-SIGNATURE. Do not generate a new authorization merely because the service returned settlement_pending or a transient 503.
+
+OpenAPI: https://pa-entity-x402.floot.app/openapi.json
+LLM guide: https://pa-entity-x402.floot.app/llms.txt
