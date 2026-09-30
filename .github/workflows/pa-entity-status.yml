@@ -1,0 +1,57 @@
+name: PA Entity buyer status readback
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-status.yml'
+
+jobs:
+  read:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read current buyer and directory state
+        shell: bash
+        run: |
+          set +e
+          ENDPOINT='https://pa-entity-x402.floot.app/_api/pa-business'
+          ENC=$(python3 - <<'PY'
+          import urllib.parse
+          print(urllib.parse.quote('https://pa-entity-x402.floot.app/_api/pa-business',safe=''))
+          PY
+          )
+
+          echo '=== PAYAI STATS ==='
+          curl -sS "https://facilitator.payai.network/discovery/resources/$ENC/stats"
+          echo
+
+          echo '=== NOHUMANS ==='
+          curl -sS 'https://api.nohumans.directory/v1/listings/958fd262-287' | jq '{
+            id,name,status,score,probe_count,probes_passed,probes_failed,
+            consecutive_failures,paid_verified,distinct_payers,evidence_tier,
+            onchain_tx_count_30d,onchain_unique_payers_30d,last_probed_at_iso,
+            next_check_by_iso,sample_query
+          }'
+          echo
+
+          echo '=== 402 INDEX ==='
+          curl -sS 'https://402index.io/api/v1/services/2a92dcd4-206a-42ad-b6e5-e457635bb75a' | jq .
+          echo
+
+          echo '=== MARKET402 ==='
+          curl -sS -i 'https://market402.com/op/pa-entity-x402.floot.app.json' | head -c 12000
+          echo
+
+          echo '=== TRUE402 ==='
+          curl -sS 'https://true402.dev/api/v1/services/ca9c2ed8-930c-4d55-920c-f87a858bb045' | jq .
+          echo
+
+          echo '=== AGENT402 INDEX ==='
+          curl -sS 'https://agent402.tools/api/index?seller=pa-entity-x402.floot.app' | head -c 20000
+          echo
+
+          echo '=== LIVE PAYWALL ==='
+          curl -sS -D /tmp/h -o /tmp/b -w 'status=%{http_code} time=%{time_total}\n' "$ENDPOINT?q=OpenAI&limit=1"
+          grep -Ei '^(payment-required|content-type|cache-control):' /tmp/h
+          head -c 500 /tmp/b
+          echo
