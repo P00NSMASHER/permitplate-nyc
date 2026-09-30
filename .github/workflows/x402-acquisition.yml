@@ -1,4 +1,4 @@
-name: x402 acquisition batch
+name: x402 acquisition diagnostics
 
 on:
   push:
@@ -6,26 +6,36 @@ on:
       - '.github/workflows/x402-acquisition.yml'
 
 jobs:
-  submit:
+  diagnose:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Submit remaining free discovery channels
+      - name: Measure buyer discovery and blocked channels
         shell: bash
         run: |
           set +e
-          ENDPOINT='https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
-          ORIGIN='https://pa-entity-x402.floot.app'
-          NAME='PA Entity Lookup x402'
-          DESC='Company identity and legal-entity enrichment for Pennsylvania businesses by company name. Returns filing number, registration type, registered address, city, ZIP, and county for vendor verification, due diligence, and lead enrichment.'
+          echo '=== Agent402 seller record ==='
+          curl -sS 'https://agent402.tools/api/index?seller=pa-entity-x402.floot.app'
+          echo
 
-          echo '=== agent-tools.cloud with project URL contact ==='
-          curl -sS -i -X POST 'https://agent-tools.cloud/api/v1/submit'             -H 'content-type: application/json'             --data "$(jq -nc               --arg url "$ENDPOINT"               --arg name "$NAME"               --arg description "$DESC"               --arg contact "$ORIGIN"               '{type:"x402",url:$url,name:$name,description:$description,contact:$contact}')"
+          for q in             'Pennsylvania business registry'             'company identity Pennsylvania'             'legal entity enrichment Pennsylvania'             'vendor verification Pennsylvania'
+          do
+            echo
+            echo "=== Agent402 find: $q ==="
+            curl -sS -G 'https://agent402.tools/api/find' --data-urlencode "q=$q"
+            echo
+            echo "=== Agent402 route quote: $q ==="
+            curl -sS -G 'https://agent402.tools/api/route' --data-urlencode "q=$q" --data-urlencode 'include=external'
+          done
 
           echo
-          echo '=== x402Scout JSON candidate ==='
-          curl -sS -i -X POST 'https://x402scout.com/register'             -H 'content-type: application/json'             --data "$(jq -nc               --arg url "$ENDPOINT"               --arg name "$NAME"               '{url:$url,name:$name,category:"Data"}')"
+          echo '=== nohumans current listing ==='
+          curl -sS 'https://api.nohumans.directory/v1/listings/958fd262-287'
 
           echo
-          echo '=== x402Scout form candidate ==='
-          curl -sS -i -X POST 'https://x402scout.com/register'             -H 'content-type: application/x-www-form-urlencoded'             --data-urlencode "url=$ENDPOINT"             --data-urlencode "name=$NAME"             --data-urlencode 'category=Data'
+          echo '=== PayAPI submit-listing empty schema probe ==='
+          curl -sS -i -X POST 'https://payapi.market/api/submit-listing'             -H 'content-type: application/json'             --data '{}'
+
+          echo
+          echo '=== PayAPI submit-listing partial schema probe ==='
+          curl -sS -i -X POST 'https://payapi.market/api/submit-listing'             -H 'content-type: application/json'             --data '{"provider":{"name":"PA Entity Lookup x402"},"api":{"base_url":"https://pa-entity-x402.floot.app"}}'
