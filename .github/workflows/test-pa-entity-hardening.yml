@@ -1,0 +1,15 @@
+name: test hardened PA Entity core
+
+on:
+  push:
+    paths:
+      - '.github/workflows/test-pa-entity-hardening.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run hardened core tests
+        run: npx -y tsx seller-hardening/pa-entity-core.test.ts
