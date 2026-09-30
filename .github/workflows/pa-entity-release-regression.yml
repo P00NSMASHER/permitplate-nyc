@@ -1,0 +1,30 @@
+name: PA Entity x402 release regression
+
+on:
+  push:
+    paths:
+      - 'docs/pa-entity-floot-release/**'
+      - 'scripts/test-pa-entity-floot-release.mts'
+      - 'scripts/test-pa-entity-discovery-fixtures.mjs'
+      - 'PA_ENTITY_SKILL.md'
+      - 'x402-manifest.json'
+      - '.github/workflows/pa-entity-release-regression.yml'
+  pull_request:
+    paths:
+      - 'docs/pa-entity-floot-release/**'
+      - 'scripts/test-pa-entity-floot-release.mts'
+      - 'scripts/test-pa-entity-discovery-fixtures.mjs'
+      - 'PA_ENTITY_SKILL.md'
+      - 'x402-manifest.json'
+  workflow_dispatch:
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test payment and settlement recovery
+        run: npx -y tsx@latest scripts/test-pa-entity-floot-release.mts
+      - name: Test discovery fixture parity
+        run: node scripts/test-pa-entity-discovery-fixtures.mjs
