@@ -1,4 +1,5 @@
 name: PA Entity Market402 submission
+# corrected resource field
 
 on:
   push:
@@ -22,7 +23,7 @@ jobs:
           echo
           echo '=== SUBMIT + PAID PROBE OPT-IN ==='
           curl -sS -i -X POST 'https://market402.com/submit'             -H 'content-type: application/json'             --data "$(jq -nc               --arg url "$ENDPOINT"               --argjson price 0.005               '{
-                url:$url,
+                resource:$url,
                 declared_price_usd:$price,
                 paid_probe_optin:true,
                 sample_input:{
