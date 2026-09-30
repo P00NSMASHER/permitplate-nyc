@@ -1,0 +1,28 @@
+name: x402 Agent402 recrawl
+
+on:
+  push:
+    paths:
+      - '.github/workflows/x402-agent402-recrawl.yml'
+
+jobs:
+  recrawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Re-register and verify Agent402 seller
+        shell: bash
+        run: |
+          set +e
+          ORIGIN='https://pa-entity-x402.floot.app'
+
+          echo '=== re-register ==='
+          curl -sS -i -X POST 'https://agent402.tools/api/index/register'             -H 'content-type: application/json'             --data "$(jq -nc --arg origin "$ORIGIN" '{origin:$origin}')"
+
+          echo
+          echo '=== seller readback ==='
+          curl -sS 'https://agent402.tools/api/index?seller=pa-entity-x402.floot.app' | jq .
+
+          echo
+          echo '=== buyer-intent route ==='
+          curl -sS -G 'https://agent402.tools/api/route'             --data-urlencode 'q=Pennsylvania business registry company identity lookup'             --data-urlencode 'network=base' | jq .
