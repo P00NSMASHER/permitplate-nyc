@@ -4,10 +4,10 @@
   <url><loc>https://pa-entity-x402.floot.app/openapi.json</loc></url>
   <url><loc>https://pa-entity-x402.floot.app/llms.txt</loc></url>
   <url><loc>https://pa-entity-x402.floot.app/llms-full.txt</loc></url>
+  <url><loc>https://pa-entity-x402.floot.app/skill.txt</loc></url>
   <url><loc>https://pa-entity-x402.floot.app/.well-known/x402.json</loc></url>
   <url><loc>https://pa-entity-x402.floot.app/.well-known/x402-services.json</loc></url>
   <url><loc>https://pa-entity-x402.floot.app/.well-known/x402-service.json</loc></url>
   <url><loc>https://pa-entity-x402.floot.app/.well-known/x402-catalog.json</loc></url>
-  <url><loc>https://pa-entity-x402.floot.app/.well-known/agent-card.json</loc></url>
   <url><loc>https://pa-entity-x402.floot.app/.well-known/security.txt</loc></url>
 </urlset>
