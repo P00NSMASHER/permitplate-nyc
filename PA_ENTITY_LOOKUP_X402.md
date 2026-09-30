@@ -18,13 +18,25 @@ Common agent use cases:
 - registered address, city, ZIP, and county confirmation
 - lead enrichment
 
-## Live paid endpoint
+## Paid product ladder
+
+Current production:
 
 ```text
 GET https://pa-entity-x402.floot.app/_api/pa-business?q=NAME&limit=10
 ```
 
-Price: **$0.005 USDC per successful paid lookup**
+Price: **$0.005 USDC per successful settled lookup**
+
+Prepared for the next hardened production release:
+
+```text
+GET https://pa-entity-x402.floot.app/_api/pa-entity-one?q=NAME
+```
+
+Price: **$0.001 USDC per successful settled lookup**
+
+The $0.001 route returns at most one best-ranked legal entity. The $0.005 route returns multiple ranked candidates for disambiguation and enrichment.
 
 Protocol: **x402 v2**
 
@@ -38,19 +50,23 @@ No account or API key is required. An unpaid request returns HTTP 402 with a `PA
 GET https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1
 ```
 
-The paid response is JSON with:
+The hardened response schema is JSON with:
 
 - `query`
 - `count`
 - `results[].businessName`
 - `results[].filingNumber`
 - `results[].registrationType`
+- `results[].creationDate`
 - `results[].address1`
 - `results[].address2`
 - `results[].city`
 - `results[].state`
 - `results[].zip`
 - `results[].county`
+- `results[].countyCode`
+- `results[].principals[]`
+- `enrichment.principals`
 - `source`
 - `paid`
 
@@ -97,10 +113,10 @@ Current red-team snapshot on 2026-09-30:
 - Coinbase/CDP x402 validator: **valid=true**, simulation **accepted** in the most recent completed validation; required preflights passed for live HTTP 402, `PAYMENT-REQUIRED`, x402 v2, Base, USDC, exact scheme, resource metadata, Bazaar extension, input metadata, and Bazaar schema.
 - x402scan: registered.
 - true402: registered, but the current record has **0 transactions**, **trustScore 0**, and an old `lastSeen`; refresh after the next production release.
-- nohumans.directory main $0.005 listing: **verified by probe**, score about **0.884**, 13/18 probes passed, zero consecutive failures; **not paid-verified**, 0 distinct payers.
+- nohumans.directory main $0.005 listing: **verified by probe**; latest commercial sweep improved the score to about **0.896** and moved the seller to about **#18** for the buyer query "Pennsylvania business registry"; **not paid-verified**, 0 distinct payers.
 - 402 Index: **active** and **healthy**. Its current record says `approval_reason: domain-verified` but also reports `domain_verified: 0`, `verified: 0`, and `x402_payment_valid: null`; do not describe it as currently verified until those fields agree.
-- Agent402: indexed and sees the paid route, but currently **routable=false**, health about **0.5**, `routerDispatchReason: crawl_failed`. The canonical x402 manifest repair is intended to clear this.
-- Market402: current operator lookup returns **404 unknown_operator**. An earlier self-test/submission did not produce a durable operator listing.
+- Agent402: indexed and parses the paid OpenAPI route, but currently **routable=false** because the canonical x402 manifest path still returns 403. The parser-tested manifest repair is prepared for the next production release.
+- Market402: the exact $0.005 endpoint is now **actually queued and present in the paid-probe opt-in roster** with a valid sample input. Its instant self-test passes **11/11**. Paid-probe qualification is currently blocked only by `not_in_catalog` until the resource appears in the public Bazaar catalog. This is not yet a verified badge or a paid settlement.
 - Cinderwright Discovery Hub: an earlier submission was accepted into its verification queue; no independent paid verification has been established.
 - x402dash and x402 Arena were previously accepted by their registration APIs; they were not re-audited in the latest red-team sweep.
 
@@ -112,11 +128,16 @@ Historical 402 Index buyer-search snapshot from earlier on 2026-09-30:
 
 AgentCash has also previously discovered the seller as one paid GET route at $0.005 USD over x402.
 
-## Related lower-cost product
+## Lower-cost product
 
-A separate active nohumans listing currently advertises a **$0.001** single-best-match Pennsylvania entity resolver on the AppDeploy origin. It uses the same receiving wallet and was passing its marketplace probes at the latest audit.
+A legacy AppDeploy **$0.001** single-best-match route is live and independently passes Market402's 11/11 x402 self-test and Coinbase/CDP validation. However, its older settlement-recovery implementation predates the latest red-team hardening, so it is **not being promoted to funded paid probes**.
 
-This should be treated as a distinct low-cost product, not evidence that the $0.005 service has buyers. The $0.005 service must differentiate itself through multi-candidate disambiguation and richer enrichment.
+A hardened $0.001 best-match route is prepared for the Floot origin and covered by the same settlement-pending, invalid-payment, timeout, CORS, ranking, and enrichment protections as the $0.005 route. Once deployed, the intended product ladder is:
+
+- $0.001: one best-ranked entity;
+- $0.005: multi-result enriched search.
+
+Neither route counts as revenue until an independent buyer actually settles USDC.
 
 ## Revenue
 
