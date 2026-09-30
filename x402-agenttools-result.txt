@@ -1,0 +1,8 @@
+=== contact as project URL string ===
+HTTP 422
+{"detail":[{"type":"string_pattern_mismatch","loc":["body","contact"],"msg":"String should match pattern '^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$'","input":"https://pa-entity-x402.floot.app","ctx":{"pattern":"^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"}}]}
+
+=== contact as project URL object ===
+HTTP 422
+{"detail":[{"type":"string_type","loc":["body","contact"],"msg":"Input should be a valid string","input":{"url":"https://pa-entity-x402.floot.app"}}]}
+
