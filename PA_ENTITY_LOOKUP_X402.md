@@ -86,6 +86,7 @@ This service is a factual lookup/enrichment API. It is not legal advice and shou
 
 As of 2026-09-30:
 
+- Coinbase/CDP x402 validator: **valid=true**, simulation **accepted**; every required preflight passed, including live HTTP 402, `PAYMENT-REQUIRED`, x402 v2, Base, USDC, exact scheme, resource metadata, Bazaar extension, input metadata, and Bazaar schema
 - x402scan: registered
 - true402: registered
 - nohumans.directory: verified
@@ -95,6 +96,11 @@ As of 2026-09-30:
 - Agent402: listed as routable/healthy
 - Market402: submission queued; immediate self-test passed 11/11 x402 checks
 - Cinderwright Discovery Hub: queued for verification
+
+Current 402 Index buyer-search snapshot:
+- `Pennsylvania business registry`: rank **#1**
+- `company identity Pennsylvania`: rank **#1**
+- `vendor verification Pennsylvania`: rank **#2**
 
 The service has also passed AgentCash discovery as one paid GET route at $0.005 USD over x402.
 
