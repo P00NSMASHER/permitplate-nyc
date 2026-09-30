@@ -1,4 +1,4 @@
-name: x402 acquisition batch
+name: x402 trust status
 
 on:
   push:
@@ -6,45 +6,47 @@ on:
       - '.github/workflows/x402-acquisition.yml'
 
 jobs:
-  submit:
+  status:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 5
     steps:
-      - name: Submit and probe buyer directories
+      - name: Read external buyer trust state
         shell: bash
         run: |
           set +e
+          HOST='pa-entity-x402.floot.app'
           ENDPOINT='https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
-          ORIGIN='https://pa-entity-x402.floot.app'
-          NAME='PA Entity Lookup x402'
-          DESC='Company identity and legal-entity enrichment for Pennsylvania businesses by company name. Returns filing number, registration type, registered address, city, ZIP, and county for vendor verification, due diligence, and lead enrichment.'
-          CONTACT='https://github.com/P00NSMASHER/permitplate-nyc/blob/main/docs/pa-entity-x402.md'
 
-          post_json () {
-            label="$1"
-            url="$2"
-            json="$3"
-            echo
-            echo "=== $label ==="
-            body_file="$(mktemp)"
-            status="$(curl -sS -o "$body_file" -w '%{http_code}' -X POST "$url" -H 'content-type: application/json' --data "$json")"
-            echo "STATUS=$status"
-            cat "$body_file"
-            echo
-            rm -f "$body_file"
-          }
-
-          post_json 'agent-tools.cloud contact-url'             'https://agent-tools.cloud/api/v1/submit'             "$(jq -nc --arg url "$ENDPOINT" --arg name "$NAME" --arg description "$DESC" --arg contact "$CONTACT" '{type:"x402",url:$url,name:$name,description:$description,contact:$contact}')"
-
-          post_json 'Agents.NET likely payload'             'https://agents.net/api/agents/submit'             "$(jq -nc --arg url "$ORIGIN" --arg name "$NAME" --arg description "$DESC" --arg contact "$CONTACT" '{name:$name,url:$url,description:$description,category:"Data",contact:$contact}')"
-
-          post_json 'Agents.NET empty schema probe'             'https://agents.net/api/agents/submit' '{}'
-
-          post_json 'x402Scout endpoint'             'https://x402scout.com/register'             "$(jq -nc --arg url "$ENDPOINT" --arg name "$NAME" --arg description "$DESC" '{url:$url,name:$name,description:$description}')"
-
-          post_json 'x402Scout origin'             'https://x402scout.com/register'             "$(jq -nc --arg url "$ORIGIN" --arg name "$NAME" --arg description "$DESC" '{url:$url,name:$name,description:$description}')"
+          echo '=== Market402 operator ==='
+          curl -sS -i --max-time 20 "https://market402.com/op/$HOST"
+          echo
+          echo '=== Market402 badge ==='
+          curl -sS -i --max-time 20 "https://market402.com/badge/$HOST"
+          echo
+          echo '=== Market402 operator JSON ==='
+          curl -sS -i --max-time 20 "https://market402.com/op/$HOST.json"
 
           echo
-          echo '=== Agent402 readback ==='
-          curl -sS 'https://agent402.tools/api/index/search?q=Pennsylvania%20business%20registry' | head -c 5000
+          echo '=== nohumans ==='
+          curl -sS --max-time 20 'https://api.nohumans.directory/v1/listings/958fd262-287'
+
           echo
+          echo '=== true402 ==='
+          curl -sS --max-time 20 'https://true402.dev/api/v1/services/ca9c2ed8-930c-4d55-920c-f87a858bb045'
+
+          echo
+          echo '=== x402dash ==='
+          curl -sS -G --max-time 20 'https://api.x402dash.com/v1/liveness' --data-urlencode "endpoint=$ENDPOINT"
+
+          echo
+          echo '=== 402 Index search ==='
+          curl -sS -G --max-time 20 'https://402index.io/api/v1/services' --data-urlencode 'q=Pennsylvania business registry' --data-urlencode 'protocol=x402' --data-urlencode 'limit=10'
+
+          echo
+          echo '=== Cinderwright status guesses ==='
+          for u in             'https://api.ideafactorylab.org/submission/sub_1790757996876'             'https://api.ideafactorylab.org/status/sub_1790757996876'             'https://api.ideafactorylab.org/submissions/sub_1790757996876'
+          do
+            echo "-- $u"
+            curl -sS -i --max-time 10 "$u"
+            echo
+          done
