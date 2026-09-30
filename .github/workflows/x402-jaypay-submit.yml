@@ -1,4 +1,4 @@
-name: submit PA entity best-match to 402directory
+name: jaypay submit retry
 
 on:
   push:
@@ -10,55 +10,27 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 4
     steps:
-      - name: Submit and capture raw response
+      - name: Submit cheap SKU
         shell: bash
         run: |
-          set +e
           ENDPOINT='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI'
-          PAYLOAD="$(jq -nc \
-            --arg name 'PA Entity Best Match x402' \
-            --arg description 'Low-friction Pennsylvania company identity lookup by business name. Returns one best-ranked legal-entity registry record with filing number, registration type, registered address, city, ZIP, and county for $0.001 USDC.' \
-            --arg endpoint "$ENDPOINT" \
-            '{
-              name:$name,
-              description:$description,
-              endpoint:$endpoint,
-              method:"GET",
-              price_usdc:0.001,
-              chain:"base",
-              protocol:"x402",
-              category:"company-data",
-              tags:"pennsylvania,business-registry,company-identity,legal-entity,entity-resolution,due-diligence",
-              example:$endpoint,
-              submitter_email:""
-            }')"
-
-          echo '=== POST /api/submissions ==='
-          curl -sS -D /tmp/submit-h -o /tmp/submit-b -X POST \
-            'https://402directory.com/api/submissions' \
-            -H 'content-type: application/json' \
-            -H 'accept: application/json,text/plain,*/*' \
-            --data "$PAYLOAD"
-          awk 'toupper($1) ~ /^HTTP\\// {c=$2} END{print "HTTP " c}' /tmp/submit-h
-          grep -iE '^(content-type|location):' /tmp/submit-h || true
-          cat /tmp/submit-b
+          cat > /tmp/payload.json <<'JSON'
+          {
+            "name":"PA Entity Best Match x402",
+            "description":"Low-friction Pennsylvania company identity lookup by business name. Returns one best-ranked legal-entity registry record with filing number, registration type, registered address, city, ZIP, and county for $0.001 USDC.",
+            "endpoint":"https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI",
+            "method":"GET",
+            "price_usdc":0.001,
+            "chain":"base",
+            "protocol":"x402",
+            "category":"company-data",
+            "tags":"pennsylvania,business-registry,company-identity,legal-entity,entity-resolution,due-diligence",
+            "example":"https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI",
+            "submitter_email":""
+          }
+          JSON
+          echo '=== submit ==='
+          curl -sS -i -X POST 'https://402directory.com/api/submissions' -H 'content-type: application/json' --data-binary @/tmp/payload.json
           echo
-
-          echo '=== GET /api/directory exact endpoint lookup ==='
-          curl -sS -D /tmp/dir-h -o /tmp/dir-b 'https://402directory.com/api/directory'
-          awk 'toupper($1) ~ /^HTTP\\// {c=$2} END{print "HTTP " c}' /tmp/dir-h
-          grep -i '^content-type:' /tmp/dir-h || true
-          python3 - <<'PY'
-import json
-endpoint='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI'
-raw=open('/tmp/dir-b','rb').read()
-print(raw[:500].decode('utf-8','replace'))
-try:
-    data=json.loads(raw)
-    entries=data.get('entries', data if isinstance(data,list) else [])
-    matches=[x for x in entries if isinstance(x,dict) and x.get('endpoint')==endpoint]
-    print('MATCH_COUNT',len(matches))
-    print(json.dumps(matches[:3],indent=2))
-except Exception as e:
-    print('DIRECTORY_JSON_ERROR',repr(e))
-PY
+          echo '=== directory lookup ==='
+          curl -sS 'https://402directory.com/api/directory' | grep -F "$ENDPOINT" -C 2 || true
