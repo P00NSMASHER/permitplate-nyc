@@ -1,4 +1,4 @@
-name: x402 acquisition batch
+name: x402 buyer-rank diagnostics
 
 on:
   push:
@@ -6,38 +6,73 @@ on:
       - '.github/workflows/x402-acquisition.yml'
 
 jobs:
-  submit:
+  diagnose:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 8
     steps:
-      - name: Expand free buyer discovery
+      - name: Buyer rank and verifier discovery
         shell: bash
         run: |
           set +e
-          ENDPOINT='https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
           ORIGIN='https://pa-entity-x402.floot.app'
-          NAME='PA Entity Lookup x402'
-          DESC='Company identity and legal-entity enrichment for Pennsylvania businesses by company name. Returns filing number, registration type, registered address, city, ZIP, and county for vendor verification, due diligence, and lead enrichment.'
 
-          echo '=== agent-tools.cloud pre-search ==='
-          curl -sS -G 'https://agent-tools.cloud/x402' --data-urlencode 'q=pa-entity-x402.floot.app' | grep -o -m1 'pa-entity-x402[^"< ]*' || true
+          for q in             'Pennsylvania business registry'             'company identity Pennsylvania'             'legal entity enrichment Pennsylvania'             'vendor verification Pennsylvania'
+          do
+            echo
+            echo "=== Agent402 external rank: $q ==="
+            curl -sS -G 'https://agent402.tools/api/find'               --data-urlencode "q=$q"               --data-urlencode 'include=external'               --data-urlencode 'top=25'             | jq --arg origin "$ORIGIN" '{
+                query:.query,
+                returned:.returned,
+                our_matches:[
+                  .results | to_entries[] |
+                  select(
+                    (.value.source // "") == $origin
+                    or (.value.seller // "") == $origin
+                    or (.value.url // "" | contains("pa-entity-x402.floot.app"))
+                    or (.value.route // "" | contains("pa-business"))
+                  ) |
+                  {rank:(.key+1), value:.value}
+                ],
+                top3:(.results[0:3] | map({name,slug,score,price,source,routerDispatchEligible,routerDispatchReason}))
+              }'
+          done
 
           echo
-          echo '=== agent-tools.cloud submit with project URL contact ==='
-          curl -sS -i -X POST 'https://agent-tools.cloud/api/v1/submit'             -H 'content-type: application/json'             --data "$(jq -nc               --arg url "$ENDPOINT"               --arg name "$NAME"               --arg description "$DESC"               --arg contact "$ORIGIN"               '{type:"x402",url:$url,name:$name,description:$description,contact:$contact}')"
+          echo '=== Market402 operator candidates ==='
+          for u in             'https://market402.com/op/pa-entity-x402.floot.app'             'https://market402.com/op/pa-entity-x402.floot.app.json'             'https://market402.com/badge/pa-entity-x402.floot.app'
+          do
+            echo "--- $u"
+            curl -sS -o /tmp/m402 -w 'HTTP=%{http_code}\n' "$u"
+            head -c 1500 /tmp/m402
+            echo
+          done
 
           echo
-          echo '=== agent-tools.cloud post-search ==='
-          curl -sS -G 'https://agent-tools.cloud/x402' --data-urlencode 'q=pa-entity-x402.floot.app' | grep -o -m1 'pa-entity-x402[^"< ]*' || true
+          echo '=== vet402 homepage API hints ==='
+          curl -sS 'https://vet402.com/' -o /tmp/vet.html
+          grep -oE '<script[^>]+src="[^"]+"' /tmp/vet.html | head -40
+          grep -oE '(/api/[A-Za-z0-9_./?=&:-]+|https://vet402.com/api/[A-Za-z0-9_./?=&:-]+)' /tmp/vet.html | sort -u | head -80
 
           echo
-          echo '=== x402Scout discovery read ==='
-          curl -sS -i --max-time 20 'https://x402scout.com/.well-known/x402-discovery'
-
-          echo
-          echo '=== x402Scout register candidate ==='
-          curl -sS -i --max-time 25 -X POST 'https://x402scout.com/register'             -H 'content-type: application/json'             --data "$(jq -nc               --arg url "$ENDPOINT"               --arg name "$NAME"               --arg description "$DESC"               '{url:$url,name:$name,category:"Data",description:$description}')"
-
-          echo
-          echo '=== x402Scout search/readback ==='
-          curl -sS -i --max-time 20 -G 'https://x402scout.com/discover'             --data-urlencode 'query=Pennsylvania business registry'
+          echo '=== vet402 JS route hints ==='
+          python3 - <<'PY'
+          import re, urllib.request
+          html=open('/tmp/vet.html',encoding='utf-8',errors='ignore').read()
+          srcs=re.findall(r'<script[^>]+src="([^"]+)"',html)
+          for src in srcs[:30]:
+              if src.startswith('/'):
+                  url='https://vet402.com'+src
+              elif src.startswith('http'):
+                  url=src
+              else:
+                  continue
+              try:
+                  txt=urllib.request.urlopen(url,timeout=10).read().decode('utf-8','ignore')
+              except Exception:
+                  continue
+              hits=sorted(set(re.findall(r'["\'\`](\/api\/[A-Za-z0-9_./?=&:{}-]+)',txt)))
+              seller=[h for h in hits if any(k in h.lower() for k in ['seller','check','probe','observ','score','verify'])]
+              if seller:
+                  print(url)
+                  for h in seller[:30]: print(' ',h)
+          PY
