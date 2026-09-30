@@ -126,6 +126,7 @@ As of 2026-09-30:
 - **Cinderwright Discovery Hub** — submission `sub_1790759792472` queued for independent verification.
 - **nohumans.directory** — canonical cheap listing `64403ef1-4ad` is **verified**, score **1.0**, with **3/3** passing probes, no current failure streak, a free live PA-data sample, and a field-level response schema for paid-delivery validation. The accidental duplicate listing was delisted.
 - **true402** — cheap service `360d6155-41e4-44c6-ac23-56062b633aa9` registered at $0.001; current transaction / settled-volume history is still zero.
+- **402directory / jaypay** — residential-network submission returned **HTTP 201**, status **approved**, and its intake probe observed a valid **x402 v2 HTTP 402**. The public directory now contains the $0.001 endpoint, so buyer agents using jaypay's `pay.discover` federation can see it. Two identical community rows were created by overlapping submissions; jaypay exposes no public per-submission edit/delete route, so no further resubmits will be made.
 
 ### $0.005 multi-result SKU
 
