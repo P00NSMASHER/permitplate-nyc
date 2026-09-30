@@ -1,4 +1,5 @@
 name: PA Entity hardened release tests
+# rerun after hardened endpoint fix
 
 on:
   push:
