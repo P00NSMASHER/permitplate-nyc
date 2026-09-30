@@ -43,10 +43,10 @@ for (const p of ['/.well-known/x402','/.well-known/x402.json','/.well-known/x402
   check((r.res.headers.get('content-type')||'').includes('json'),p+' is JSON',r.res.headers.get('content-type')||'');
 }
 
-const skill=await read(origin+'/skill.md');
-check(skill.res.status===200,'skill.md returns 200',String(skill.res.status));
-check(!/<!doctype html/i.test(skill.text),'skill.md is not HTML app shell',skill.res.headers.get('content-type')||'');
-check(/^#\s+/m.test(skill.text),'skill.md looks like Markdown');
+const skill=await read(origin+'/skill.txt');
+check(skill.res.status===200,'skill.txt returns 200',String(skill.res.status));
+check(!/<!doctype html/i.test(skill.text),'skill.txt is not HTML app shell',skill.res.headers.get('content-type')||'');
+check(/^#\s+PA Entity Lookup x402/m.test(skill.text),'skill.txt contains PA Entity skill text');
 
 const malformed=await read(endpoint,{headers:{'PAYMENT-SIGNATURE':'not-base64-json'}});
 check(malformed.res.status===402,'malformed payment returns 402',String(malformed.res.status));
