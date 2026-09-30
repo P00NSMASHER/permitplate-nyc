@@ -1,0 +1,47 @@
+{
+  "name": "PA Entity Lookup x402",
+  "description": "Pennsylvania business registry and company identity lookup for autonomous agents.",
+  "url": "https://pa-entity-x402.floot.app",
+  "version": "1.0.0",
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false,
+    "stateTransitionHistory": false
+  },
+  "defaultInputModes": [
+    "application/json",
+    "text/plain"
+  ],
+  "defaultOutputModes": [
+    "application/json"
+  ],
+  "skills": [
+    {
+      "id": "pennsylvania-business-registry",
+      "name": "Pennsylvania Business Registry Lookup",
+      "description": "Resolve a Pennsylvania company name to Department of State registration records for entity resolution, vendor verification, due diligence, and lead enrichment.",
+      "tags": [
+        "pennsylvania-business-registry",
+        "company-identity",
+        "legal-entity",
+        "vendor-verification",
+        "due-diligence",
+        "lead-enrichment"
+      ],
+      "examples": [
+        "OpenAI",
+        "Sheetz",
+        "Wawa"
+      ]
+    }
+  ],
+  "documentationUrl": "https://pa-entity-x402.floot.app/skill.md",
+  "openapiUrl": "https://pa-entity-x402.floot.app/openapi.json",
+  "x402": {
+    "version": 2,
+    "manifest": "https://pa-entity-x402.floot.app/.well-known/x402",
+    "network": "eip155:8453",
+    "price": "0.005 USDC",
+    "endpoint": "https://pa-entity-x402.floot.app/_api/pa-business"
+  }
+}
