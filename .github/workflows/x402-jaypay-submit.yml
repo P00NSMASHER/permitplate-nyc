@@ -1,0 +1,58 @@
+name: submit PA entity best-match to 402directory
+
+on:
+  push:
+    paths:
+      - '.github/workflows/x402-jaypay-submit.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Submit and read back
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT='x402-jaypay-submit-result.json'
+          ENDPOINT='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI'
+          PAYLOAD="$(jq -nc             --arg name 'PA Entity Best Match x402'             --arg description 'Low-friction Pennsylvania company identity lookup by business name. Returns one best-ranked legal-entity registry record with filing number, registration type, registered address, city, ZIP, and county for $0.001 USDC.'             --arg endpoint "$ENDPOINT"             '{
+              name:$name,
+              description:$description,
+              endpoint:$endpoint,
+              method:"GET",
+              price_usdc:0.001,
+              chain:"base",
+              protocol:"x402",
+              category:"company-data",
+              tags:"pennsylvania,business-registry,company-identity,legal-entity,entity-resolution,due-diligence",
+              example:$endpoint,
+              submitter_email:""
+            }')"
+
+          SUBMIT_STATUS="$(curl -sS -o /tmp/submit.json -w '%{http_code}'             -X POST 'https://402directory.com/api/submissions'             -H 'content-type: application/json'             -H 'accept: application/json'             --data "$PAYLOAD")"
+
+          curl -sS -H 'accept: application/json'             'https://402directory.com/api/directory' -o /tmp/directory.json
+
+          jq -n             --argjson payload "$PAYLOAD"             --arg submit_status "$SUBMIT_STATUS"             --slurpfile submit /tmp/submit.json             --slurpfile directory /tmp/directory.json             --arg endpoint "$ENDPOINT"             '{
+              payload:$payload,
+              submit_http:($submit_status|tonumber),
+              submit_response:($submit[0] // null),
+              visible_now:([($directory[0].entries // [])[] | select(.endpoint==$endpoint)] | length > 0),
+              matching_entries:[($directory[0].entries // [])[] | select(.endpoint==$endpoint)]
+            }' > "$OUT"
+
+          cat "$OUT"
+
+      - name: Commit result
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add x402-jaypay-submit-result.json
+          git commit -m 'Record 402directory submission result' || exit 0
+          git push
