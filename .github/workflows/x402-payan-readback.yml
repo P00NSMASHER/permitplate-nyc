@@ -1,0 +1,47 @@
+name: PayanAgent discovery readback
+
+on:
+  push:
+    paths:
+      - '.github/workflows/x402-payan-readback.yml'
+
+jobs:
+  readback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Query PayanAgent federation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, urllib.parse, urllib.request
+          qs=[
+            'Pennsylvania business registry',
+            'Pennsylvania company identity',
+            'pa-entity-one',
+            'pa-entity-x402',
+            'vendor verification Pennsylvania'
+          ]
+          needles=['pa-entity-one','pa-entity-x402.floot.app','pa-entity-lookup-x402-4fbm4s']
+          for q in qs:
+              url='https://payanagent.com/api/v1/discover?'+urllib.parse.urlencode({
+                  'q':q,'offerType':'api','limit':50
+              })
+              print('\n===',q,'===')
+              try:
+                  with urllib.request.urlopen(url,timeout=30) as r:
+                      raw=r.read().decode()
+                      print('HTTP',r.status,'LEN',len(raw))
+                  data=json.loads(raw)
+                  blob=json.dumps(data)
+                  print('FOUND',any(n.lower() in blob.lower() for n in needles))
+                  offers=data.get('offers',[])
+                  for i,x in enumerate(offers[:20],1):
+                      s=json.dumps(x)
+                      if any(n.lower() in s.lower() for n in needles) or 'pennsylvania' in s.lower():
+                          print('MATCH_RANK',i,json.dumps(x,indent=2)[:6000])
+                  print('TOP5',json.dumps(offers[:5],indent=2)[:9000])
+              except Exception as e:
+                  print('ERROR',repr(e))
+          PY
