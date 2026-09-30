@@ -1,0 +1,87 @@
+name: x402 distribution pass
+
+on:
+  push:
+    paths:
+      - '.github/workflows/x402-distribution-pass.yml'
+
+jobs:
+  distribute:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Submit cheap SKU to remaining free directories
+        shell: bash
+        run: |
+          set +e
+          CHEAP='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI'
+          NAME='PA Entity Best Match x402'
+          DESC='Low-friction Pennsylvania company identity lookup by business name. Returns one best-ranked legal-entity registry record with filing number, registration type, registered address, city, ZIP, and county for $0.001 USDC.'
+          CONTACT='https://pa-entity-x402.floot.app'
+
+          echo '=== nohumans cheap SKU, no sample_query ==='
+          curl -sS -w '\nHTTP_STATUS=%{http_code}\n' -X POST 'https://api.nohumans.directory/v1/listings' \
+            -H 'content-type: application/json' \
+            --data "$(jq -nc --arg name "$NAME" --arg desc "$DESC" --arg endpoint "$CHEAP" '{
+              name:$name,
+              description:$desc,
+              endpoint_url:$endpoint,
+              category:"data.company",
+              price_amount:0.001,
+              price_currency:"USDC",
+              chains:["base"],
+              request_schema:{
+                type:"object",
+                required:["q"],
+                properties:{
+                  q:{type:"string",minLength:2,example:"OpenAI",description:"Pennsylvania business name"}
+                }
+              },
+              response_schema:{
+                type:"object",
+                properties:{
+                  businessName:{type:["string","null"]},
+                  filingNumber:{type:["string","null"]},
+                  registrationType:{type:["string","null"]},
+                  address1:{type:["string","null"]},
+                  address2:{type:["string","null"]},
+                  city:{type:["string","null"]},
+                  state:{type:["string","null"]},
+                  zip:{type:["string","null"]},
+                  county:{type:["string","null"]}
+                }
+              }
+            }')"
+
+          echo
+          echo '=== agent-tools.cloud with URL contact ==='
+          curl -sS -w '\nHTTP_STATUS=%{http_code}\n' -X POST 'https://agent-tools.cloud/api/v1/submit' \
+            -H 'content-type: application/json' \
+            --data "$(jq -nc --arg url "$CHEAP" --arg name "$NAME" --arg description "$DESC" --arg contact "$CONTACT" '{
+              type:"x402",url:$url,name:$name,description:$description,contact:$contact
+            }')"
+
+          echo
+          echo '=== Market402 operator state ==='
+          curl -sS -w '\nHTTP_STATUS=%{http_code}\n' 'https://market402.com/badge/api-v2.appdeploy.ai'
+
+          echo
+          echo '=== Market402 operator JSON ==='
+          curl -sS -w '\nHTTP_STATUS=%{http_code}\n' 'https://market402.com/op/api-v2.appdeploy.ai.json'
+
+          echo
+          echo '=== x402dash cheap SKU readback ==='
+          curl -sS -G -w '\nHTTP_STATUS=%{http_code}\n' 'https://api.x402dash.com/v1/liveness' \
+            --data-urlencode "endpoint=$CHEAP"
+
+          echo
+          echo '=== x402 Arena cheap agent readback ==='
+          curl -sS -w '\nHTTP_STATUS=%{http_code}\n' 'https://core.x402arena.gg/agents' | \
+            jq '.agents[] | select(.agentId=="pa-entity-best-match")'
+
+          echo
+          echo '=== Agent402 buyer search ==='
+          for Q in 'Pennsylvania business registry' 'company identity Pennsylvania' 'legal entity enrichment Pennsylvania' 'vendor verification Pennsylvania'; do
+            echo "--- $Q ---"
+            curl -sS -G 'https://agent402.tools/api/find' --data-urlencode "q=$Q" | jq .
+          done
