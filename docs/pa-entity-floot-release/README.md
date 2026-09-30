@@ -10,7 +10,11 @@ Copy these files into Floot after the daily action reset:
 | --- | --- |
 | pa-business_GET.ts | endpoints/pa-business_GET.ts |
 | pa-business_GET.schema.ts | endpoints/pa-business_GET.schema.ts |
+| pa-entity-one_GET.ts | endpoints/pa-entity-one_GET.ts |
+| pa-entity-one_GET.schema.ts | endpoints/pa-entity-one_GET.schema.ts |
 | pa-business_OPTIONS.ts | endpoints/pa-business_OPTIONS.ts |
+| pa-entity-one_OPTIONS.ts | endpoints/pa-entity-one_OPTIONS.ts |
+| pa-entity-one_OPTIONS.schema.ts | endpoints/pa-entity-one_OPTIONS.schema.ts |
 | pa-business_OPTIONS.schema.ts | endpoints/pa-business_OPTIONS.schema.ts |
 | openapi.json | static/openapi.json |
 | llms.txt | static/llms.txt |
@@ -48,9 +52,9 @@ Do not advertise the broken same-origin /skill.md path.
 7. /.well-known/x402-catalog.json => 200 application/json.
 8. /.well-known/agent-card.json => 200 application/json.
 9. /.well-known/security.txt => 200 text/plain.
-10. Unpaid paid route => real external HTTP 402.
+10. Both paid routes => real external HTTP 402.
 11. PAYMENT-REQUIRED present.
-12. $0.005 / 5000 atomic Base USDC / payTo unchanged.
+12. /_api/pa-business = $0.005 / 5000 atomic Base USDC; /_api/pa-entity-one = $0.001 / 1000 atomic Base USDC; payTo unchanged.
 13. Invalid signed payload => 402, not 503.
 14. Invalid paid retry query => 400 without facilitator call.
 15. PA source failure => 502 and no settlement.
