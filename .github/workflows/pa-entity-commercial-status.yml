@@ -1,4 +1,4 @@
-name: PA Entity commercial status
+name: PA Entity Market402 submission
 
 on:
   push:
@@ -6,113 +6,51 @@ on:
       - '.github/workflows/pa-entity-commercial-status.yml'
 
 jobs:
-  status:
+  submit:
     runs-on: ubuntu-latest
-    timeout-minutes: 7
+    timeout-minutes: 6
     steps:
-      - name: Read public commercial status
+      - name: Submit seller with paid-probe opt-in
         shell: bash
         run: |
-          set +e
-          ORIGIN='https://pa-entity-x402.floot.app'
-          ENDPOINT="$ORIGIN/_api/pa-business?q=OpenAI&limit=1"
+          set -euo pipefail
+          ENDPOINT='https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
 
-          echo '=== PAYAI STATS ==='
-          ENC=$(python3 - <<'PY'
-          import urllib.parse
-          print(urllib.parse.quote('https://pa-entity-x402.floot.app/_api/pa-business', safe=''))
-          PY
-          )
-          curl -sS "https://facilitator.payai.network/discovery/resources/$ENC/stats" | jq .
+          echo '=== SELFTEST ==='
+          curl -sS -i -X POST 'https://market402.com/selftest'             -H 'content-type: application/json'             --data "$(jq -nc --arg url "$ENDPOINT" '{url:$url}')" | tee /tmp/selftest.txt
 
           echo
-          echo '=== NOHUMANS ==='
-          curl -sS 'https://api.nohumans.directory/v1/listings/958fd262-287' | jq '{
-            id,name,status,score,probe_count,probes_passed,probes_failed,
-            consecutive_failures,last_probed_at_iso,next_check_by_iso,
-            paid_verified,distinct_payers,onchain_tx_count_30d,onchain_unique_payers_30d,
-            evidence_tier,paid_depth,sample_query
-          }'
+          echo '=== SUBMIT + PAID PROBE OPT-IN ==='
+          curl -sS -i -X POST 'https://market402.com/submit'             -H 'content-type: application/json'             --data "$(jq -nc               --arg url "$ENDPOINT"               --argjson price 0.005               '{
+                url:$url,
+                declared_price_usd:$price,
+                paid_probe_optin:true,
+                sample_input:{
+                  method:"GET",
+                  queryParams:{q:"OpenAI",limit:1}
+                }
+              }')" | tee /tmp/submit.txt
 
           echo
-          echo '=== NOHUMANS BUYER RANKS ==='
-          for q in             'Pennsylvania business registry'             'company identity Pennsylvania'             'vendor verification Pennsylvania'             'legal entity enrichment Pennsylvania'
-          do
-            echo "-- $q"
-            curl -sS -G 'https://nohumans.directory/v1/discover'               --data-urlencode "q=$q" --data-urlencode 'limit=100' > /tmp/nh.json
-            python3 - "$q" <<'PY'
-          import json,sys
-          q=sys.argv[1]
-          d=json.load(open('/tmp/nh.json'))
-          rows=d.get('results',[])
-          hits=[(i+1,x) for i,x in enumerate(rows) if 'pa-entity-x402.floot.app' in x.get('endpoint_url','')]
-          print(json.dumps({'query':q,'returned':len(rows),'rank':hits[0][0] if hits else None,'match':hits[0][1] if hits else None},indent=2))
-          PY
-          done
-
-          echo
-          echo '=== 402 INDEX ==='
-          curl -sS 'https://402index.io/api/v1/services/2a92dcd4-206a-42ad-b6e5-e457635bb75a' | jq .
-
-          echo
-          echo '=== 402 INDEX BUYER RANKS ==='
-          for q in             'Pennsylvania business registry'             'company identity Pennsylvania'             'vendor verification Pennsylvania'             'legal entity enrichment Pennsylvania'
-          do
-            echo "-- $q"
-            curl -sS -G 'https://402index.io/api/v1/services'               --data-urlencode "q=$q"               --data-urlencode 'protocol=x402'               --data-urlencode 'limit=20' > /tmp/i.json
-            python3 - "$q" <<'PY'
-          import json,sys
-          q=sys.argv[1]
-          d=json.load(open('/tmp/i.json'))
-          rows=d.get('services',[])
-          target='2a92dcd4-206a-42ad-b6e5-e457635bb75a'
-          idx=next((i for i,x in enumerate(rows) if x.get('id')==target),None)
-          print(json.dumps({'query':q,'rank':idx+1 if idx is not None else None,'top5':[{'name':x.get('name'),'id':x.get('id'),'price':x.get('price_usd'),'health':x.get('health_status')} for x in rows[:5]]},indent=2))
-          PY
-          done
-
-          echo
-          echo '=== TRUE402 ==='
-          curl -sS 'https://true402.dev/api/v1/services/ca9c2ed8-930c-4d55-920c-f87a858bb045' | jq .
-
-          echo
-          echo '=== X402DASH ==='
-          curl -sS -G 'https://api.x402dash.com/v1/liveness'             --data-urlencode "endpoint=$ENDPOINT" | jq .
-
-          echo
-          echo '=== X402 ARENA ==='
-          curl -sS 'https://core.x402arena.gg/agents' > /tmp/arena.json
-          jq '.agents // . | map(select((.agentId // .name // "") | tostring | contains("pa-entity-lookup")))' /tmp/arena.json
-
-          echo
-          echo '=== AGENT402 SELLER ==='
-          curl -sS 'https://agent402.tools/api/index?seller=pa-entity-x402.floot.app' | jq '{
-            origin,toolCount,paidToolCount,fetchedAt,error,health,routable,
-            discoveryPath,history,paymentNetworksKnown,routerDispatchEligible,
-            routerDispatchReason,routerDispatchByChain,
-            tools:[.tools[]? | {method,route,slug,name,price,paid,lastVerifiedAt,networks}]
-          }'
-
-          echo
-          echo '=== MARKET402 OPERATOR ==='
-          curl -sS -i 'https://market402.com/op/pa-entity-x402.floot.app.json' | head -c 12000
-
-          echo
-          echo '=== MARKET402 CATALOG SEARCH ==='
-          curl -sS 'https://market402.com/operators.json' > /tmp/operators.json
+          echo '=== OPTIN ROSTER CHECK ==='
+          curl -sS 'https://market402.com/optin.json' > /tmp/optin.json
           python3 - <<'PY'
           import json
-          d=json.load(open('/tmp/operators.json'))
-          raw=json.dumps(d)
+          d=json.load(open('/tmp/optin.json'))
           needle='pa-entity-x402.floot.app'
+          raw=json.dumps(d)
           print('contains=',needle in raw)
           if needle in raw:
             def walk(x,path=''):
               if isinstance(x,dict):
-                if any(needle in str(v) for v in x.values()):
-                  print(path,json.dumps(x)[:10000])
+                if needle in json.dumps(x):
+                  print(path,json.dumps(x,indent=2)[:12000])
                 for k,v in x.items(): walk(v,path+'/'+str(k))
               elif isinstance(x,list):
                 for i,v in enumerate(x): walk(v,path+'/'+str(i))
             walk(d)
           PY
+
+          echo
+          echo '=== OPERATOR READBACK ==='
+          curl -sS -i 'https://market402.com/op/pa-entity-x402.floot.app.json' | head -c 12000
