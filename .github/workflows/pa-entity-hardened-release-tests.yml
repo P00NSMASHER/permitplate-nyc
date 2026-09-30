@@ -1,0 +1,15 @@
+name: PA Entity hardened release tests
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-hardened-release-tests.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run hardened seller regressions
+        run: npx -y tsx@latest scripts/test-pa-entity-floot-release.mts
