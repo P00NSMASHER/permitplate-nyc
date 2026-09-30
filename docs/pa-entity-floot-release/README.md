@@ -20,6 +20,7 @@ Copy these files into Floot after the daily action reset:
 | llms.txt | static/llms.txt |
 | llms-full.txt | static/llms-full.txt |
 | skill.txt | static/skill.txt |
+| x402 | static/.well-known/x402 |
 | x402.json | static/.well-known/x402.json |
 | x402-services.json | static/.well-known/x402-services.json |
 | x402-service.json | static/.well-known/x402-service.json |
@@ -27,10 +28,13 @@ Copy these files into Floot after the daily action reset:
 | security.txt | static/.well-known/security.txt |
 | sitemap.xml | static/sitemap.xml |
 
-Also attempt to serve the canonical extensionless path:
-- static/.well-known/x402
+The canonical extensionless path is intentionally a **two-resource** manifest:
+- `/_api/pa-entity-one` at $0.001
+- `/_api/pa-business` at $0.005
 
-Use the exact contents of x402.json. If Floot rejects an extensionless static file, keep both JSON aliases live and record the platform limitation; do not fabricate success.
+The staged `x402` file has been parsed successfully by Agent402's current `normaliseManifestTools` implementation with both prices, Base network, and seller wallet preserved.
+
+Keep `x402.json` and `x402-services.json` as conservative single-resource compatibility aliases. If Floot cannot serve the extensionless static file as HTTP 200 `application/json`, record that platform limitation and do not claim Agent402 canonical discovery is fixed.
 
 ## Skill discovery
 
@@ -50,25 +54,26 @@ Do not publish an A2A `/.well-known/agent-card.json` unless the service actually
 2. /openapi.json => 200 application/json.
 3. /llms.txt => 200 text/plain.
 4. /skill.txt => 200 text/plain and must not contain the SPA HTML shell.
-5. /.well-known/x402.json => 200 application/json.
-6. /.well-known/x402-services.json => 200 application/json.
-7. /.well-known/x402-service.json => 200 application/json.
-8. /.well-known/x402-catalog.json => 200 application/json.
-9. /.well-known/security.txt => 200 text/plain.
-10. Both paid routes => real external HTTP 402.
-11. PAYMENT-REQUIRED present.
-12. /_api/pa-business = $0.005 / 5000 atomic Base USDC; /_api/pa-entity-one = $0.001 / 1000 atomic Base USDC; payTo unchanged.
-13. Invalid signed payload => 402, not 503.
-14. Invalid paid retry query => 400 without facilitator call.
-15. PA source failure => 502 and no settlement.
-16. settlement_pending/duplicate_settlement never creates a fresh payment challenge.
-17. unresolved settlement => 503 + Retry-After + no PAYMENT-REQUIRED.
-18. successful settlement => PAYMENT-RESPONSE + x402-settled:true.
-19. OpenAI, Sheetz, Wawa legal-name matches rank first.
-20. creationDate and principal/officer enrichment present.
-21. Coinbase/CDP validator valid=true and simulation accepted.
-22. AgentCash discovers both paid GET routes: $0.001 best-match and $0.005 enriched multi-result.
-23. Refresh x402scan.
-24. Re-register Agent402 and inspect routable/health state.
-25. Re-check 402 Index and nohumans rankings.
-26. Revenue remains $0 until a third-party settlement is observed.
+5. /.well-known/x402 => 200 application/json and advertises both $0.001 + $0.005 routes.
+6. /.well-known/x402.json => 200 application/json.
+7. /.well-known/x402-services.json => 200 application/json.
+8. /.well-known/x402-service.json => 200 application/json.
+9. /.well-known/x402-catalog.json => 200 application/json.
+10. /.well-known/security.txt => 200 text/plain.
+11. Both paid routes => real external HTTP 402.
+12. PAYMENT-REQUIRED present.
+13. /_api/pa-business = $0.005 / 5000 atomic Base USDC; /_api/pa-entity-one = $0.001 / 1000 atomic Base USDC; payTo unchanged.
+14. Invalid signed payload => 402, not 503.
+15. Invalid paid retry query => 400 without facilitator call.
+16. PA source failure => 502 and no settlement.
+17. settlement_pending/duplicate_settlement never creates a fresh payment challenge.
+18. unresolved settlement => 503 + Retry-After + no PAYMENT-REQUIRED.
+19. successful settlement => PAYMENT-RESPONSE + x402-settled:true.
+20. OpenAI, Sheetz, Wawa legal-name matches rank first.
+21. creationDate and principal/officer enrichment present.
+22. Coinbase/CDP validator valid=true and simulation accepted.
+23. AgentCash discovers both paid GET routes: $0.001 best-match and $0.005 enriched multi-result.
+24. Refresh x402scan.
+25. Re-register Agent402 and inspect routable/health state.
+26. Re-check 402 Index and nohumans rankings.
+27. Revenue remains $0 until a third-party settlement is observed.
