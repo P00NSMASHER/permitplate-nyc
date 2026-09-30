@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import {
   decodePayment,
   handle,
+  normalizeCreationDate,
   parseLimit,
   paymentDocument,
 } from '../docs/pa-entity-floot-release/pa-business_GET.ts'
@@ -57,6 +58,9 @@ assert.throws(() => parseLimit('10garbage'), /invalid_limit/)
 assert.throws(() => parseLimit('0'), /invalid_limit/)
 assert.throws(() => decodePayment(signature({})), /invalid_payment_payload/)
 assert.equal(paymentDocument().accepts[0].extra.name, 'USD Coin')
+assert.equal(normalizeCreationDate('1753-01-01T00:00:00.000'), null)
+assert.equal(normalizeCreationDate('1768-04-01T00:00:00.000'), '1768-04-01')
+assert.equal(normalizeCreationDate('2025-04-23T00:00:00.000'), '2025-04-23')
 
 {
   const res = await handle({ request: req() })
