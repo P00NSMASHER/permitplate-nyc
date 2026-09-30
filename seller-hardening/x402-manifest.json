@@ -1,0 +1,139 @@
+{
+  "x402Version": 2,
+  "resource": {
+    "url": "https://pa-entity-x402.floot.app/_api/pa-business",
+    "description": "Pennsylvania business registry and company identity lookup by business name. Returns Pennsylvania Department of State filing number, registration type, registered address, city, ZIP, county, creation date, and source-published principal/officer records for entity resolution, vendor verification, due diligence, and lead enrichment.",
+    "mimeType": "application/json",
+    "serviceName": "Pennsylvania Business Registry — Company Identity Lookup",
+    "tags": [
+      "pennsylvania-business-registry",
+      "company-identity",
+      "legal-entity",
+      "vendor-verification",
+      "due-diligence",
+      "lead-enrichment"
+    ]
+  },
+  "accepts": [
+    {
+      "scheme": "exact",
+      "network": "eip155:8453",
+      "amount": "5000",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+      "maxTimeoutSeconds": 60,
+      "extra": {
+        "name": "USD Coin",
+        "version": "2"
+      }
+    }
+  ],
+  "extensions": {
+    "bazaar": {
+      "info": {
+        "input": {
+          "type": "http",
+          "method": "GET",
+          "queryParams": {
+            "q": "OpenAI",
+            "limit": 1
+          }
+        },
+        "output": {
+          "type": "json",
+          "example": {
+            "query": "OpenAI",
+            "count": 1,
+            "results": [
+              {
+                "businessName": "Openai, L.l.c.",
+                "filingNumber": "0014371957",
+                "registrationType": "Foreign Limited Liability Company",
+                "address1": "600 North Second Street, Suite 401",
+                "address2": null,
+                "city": "Harrisburg",
+                "state": "PA",
+                "zip": "17101",
+                "county": "Dauphin",
+                "countyCode": "22",
+                "creationDate": "2025-04-23",
+                "principals": [
+                  {
+                    "role": "Governor",
+                    "firstName": null,
+                    "middleName": null,
+                    "lastName": null
+                  }
+                ]
+              }
+            ],
+            "source": "Pennsylvania Department of State via data.pa.gov",
+            "paid": true
+          }
+        }
+      },
+      "schema": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "http"
+              },
+              "method": {
+                "const": "GET"
+              },
+              "queryParams": {
+                "type": "object",
+                "properties": {
+                  "q": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 120
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 25
+                  }
+                },
+                "required": [
+                  "q"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "type",
+              "method",
+              "queryParams"
+            ],
+            "additionalProperties": false
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "json"
+              },
+              "example": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "type",
+              "example"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "input",
+          "output"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+}
