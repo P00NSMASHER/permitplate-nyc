@@ -4,7 +4,7 @@
   "description": "Two Pennsylvania business-registry products for agents: a $0.001 single best-match resolver and a $0.005 multi-result enriched company-identity search.",
   "openapi": "https://pa-entity-x402.floot.app/openapi.json",
   "llms": "https://pa-entity-x402.floot.app/llms.txt",
-  "skill": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/main/PA_ENTITY_SKILL.md",
+  "skill": "https://pa-entity-x402.floot.app/skill.txt",
   "resources": [
     {
       "resource": "https://pa-entity-x402.floot.app/_api/pa-business",
