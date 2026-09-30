@@ -1,0 +1,41 @@
+name: current nohumans rank audit
+
+on:
+  push:
+    paths:
+      - '.github/workflows/x402-current-rank.yml'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Measure current semantic ranks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, urllib.parse, urllib.request
+          listing_id='64403ef1-4ad'
+          queries=[
+            'Pennsylvania business registry',
+            'Pennsylvania company identity',
+            'Pennsylvania legal entity enrichment',
+            'Pennsylvania vendor verification',
+            'Pennsylvania business registration lookup',
+            'Pennsylvania company due diligence',
+            'find Pennsylvania filing number by company name',
+            'verify Pennsylvania company registered address'
+          ]
+          out=[]
+          for q in queries:
+              url='https://api.nohumans.directory/v1/discover?'+urllib.parse.urlencode({
+                  'q':q,'max_price':'0.01','limit':'20'
+              })
+              with urllib.request.urlopen(url, timeout=20) as r:
+                  data=json.load(r)
+              rows=data.get('results',[])
+              rank=next((i+1 for i,x in enumerate(rows) if x.get('id')==listing_id),0)
+              out.append({'query':q,'rank':rank,'count':len(rows)})
+          print(json.dumps(out,indent=2))
+          PY
