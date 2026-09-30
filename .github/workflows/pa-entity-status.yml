@@ -1,4 +1,4 @@
-name: PA best-match directory batch
+name: PA best-match nohumans submit
 
 on:
   push:
@@ -8,37 +8,25 @@ on:
 jobs:
   submit:
     runs-on: ubuntu-latest
-    timeout-minutes: 7
+    timeout-minutes: 5
     steps:
-      - name: Submit distinct $0.001 best-match tool
+      - name: Submit paid best-match endpoint without fake free preview
         shell: bash
         run: |
-          set +e
-          ENDPOINT='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI'
-          NAME='PA Entity Best Match x402'
-          DESC='Resolve one best Pennsylvania legal-entity match by business name for $0.001 USDC. Returns the top-ranked Department of State registry record for low-cost company identity resolution, vendor matching, and lead normalization.'
-          WALLET='0x708f7b52b56eafd7fc1de65fc7752ed732914021'
+          set -euo pipefail
+          STATUS=$(curl -sS -o /tmp/nh.json -w '%{http_code}' -X POST 'https://api.nohumans.directory/v1/listings'             -H 'content-type: application/json'             --data '{"name":"PA Entity Best Match x402","description":"Resolve one best Pennsylvania legal-entity match by business name for $0.001 USDC. Returns the top-ranked Pennsylvania Department of State registry record for low-cost company identity resolution, vendor matching, and lead normalization.","endpoint_url":"https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI","category":"data.company","price_amount":0.001,"price_currency":"USDC","chains":["base"],"request_schema":{"type":"object","required":["q"],"properties":{"q":{"type":"string","minLength":2,"maxLength":120,"example":"OpenAI","description":"Pennsylvania business name or distinctive fragment"}}},"response_schema":{"type":"object","required":["query","found","match","source","paid"],"properties":{"query":{"type":"string"},"found":{"type":"boolean"},"match":{"type":["object","null"]},"source":{"type":"string"},"paid":{"type":"boolean"}}}}')
+          echo "HTTP_STATUS=$STATUS"
 
-          echo '=== NOHUMANS ==='
-          curl -sS -i -X POST 'https://api.nohumans.directory/v1/listings' \
-            -H 'content-type: application/json' \
-            --data '{"name":"PA Entity Best Match x402","description":"Resolve one best Pennsylvania legal-entity match by business name for $0.001 USDC. Returns the top-ranked Department of State registry record for low-cost company identity resolution, vendor matching, and lead normalization.","endpoint_url":"https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI","category":"data.company","price_amount":0.001,"price_currency":"USDC","chains":["base"],"sample_query":"https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI","request_schema":{"type":"object","required":["q"],"properties":{"q":{"type":"string","minLength":2,"maxLength":120,"example":"OpenAI","description":"Pennsylvania business name or distinctive name fragment"}}},"response_schema":{"type":"object","required":["query","found","match","source","paid"],"properties":{"query":{"type":"string"},"found":{"type":"boolean"},"match":{"type":["object","null"]},"source":{"type":"string"},"paid":{"type":"boolean"}}}}'
-          echo
+          TOKEN=$(jq -r '.claim_token // empty' /tmp/nh.json)
+          if [ -n "$TOKEN" ]; then
+            echo "::add-mask::$TOKEN"
+          fi
 
-          echo '=== 402 INDEX ==='
-          curl -sS -i -X POST 'https://402index.io/api/v1/register' \
-            -H 'content-type: application/json' \
-            --data "$(jq -nc --arg url "$ENDPOINT" --arg name "$NAME" --arg description "$DESC" '{url:$url,name:$name,protocol:"x402",http_method:"GET",description:$description,price_usd:0.001,payment_asset:"USDC",payment_network:"Base",category:"data/company"}')"
-          echo
+          echo '=== SAFE SUBMISSION RESULT ==='
+          jq 'del(.claim_token) | {id,name,status,score,price_amount,price_currency,endpoint_url,category,chains,paid_verified,evidence_tier,request_schema,response_schema,error}' /tmp/nh.json
 
-          echo '=== X402DASH ==='
-          curl -sS -i -X POST 'https://api.x402dash.com/v1/register' \
-            -H 'content-type: application/json' \
-            --data "$(jq -nc --arg url "$ENDPOINT" --arg name "$NAME" --arg description "$DESC" '{url:$url,name:$name,description:$description,category:"data-enrichment",tags:["pennsylvania","business-registry","company-identity","best-match","entity-resolution"]}')"
-          echo
-
-          echo '=== X402 ARENA ==='
-          curl -sS -i -X POST 'https://core.x402arena.gg/register' \
-            -H 'content-type: application/json' \
-            --data "$(jq -nc --arg endpoint "$ENDPOINT" --arg walletAddress "$WALLET" --arg description "$DESC" '{name:"pa-entity-best-match",endpoint:$endpoint,niche:"company-identity",description:$description,walletAddress:$walletAddress,method:"GET",resourceType:"http",inputSchema:{type:"object",properties:{q:{type:"string",minLength:2}},required:["q"]},outputSchema:{type:"object",properties:{query:{type:"string"},found:{type:"boolean"},match:{type:["object","null"]},source:{type:"string"},paid:{type:"boolean"}},required:["query","found","match","source","paid"]}}')"
-          echo
+          ID=$(jq -r '.id // empty' /tmp/nh.json)
+          if [ -n "$ID" ]; then
+            echo '=== READBACK ==='
+            curl -sS "https://api.nohumans.directory/v1/listings/$ID" | jq '{id,name,status,score,probe_count,probes_passed,paid_verified,distinct_payers,evidence_tier,price_amount,endpoint_url}'
+          fi
