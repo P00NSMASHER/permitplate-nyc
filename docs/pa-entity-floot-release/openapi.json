@@ -12,7 +12,7 @@
   },
   "externalDocs": {
     "description": "Agent usage guide",
-    "url": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/main/PA_ENTITY_SKILL.md"
+    "url": "https://pa-entity-x402.floot.app/skill.txt"
   },
   "paths": {
     "/_api/pa-business": {
