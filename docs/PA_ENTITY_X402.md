@@ -124,7 +124,7 @@ As of 2026-09-30:
 - **x402 Arena** — agent `pa-entity-best-match`; active, verified, Bazaar-compatible; advertised price `0.001 USDC`.
 - **402 Index** — service `3d5b06e5-9d2b-43e3-bc73-db35c4725253`; live HTTP 402 verified, health `healthy`, pending directory review because the shared AppDeploy origin cannot be domain-claimed by this seller.
 - **Cinderwright Discovery Hub** — submission `sub_1790759792472` queued for independent verification.
-- **nohumans.directory** — listing `64403ef1-4ad` created for the cheap SKU after correcting the submission shape.
+- **nohumans.directory** — canonical cheap listing `64403ef1-4ad` is **verified**, score **1.0**, with **3/3** passing probes, no current failure streak, and a free live PA-data sample at the AppDeploy demo route. The accidental duplicate listing was delisted.
 
 ### $0.005 multi-result SKU
 
