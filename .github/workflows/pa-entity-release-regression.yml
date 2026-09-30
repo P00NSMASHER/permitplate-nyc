@@ -5,6 +5,8 @@ on:
     paths:
       - 'docs/pa-entity-floot-release/**'
       - 'scripts/test-pa-entity-floot-release.mts'
+      - 'scripts/test-pa-entity-best-match-release.mts'
+      - 'scripts/test-pa-entity-best-match-release.mts'
       - 'scripts/test-pa-entity-discovery-fixtures.mjs'
       - 'PA_ENTITY_SKILL.md'
       - 'x402-manifest.json'
@@ -26,5 +28,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Test payment and settlement recovery
         run: npx -y tsx@latest scripts/test-pa-entity-floot-release.mts
+      - name: Test $0.001 best-match payment and ranking
+        run: npx -y tsx@latest scripts/test-pa-entity-best-match-release.mts
       - name: Test discovery fixture parity
         run: node scripts/test-pa-entity-discovery-fixtures.mjs
