@@ -29,9 +29,11 @@ assert.throws(() => parseLimit('0'), /invalid_limit/)
 assert.throws(() => parseLimit('26'), /invalid_limit/)
 
 const sqlish=buildEntitySearchUrl("' OR 1=1 --", 'contains', 1)
-assert.match(decodeURIComponent(sqlish), /upper\(business_name\) like/)
-assert.match(decodeURIComponent(sqlish), /'' OR 1=1 --/)
-assert.match(decodeURIComponent(buildEntitySearchUrl('Wawa','starts',5)), /like 'WAWA%'/)
+const sqlWhere = new URL(sqlish).searchParams.get('$where') ?? ''
+assert.match(sqlWhere, /upper\(business_name\) like/)
+assert.match(sqlWhere, /'' OR 1=1 --/)
+const startsWhere = new URL(buildEntitySearchUrl('Wawa','starts',5)).searchParams.get('$where') ?? ''
+assert.match(startsWhere, /like 'WAWA%'/)
 
 const purl=buildPrincipalSearchUrl(['0000233685','0000326968','bad','0000233685'])
 assert.ok(purl)
