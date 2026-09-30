@@ -1,0 +1,5 @@
+Contact: https://pa-entity-x402.floot.app
+Canonical: https://pa-entity-x402.floot.app/.well-known/security.txt
+Policy: https://pa-entity-x402.floot.app/llms.txt
+Preferred-Languages: en
+Expires: 2027-09-30T00:00:00Z
