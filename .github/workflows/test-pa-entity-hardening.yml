@@ -1,4 +1,4 @@
-name: test hardened PA Entity core
+name: test hardened PA Entity core v2
 
 on:
   push:
