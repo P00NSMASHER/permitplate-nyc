@@ -1,4 +1,4 @@
-name: PayanAgent discovery readback
+name: PayanAgent demand scan
 
 on:
   push:
@@ -6,27 +6,31 @@ on:
       - '.github/workflows/x402-payan-readback.yml'
 
 jobs:
-  readback:
+  scan:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Query PayanAgent federation
+      - name: Search open buyer requests
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           import json, urllib.parse, urllib.request
           qs=[
-            'Pennsylvania business registry',
-            'Pennsylvania company identity',
-            'pa-entity-one',
-            'pa-entity-x402',
-            'vendor verification Pennsylvania'
+            'Pennsylvania',
+            'business registry',
+            'company identity',
+            'legal entity',
+            'vendor verification',
+            'company enrichment',
+            'filing number',
+            'registered address',
+            'due diligence',
+            'KYB'
           ]
-          needles=['pa-entity-one','pa-entity-x402.floot.app','pa-entity-lookup-x402-4fbm4s']
           for q in qs:
-              url='https://payanagent.com/api/v1/discover?'+urllib.parse.urlencode({
-                  'q':q,'offerType':'api','limit':50
+              url='https://payanagent.com/api/v1/requests?'+urllib.parse.urlencode({
+                  'status':'open','q':q,'limit':50
               })
               print('\n===',q,'===')
               try:
@@ -34,14 +38,10 @@ jobs:
                       raw=r.read().decode()
                       print('HTTP',r.status,'LEN',len(raw))
                   data=json.loads(raw)
-                  blob=json.dumps(data)
-                  print('FOUND',any(n.lower() in blob.lower() for n in needles))
-                  offers=data.get('offers',[])
-                  for i,x in enumerate(offers[:20],1):
-                      s=json.dumps(x)
-                      if any(n.lower() in s.lower() for n in needles) or 'pennsylvania' in s.lower():
-                          print('MATCH_RANK',i,json.dumps(x,indent=2)[:6000])
-                  print('TOP5',json.dumps(offers[:5],indent=2)[:9000])
+                  rows=data.get('requests', data if isinstance(data,list) else [])
+                  print('COUNT',len(rows))
+                  for x in rows[:20]:
+                      print(json.dumps(x,indent=2)[:5000])
               except Exception as e:
                   print('ERROR',repr(e))
           PY
