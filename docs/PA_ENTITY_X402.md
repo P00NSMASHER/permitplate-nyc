@@ -127,6 +127,7 @@ As of 2026-09-30:
 - **nohumans.directory** — canonical cheap listing `64403ef1-4ad` is **verified**, score **1.0**, with **3/3** passing probes, no current failure streak, a free live PA-data sample, and a field-level response schema for paid-delivery validation. The accidental duplicate listing was delisted.
 - **true402** — cheap service `360d6155-41e4-44c6-ac23-56062b633aa9` registered at $0.001; current transaction / settled-volume history is still zero.
 - **402directory / jaypay** — residential-network submission returned **HTTP 201**, status **approved**, and its intake probe observed a valid **x402 v2 HTTP 402**. The public directory now contains the $0.001 endpoint, so buyer agents using jaypay's `pay.discover` federation can see it. Two identical community rows were created by overlapping submissions; jaypay exposes no public per-submission edit/delete route, so no further resubmits will be made.
+- **the402 independent validator** — fresh external validation returned `verdict: payable`, parsed x402 v2 over `PAYMENT-REQUIRED`, Base mainnet, `1000` atomic USDC ($0.001), the correct payout wallet, and `problems: []`.
 
 ### $0.005 multi-result SKU
 
@@ -140,6 +141,7 @@ As of 2026-09-30:
 - **Market402** — submission queued; free self-test passed all 11 x402 conformance checks.
 - **Cinderwright Discovery Hub** — endpoint-level submission `sub_1790759386628` queued for independent verification.
 - **SCVD General Store preflight** — independent free probe returned `verdict: ready`; HTTP 402, PAYMENT-REQUIRED parsing, x402 v2, accepts fields, and Bazaar extension passed. Its separate `before-you-pay` simulation returned `will_your_client_pay: would_sign` at the advertised $0.005 price.
+- **the402 independent validator** — fresh external validation returned `verdict: payable`, parsed x402 v2 over `PAYMENT-REQUIRED`, Base mainnet, `5000` atomic USDC ($0.005), the correct payout wallet, and `problems: []`.
 
 These are discovery or protocol observations, not endorsements. Unpaid conformance tests do not prove paid delivery after settlement.
 
