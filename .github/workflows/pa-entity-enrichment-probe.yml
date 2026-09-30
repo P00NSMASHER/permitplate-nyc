@@ -1,0 +1,60 @@
+name: PA Entity enrichment probe
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-enrichment-probe.yml'
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Probe official PA datasets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for q in OpenAI Sheetz Wawa; do
+            QUP=$(printf '%s' "$q" | tr '[:lower:]' '[:upper:]')
+            echo "=== DISTINCT $q ==="
+            curl -sS -w '\nHTTP=%{http_code} TIME=%{time_total}\n'               --get 'https://data.pa.gov/resource/3urc-uaba.json'               --data-urlencode "\$where=upper(business_name) like '%${QUP}%'"               --data-urlencode "\$limit=5" | tee "/tmp/distinct-$q.txt"
+
+            echo "=== FULL $q ==="
+            curl -sS -w '\nHTTP=%{http_code} TIME=%{time_total}\n'               --get 'https://data.pa.gov/resource/xvd7-5r2c.json'               --data-urlencode "\$where=upper(business_name) like '%${QUP}%'"               --data-urlencode "\$limit=50" | tee "/tmp/full-$q.txt"
+          done
+
+          echo '=== FIELD + GROUPING SUMMARY ==='
+          python3 - <<'PY'
+          import json,glob
+          for p in sorted(glob.glob('/tmp/full-*.txt')):
+              raw=open(p).read()
+              body=raw.split('\nHTTP=',1)[0]
+              rows=json.loads(body)
+              print('\nFILE',p,'ROWS',len(rows))
+              if rows:
+                  print('KEYS',sorted(rows[0].keys()))
+              groups={}
+              for r in rows:
+                  k=r.get('filing_number')
+                  g=groups.setdefault(k,{
+                    'business_name':r.get('business_name'),
+                    'filing_number':k,
+                    'registration_type':r.get('typeofbusinessregistration'),
+                    'creationdate':r.get('creationdate'),
+                    'address_line1':r.get('address_line1'),
+                    'city':r.get('city'),
+                    'state':r.get('state'),
+                    'zip':r.get('zip'),
+                    'county':r.get('shortcountyname'),
+                    'principals':[]
+                  })
+                  if r.get('party_type') or r.get('first_name') or r.get('last_name'):
+                      g['principals'].append({
+                        'role':r.get('party_type'),
+                        'first_name':r.get('first_name'),
+                        'middle_name':r.get('middle_name'),
+                        'last_name':r.get('last_name')
+                      })
+              print(json.dumps(list(groups.values())[:8],indent=2))
+          PY
