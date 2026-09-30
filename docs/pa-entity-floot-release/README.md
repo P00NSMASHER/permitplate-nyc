@@ -19,12 +19,11 @@ Copy these files into Floot after the daily action reset:
 | openapi.json | static/openapi.json |
 | llms.txt | static/llms.txt |
 | llms-full.txt | static/llms-full.txt |
+| skill.txt | static/skill.txt |
 | x402.json | static/.well-known/x402.json |
 | x402-services.json | static/.well-known/x402-services.json |
 | x402-service.json | static/.well-known/x402-service.json |
 | x402-catalog.json | static/.well-known/x402-catalog.json |
-| agent-card.json | static/.well-known/agent-card.json |
-| agent-card.json | static/.well-known/agent.json |
 | security.txt | static/.well-known/security.txt |
 | sitemap.xml | static/sitemap.xml |
 
@@ -33,24 +32,28 @@ Also attempt to serve the canonical extensionless path:
 
 Use the exact contents of x402.json. If Floot rejects an extensionless static file, keep both JSON aliases live and record the platform limitation; do not fabricate success.
 
-## Do not copy PA_ENTITY_SKILL.md into Floot as /skill.md
+## Skill discovery
 
-The current Floot deployment accepts static/skill.md in source but production serves the SPA HTML shell at /skill.md. The hardened catalog therefore points at the durable raw GitHub document:
+The current Floot deployment serves `/skill.md` as the SPA HTML shell, so do not advertise that path.
 
-https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/main/PA_ENTITY_SKILL.md
+Publish `skill.txt` as `static/skill.txt` and use this same-origin machine-readable URL:
 
-Do not advertise the broken same-origin /skill.md path.
+https://pa-entity-x402.floot.app/skill.txt
+
+The raw GitHub `PA_ENTITY_SKILL.md` remains a durable fallback/reference, but the live service metadata should prefer the same-origin `/skill.txt`.
+
+Do not publish an A2A `/.well-known/agent-card.json` unless the service actually implements an A2A protocol binding. This release is an HTTP/x402 API, not an A2A message server.
 
 ## Required post-deploy gates
 
 1. Typecheck clean.
 2. /openapi.json => 200 application/json.
 3. /llms.txt => 200 text/plain.
-4. /.well-known/x402.json => 200 application/json.
-5. /.well-known/x402-services.json => 200 application/json.
-6. /.well-known/x402-service.json => 200 application/json.
-7. /.well-known/x402-catalog.json => 200 application/json.
-8. /.well-known/agent-card.json => 200 application/json.
+4. /skill.txt => 200 text/plain and must not contain the SPA HTML shell.
+5. /.well-known/x402.json => 200 application/json.
+6. /.well-known/x402-services.json => 200 application/json.
+7. /.well-known/x402-service.json => 200 application/json.
+8. /.well-known/x402-catalog.json => 200 application/json.
 9. /.well-known/security.txt => 200 text/plain.
 10. Both paid routes => real external HTTP 402.
 11. PAYMENT-REQUIRED present.
