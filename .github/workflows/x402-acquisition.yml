@@ -1,4 +1,4 @@
-name: x402 listing optimization
+name: x402 trust-state diagnostics
 
 on:
   push:
@@ -6,29 +6,41 @@ on:
       - '.github/workflows/x402-acquisition.yml'
 
 jobs:
-  optimize:
+  diagnose:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 6
     steps:
-      - name: Improve buyer-intent listing names
+      - name: Read trust and routing state
         shell: bash
         run: |
           set +e
+          ORIGIN='https://pa-entity-x402.floot.app'
           ENDPOINT='https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
-          NAME='Pennsylvania Business Registry — Entity Lookup x402'
-          DESC='Pennsylvania business registry and legal-entity enrichment by company name. Returns filing number, registration type, registered address, city, ZIP, and county for company identity, vendor/customer verification, due diligence, and lead enrichment.'
 
-          echo '=== nohumans update ==='
-          curl -sS -i -X PATCH 'https://api.nohumans.directory/v1/listings/958fd262-287'             -H 'content-type: application/json'             -H 'x-claim-token: c975d2dc34948d36351269e1e0569e22fd6077ef8207dde7'             --data "$(jq -nc --arg name "$NAME" --arg description "$DESC" '{name:$name,description:$description}')"
+          echo '=== Agent402 route exact origin ==='
+          curl -sS -G 'https://agent402.tools/api/route'             --data-urlencode "q=$ORIGIN"             --data-urlencode 'include=external' | jq .
 
           echo
-          echo '=== 402 Index update ==='
-          curl -sS -i -X POST 'https://402index.io/api/v1/register'             -H 'content-type: application/json'             --data "$(jq -nc               --arg url "$ENDPOINT"               --arg name "$NAME"               --arg description "$DESC"               '{url:$url,name:$name,protocol:"x402",http_method:"GET",description:$description,price_usd:0.005,payment_asset:"USDC",payment_network:"Base",category:"data/company"}')"
+          echo '=== Agent402 route buyer intent ==='
+          curl -sS -G 'https://agent402.tools/api/route'             --data-urlencode 'q=Pennsylvania business registry company identity legal entity enrichment'             --data-urlencode 'include=external' | jq .
 
           echo
-          echo '=== nohumans ranked search ==='
-          curl -sS -G 'https://nohumans.directory/v1/discover'             --data-urlencode 'q=Pennsylvania business registry'             --data-urlencode 'limit=10'           | jq '{count, our_rank: ([.results[].id] | index("958fd262-287") | if . == null then null else .+1 end), top5:[.results[0:5][]|{id,name,status,score,category}]}'
+          echo '=== Market402 live badge ==='
+          curl -sS -i 'https://market402.com/badge/pa-entity-x402.floot.app'
 
           echo
-          echo '=== 402 Index ranked search ==='
-          curl -sS -G 'https://402index.io/api/v1/services'             --data-urlencode 'q=Pennsylvania business registry'             --data-urlencode 'protocol=x402'             --data-urlencode 'limit=10'           | jq '{our_rank: ([.services[].id] | index("2a92dcd4-206a-42ad-b6e5-e457635bb75a") | if . == null then null else .+1 end), top5:[.services[0:5][]|{id,name,health_status,category,price_usd}]}'
+          echo '=== Market402 operator json ==='
+          curl -sS -i 'https://market402.com/op/pa-entity-x402.floot.app.json'
+
+          echo
+          echo '=== nohumans listing snapshot ==='
+          curl -sS 'https://api.nohumans.directory/v1/listings/958fd262-287' | jq '{
+            status,score,probe_count,probes_passed,consecutive_failures,last_ok_at_iso,
+            last_probed_at_iso,next_check_by_iso,paid_verified,paid_verified_at,
+            distinct_payers,onchain_tx_count_30d,onchain_unique_payers_30d,
+            evidence_tier,evidence_note,paid_depth
+          }'
+
+          echo
+          echo '=== true402 listing snapshot ==='
+          curl -sS 'https://true402.dev/api/v1/services/ca9c2ed8-930c-4d55-920c-f87a858bb045' | jq .
