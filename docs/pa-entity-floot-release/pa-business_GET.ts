@@ -57,7 +57,7 @@ function flootJson(
 ) {
   const headers: Record<string, string> = corsHeaders({
     'content-type': 'application/json',
-    'cache-control': status === 402 ? 'no-store' : 'no-cache',
+    'cache-control': status === 402 || status === 503 ? 'no-store' : 'no-cache',
     ...extraHeaders,
   })
   if (status !== 200) headers['x-floot-status'] = String(status)
