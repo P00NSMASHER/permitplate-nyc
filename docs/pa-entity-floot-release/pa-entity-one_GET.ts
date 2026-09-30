@@ -348,8 +348,16 @@ function entityProjection() {
   ].join(',')
 }
 
+export function normalizeCreationDate(value: unknown): string | null {
+  if (value == null) return null
+  const rawDate = String(value)
+  // 1753-01-01 is a known SQL datetime-minimum sentinel in the PA source,
+  // not a trustworthy formation date. Preserve other genuinely old dates.
+  if (rawDate.startsWith('1753-01-01')) return null
+  return rawDate.slice(0, 10)
+}
+
 function mapEntity(row: JsonRecord): EntityResult {
-  const rawDate = row.creationdate == null ? null : String(row.creationdate)
   return {
     businessName: row.business_name == null ? null : String(row.business_name),
     filingNumber: row.filing_number == null ? null : String(row.filing_number),
@@ -357,7 +365,7 @@ function mapEntity(row: JsonRecord): EntityResult {
       row.typeofbusinessregistration == null
         ? null
         : String(row.typeofbusinessregistration),
-    creationDate: rawDate ? rawDate.slice(0, 10) : null,
+    creationDate: normalizeCreationDate(row.creationdate),
     address1: row.address_line1 == null ? null : String(row.address_line1),
     address2: row.address_line2 == null ? null : String(row.address_line2),
     city: row.city == null ? null : String(row.city),
