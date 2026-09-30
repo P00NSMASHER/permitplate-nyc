@@ -1,0 +1,35 @@
+name: x402 acquisition batch
+
+on:
+  push:
+    paths:
+      - '.github/workflows/x402-acquisition.yml'
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Submit to free discovery APIs
+        shell: bash
+        run: |
+          set +e
+          ENDPOINT='https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
+          ORIGIN='https://pa-entity-x402.floot.app'
+          NAME='PA Entity Lookup x402'
+          DESC='Company identity and legal-entity enrichment for Pennsylvania businesses by company name. Returns filing number, registration type, registered address, city, ZIP, and county for vendor verification, due diligence, and lead enrichment.'
+
+          echo '=== agent-tools.cloud candidate 1 ==='
+          curl -sS -i -X POST 'https://agent-tools.cloud/api/v1/submit'             -H 'content-type: application/json'             --data "$(jq -nc --arg url "$ENDPOINT" --arg name "$NAME" --arg description "$DESC" '{type:"x402",url:$url,name:$name,description:$description}')"
+
+          echo
+          echo '=== agent-tools.cloud candidate 2 ==='
+          curl -sS -i -X POST 'https://agent-tools.cloud/api/v1/submit'             -H 'content-type: application/json'             --data "$(jq -nc --arg url "$ENDPOINT" --arg name "$NAME" --arg description "$DESC" '{kind:"x402",endpoint:$url,title:$name,description:$description}')"
+
+          echo
+          echo '=== cinderwright candidate 1 ==='
+          curl -sS -i -X POST 'https://api.ideafactorylab.org/submit'             -H 'content-type: application/json'             --data "$(jq -nc --arg url "$ORIGIN" --arg name "$NAME" --arg description "$DESC" '{url:$url,name:$name,description:$description}')"
+
+          echo
+          echo '=== cinderwright candidate 2 ==='
+          curl -sS -i -X POST 'https://api.ideafactorylab.org/submit'             -H 'content-type: application/json'             --data "$(jq -nc --arg url "$ORIGIN" --arg name "$NAME" --arg description "$DESC" '{website:$url,title:$name,description:$description,type:"x402"}')"
