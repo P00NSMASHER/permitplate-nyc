@@ -646,3 +646,52 @@ This reinforces the P0 canonical-manifest fix; the seller is not absent, it is b
 - reported reliability: 100
 
 Revenue remains **$0.00**.
+
+
+---
+
+## P1 — Upstream Socrata throttling can turn paid intent into availability failures
+
+The Pennsylvania datasets are served through Socrata's SODA API.
+
+Socrata's current developer documentation says requests without an application token are throttled from a shared IP-based pool and may receive **HTTP 429 Too Many Requests**. Application tokens receive a dedicated/higher request pool, but obtaining one requires a Socrata account.
+
+### Current risk
+
+The seller currently performs unauthenticated source queries. On a serverless/shared host, unrelated traffic from the same egress IP can consume the unauthenticated pool.
+
+At low traffic this is acceptable, but if real buyers arrive:
+
+- source requests may be throttled independently of our own traffic;
+- a paid attempt may verify successfully and then fail before settlement;
+- marketplace probes can interpret repeated 429-derived failures as seller unreliability.
+
+### Fix
+
+1. Keep the current rule that upstream failure prevents settlement.
+2. Detect source HTTP 429 separately from generic source errors.
+3. Preserve/forward a bounded `Retry-After` when the source provides one.
+4. Return a specific machine-readable error such as `source_rate_limited`.
+5. Keep fast starts-with queries as the default to reduce source cost/load.
+6. Cache only source-data results where safe; never let a cache bypass the x402 payment requirement.
+7. Once buyer volume justifies it, evaluate a free Socrata application token rather than waiting for rate-limit failures in production.
+
+Do not spend money or create an external account solely for this before demand exists.
+
+---
+
+## Licensing / reuse result — no commercial-use blocker found in PA Open Data policy
+
+The current Pennsylvania Open Data policy states that datasets on data.pa.gov are offered **free and without restriction**. The Commonwealth's own open-data guidance describes open data as reusable and redistributable and specifically frames private-business reuse as an intended economic benefit.
+
+This removes a major licensing concern for the current source.
+
+### Obligations / trust posture
+
+- keep attribution to Pennsylvania/data.pa.gov even though the policy says attribution is requested rather than required;
+- preserve the Commonwealth's “as-is” limitation in our own caveats;
+- do not imply Commonwealth endorsement;
+- do not claim accuracy, timeliness, completeness, or legal fitness beyond the source;
+- remember the Commonwealth can discontinue content at any time.
+
+The current attribution/caveat direction is appropriate.
