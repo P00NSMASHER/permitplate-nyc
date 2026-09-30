@@ -2,7 +2,32 @@
 
 Live pay-per-call Pennsylvania business-registry lookup for autonomous agents.
 
-## Live service
+## Buyer entry point — $0.001 best match
+
+The lowest-friction SKU is a single-record resolver:
+
+- Endpoint: `GET https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI`
+- Price: **$0.001 USDC**
+- Protocol: x402 v2, `exact`
+- Network: Base mainnet (`eip155:8453`)
+- Payment asset: Base USDC (`USD Coin`, EIP-712 version `2`)
+- Receiving address: `0x708f7b52b56eafd7fc1de65fc7752ed732914021`
+- Result: one best-ranked Pennsylvania legal-entity match or `found:false`
+- Public source: Pennsylvania Department of State data via data.pa.gov
+
+Use this route when an agent needs a quick company-identity answer and does not need a list of candidate records.
+
+Example:
+
+```text
+GET https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI
+```
+
+An unpaid request returns HTTP 402 with `PAYMENT-REQUIRED`, amount `1000` atomic USDC, and Bazaar-compatible input/output metadata.
+
+## Deeper search — $0.005 multi-result
+
+The fuller search remains live at the Floot origin:
 
 - Origin: https://pa-entity-x402.floot.app
 - Paid endpoint: `GET https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1`
@@ -13,11 +38,11 @@ Live pay-per-call Pennsylvania business-registry lookup for autonomous agents.
 - Receiving address: `0x708f7b52b56eafd7fc1de65fc7752ed732914021`
 - Public source: Pennsylvania Department of State data via data.pa.gov
 
-An unpaid request returns HTTP 402 with a `PAYMENT-REQUIRED` header. The paid retry returns structured Pennsylvania registration records after payment verification and settlement.
+Use the multi-result route when an agent needs to disambiguate names or inspect several candidate registrations.
 
 ## What it is for
 
-Use this API for Pennsylvania:
+Use these APIs for Pennsylvania:
 
 - company identity resolution;
 - legal-entity enrichment;
@@ -28,9 +53,9 @@ Use this API for Pennsylvania:
 - registered-address, city, ZIP, and county confirmation;
 - lead-enrichment and due-diligence workflows.
 
-It is not legal advice and should not be treated as proof of current good-standing status unless the source record explicitly establishes that fact.
+They are not legal advice and should not be treated as proof of current good-standing status unless the source record explicitly establishes that fact.
 
-## Request
+## Multi-result request
 
 ```text
 GET /_api/pa-business?q=NAME&limit=10
@@ -51,7 +76,7 @@ Examples:
 /_api/pa-business?q=Wawa&limit=5
 ```
 
-## Response fields
+## Multi-result response fields
 
 ```json
 {
@@ -77,6 +102,8 @@ Examples:
 
 ## Machine discovery
 
+Floot multi-result discovery:
+
 - OpenAPI: https://pa-entity-x402.floot.app/openapi.json
 - llms.txt: https://pa-entity-x402.floot.app/llms.txt
 - Extended LLM reference: https://pa-entity-x402.floot.app/llms-full.txt
@@ -84,23 +111,35 @@ Examples:
 - x402 service manifest: https://pa-entity-x402.floot.app/.well-known/x402-service.json
 - x402 catalog: https://pa-entity-x402.floot.app/.well-known/x402-catalog.json
 
+The AppDeploy OpenAPI/discovery contract also advertises the $0.001 best-match route alongside the existing $0.005 route.
+
 ## Independent discovery / validation state
 
 As of 2026-09-30:
 
+### $0.001 best-match SKU
+
+- **Market402** — free self-test passed all **11/11** x402 conformance checks; submission accepted and queued for Market402's own scheduled probe.
+- **x402dash** — registered and independently marked `verified:true`.
+- **x402 Arena** — agent `pa-entity-best-match`; active, verified, Bazaar-compatible; advertised price `0.001 USDC`.
+- **402 Index** — service `3d5b06e5-9d2b-43e3-bc73-db35c4725253`; live HTTP 402 verified, health `healthy`, pending directory review because the shared AppDeploy origin cannot be domain-claimed by this seller.
+- **Cinderwright Discovery Hub** — submission `sub_1790759792472` queued for independent verification.
+- **nohumans.directory** — listing `64403ef1-4ad` created for the cheap SKU after correcting the submission shape.
+
+### $0.005 multi-result SKU
+
 - **x402scan** — registered from OpenAPI; 1 paid route, 0 failed, 0 skipped.
-- **402 Index** — service `2a92dcd4-206a-42ad-b6e5-e457635bb75a`; domain-verified, active, and healthy.
+- **402 Index** — service `2a92dcd4-206a-42ad-b6e5-e457635bb75a`; domain-verified, active, and healthy. Current search for “Pennsylvania business registry” has returned this listing first.
 - **x402dash** — endpoint registered and verified.
 - **x402 Arena** — agent `pa-entity-lookup`; active, verified, Bazaar-compatible.
-- **Agent402** — origin indexed, crawl health 1, routable; external Base dispatch remains gated on independent settlement history.
+- **Agent402** — origin indexed and routable; external Base dispatch remains gated on independent settlement history.
 - **true402** — service `ca9c2ed8-930c-4d55-920c-f87a858bb045`.
-- **nohumans.directory** — listing `958fd262-287`; request/response schemas and a parameterized sample call published. Latest observed probe passed after earlier onboarding failures.
+- **nohumans.directory** — listing `958fd262-287`; request/response schemas and a parameterized paid sample call published. Latest observed probe passed after earlier onboarding failures.
 - **Market402** — submission queued; free self-test passed all 11 x402 conformance checks.
-- **Cinderwright Discovery Hub** — submission `sub_1790757996876` queued for independent verification.
-- **Agent402 index** — seller is visible and healthy, but its router correctly reports `settlement_required` until independent buyers exist.
-- **SCVD General Store preflight** — independent free probe on 2026-09-30 returned `verdict: ready`; HTTP 402, PAYMENT-REQUIRED parsing, x402 v2, accepts fields, and Bazaar extension all passed. Its separate `before-you-pay` simulation returned `will_your_client_pay: would_sign` for a stock x402 client at the advertised $0.005 price. Reproduce with `POST https://scvd.store/api/preflight/v1` or `POST https://scvd.store/api/before-you-pay/v1` and `{"url":"https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1"}`.
+- **Cinderwright Discovery Hub** — endpoint-level submission `sub_1790759386628` queued for independent verification.
+- **SCVD General Store preflight** — independent free probe returned `verdict: ready`; HTTP 402, PAYMENT-REQUIRED parsing, x402 v2, accepts fields, and Bazaar extension passed. Its separate `before-you-pay` simulation returned `will_your_client_pay: would_sign` at the advertised $0.005 price.
 
-These are discovery or protocol observations, not endorsements. The SCVD checks are unpaid structural/client-selection evidence and do not prove delivery after payment.
+These are discovery or protocol observations, not endorsements. Unpaid conformance tests do not prove paid delivery after settlement.
 
 ## Revenue / buyer status
 
@@ -110,7 +149,7 @@ No self-funded payment is counted as customer demand. The objective is a genuine
 
 ## Failure behavior
 
-The service is designed to avoid charging for an unusable upstream result:
+The paid paths are designed to avoid settling payment when the public-data lookup cannot be delivered:
 
 1. verify payment;
 2. query Pennsylvania public data;
@@ -121,4 +160,4 @@ If the Pennsylvania source fails before settlement, the service returns an upstr
 
 ## Current acquisition objective
 
-The technical path is live. The remaining bottleneck is the first independent settlement, because that unlocks stronger router/catalog eligibility in networks that gate new Base sellers on real settlement history.
+The $0.001 resolver is the low-friction acquisition SKU. The $0.005 route remains the deeper search product. The remaining bottleneck is the first independent settlement, because that creates real demand evidence and unlocks stronger router/catalog trust in systems that weight payment history.
