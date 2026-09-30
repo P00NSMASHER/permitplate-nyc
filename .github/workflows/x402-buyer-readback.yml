@@ -1,0 +1,50 @@
+name: x402 buyer trust readback
+
+on:
+  push:
+    paths:
+      - '.github/workflows/x402-buyer-readback.yml'
+
+jobs:
+  readback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Read buyer and verifier state
+        shell: bash
+        run: |
+          set +e
+          CHEAP='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI'
+          FLOOT='https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
+          WALLET='0x708f7b52b56eafd7fc1de65fc7752ed732914021'
+
+          echo '=== vet402 cheap resolve ==='
+          curl -sS -G -w '\nHTTP_STATUS=%{http_code}\n' 'https://vet402.com/api/v1/resolve' --data-urlencode "q=$CHEAP"
+          echo
+
+          echo '=== vet402 floot resolve ==='
+          curl -sS -G -w '\nHTTP_STATUS=%{http_code}\n' 'https://vet402.com/api/v1/resolve' --data-urlencode "q=$FLOOT"
+          echo
+
+          echo '=== Market402 cheap shared-host badge ==='
+          curl -sS -w '\nHTTP_STATUS=%{http_code}\n' 'https://market402.com/badge/api-v2.appdeploy.ai'
+          echo
+
+          echo '=== Market402 Floot badge ==='
+          curl -sS -w '\nHTTP_STATUS=%{http_code}\n' 'https://market402.com/badge/pa-entity-x402.floot.app'
+          echo
+
+          echo '=== nohumans cheap ==='
+          curl -sS -w '\nHTTP_STATUS=%{http_code}\n' 'https://api.nohumans.directory/v1/listings/64403ef1-4ad' | jq .
+          echo
+
+          echo '=== true402 cheap ==='
+          curl -sS -w '\nHTTP_STATUS=%{http_code}\n' 'https://true402.dev/api/v1/services/360d6155-41e4-44c6-ac23-56062b633aa9' | jq .
+          echo
+
+          echo '=== 402index cheap ==='
+          curl -sS -w '\nHTTP_STATUS=%{http_code}\n' 'https://402index.io/api/v1/services/3d5b06e5-9d2b-43e3-bc73-db35c4725253' | jq .
+          echo
+
+          echo '=== Base USDC receipts ==='
+          curl -sS "https://base.blockscout.com/api/v2/addresses/$WALLET/token-transfers?type=ERC-20&filter=to" | jq '[.items[] | select((.token.address_hash // .token.address // "") | ascii_downcase == "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913") | {timestamp, transaction_hash, from:(.from.hash // .from), to:(.to.hash // .to), total}]'
