@@ -1,4 +1,4 @@
-name: x402 rail diagnostics
+name: x402 acquisition batch
 
 on:
   push:
@@ -6,16 +6,45 @@ on:
       - '.github/workflows/x402-acquisition.yml'
 
 jobs:
-  diagnose:
+  submit:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
-      - name: Inspect PayAI supported rails
+      - name: Submit and probe buyer directories
         shell: bash
         run: |
           set +e
-          echo '=== PayAI supported ==='
-          curl -sS -i 'https://facilitator.payai.network/supported'
+          ENDPOINT='https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
+          ORIGIN='https://pa-entity-x402.floot.app'
+          NAME='PA Entity Lookup x402'
+          DESC='Company identity and legal-entity enrichment for Pennsylvania businesses by company name. Returns filing number, registration type, registered address, city, ZIP, and county for vendor verification, due diligence, and lead enrichment.'
+          CONTACT='https://github.com/P00NSMASHER/permitplate-nyc/blob/main/docs/pa-entity-x402.md'
+
+          post_json () {
+            label="$1"
+            url="$2"
+            json="$3"
+            echo
+            echo "=== $label ==="
+            body_file="$(mktemp)"
+            status="$(curl -sS -o "$body_file" -w '%{http_code}' -X POST "$url" -H 'content-type: application/json' --data "$json")"
+            echo "STATUS=$status"
+            cat "$body_file"
+            echo
+            rm -f "$body_file"
+          }
+
+          post_json 'agent-tools.cloud contact-url'             'https://agent-tools.cloud/api/v1/submit'             "$(jq -nc --arg url "$ENDPOINT" --arg name "$NAME" --arg description "$DESC" --arg contact "$CONTACT" '{type:"x402",url:$url,name:$name,description:$description,contact:$contact}')"
+
+          post_json 'Agents.NET likely payload'             'https://agents.net/api/agents/submit'             "$(jq -nc --arg url "$ORIGIN" --arg name "$NAME" --arg description "$DESC" --arg contact "$CONTACT" '{name:$name,url:$url,description:$description,category:"Data",contact:$contact}')"
+
+          post_json 'Agents.NET empty schema probe'             'https://agents.net/api/agents/submit' '{}'
+
+          post_json 'x402Scout endpoint'             'https://x402scout.com/register'             "$(jq -nc --arg url "$ENDPOINT" --arg name "$NAME" --arg description "$DESC" '{url:$url,name:$name,description:$description}')"
+
+          post_json 'x402Scout origin'             'https://x402scout.com/register'             "$(jq -nc --arg url "$ORIGIN" --arg name "$NAME" --arg description "$DESC" '{url:$url,name:$name,description:$description}')"
+
           echo
-          echo '=== PayAI Bazaar current wallet ==='
-          curl -sS -G 'https://facilitator.payai.network/discovery/resources'             --data-urlencode 'payTo=0x708f7b52b56eafd7fc1de65fc7752ed732914021'             --data-urlencode 'limit=100'
+          echo '=== Agent402 readback ==='
+          curl -sS 'https://agent402.tools/api/index/search?q=Pennsylvania%20business%20registry' | head -c 5000
+          echo
