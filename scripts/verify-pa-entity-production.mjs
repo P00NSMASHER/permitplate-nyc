@@ -2,10 +2,12 @@ import assert from 'node:assert/strict'
 
 const origin = process.argv[2] || 'https://pa-entity-x402.floot.app'
 const endpoint = `${origin}/_api/pa-business?q=OpenAI&limit=1`
+const bestEndpoint = `${origin}/_api/pa-entity-one?q=OpenAI`
 const EXPECTED_PAYTO = '0x708f7b52b56eafd7fc1de65fc7752ed732914021'
 const EXPECTED_ASSET = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'
 const EXPECTED_NETWORK = 'eip155:8453'
 const EXPECTED_AMOUNT = '5000'
+const EXPECTED_BEST_AMOUNT = '1000'
 
 function decodeHeader(value) {
   const normalized = value.replace(/-/g, '+').replace(/_/g, '/')
@@ -52,6 +54,14 @@ await check('openapi JSON', async () => {
     doc.paths['/_api/pa-business'].get['x-payment-info'].price.amount,
     '0.005000',
   )
+  assert.equal(
+    doc.paths['/_api/pa-entity-one'].get.operationId,
+    'resolvePennsylvaniaBusinessBestMatch',
+  )
+  assert.equal(
+    doc.paths['/_api/pa-entity-one'].get['x-payment-info'].price.amount,
+    '0.001000',
+  )
 })
 
 await check('llms.txt plain text', async () => {
@@ -95,8 +105,8 @@ await check('canonical extensionless x402 if supported', async () => {
 
 let paymentDoc
 
-await check('unpaid route real 402', async () => {
-  const res = await fetch(endpoint)
+async function assertUnpaidChallenge(url, expectedAmount) {
+  const res = await fetch(url)
   const text = await res.text()
   assert.equal(res.status, 402)
   expectContentType(res, /application\/json/i)
@@ -112,15 +122,25 @@ await check('unpaid route real 402', async () => {
 
   const accept = headerDoc.accepts[0]
   assert.equal(accept.network, EXPECTED_NETWORK)
-  assert.equal(accept.amount, EXPECTED_AMOUNT)
+  assert.equal(accept.amount, expectedAmount)
   assert.equal(accept.asset.toLowerCase(), EXPECTED_ASSET.toLowerCase())
   assert.equal(accept.payTo.toLowerCase(), EXPECTED_PAYTO.toLowerCase())
   assert.equal(accept.extra?.name, 'USD Coin')
   assert.equal(headerDoc.extensions?.bazaar?.info?.output?.example?.count, 1)
-  paymentDoc = headerDoc
+  return headerDoc
+}
+
+await check('unpaid enriched route real 402', async () => {
+  paymentDoc = await assertUnpaidChallenge(endpoint, EXPECTED_AMOUNT)
 })
 
-await check('CORS exposed on paid GET', async () => {
+await check('unpaid $0.001 best-match route real 402', async () => {
+  const doc = await assertUnpaidChallenge(bestEndpoint, EXPECTED_BEST_AMOUNT)
+  assert.match(doc.resource.url, /\/pa-entity-one$/)
+  assert.deepEqual(doc.extensions?.bazaar?.info?.input?.queryParams, { q: 'OpenAI' })
+})
+
+await check('CORS exposed on enriched GET', async () => {
   const res = await fetch(endpoint, {
     headers: { Origin: 'https://buyer.example' },
   })
@@ -133,7 +153,15 @@ await check('CORS exposed on paid GET', async () => {
   assert.match(exposed, /payment-response/)
 })
 
-await check('CORS OPTIONS', async () => {
+await check('CORS exposed on $0.001 best-match GET', async () => {
+  const res = await fetch(bestEndpoint, {
+    headers: { Origin: 'https://buyer.example' },
+  })
+  assert.equal(res.status, 402)
+  assert.equal(res.headers.get('access-control-allow-origin'), '*')
+})
+
+await check('CORS enriched OPTIONS', async () => {
   const res = await fetch(endpoint, {
     method: 'OPTIONS',
     headers: {
@@ -148,6 +176,19 @@ await check('CORS OPTIONS', async () => {
     res.headers.get('access-control-allow-headers') || '',
     /payment-signature/i,
   )
+})
+
+await check('CORS best-match OPTIONS', async () => {
+  const res = await fetch(bestEndpoint, {
+    method: 'OPTIONS',
+    headers: {
+      Origin: 'https://buyer.example',
+      'Access-Control-Request-Method': 'GET',
+      'Access-Control-Request-Headers': 'payment-signature',
+    },
+  })
+  assert.equal(res.status, 204)
+  assert.equal(res.headers.get('access-control-allow-origin'), '*')
 })
 
 await check('malformed payment stays 402', async () => {
@@ -205,18 +246,47 @@ await check('oversized payment header rejected', async () => {
   }
 })
 
-await check('CDP x402 validation', async () => {
+await check('Market402 selftest enriched route', async () => {
+  const res = await fetch('https://market402.com/selftest', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ url: endpoint }),
+  })
+  assert.equal(res.status, 200)
+  const data = await res.json()
+  assert.equal(data.ok, true)
+  assert.equal(data.summary?.failed, 0)
+})
+
+await check('Market402 selftest $0.001 route', async () => {
+  const res = await fetch('https://market402.com/selftest', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ url: bestEndpoint }),
+  })
+  assert.equal(res.status, 200)
+  const data = await res.json()
+  assert.equal(data.ok, true)
+  assert.equal(data.summary?.failed, 0)
+})
+
+async function assertCdpValid(resource) {
   const res = await fetch(
     'https://api.cdp.coinbase.com/platform/v2/x402/validate',
     {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ resource: endpoint, method: 'GET' }),
+      body: JSON.stringify({ resource, method: 'GET' }),
     },
   )
   assert.equal(res.status, 200)
   const data = await res.json()
   assert.equal(data.valid, true)
+  return data
+}
+
+await check('CDP enriched x402 validation', async () => {
+  const data = await assertCdpValid(endpoint)
   const simulation =
     data.simulation?.status ||
     data.simulation?.result ||
@@ -227,6 +297,11 @@ await check('CDP x402 validation', async () => {
       data.valid === true,
     'CDP validation did not accept resource',
   )
+})
+
+await check('CDP $0.001 best-match x402 validation', async () => {
+  const data = await assertCdpValid(bestEndpoint)
+  assert.equal(data.valid, true)
 })
 
 await check('PayAI public stats readable', async () => {
