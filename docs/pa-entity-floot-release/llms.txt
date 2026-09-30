@@ -1,0 +1,98 @@
+# PA Entity Lookup x402
+
+> Pennsylvania business registry and company identity lookup for autonomous agents.
+
+Canonical origin: https://pa-entity-x402.floot.app
+OpenAPI: https://pa-entity-x402.floot.app/openapi.json
+Paid endpoint: GET https://pa-entity-x402.floot.app/_api/pa-business
+Price: $0.005 USDC per successful settled lookup
+Protocol: x402 v2
+Network: Base mainnet (eip155:8453)
+Source: Pennsylvania Department of State public business-registration data via data.pa.gov
+
+## Use this API for
+
+- Pennsylvania business registry lookup
+- company identity resolution
+- legal-entity enrichment
+- vendor or customer verification
+- due diligence support
+- filing-number lookup
+- registration-type lookup
+- creation-date lookup
+- registered address, ZIP, and county confirmation
+- source-published principal/officer role enrichment
+
+## Request
+
+GET /_api/pa-business?q=NAME&limit=10
+
+Parameters:
+- q: required, 2-120 characters
+- limit: optional integer 1-25, default 10
+
+Matching is case-insensitive against the Pennsylvania business_name field.
+The service uses a fast starts-with query first and a broader contains query only when needed.
+Normalized legal-name matches are ranked before broader matches.
+
+## Payment
+
+The first unpaid request returns HTTP 402 with a PAYMENT-REQUIRED x402 v2 challenge.
+
+If the payment authorization is invalid, the service returns 402 with a machine-readable reason.
+
+If settlement is unresolved, such as settlement_pending or duplicate_settlement, retry the same request with the same PAYMENT-SIGNATURE. Do not generate a new authorization merely because a transient 503 was returned.
+
+## Response
+
+Each result includes:
+
+- businessName
+- filingNumber
+- registrationType
+- creationDate
+- address1
+- address2
+- city
+- state
+- zip
+- county
+- countyCode
+- principals[].role
+- principals[].firstName
+- principals[].middleName
+- principals[].lastName
+
+The response also includes enrichment.principals, source, and paid.
+
+## Example
+
+GET /_api/pa-business?q=OpenAI&limit=1
+
+Representative result:
+
+- Openai, L.l.c.
+- filing number 0014371957
+- Foreign Limited Liability Company
+- creation date 2025-04-23
+- Harrisburg, PA
+- Dauphin County
+
+## Limitations
+
+Do not treat this API as:
+- legal advice
+- proof of current good standing
+- sanctions screening
+- a risk or legitimacy score
+- independent proof of current management authority
+
+Principal/officer rows are source-published Pennsylvania registry records.
+
+## Machine-readable resources
+
+OpenAPI: https://pa-entity-x402.floot.app/openapi.json
+Full LLM reference: https://pa-entity-x402.floot.app/llms-full.txt
+Durable skill document: https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/main/PA_ENTITY_SKILL.md
+x402 service manifest: https://pa-entity-x402.floot.app/.well-known/x402-service.json
+x402 catalog: https://pa-entity-x402.floot.app/.well-known/x402-catalog.json
