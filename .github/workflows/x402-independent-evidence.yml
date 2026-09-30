@@ -10,25 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Generate free third-party evidence and read status
+      - name: Read third-party buyer and verifier status
         shell: bash
         run: |
           set +e
           HOST='pa-entity-x402.floot.app'
           ENDPOINT='https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
 
-          echo '=== SCVD preflight ==='
-          curl -sS -i -X POST 'https://scvd.store/api/preflight/v1'             -H 'content-type: application/json'             --data "$(jq -nc --arg url "$ENDPOINT" '{url:$url}')"
-
-          echo
-          echo '=== SCVD before-you-pay ==='
-          curl -sS -i -X POST 'https://scvd.store/api/before-you-pay/v1'             -H 'content-type: application/json'             --data "$(jq -nc --arg url "$ENDPOINT" '{url:$url}')"
-
-          echo
-          echo '=== SCVD look ==='
-          curl -sS -i -X POST 'https://scvd.store/api/look/v1'             -H 'content-type: application/json'             --data "$(jq -nc --arg url "$ENDPOINT" '{url:$url}')"
-
-          echo
           echo '=== Market402 operator JSON ==='
           curl -sS -i --max-time 20 "https://market402.com/op/$HOST.json"
 
@@ -37,5 +25,33 @@ jobs:
           curl -sS -i --max-time 20 "https://market402.com/badge/$HOST"
 
           echo
-          echo '=== nohumans ==='
-          curl -sS --max-time 20 'https://api.nohumans.directory/v1/listings/958fd262-287'
+          echo '=== nohumans listing ==='
+          curl -sS --max-time 20 'https://api.nohumans.directory/v1/listings/958fd262-287' | jq .
+
+          echo
+          echo '=== true402 listing ==='
+          curl -sS --max-time 20 'https://true402.dev/api/v1/services/ca9c2ed8-930c-4d55-920c-f87a858bb045' | jq .
+
+          echo
+          echo '=== x402 Arena agent ==='
+          curl -sS --max-time 20 'https://core.x402arena.gg/agents' | jq '.agents[]? | select(.agentId=="pa-entity-lookup")'
+
+          echo
+          echo '=== x402 Arena leaderboard ==='
+          curl -sS --max-time 20 'https://core.x402arena.gg/leaderboard' | jq '.leaderboard[]? | select(.agentId=="pa-entity-lookup")'
+
+          echo
+          echo '=== 402 Index search ==='
+          curl -sS -G --max-time 20 'https://402index.io/api/v1/services'             --data-urlencode 'q=PA Entity Lookup x402'             --data-urlencode 'protocol=x402'             --data-urlencode 'limit=10' | jq .
+
+          echo
+          echo '=== agent-tools.cloud search ==='
+          curl -sS -G --max-time 20 'https://agent-tools.cloud/x402'             --data-urlencode 'q=pa-entity-x402.floot.app' | grep -o -m3 'pa-entity-x402[^"< ]*' || true
+
+          echo
+          echo '=== Agent402 seller index ==='
+          curl -sS --max-time 20 'https://agent402.tools/api/index?seller=pa-entity-x402.floot.app' | jq .
+
+          echo
+          echo '=== production challenge ==='
+          curl -sS -i --max-time 20 "$ENDPOINT" | head -80
