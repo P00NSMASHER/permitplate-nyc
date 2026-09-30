@@ -1,4 +1,4 @@
-name: PA Entity Market402 submit
+name: PA best-match Market402 submit
 
 on:
   push:
@@ -10,16 +10,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Submit current paid endpoint using current schema
+      - name: Test and submit $0.001 best-match endpoint
         shell: bash
         run: |
           set +e
-          RESOURCE='https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
+          RESOURCE='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI'
+
+          echo '=== SELFTEST ==='
+          curl -sS -i -X POST 'https://market402.com/selftest'             -H 'content-type: application/json'             --data "$(jq -nc --arg url "$RESOURCE" '{url:$url}')"
+          echo
 
           echo '=== SUBMIT ==='
           curl -sS -i -X POST 'https://market402.com/submit'             -H 'content-type: application/json'             --data "$(jq -nc --arg resource "$RESOURCE" '{resource:$resource}')"
-          echo
-
-          echo '=== OPERATOR READBACK ==='
-          curl -sS -i 'https://market402.com/op/pa-entity-x402.floot.app.json' | head -c 20000
           echo
