@@ -741,3 +741,52 @@ Unit/integration tests must prove:
 - `{isValid:false, success:true}` -> rejected
 - `{success:true}` without `isValid:true` -> rejected
 - HTTP 200 with malformed/unknown body -> rejected
+
+
+---
+
+## P1 — Settlement idempotency is not the same as delivery idempotency
+
+PayAI's own integration guidance explicitly calls out the case where **payment succeeds but delivery fails**. The facilitator can make settlement idempotent, but exactly-once application delivery still requires the resource server to bind/replay the paid result.
+
+### Current risk
+
+The current flow is effectively:
+
+1. verify payment;
+2. query PA source;
+3. settle;
+4. return JSON result.
+
+If settlement succeeds but the final HTTP response is lost between the seller and buyer, the buyer has paid but may not possess the result.
+
+A blind retry is not guaranteed to recover cleanly:
+
+- the authorization may now appear spent/replayed at verification time;
+- facilitator settlement idempotency can recover the payment outcome, but it does not automatically restore our application response;
+- a serverless cold start means an in-memory result cache is not durable enough to prove redelivery.
+
+### Fix before meaningful volume
+
+Implement a payment/delivery idempotency strategy keyed to a stable hash of:
+
+- payment payload/proof;
+- payment requirements/resource;
+- normalized query/limit.
+
+Preferred behavior:
+
+1. Build the deterministic result before settlement.
+2. Preserve a compact delivery record keyed to the payment proof before/with settlement where the hosting primitive permits.
+3. Re-submit the identical settle operation for unresolved/duplicate outcomes rather than creating a fresh authorization.
+4. If the same settled payment proof is retried for the same normalized resource input, return the same result without charging again.
+5. Reject attempts to reuse one paid proof for different query parameters.
+6. Retain enough receipt evidence to distinguish:
+   - verified but not settled;
+   - settlement pending;
+   - settled and delivered;
+   - settled but delivery status unknown.
+
+If a durable store is not available on the free host, explicitly document this residual risk and keep the product deterministic so result reconstruction is possible once a settled payment is proven.
+
+Do not claim exactly-once delivery until this path is tested with a real settled payment plus a simulated dropped response.
