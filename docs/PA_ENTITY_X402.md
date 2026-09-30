@@ -111,7 +111,7 @@ Floot multi-result discovery:
 - x402 service manifest: https://pa-entity-x402.floot.app/.well-known/x402-service.json
 - x402 catalog: https://pa-entity-x402.floot.app/.well-known/x402-catalog.json
 
-The AppDeploy OpenAPI/discovery contract also advertises the $0.001 best-match route alongside the existing $0.005 route.
+The AppDeploy OpenAPI/discovery contract also advertises the $0.001 best-match route alongside the existing $0.005 route. The cheap route currently inherits the older multi-result Bazaar example/schema inside its 402 extension; payment terms are correct, but route-specific single-match Bazaar metadata is queued for correction after the free deployment budget resets.
 
 ## Independent discovery / validation state
 
@@ -119,12 +119,13 @@ As of 2026-09-30:
 
 ### $0.001 best-match SKU
 
-- **Market402** — free self-test passed all **11/11** x402 conformance checks; submission accepted and queued for Market402's own scheduled probe.
+- **Market402** — free self-test passed all **11/11** x402 conformance checks; submission accepted and queued for Market402's rotating real-USDC paid-probe pool. The $0.001 price is within its purchase-test cap.
 - **x402dash** — registered and independently marked `verified:true`.
 - **x402 Arena** — agent `pa-entity-best-match`; active, verified, Bazaar-compatible; advertised price `0.001 USDC`.
 - **402 Index** — service `3d5b06e5-9d2b-43e3-bc73-db35c4725253`; live HTTP 402 verified, health `healthy`, pending directory review because the shared AppDeploy origin cannot be domain-claimed by this seller.
 - **Cinderwright Discovery Hub** — submission `sub_1790759792472` queued for independent verification.
-- **nohumans.directory** — canonical cheap listing `64403ef1-4ad` is **verified**, score **1.0**, with **3/3** passing probes, no current failure streak, and a free live PA-data sample at the AppDeploy demo route. The accidental duplicate listing was delisted.
+- **nohumans.directory** — canonical cheap listing `64403ef1-4ad` is **verified**, score **1.0**, with **3/3** passing probes, no current failure streak, a free live PA-data sample, and a field-level response schema for paid-delivery validation. The accidental duplicate listing was delisted.
+- **true402** — cheap service `360d6155-41e4-44c6-ac23-56062b633aa9` registered at $0.001; current transaction / settled-volume history is still zero.
 
 ### $0.005 multi-result SKU
 
