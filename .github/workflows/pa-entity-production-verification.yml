@@ -11,8 +11,82 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
+
       - name: Verify production externally
         run: node scripts/verify-pa-entity-production.mjs "${{ inputs.origin }}"
+
+      - name: Require both AgentCash paid routes
+        shell: bash
+        env:
+          ORIGIN: ${{ inputs.origin }}
+        run: |
+          set -euo pipefail
+          npx -y @agentcash/discovery@latest discover "$ORIGIN" | tee /tmp/agentcash.txt
+          grep -E '/_api/pa-business.*0\.005000.*\[x402\]' /tmp/agentcash.txt
+          grep -E '/_api/pa-entity-one.*0\.001000.*\[x402\]' /tmp/agentcash.txt
+
+      - name: Refresh x402scan origin
+        shell: bash
+        env:
+          ORIGIN: ${{ inputs.origin }}
+        run: |
+          set -euo pipefail
+          curl -fsS -X POST 'https://x402scan.com/api/x402/registry/register-origin'             -H 'content-type: application/json'             --data "$(jq -nc --arg origin "$ORIGIN" '{origin:$origin}')"             | tee /tmp/x402scan.json
+          jq . /tmp/x402scan.json
+
+      - name: Refresh Agent402 and require healthy crawl
+        shell: bash
+        env:
+          ORIGIN: ${{ inputs.origin }}
+        run: |
+          set -euo pipefail
+          curl -fsS -X POST 'https://agent402.tools/api/index/register'             -H 'content-type: application/json'             --data "$(jq -nc --arg origin "$ORIGIN" '{origin:$origin}')"             | tee /tmp/agent402-register.json
+          jq . /tmp/agent402-register.json || cat /tmp/agent402-register.json
+
+          SELLER=$(python3 - <<'PY'
+          import os, urllib.parse
+          print(urllib.parse.urlparse(os.environ['ORIGIN']).netloc)
+          PY
+          )
+
+          ok=0
+          for attempt in 1 2 3 4; do
+            echo "Agent402 readback attempt $attempt"
+            curl -fsS -G 'https://agent402.tools/api/index'               --data-urlencode "seller=$SELLER"               > /tmp/agent402-index.json
+            cat /tmp/agent402-index.json
+            if python3 - <<'PY'
+          import json,sys
+          data=json.load(open('/tmp/agent402-index.json'))
+          raw=json.dumps(data).lower()
+          if 'crawl_failed' in raw:
+              raise SystemExit(1)
+
+          records=[]
+          def walk(x):
+              if isinstance(x,dict):
+                  if any(k in x for k in ('health','routable','seller','origin','route')):
+                      records.append(x)
+                  for v in x.values(): walk(v)
+              elif isinstance(x,list):
+                  for v in x: walk(v)
+          walk(data)
+
+          health_values=[]
+          for r in records:
+              h=r.get('health')
+              if isinstance(h,(int,float)):
+                  health_values.append(h)
+          if health_values and max(health_values) <= 0:
+              raise SystemExit(1)
+          print('AGENT402_CRAWL_HEALTHY=true')
+          PY
+            then
+              ok=1
+              break
+            fi
+            sleep 5
+          done
+          test "$ok" = 1
