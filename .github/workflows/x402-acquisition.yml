@@ -1,4 +1,4 @@
-name: x402 trust status
+name: x402 buyer-surface diagnostics
 
 on:
   push:
@@ -6,47 +6,57 @@ on:
       - '.github/workflows/x402-acquisition.yml'
 
 jobs:
-  status:
+  diagnose:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
-      - name: Read external buyer trust state
+      - name: Inspect buyer-side discovery surfaces
         shell: bash
         run: |
           set +e
-          HOST='pa-entity-x402.floot.app'
+          ORIGIN='https://pa-entity-x402.floot.app'
           ENDPOINT='https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
 
-          echo '=== Market402 operator ==='
-          curl -sS -i --max-time 20 "https://market402.com/op/$HOST"
-          echo
-          echo '=== Market402 badge ==='
-          curl -sS -i --max-time 20 "https://market402.com/badge/$HOST"
-          echo
-          echo '=== Market402 operator JSON ==='
-          curl -sS -i --max-time 20 "https://market402.com/op/$HOST.json"
+          echo '=== Agent402 exact-domain find ==='
+          curl -sS -G 'https://agent402.tools/api/find'             --data-urlencode 'q=pa-entity-x402.floot.app'             --data-urlencode 'include=external'             --data-urlencode 'top=50' | jq .
 
           echo
-          echo '=== nohumans ==='
-          curl -sS --max-time 20 'https://api.nohumans.directory/v1/listings/958fd262-287'
+          echo '=== Agent402 buyer-intent find ==='
+          curl -sS -G 'https://agent402.tools/api/find'             --data-urlencode 'q=Pennsylvania business registry company identity legal entity'             --data-urlencode 'include=external'             --data-urlencode 'top=50' | jq .
 
           echo
-          echo '=== true402 ==='
-          curl -sS --max-time 20 'https://true402.dev/api/v1/services/ca9c2ed8-930c-4d55-920c-f87a858bb045'
+          echo '=== x402.direct newest first page ==='
+          curl -sS 'https://x402.direct/api/services?sort=newest&limit=100&page=1' -o /tmp/x402direct.json
+          grep -oi -m3 'pa-entity-x402[^" ]*' /tmp/x402direct.json || true
+          python3 - <<'PY'
+          import json
+          x=json.load(open('/tmp/x402direct.json'))
+          rows=x.get('services') or x.get('data') or x.get('items') or []
+          hits=[r for r in rows if 'pa-entity-x402.floot.app' in json.dumps(r)]
+          print(json.dumps(hits[:5],indent=2))
+          PY
 
           echo
-          echo '=== x402dash ==='
-          curl -sS -G --max-time 20 'https://api.x402dash.com/v1/liveness' --data-urlencode "endpoint=$ENDPOINT"
+          echo '=== Agentic Market route discovery ==='
+          curl -sS 'https://agentic.market/about' -o /tmp/agentic.html
+          grep -oE '<script[^>]+src="[^"]+"' /tmp/agentic.html | head -30
 
-          echo
-          echo '=== 402 Index search ==='
-          curl -sS -G --max-time 20 'https://402index.io/api/v1/services' --data-urlencode 'q=Pennsylvania business registry' --data-urlencode 'protocol=x402' --data-urlencode 'limit=10'
-
-          echo
-          echo '=== Cinderwright status guesses ==='
-          for u in             'https://api.ideafactorylab.org/submission/sub_1790757996876'             'https://api.ideafactorylab.org/status/sub_1790757996876'             'https://api.ideafactorylab.org/submissions/sub_1790757996876'
-          do
-            echo "-- $u"
-            curl -sS -i --max-time 10 "$u"
-            echo
-          done
+          python3 - <<'PY'
+          import re, urllib.request, urllib.parse
+          html=open('/tmp/agentic.html',encoding='utf-8',errors='ignore').read()
+          srcs=re.findall(r'<script[^>]+src="([^"]+)"',html)
+          seen=set()
+          for src in srcs[:50]:
+              url=urllib.parse.urljoin('https://agentic.market/about',src)
+              try:
+                  txt=urllib.request.urlopen(url,timeout=15).read().decode('utf-8','ignore')
+              except Exception:
+                  continue
+              hits=sorted(set(re.findall(r'[/]api[/][A-Za-z0-9_./?=&:{}-]+',txt)))
+              hits=[h for h in hits if any(k in h.lower() for k in ['validate','submit','service','seller','endpoint','register'])]
+              if hits:
+                  print(url)
+                  for h in hits[:80]:
+                      if h not in seen:
+                          print(' ',h); seen.add(h)
+          PY
