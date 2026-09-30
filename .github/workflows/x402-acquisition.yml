@@ -1,4 +1,4 @@
-name: x402 acquisition status
+name: x402 listing optimization
 
 on:
   push:
@@ -6,45 +6,29 @@ on:
       - '.github/workflows/x402-acquisition.yml'
 
 jobs:
-  status:
+  optimize:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 5
     steps:
-      - name: Check verification queues and propagation
+      - name: Improve buyer-intent listing names
         shell: bash
         run: |
           set +e
+          ENDPOINT='https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
+          NAME='Pennsylvania Business Registry — Entity Lookup x402'
+          DESC='Pennsylvania business registry and legal-entity enrichment by company name. Returns filing number, registration type, registered address, city, ZIP, and county for company identity, vendor/customer verification, due diligence, and lead enrichment.'
 
-          echo '=== Market402 operator ==='
-          curl -sS -i 'https://market402.com/op/pa-entity-x402.floot.app'
-          echo
-          echo '=== Market402 badge ==='
-          curl -sS -i 'https://market402.com/badge/pa-entity-x402.floot.app'
-
-          echo
-          echo '=== Market402 operators search ==='
-          curl -sS 'https://market402.com/operators.json'             | jq '[.operators[]? | select((.domain // .operator // .name // "" | tostring) | contains("pa-entity-x402"))]'
+          echo '=== nohumans update ==='
+          curl -sS -i -X PATCH 'https://api.nohumans.directory/v1/listings/958fd262-287'             -H 'content-type: application/json'             -H 'x-claim-token: c975d2dc34948d36351269e1e0569e22fd6077ef8207dde7'             --data "$(jq -nc --arg name "$NAME" --arg description "$DESC" '{name:$name,description:$description}')"
 
           echo
-          echo '=== Cinderwright submission paths ==='
-          for u in             'https://api.ideafactorylab.org/submissions/sub_1790757996876'             'https://api.ideafactorylab.org/submit/sub_1790757996876'             'https://api.ideafactorylab.org/status/sub_1790757996876'             'https://api.ideafactorylab.org/submission/sub_1790757996876'
-          do
-            echo "--- $u"
-            curl -sS -i "$u" | head -80
-          done
+          echo '=== 402 Index update ==='
+          curl -sS -i -X POST 'https://402index.io/api/v1/register'             -H 'content-type: application/json'             --data "$(jq -nc               --arg url "$ENDPOINT"               --arg name "$NAME"               --arg description "$DESC"               '{url:$url,name:$name,protocol:"x402",http_method:"GET",description:$description,price_usd:0.005,payment_asset:"USDC",payment_network:"Base",category:"data/company"}')"
 
           echo
-          echo '=== SwarmBazaar / InferenceView provider search ==='
-          for u in             'https://inferenceview.com/api/providers?q=pa-entity-x402&limit=20'             'https://inferenceview.com/api/providers?q=Pennsylvania%20business%20registry&limit=20'             'https://swarmbazaar.com/api/providers?q=pa-entity-x402&limit=20'
-          do
-            echo "--- $u"
-            curl -sS -i "$u" | head -120
-          done
+          echo '=== nohumans ranked search ==='
+          curl -sS -G 'https://nohumans.directory/v1/discover'             --data-urlencode 'q=Pennsylvania business registry'             --data-urlencode 'limit=10'           | jq '{count, our_rank: ([.results[].id] | index("958fd262-287") | if . == null then null else .+1 end), top5:[.results[0:5][]|{id,name,status,score,category}]}'
 
           echo
-          echo '=== x402-list search ==='
-          for u in             'https://x402-list.com/api/services?q=pa-entity-x402'             'https://x402-list.com/api/search?q=pa-entity-x402'             'https://x402-list.com/services?search=pa-entity-x402'
-          do
-            echo "--- $u"
-            curl -sS -i "$u" | head -80
-          done
+          echo '=== 402 Index ranked search ==='
+          curl -sS -G 'https://402index.io/api/v1/services'             --data-urlencode 'q=Pennsylvania business registry'             --data-urlencode 'protocol=x402'             --data-urlencode 'limit=10'           | jq '{our_rank: ([.services[].id] | index("2a92dcd4-206a-42ad-b6e5-e457635bb75a") | if . == null then null else .+1 end), top5:[.services[0:5][]|{id,name,health_status,category,price_usd}]}'
