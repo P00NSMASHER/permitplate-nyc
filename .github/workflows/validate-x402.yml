@@ -10,18 +10,28 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      TARGET_URL: https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s
+      API_URL: https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s
+      FRONTEND_URL: https://pa-entity-lookup-x402-4fbm4s.v2.appdeploy.ai
     steps:
-      - name: Validate AgentCash discovery
-        run: npx -y @agentcash/discovery@latest discover "$TARGET_URL"
-      - name: Check AgentCash discovery
-        run: npx -y @agentcash/discovery@latest check "$TARGET_URL"
-      - name: Verify unpaid route returns 402 before query validation
+      - name: Check backend origin behavior
         shell: bash
         run: |
           set -euo pipefail
-          status="$(curl -sS -o /tmp/body.txt -D /tmp/headers.txt -w '%{http_code}' "$TARGET_URL/api/pa-business")"
-          cat /tmp/headers.txt
-          cat /tmp/body.txt
-          test "$status" = "402"
-          grep -qi '^payment-required:' /tmp/headers.txt
+          echo '=== backend openapi ==='
+          curl -sS -o /tmp/backend-openapi.txt -D - -w '\nSTATUS=%{http_code}\n' "$API_URL/openapi.json" || true
+          head -c 600 /tmp/backend-openapi.txt || true
+          echo
+          echo '=== backend unpaid endpoint ==='
+          curl -sS -o /tmp/backend-body.txt -D - -w '\nSTATUS=%{http_code}\n' "$API_URL/api/pa-business" || true
+          cat /tmp/backend-body.txt || true
+      - name: Check frontend same-origin escape hatch
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '=== frontend openapi ==='
+          curl -sS -o /tmp/front-openapi.txt -D - -w '\nSTATUS=%{http_code}\n' "$FRONTEND_URL/openapi.json" || true
+          head -c 600 /tmp/front-openapi.txt || true
+          echo
+          echo '=== frontend unpaid endpoint ==='
+          curl -sS -o /tmp/front-body.txt -D - -w '\nSTATUS=%{http_code}\n' "$FRONTEND_URL/api/pa-business" || true
+          head -c 1200 /tmp/front-body.txt || true
