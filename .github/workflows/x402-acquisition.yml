@@ -6,33 +6,50 @@ on:
       - '.github/workflows/x402-acquisition.yml'
 
 jobs:
-  submit:
+  audit:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Register with x402Scout and verify discovery
+      - name: Verify buyer discoverability
         shell: bash
         run: |
           set +e
-          ENDPOINT='https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
-          NAME='PA Entity Lookup x402'
-          DESC='Company identity and legal-entity enrichment for Pennsylvania businesses by company name. Returns filing number, registration type, registered address, city, ZIP, and county for vendor verification, due diligence, and lead enrichment.'
+          ORIGIN='https://pa-entity-x402.floot.app'
+          ENDPOINT="$ORIGIN/_api/pa-business?q=OpenAI&limit=1"
 
-          echo '=== x402Scout register ==='
-          curl -sS -i -X POST 'https://x402scout.com/register' \
-            -H 'content-type: application/json' \
-            --data "$(jq -nc --arg name "$NAME" --arg url "$ENDPOINT" --arg description "$DESC" '{name:$name,url:$url,price_usd:0.005,category:"data",description:$description,network:"base-mainnet"}')"
-
-          echo
-          echo '=== x402Scout discovery lookup ==='
-          curl -sS 'https://x402scout.com/.well-known/x402-discovery' | \
-            jq --arg needle 'pa-entity-x402.floot.app' '.. | objects | select((.url? // .endpoint? // .resource? // "") | contains($needle))' | head -c 16000
+          echo '=== discovery assets ==='
+          for p in /openapi.json /llms.txt /llms-full.txt /skill.md /robots.txt /sitemap.xml /.well-known/x402-catalog.json /.well-known/x402-service.json; do
+            code=$(curl -sS -o /tmp/body -w '%{http_code}' "$ORIGIN$p")
+            echo "$p $code $(wc -c </tmp/body) bytes"
+          done
 
           echo
-          echo '=== Agent402 seller search ==='
-          curl -sS 'https://agent402.tools/api/services?search=Pennsylvania%20business%20registry' | head -c 14000
+          echo '=== Agent402 find: Pennsylvania business registry ==='
+          curl -sS 'https://agent402.tools/api/find?q=Pennsylvania%20business%20registry' | head -c 16000
 
           echo
-          echo '=== nohumans buyer-style search ==='
-          curl -sS 'https://nohumans.directory/v1/discover?q=Pennsylvania%20business%20registry&limit=20' | \
-            jq '.results[] | select(.endpoint_url | contains("pa-entity-x402.floot.app")) | {id,name,status,score,category,price_amount,paid_verified,evidence_tier,endpoint_url}'
+          echo '=== Agent402 find: company identity Pennsylvania ==='
+          curl -sS 'https://agent402.tools/api/find?q=company%20identity%20Pennsylvania' | head -c 16000
+
+          echo
+          echo '=== Market402 operator record ==='
+          curl -sS -i 'https://market402.com/op/pa-entity-x402.floot.app.json' | head -c 16000
+
+          echo
+          echo '=== nohumans exact search rank ==='
+          curl -sS 'https://nohumans.directory/v1/discover?q=Pennsylvania%20business%20registry&limit=100' | jq --arg needle 'pa-entity-x402.floot.app' '
+            .results as $r |
+            {count:(($r // [])|length),
+             rank: ([range(0; (($r // [])|length)) | select(($r[.] .endpoint_url // "") | contains($needle))][0] // -1) + 1,
+             match: (($r // [])[]? | select((.endpoint_url // "") | contains($needle))) }'
+
+          echo
+          echo '=== 402 Index buyer searches ==='
+          for q in 'Pennsylvania business registry' 'company identity Pennsylvania' 'vendor verification Pennsylvania'; do
+            echo "-- $q"
+            curl -sS "https://402index.io/api/v1/services?q=$(jq -rn --arg v "$q" '$v|@uri')&protocol=x402&limit=10" | jq '.services | map({id,name,health_status,price_usd,category})'
+          done
+
+          echo
+          echo '=== x402.new search presence ==='
+          curl -sS 'https://x402.new/services?q=Pennsylvania%20business%20registry' | grep -o 'pa-entity-x402[^"< ]*' | head
