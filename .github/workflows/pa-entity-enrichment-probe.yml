@@ -10,28 +10,22 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Benchmark distinct projection on officer dataset
+      - name: Benchmark officer lookup by filing number
         shell: bash
         run: |
           set -euo pipefail
-          SELECT='distinct business_name,filing_number,address_line1,address_line2,city,state,zip,typeofbusinessregistration,creationdate,shortcountyname,county_code'
 
-          for q in OpenAI Sheetz Wawa; do
-            QUP=$(printf '%s' "$q" | tr '[:lower:]' '[:upper:]')
-            echo "=== PROJECTED DISTINCT $q ==="
-            curl -sS -w '\nHTTP=%{http_code} TIME=%{time_total}\n'               --get 'https://data.pa.gov/resource/xvd7-5r2c.json'               --data-urlencode "\$select=$SELECT"               --data-urlencode "\$where=upper(business_name) like '%${QUP}%'"               --data-urlencode "\$order=business_name ASC"               --data-urlencode "\$limit=100" | tee "/tmp/projected-$q.txt"
+          echo '=== SINGLE OpenAI principals ==='
+          curl -sS -w '\nHTTP=%{http_code} TIME=%{time_total}\n'             --get 'https://data.pa.gov/resource/xvd7-5r2c.json'             --data-urlencode "\$select=filing_number,party_type,first_name,middle_name,last_name"             --data-urlencode "\$where=filing_number='0014371957'"             --data-urlencode "\$limit=100"
 
-            echo "=== STARTS-WITH $q ==="
-            curl -sS -w '\nHTTP=%{http_code} TIME=%{time_total}\n'               --get 'https://data.pa.gov/resource/xvd7-5r2c.json'               --data-urlencode "\$select=$SELECT"               --data-urlencode "\$where=upper(business_name) like '${QUP}%'"               --data-urlencode "\$order=business_name ASC"               --data-urlencode "\$limit=100" | tee "/tmp/starts-$q.txt"
-          done
+          echo '=== SINGLE Sheetz principals ==='
+          curl -sS -w '\nHTTP=%{http_code} TIME=%{time_total}\n'             --get 'https://data.pa.gov/resource/xvd7-5r2c.json'             --data-urlencode "\$select=filing_number,party_type,first_name,middle_name,last_name"             --data-urlencode "\$where=filing_number='0000326968'"             --data-urlencode "\$limit=100"
 
-          echo '=== SUMMARY ==='
-          python3 - <<'PY'
-          import json,glob,re
-          for p in sorted(glob.glob('/tmp/projected-*')+glob.glob('/tmp/starts-*')):
-              raw=open(p).read()
-              body,meta=raw.split('\nHTTP=',1)
-              rows=json.loads(body)
-              print(p, meta.strip(), 'ROWS='+str(len(rows)))
-              print(json.dumps(rows[:8],indent=2))
-          PY
+          echo '=== SINGLE Wawa principals ==='
+          curl -sS -w '\nHTTP=%{http_code} TIME=%{time_total}\n'             --get 'https://data.pa.gov/resource/xvd7-5r2c.json'             --data-urlencode "\$select=filing_number,party_type,first_name,middle_name,last_name"             --data-urlencode "\$where=filing_number='0000233685'"             --data-urlencode "\$limit=100"
+
+          echo '=== BATCH 3 principals ==='
+          curl -sS -w '\nHTTP=%{http_code} TIME=%{time_total}\n'             --get 'https://data.pa.gov/resource/xvd7-5r2c.json'             --data-urlencode "\$select=filing_number,party_type,first_name,middle_name,last_name"             --data-urlencode "\$where=filing_number in('0014371957','0000326968','0000233685')"             --data-urlencode "\$order=filing_number ASC"             --data-urlencode "\$limit=300"
+
+          echo '=== BATCH 5 representative filings ==='
+          curl -sS -w '\nHTTP=%{http_code} TIME=%{time_total}\n'             --get 'https://data.pa.gov/resource/xvd7-5r2c.json'             --data-urlencode "\$select=filing_number,party_type,first_name,middle_name,last_name"             --data-urlencode "\$where=filing_number in('0014371957','0000326968','0000233685','0014879623','0013702576')"             --data-urlencode "\$order=filing_number ASC"             --data-urlencode "\$limit=500"
