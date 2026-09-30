@@ -30,5 +30,5 @@
   "endpoint": "https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1",
   "description": "Pennsylvania business registry and company identity lookup with filing number, registration type, creation date, registered address, county, and source-published principal/officer roles.",
   "documentation": "https://pa-entity-x402.floot.app/llms.txt",
-  "skill": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/main/PA_ENTITY_SKILL.md"
+  "skill": "https://pa-entity-x402.floot.app/skill.txt"
 }
