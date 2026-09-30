@@ -2,7 +2,7 @@
   "x402Version": 2,
   "resource": {
     "url": "https://pa-entity-x402.floot.app/_api/pa-business",
-    "description": "Pennsylvania business registry and company identity lookup by business name. Returns Department of State filing number, registration type, registered address, city, ZIP, and county for entity resolution, vendor verification, due diligence, and lead enrichment.",
+    "description": "Pennsylvania business registry and company identity lookup by business name. Returns filing number, registration type, creation date, registered address, county, and source-published principal/officer roles.",
     "mimeType": "application/json",
     "serviceName": "Pennsylvania Business Registry — Company Identity Lookup",
     "tags": [
@@ -11,7 +11,9 @@
       "legal-entity",
       "vendor-verification",
       "due-diligence",
-      "lead-enrichment"
+      "lead-enrichment",
+      "creation-date",
+      "principal-officer-records"
     ]
   },
   "accepts": [
@@ -36,7 +38,7 @@
           "method": "GET",
           "queryParams": {
             "q": "OpenAI",
-            "limit": 5
+            "limit": 1
           }
         },
         "output": {
@@ -49,14 +51,27 @@
                 "businessName": "Openai, L.l.c.",
                 "filingNumber": "0014371957",
                 "registrationType": "Foreign Limited Liability Company",
+                "creationDate": "2025-04-23",
                 "address1": "600 North Second Street, Suite 401",
                 "address2": null,
                 "city": "Harrisburg",
                 "state": "PA",
                 "zip": "17101",
-                "county": "Dauphin"
+                "county": "Dauphin",
+                "countyCode": "22",
+                "principals": [
+                  {
+                    "role": "Governor",
+                    "firstName": null,
+                    "middleName": null,
+                    "lastName": null
+                  }
+                ]
               }
             ],
+            "enrichment": {
+              "principals": "complete"
+            },
             "source": "Pennsylvania Department of State via data.pa.gov",
             "paid": true
           }
@@ -79,7 +94,8 @@
                 "properties": {
                   "q": {
                     "type": "string",
-                    "minLength": 2
+                    "minLength": 2,
+                    "maxLength": 120
                   },
                   "limit": {
                     "type": "integer",
