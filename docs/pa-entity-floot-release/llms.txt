@@ -107,6 +107,6 @@ Principal/officer rows are source-published Pennsylvania registry records.
 
 OpenAPI: https://pa-entity-x402.floot.app/openapi.json
 Full LLM reference: https://pa-entity-x402.floot.app/llms-full.txt
-Durable skill document: https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/main/PA_ENTITY_SKILL.md
+Skill document: https://pa-entity-x402.floot.app/skill.txt\nFallback source copy: https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/main/PA_ENTITY_SKILL.md
 x402 service manifest: https://pa-entity-x402.floot.app/.well-known/x402-service.json
 x402 catalog: https://pa-entity-x402.floot.app/.well-known/x402-catalog.json
