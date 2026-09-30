@@ -4,8 +4,10 @@
 
 Canonical origin: https://pa-entity-x402.floot.app
 OpenAPI: https://pa-entity-x402.floot.app/openapi.json
-Paid endpoint: GET https://pa-entity-x402.floot.app/_api/pa-business
-Price: $0.005 USDC per successful settled lookup
+Low-cost best-match endpoint: GET https://pa-entity-x402.floot.app/_api/pa-entity-one?q=NAME
+Best-match price: $0.001 USDC per successful settled lookup
+Enriched search endpoint: GET https://pa-entity-x402.floot.app/_api/pa-business?q=NAME&limit=10
+Enriched search price: $0.005 USDC per successful settled lookup
 Protocol: x402 v2
 Network: Base mainnet (eip155:8453)
 Source: Pennsylvania Department of State public business-registration data via data.pa.gov
@@ -23,13 +25,21 @@ Source: Pennsylvania Department of State public business-registration data via d
 - registered address, ZIP, and county confirmation
 - source-published principal/officer role enrichment
 
-## Request
+## Choose an endpoint
+
+For one highest-ranked entity at the lowest price:
+
+GET /_api/pa-entity-one?q=NAME
+
+For multiple enriched candidates:
 
 GET /_api/pa-business?q=NAME&limit=10
 
 Parameters:
-- q: required, 2-120 characters
-- limit: optional integer 1-25, default 10
+- q: required on both routes, 2-120 characters
+- limit: only on /_api/pa-business; optional integer 1-25, default 10
+
+The $0.001 route always returns at most one result in the same result-array schema.
 
 Matching is case-insensitive against the Pennsylvania business_name field.
 The service uses a fast starts-with query first and a broader contains query only when needed.
@@ -66,6 +76,10 @@ Each result includes:
 The response also includes enrichment.principals, source, and paid.
 
 ## Example
+
+GET /_api/pa-entity-one?q=OpenAI
+
+or
 
 GET /_api/pa-business?q=OpenAI&limit=1
 
