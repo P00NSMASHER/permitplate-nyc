@@ -695,3 +695,49 @@ This removes a major licensing concern for the current source.
 - remember the Commonwealth can discontinue content at any time.
 
 The current attribution/caveat direction is appropriate.
+
+
+---
+
+## P0 — Verification logic must fail closed on `isValid`; do not accept `success`
+
+The current seller implementation accepts a PayAI verify response when either:
+
+- `verified.isValid === true`, **or**
+- `verified.success === true`
+
+PayAI's current facilitator contract clearly separates the response shapes:
+
+- `POST /verify` -> `{ isValid, invalidReason, invalidMessage }`
+- `POST /settle` -> `{ success, errorReason, errorMessage, ... }`
+
+`success` is therefore a settlement field, not a documented verification signal.
+
+### Risk
+
+The extra `success === true` fallback is fail-open behavior. A future proxy/schema change, unexpected wrapper, or wrong response routed into the verifier could be treated as authorization to serve data even though `isValid` was never true.
+
+No exploit was demonstrated against PayAI's current response shape, but the condition is unnecessary and weakens the payment trust boundary.
+
+### Fix
+
+For `POST /verify`:
+
+```ts
+if (verified.isValid !== true) {
+  // reject / return payment challenge
+}
+```
+
+Do not infer verification from `success`, HTTP 2xx alone, or the absence of an error.
+
+For `POST /settle`, continue to use the documented `success === true` result, with explicit handling for `settlement_pending` and other structured error reasons.
+
+### Release gate
+
+Unit/integration tests must prove:
+
+- `{isValid:true}` -> accepted
+- `{isValid:false, success:true}` -> rejected
+- `{success:true}` without `isValid:true` -> rejected
+- HTTP 200 with malformed/unknown body -> rejected
