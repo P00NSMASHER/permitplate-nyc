@@ -65,15 +65,13 @@ The manifest fixture in `x402-manifest.json` has already passed Agent402's curre
 
 ### P1 — fix advertised machine documents
 
-`/skill.md` currently returns the HTML Floot app shell.
+`/skill.md` currently returns the HTML Floot app shell. Do not advertise it.
 
-It must return actual Markdown with `text/markdown` or `text/plain`.
+Publish the real machine skill at `/skill.txt` with `text/plain`, and point OpenAPI/x402 discovery at that same-origin URL.
 
-The x402 catalogue must not advertise a skill URL unless that URL serves the actual skill document.
+Do **not** publish an A2A `/.well-known/agent-card.json` unless an actual A2A protocol binding is implemented; this release is an HTTP/x402 API, not an A2A message server.
 
-Add:
-- `/.well-known/agent-card.json` if supported cleanly;
-- `/.well-known/security.txt` with project-level contact URL only if desired; do not expose personal email.
+Publish `/.well-known/security.txt` with a project-level GitHub security/policy contact only; do not expose personal email.
 
 ### P1 — Bazaar example correctness
 
@@ -109,10 +107,9 @@ Return 400 for invalid paid-attempt inputs without calling the facilitator.
 
 ### P1 — dependency timeouts
 
-Add AbortController timeouts:
-- PayAI verify: 5 s;
-- PA Open Data: 8 s;
-- PayAI settle: 8 s.
+Add AbortController timeouts matching the staged release:
+- PayAI verify/settle: 6 s per facilitator request;
+- PA Open Data: 10 s per source request.
 
 Do not leave serverless requests unbounded.
 
@@ -163,7 +160,7 @@ Search:
 4. deduplicate by filing number.
 
 Add backward-compatible fields:
-- `creationDate`
+- `creationDate` (treat exact source sentinel `1753-01-01` as unavailable/null; preserve other genuinely old dates)
 - `countyCode`
 - `principals[]` with source-published role/name fields
 
@@ -191,7 +188,7 @@ Benchmarks already measured:
 7. Missing/invalid q with a payment payload -> 400 without facilitator call.
 8. settlement_pending never triggers a fresh 402.
 9. canonical well-known x402 paths -> 200 JSON.
-10. skill.md -> actual Markdown, not HTML.
+10. skill.txt -> real machine-readable skill text, not HTML; do not advertise the broken `/skill.md` path.
 11. Bazaar OpenAI example contains a real record.
 12. OpenAI, Sheetz, Wawa rank correctly.
 13. enrichment fields are present and grouped.
