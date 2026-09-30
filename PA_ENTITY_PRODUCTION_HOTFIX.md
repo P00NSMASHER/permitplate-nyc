@@ -194,7 +194,7 @@ Benchmarks already measured:
 13. enrichment fields are present and grouped.
 14. CORS exposes x402 headers.
 15. Coinbase/CDP validator remains valid/accepted.
-16. AgentCash still discovers the paid route.
+16. AgentCash discovers both paid GET routes with the correct $0.001 and $0.005 prices.
 17. Agent402 re-registration no longer reports crawl_failed.
 18. Agent402 seller health becomes non-zero/routable if no independent-settlement gate remains.
 19. x402scan/nohumans/402 Index are refreshed.
