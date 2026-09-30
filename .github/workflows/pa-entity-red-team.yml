@@ -1,0 +1,83 @@
+name: PA Entity red team
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-red-team.yml'
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Adversarial unauthenticated probes
+        shell: bash
+        run: |
+          set -uo pipefail
+          ORIGIN='https://pa-entity-x402.floot.app'
+          ENDPOINT="$ORIGIN/_api/pa-business"
+          mkdir -p /tmp/rt
+
+          probe () {
+            label="$1"; shift
+            echo "=== $label ==="
+            curl -sS --max-time 15 -D /tmp/rt/h -o /tmp/rt/b -w 'status=%{http_code} time=%{time_total} bytes=%{size_download}\n' "$@" || true
+            grep -Ei '^(content-type|payment-required|payment-response|access-control|cache-control|retry-after|server|x-floot-status):' /tmp/rt/h | head -20 || true
+            head -c 900 /tmp/rt/b || true
+            echo; echo
+          }
+
+          probe 'root' "$ORIGIN/"
+          for p in             /openapi.json /llms.txt /llms-full.txt /skill.md /robots.txt /sitemap.xml             /.well-known/x402 /.well-known/x402.json /.well-known/x402-services.json             /.well-known/x402-service.json /.well-known/x402-catalog.json             /.well-known/agent-card.json /.well-known/agent.json
+          do
+            probe "GET $p" "$ORIGIN$p"
+          done
+
+          probe 'paid route canonical q' "$ENDPOINT?q=OpenAI&limit=1"
+          probe 'paid route missing q' "$ENDPOINT"
+          probe 'paid route one-char q' "$ENDPOINT?q=A"
+          probe 'paid route huge limit' "$ENDPOINT?q=OpenAI&limit=999999999"
+          probe 'paid route weird limit' "$ENDPOINT?q=OpenAI&limit=10garbage"
+          probe 'paid route SQL-ish q' --get "$ENDPOINT" --data-urlencode "q=' OR 1=1 --" --data-urlencode 'limit=1'
+          probe 'paid route wildcard q' --get "$ENDPOINT" --data-urlencode 'q=%_' --data-urlencode 'limit=1'
+          probe 'paid route unicode q' --get "$ENDPOINT" --data-urlencode 'q=Česká Škoda 株式会社' --data-urlencode 'limit=1'
+
+          EMPTY_SIG=$(printf '{}' | base64 -w0)
+          BAD_SIG='not-base64-json'
+          probe 'malformed payment header' -H "PAYMENT-SIGNATURE: $BAD_SIG" "$ENDPOINT?q=OpenAI&limit=1"
+          probe 'empty-object payment + missing q' -H "PAYMENT-SIGNATURE: $EMPTY_SIG" "$ENDPOINT"
+          probe 'empty-object payment + 1char q' -H "PAYMENT-SIGNATURE: $EMPTY_SIG" "$ENDPOINT?q=A"
+          probe 'empty-object payment + wildcard q' -H "PAYMENT-SIGNATURE: $EMPTY_SIG" --get "$ENDPOINT" --data-urlencode 'q=%_' --data-urlencode 'limit=1'
+          probe 'empty-object payment + valid q' -H "PAYMENT-SIGNATURE: $EMPTY_SIG" "$ENDPOINT?q=OpenAI&limit=1"
+
+          python3 - <<'PY' >/tmp/rt/bigsig.txt
+          import base64,json
+          print(base64.b64encode(json.dumps({"x":"A"*70000}).encode()).decode())
+          PY
+          BIG_SIG=$(cat /tmp/rt/bigsig.txt)
+          probe 'oversized payment header ~93KB' -H "PAYMENT-SIGNATURE: $BIG_SIG" "$ENDPOINT?q=OpenAI&limit=1"
+
+          probe 'POST wrong method' -X POST "$ENDPOINT?q=OpenAI&limit=1"
+          probe 'OPTIONS preflight' -X OPTIONS -H 'Origin: https://buyer.example' -H 'Access-Control-Request-Method: GET' "$ENDPOINT?q=OpenAI&limit=1"
+
+          echo '=== PayAI discovery grep ==='
+          for off in 0 100 200 300 400 500; do
+            curl -sS --max-time 15 "https://facilitator.payai.network/discovery/resources?limit=100&offset=$off" -o "/tmp/rt/payai-$off.json" || true
+            if grep -qi 'pa-entity-x402\.floot\.app' "/tmp/rt/payai-$off.json"; then
+              echo "FOUND offset=$off"
+              python3 - "$off" <<'PY'
+          import json,sys
+          off=sys.argv[1]
+          d=json.load(open(f'/tmp/rt/payai-{off}.json'))
+          def walk(x):
+            if isinstance(x,dict):
+              if 'pa-entity-x402.floot.app' in json.dumps(x):
+                print(json.dumps(x,indent=2)[:12000])
+              for v in x.values(): walk(v)
+            elif isinstance(x,list):
+              for v in x: walk(v)
+          walk(d)
+          PY
+              break
+            fi
+          done
