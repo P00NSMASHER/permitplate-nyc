@@ -17,5 +17,7 @@ jobs:
           for Q in             'Pennsylvania business entity'             'company identity Pennsylvania'             'PA Entity Best Match'             'api-v2.appdeploy.ai'
           do
             echo "=== $Q ==="
-            curl -sS -G 'https://payanagent.com/api/v1/offers'               --data-urlencode "q=$Q"               --data-urlencode 'limit=50' | jq '.offers[] | {id:._id,title,description,priceUsd,buyUrl,source,externalUrl,category,tags}' || true
+            curl -sS -G 'https://payanagent.com/api/v1/offers'               --data-urlencode "q=$Q"               --data-urlencode 'limit=50' | tee /tmp/payan.json
+            echo
+            jq . /tmp/payan.json || cat /tmp/payan.json
           done
