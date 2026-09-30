@@ -1,5 +1,4 @@
-name: PA Entity Market402 submission
-# corrected resource field
+name: PA Entity cheap-route qualification
 
 on:
   push:
@@ -7,51 +6,38 @@ on:
       - '.github/workflows/pa-entity-commercial-status.yml'
 
 jobs:
-  submit:
+  qualify:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Submit seller with paid-probe opt-in
+      - name: Verify existing $0.001 best-match seller
         shell: bash
         run: |
-          set -euo pipefail
-          ENDPOINT='https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
+          set +e
+          E='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI'
 
-          echo '=== SELFTEST ==='
-          curl -sS -i -X POST 'https://market402.com/selftest'             -H 'content-type: application/json'             --data "$(jq -nc --arg url "$ENDPOINT" '{url:$url}')" | tee /tmp/selftest.txt
-
-          echo
-          echo '=== SUBMIT + PAID PROBE OPT-IN ==='
-          curl -sS -i -X POST 'https://market402.com/submit'             -H 'content-type: application/json'             --data "$(jq -nc               --arg url "$ENDPOINT"               --argjson price 0.005               '{
-                resource:$url,
-                declared_price_usd:$price,
-                paid_probe_optin:true,
-                sample_input:{
-                  method:"GET",
-                  queryParams:{q:"OpenAI",limit:1}
-                }
-              }')" | tee /tmp/submit.txt
+          echo '=== DIRECT 402 ==='
+          curl -sS -D /tmp/h -o /tmp/b -w 'status=%{http_code} time=%{time_total} bytes=%{size_download}\n' "$E"
+          grep -Ei '^(content-type|payment-required|cache-control|x402-price|x402-network|x402-pay-to):' /tmp/h || true
+          cat /tmp/b
 
           echo
-          echo '=== OPTIN ROSTER CHECK ==='
-          curl -sS 'https://market402.com/optin.json' > /tmp/optin.json
+          echo '=== HEADER DECODE ==='
           python3 - <<'PY'
-          import json
-          d=json.load(open('/tmp/optin.json'))
-          needle='pa-entity-x402.floot.app'
-          raw=json.dumps(d)
-          print('contains=',needle in raw)
-          if needle in raw:
-            def walk(x,path=''):
-              if isinstance(x,dict):
-                if needle in json.dumps(x):
-                  print(path,json.dumps(x,indent=2)[:12000])
-                for k,v in x.items(): walk(v,path+'/'+str(k))
-              elif isinstance(x,list):
-                for i,v in enumerate(x): walk(v,path+'/'+str(i))
-            walk(d)
+          import base64,json,re
+          h=open('/tmp/h').read()
+          m=re.search(r'(?im)^payment-required:\s*(\S+)',h)
+          if not m:
+            print('NO PAYMENT-REQUIRED')
+            raise SystemExit(1)
+          x=m.group(1); x += '='*((4-len(x)%4)%4)
+          print(json.dumps(json.loads(base64.b64decode(x)),indent=2))
           PY
 
           echo
-          echo '=== OPERATOR READBACK ==='
-          curl -sS -i 'https://market402.com/op/pa-entity-x402.floot.app.json' | head -c 12000
+          echo '=== MARKET402 SELFTEST ==='
+          curl -sS -X POST 'https://market402.com/selftest'             -H 'content-type: application/json'             --data "$(jq -nc --arg url "$E" '{url:$url}')" | jq .
+
+          echo
+          echo '=== CDP VALIDATE ==='
+          curl -sS -X POST 'https://api.cdp.coinbase.com/platform/v2/x402/validate'             -H 'content-type: application/json'             --data "$(jq -nc --arg resource "$E" '{resource:$resource,method:"GET"}')" | jq .
