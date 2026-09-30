@@ -1,0 +1,41 @@
+name: x402 measured directory probe
+
+on:
+  push:
+    paths:
+      - '.github/workflows/x402-measured-directory.yml'
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Probe measured directories
+        shell: bash
+        run: |
+          set +e
+          CHEAP='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI'
+          FLOOT='https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
+
+          echo '=== the402 validate cheap ==='
+          curl -sS -G -w '\nHTTP_STATUS=%{http_code}\n' 'https://api.the402.dev/validate' --data-urlencode "url=$CHEAP"
+          echo
+
+          echo '=== the402 validate floot ==='
+          curl -sS -G -w '\nHTTP_STATUS=%{http_code}\n' 'https://api.the402.dev/validate' --data-urlencode "url=$FLOOT"
+          echo
+
+          echo '=== x402.direct newest search pages ==='
+          FOUND=0
+          for P in 1 2 3 4 5; do
+            BODY="$(curl -sS -G 'https://x402.direct/api/services'               --data-urlencode "page=$P"               --data-urlencode 'limit=100'               --data-urlencode 'sort=newest')"
+            echo "$BODY" | grep -F 'pa-entity-x402.floot.app' && FOUND=1
+            echo "$BODY" | grep -F 'pa-entity-lookup-x402-4fbm4s' && FOUND=1
+          done
+          echo "X402_DIRECT_FOUND=$FOUND"
+
+          echo '=== the402 search pages ==='
+          for Q in 'pa-entity' 'Pennsylvania business registry' 'api-v2.appdeploy.ai'; do
+            echo "--- $Q ---"
+            curl -sS -G 'https://the402.dev/' --data-urlencode "q=$Q" |               grep -Eo 'https://[^"< ]+|Pennsylvania[^<]{0,180}|pa-entity[^<]{0,180}' | head -30
+          done
