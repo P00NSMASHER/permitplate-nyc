@@ -6,77 +6,22 @@ on:
       - '.github/workflows/x402-acquisition.yml'
 
 jobs:
-  audit:
+  inspect:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 5
     steps:
-      - name: Test real buyer routing
+      - name: Inspect jaypay directory submission form
         shell: bash
         run: |
           set +e
-          NEEDLE='pa-entity-x402.floot.app'
-
-          echo '=== Agent402 cross-seller route: Pennsylvania business registry ==='
-          curl -sS 'https://agent402.tools/api/route?q=Pennsylvania%20business%20registry&include=external' | tee /tmp/route1.json | head -c 20000
-          echo
-          echo "contains seller: $(grep -ci "$NEEDLE" /tmp/route1.json)"
+          curl -sS 'https://402directory.com/submit' -o /tmp/submit.html
+          echo '=== FORM / ACTION / API REFERENCES ==='
+          grep -Ein -C 3 '<form|action=|fetch\(|/api/|submit' /tmp/submit.html | head -c 30000
 
           echo
-          echo '=== Agent402 cross-seller route: company identity Pennsylvania ==='
-          curl -sS 'https://agent402.tools/api/route?q=company%20identity%20Pennsylvania&include=external' | tee /tmp/route2.json | head -c 20000
-          echo
-          echo "contains seller: $(grep -ci "$NEEDLE" /tmp/route2.json)"
+          echo '=== SCRIPT SOURCES ==='
+          grep -Eo '<script[^>]+src="[^"]+"' /tmp/submit.html | head -30
 
           echo
-          echo '=== nohumans exact buyer-search rank ==='
-          curl -sS 'https://nohumans.directory/v1/discover?q=Pennsylvania%20business%20registry&limit=100' > /tmp/nh.json
-          python3 - <<'PY'
-          import json
-          d=json.load(open('/tmp/nh.json'))
-          rows=d.get('results',[])
-          hits=[(i+1,x) for i,x in enumerate(rows) if 'pa-entity-x402.floot.app' in x.get('endpoint_url','')]
-          print(json.dumps({'returned':len(rows),'hits':hits},indent=2))
-          PY
-
-          echo
-          echo '=== nohumans company identity rank ==='
-          curl -sS 'https://nohumans.directory/v1/discover?q=company%20identity%20Pennsylvania&limit=100' > /tmp/nh2.json
-          python3 - <<'PY'
-          import json
-          d=json.load(open('/tmp/nh2.json'))
-          rows=d.get('results',[])
-          hits=[(i+1,x) for i,x in enumerate(rows) if 'pa-entity-x402.floot.app' in x.get('endpoint_url','')]
-          print(json.dumps({'returned':len(rows),'hits':hits},indent=2))
-          PY
-
-          echo
-          echo '=== Market402 operators search ==='
-          curl -sS 'https://market402.com/operators.json' > /tmp/op.json
-          python3 - <<'PY'
-          import json
-          d=json.load(open('/tmp/op.json'))
-          raw=json.dumps(d)
-          needle='pa-entity-x402.floot.app'
-          print('contains seller:', needle in raw)
-          if needle in raw:
-              def walk(x,path=''):
-                  if isinstance(x,dict):
-                      if needle in json.dumps(x):
-                          if any(needle in str(v) for v in x.values()):
-                              print(path, json.dumps(x)[:8000])
-                          for k,v in x.items(): walk(v,path+'/'+str(k))
-                  elif isinstance(x,list):
-                      for i,v in enumerate(x): walk(v,path+'/'+str(i))
-              walk(d)
-          PY
-
-          echo
-          echo '=== x402.new search ==='
-          curl -sS 'https://x402.new/services?q=Pennsylvania%20business%20registry' > /tmp/new.html
-          echo "contains seller: $(grep -ci "$NEEDLE" /tmp/new.html)"
-
-          echo
-          echo '=== current unauthenticated 402 ==='
-          curl -sS -o /tmp/paybody -D /tmp/payheaders -w 'status=%{http_code} latency=%{time_total}\n'             'https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
-          grep -i '^payment-required:' /tmp/payheaders | head -1 | cut -c1-160
-          head -c 400 /tmp/paybody
+          echo '=== PAGE SIZE ==='
+          wc -c /tmp/submit.html
