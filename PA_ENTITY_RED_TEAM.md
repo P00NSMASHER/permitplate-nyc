@@ -360,3 +360,120 @@ Do not infer missing officer names or current authority.
    - 402 Index/nohumans;
    - PayAI stats.
 12. Do not count any validation as revenue. Only a third-party settlement changes the revenue number.
+
+
+---
+
+## P1 — Settlement-pending responses can be misreported as unpaid failures
+
+PayAI's current developer reference states that settlement is **idempotent** and that a settlement can return `settlement_pending` with a broadcast transaction hash. The transfer may still land; the documented recovery is to re-submit the **identical settle request** to obtain the eventual definitive result.
+
+### Risk in the current integration
+
+The seller currently treats facilitator non-success responses too generically. If a settle call is pending or its HTTP response is lost after broadcast, a buyer could ultimately pay while receiving a 503/no product.
+
+### Fix
+
+1. Preserve the exact settle request body after verify succeeds.
+2. Parse structured settle responses even on non-2xx.
+3. If `errorReason === "settlement_pending"` (or equivalent documented shape), retry the **identical body** with bounded exponential backoff inside the request deadline.
+4. Because settle is idempotent, never generate a different payment/settle body for the same authorization.
+5. If still unresolved, return an explicit `payment_settlement_pending` response with the facilitator transaction hash/reference. Never say “payment was not settled” when the state is unknown.
+6. Do not count a pending transaction as revenue until a definitive settlement result/on-chain evidence exists.
+
+This is payment-correctness, not just nicer error text.
+
+---
+
+## P2 — Facilitator economics become material at this price
+
+Current PayAI public pricing says facilitator fees are a **flat per-settlement cost**, separate from the API's customer price. The live Base EIP-3009 rate observed during red-team testing was about **2.31 credits = $0.00231** per settlement at that moment.
+
+At a $0.005 customer price, once the free credit allowance is exhausted:
+
+- customer price: $0.005
+- facilitator cost at the observed rate: ~$0.00231
+- gross remainder before all other costs: ~$0.00269
+
+The rate can change with network costs, so this is not a fixed future margin.
+
+### Current decision
+
+**Do not raise the price yet.** There are zero third-party buyers, and $0.005 is competitively positioned for machine purchase.
+
+### Volume trigger
+
+Once real settlements begin:
+
+- record facilitator credits consumed per settled call;
+- calculate realized net revenue per service;
+- revisit price before the free credit allowance is materially consumed;
+- compare PayAI's then-current rate with alternative compatible facilitators rather than silently accepting negative/near-zero unit economics.
+
+Do not attempt to evade facilitator pricing by creating wallets solely to multiply free allowances.
+
+---
+
+## P2 — Free-tier exhaustion needs an explicit failure mode
+
+PayAI documents that exhausted settlement credits can return HTTP 403 with an `errorReason` beginning `free_tier_exhausted`.
+
+The seller must not translate this into generic `payment_verifier_unavailable`.
+
+### Fix
+
+Map it to an operator-actionable service state such as:
+
+`facilitator_credit_required`
+
+while still preventing settlement/product delivery until payment infrastructure is restored.
+
+Once real volume exists, monitor this condition before it becomes customer-facing downtime.
+
+---
+
+## P2 — Normalized-invalid queries can become upstream-looking errors
+
+The current search normalizes wildcard characters such as `%` and `_`. A raw two-character query can pass the public minimum length but normalize to fewer than two usable characters.
+
+Example class:
+
+- `q=%%`
+- `q=__`
+
+The current search helper can then throw `query_too_short_after_normalization`, which risks being caught as an upstream/source failure rather than a clean buyer input error.
+
+### Fix
+
+Validate the **normalized** search term before payment verification/upstream fetch and return 400:
+
+`q must contain at least 2 searchable characters`
+
+Do not label normalized-invalid input as PA registry downtime.
+
+---
+
+## P2 — Source freshness/provenance is underspecified for due-diligence use
+
+The Commonwealth's data policy explicitly says data is provided **as-is** with no warranty of accuracy, timeliness, completeness, or fitness for a particular purpose.
+
+For a tool marketed around company identity and due diligence, the response should make provenance and freshness clearer.
+
+### Fix
+
+Where practical, add stable source metadata such as:
+
+- source dataset name;
+- source dataset ID;
+- source URL;
+- source last-updated timestamp / `sourceAsOf` when it can be obtained reliably.
+
+Do not market “Current Business Entities” as a legal conclusion that an entity is currently active or in good standing.
+
+---
+
+## P3 — Public security contact can be added without exposing personal email
+
+`/.well-known/security.txt` is currently absent.
+
+If Floot permits a raw static file, publish an RFC 9116-style file using a **project/public URL** contact surface rather than a personal email. This is optional trust hardening after buyer-blocking discovery/payment issues are fixed.
