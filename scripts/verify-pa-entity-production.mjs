@@ -71,12 +71,21 @@ await check('llms.txt plain text', async () => {
   assert.match(text, /same PAYMENT-SIGNATURE/)
 })
 
+await check('skill.txt plain text', async () => {
+  const { res, text } = await fetchText('/skill.txt')
+  assert.equal(res.status, 200)
+  expectContentType(res, /text\/plain/i)
+  assert.ok(!/<html|<!doctype html/i.test(text), 'skill.txt must not be the SPA HTML shell')
+  assert.match(text, /PA Entity Lookup x402/)
+  assert.match(text, /\$0\.001/)
+  assert.match(text, /\$0\.005/)
+})
+
 for (const path of [
   '/.well-known/x402.json',
   '/.well-known/x402-services.json',
   '/.well-known/x402-service.json',
   '/.well-known/x402-catalog.json',
-  '/.well-known/agent-card.json',
 ]) {
   await check(`${path} JSON`, async () => {
     const { res, text } = await fetchText(path)
@@ -90,7 +99,8 @@ await check('security.txt plain text', async () => {
   const { res, text } = await fetchText('/.well-known/security.txt')
   assert.equal(res.status, 200)
   expectContentType(res, /text\/plain/i)
-  assert.match(text, /Contact:/)
+  assert.match(text, /Contact: https:\/\/github\.com\/P00NSMASHER\/permitplate-nyc\/security/)
+  assert.match(text, /Policy: https:\/\/github\.com\/P00NSMASHER\/permitplate-nyc\/security\/policy/)
 })
 
 await check('canonical extensionless x402 if supported', async () => {
