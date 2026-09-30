@@ -32,12 +32,12 @@ for (const path of ['/.well-known/x402','/.well-known/x402.json','/.well-known/x
 }
 
 {
-  const {r,text} = await get('/skill.md');
+  const {r,text} = await get('/skill.txt');
   const ct = r.headers.get('content-type') || '';
   const html = /<!doctype html/i.test(text);
-  check(r.status === 200, '/skill.md status 200');
-  check(!html, '/skill.md is not SPA HTML');
-  check(/markdown|text\/plain/i.test(ct), '/skill.md machine-readable content type');
+  check(r.status === 200, '/skill.txt status 200');
+  check(!html, '/skill.txt is not SPA HTML');
+  check(/markdown|text\/plain/i.test(ct), '/skill.txt machine-readable content type');
 }
 
 {
