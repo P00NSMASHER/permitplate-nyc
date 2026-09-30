@@ -98,8 +98,9 @@ As of 2026-09-30:
 - **Market402** — submission queued; free self-test passed all 11 x402 conformance checks.
 - **Cinderwright Discovery Hub** — submission `sub_1790757996876` queued for independent verification.
 - **Agent402 index** — seller is visible and healthy, but its router correctly reports `settlement_required` until independent buyers exist.
+- **SCVD General Store preflight** — independent free probe on 2026-09-30 returned `verdict: ready`; HTTP 402, PAYMENT-REQUIRED parsing, x402 v2, accepts fields, and Bazaar extension all passed. Its separate `before-you-pay` simulation returned `will_your_client_pay: would_sign` for a stock x402 client at the advertised $0.005 price. Reproduce with `POST https://scvd.store/api/preflight/v1` or `POST https://scvd.store/api/before-you-pay/v1` and `{"url":"https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1"}`.
 
-These are discovery or protocol observations, not endorsements.
+These are discovery or protocol observations, not endorsements. The SCVD checks are unpaid structural/client-selection evidence and do not prove delivery after payment.
 
 ## Revenue / buyer status
 
