@@ -1,0 +1,75 @@
+name: x402 acquisition batch
+
+on:
+  push:
+    paths:
+      - '.github/workflows/x402-acquisition.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Submit to free discovery APIs
+        shell: bash
+        run: |
+          set +e
+          RESULT='x402-acquisition-results.txt'
+          : > "$RESULT"
+
+          ENDPOINT='https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
+          ORIGIN='https://pa-entity-x402.floot.app'
+          NAME='PA Entity Lookup x402'
+          DESC='Company identity and legal-entity enrichment for Pennsylvania businesses by company name. Returns filing number, registration type, registered address, city, ZIP, and county for vendor verification, due diligence, and lead enrichment.'
+
+          post_json () {
+            label="$1"
+            url="$2"
+            payload="$3"
+            echo "=== $label ===" | tee -a "$RESULT"
+            curl -sS -D /tmp/h -o /tmp/b -X POST "$url"               -H 'content-type: application/json'               --data "$payload"
+            code=$(awk 'toupper($1) ~ /^HTTP\// {c=$2} END{print c}' /tmp/h)
+            echo "HTTP $code" | tee -a "$RESULT"
+            cat /tmp/b | tee -a "$RESULT"
+            echo | tee -a "$RESULT"
+            echo | tee -a "$RESULT"
+          }
+
+          echo "Run UTC: $(date -u +%FT%TZ)" >> "$RESULT"
+          echo "Endpoint: $ENDPOINT" >> "$RESULT"
+          echo >> "$RESULT"
+
+          post_json 'agent-tools.cloud url/type'             'https://agent-tools.cloud/api/v1/submit'             "$(jq -nc --arg url "$ENDPOINT" --arg name "$NAME" --arg description "$DESC"               '{type:"x402",url:$url,name:$name,description:$description}')"
+
+          post_json 'agent-tools.cloud endpoint/kind'             'https://agent-tools.cloud/api/v1/submit'             "$(jq -nc --arg endpoint "$ENDPOINT" --arg title "$NAME" --arg description "$DESC"               '{kind:"x402",endpoint:$endpoint,title:$title,description:$description}')"
+
+          post_json 'agent-tools.cloud minimal'             'https://agent-tools.cloud/api/v1/submit'             "$(jq -nc --arg url "$ENDPOINT" '{type:"x402",url:$url}')"
+
+          post_json 'cinderwright origin/name'             'https://api.ideafactorylab.org/submit'             "$(jq -nc --arg url "$ORIGIN" --arg name "$NAME" --arg description "$DESC"               '{url:$url,name:$name,description:$description}')"
+
+          post_json 'cinderwright endpoint/type'             'https://api.ideafactorylab.org/submit'             "$(jq -nc --arg url "$ENDPOINT" --arg name "$NAME" --arg description "$DESC"               '{url:$url,name:$name,description:$description,type:"x402"}')"
+
+          post_json 'x402Scout endpoint'             'https://x402scout.com/register'             "$(jq -nc --arg url "$ENDPOINT" --arg name "$NAME" --arg description "$DESC"               '{url:$url,name:$name,description:$description}')"
+
+          echo '=== live readbacks ===' >> "$RESULT"
+          for url in             'https://agent402.tools/api/index/search?q=Pennsylvania%20business%20registry'             'https://402index.io/api/v1/services?q=Pennsylvania%20business%20registry&protocol=x402&limit=10'             'https://api.x402dash.com/v1/liveness?endpoint=https%3A%2F%2Fpa-entity-x402.floot.app%2F_api%2Fpa-business%3Fq%3DOpenAI%26limit%3D1'             'https://api.nohumans.directory/v1/listings/958fd262-287'             'https://true402.dev/api/v1/services/ca9c2ed8-930c-4d55-920c-f87a858bb045'
+          do
+            echo "--- $url ---" >> "$RESULT"
+            curl -sS --max-time 30 "$url" >> "$RESULT"
+            echo >> "$RESULT"
+            echo >> "$RESULT"
+          done
+
+      - name: Commit acquisition evidence
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add x402-acquisition-results.txt
+          git commit -m 'Record x402 acquisition results' || exit 0
+          git push
