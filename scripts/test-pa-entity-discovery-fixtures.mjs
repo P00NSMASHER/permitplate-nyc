@@ -10,9 +10,10 @@ const x402 = readJson('x402.json')
 const x402Services = readJson('x402-services.json')
 const catalog = readJson('x402-catalog.json')
 const service = readJson('x402-service.json')
-const card = readJson('agent-card.json')
 const llms = read('llms.txt')
 const llmsFull = read('llms-full.txt')
+const skill = read('skill.txt')
+const security = read('security.txt')
 const sitemap = read('sitemap.xml')
 const endpoint = read('pa-business_GET.ts')
 const bestEndpoint = read('pa-entity-one_GET.ts')
@@ -91,9 +92,20 @@ assert.equal(service.payment.network, 'eip155:8453')
 assert.equal(service.pricing.base, '0.005')
 assert.equal(service.skill, 'https://pa-entity-x402.floot.app/skill.txt')
 
-assert.equal(card.version, '2.0.0')
-assert.ok(card.skills[0].tags.includes('pennsylvania-business-registry'))
-assert.ok(card.skills[0].tags.includes('vendor-verification'))
+assert.match(skill, /^# PA Entity Lookup x402/m)
+assert.ok(!/<html|<!doctype html/i.test(skill), 'skill.txt must contain text, not SPA HTML')
+assert.match(skill, /\$0\.001/)
+assert.match(skill, /\$0\.005/)
+assert.match(skill, /pa-entity-one/)
+
+assert.match(
+  security,
+  /^Contact: https:\/\/github\.com\/P00NSMASHER\/permitplate-nyc\/security/m,
+)
+assert.match(
+  security,
+  /^Canonical: https:\/\/pa-entity-x402\.floot\.app\/\.well-known\/security\.txt/m,
+)
 
 assert.match(llms, /\$0\.001/)
 assert.match(llms, /pa-entity-one/)
@@ -105,6 +117,8 @@ assert.match(llmsFull, /duplicate settlement/i)
 assert.match(llmsFull, /no fresh PAYMENT-REQUIRED/i)
 
 assert.ok(!sitemap.includes('/skill.md'), 'broken Floot /skill.md must not be advertised')
+assert.ok(sitemap.includes('/skill.txt'))
+assert.ok(!sitemap.includes('/agent-card.json'), 'do not advertise A2A without an A2A binding')
 assert.ok(sitemap.includes('/.well-known/x402.json'))
 assert.ok(sitemap.includes('/.well-known/x402-services.json'))
 assert.ok(sitemap.includes('/.well-known/security.txt'))
@@ -117,6 +131,7 @@ assert.ok(!endpoint.includes('verified.success'), 'verification must never accep
 assert.match(endpoint, /SOURCE_TIMEOUT_MS/)
 assert.match(endpoint, /FACILITATOR_TIMEOUT_MS/)
 assert.match(endpoint, /access-control-expose-headers/i)
+assert.match(endpoint, /status === 402 \|\| status === 503 \? 'no-store'/)
 
 assert.match(bestEndpoint, /const AMOUNT = '1000'/)
 assert.match(bestEndpoint, /const PRICE = '\$0\.001'/)
@@ -126,5 +141,6 @@ assert.match(bestEndpoint, /settlement_pending/)
 assert.match(bestEndpoint, /duplicate_settlement/)
 assert.match(bestEndpoint, /retrySamePayment/)
 assert.ok(!bestEndpoint.includes('verified.success'))
+assert.match(bestEndpoint, /status === 402 \|\| status === 503 \? 'no-store'/)
 
 console.log('PA Entity discovery fixture tests passed')
