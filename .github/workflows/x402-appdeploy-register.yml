@@ -1,0 +1,53 @@
+name: register AppDeploy cheap x402 SKU
+
+on:
+  push:
+    paths:
+      - '.github/workflows/x402-appdeploy-register.yml'
+
+jobs:
+  register:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Register and read back
+        shell: bash
+        run: |
+          set +e
+          BASE='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s'
+          CHEAP="$BASE/api/pa-entity-one?q=OpenAI"
+
+          echo '=== manifest ==='
+          curl -sS -i "$BASE/.well-known/x402-service.json"
+
+          echo
+          echo '=== true402 register ==='
+          curl -sS -w '\nHTTP_STATUS=%{http_code}\n' -X POST 'https://true402.dev/api/v1/services' \
+            -H 'content-type: application/json' \
+            --data "$(jq -nc --arg url "$BASE" '{url:$url}')"
+
+          echo
+          echo '=== Agent402 register base path ==='
+          curl -sS -w '\nHTTP_STATUS=%{http_code}\n' -X POST 'https://agent402.tools/api/index/register' \
+            -H 'content-type: application/json' \
+            --data "$(jq -nc --arg origin "$BASE" '{origin:$origin}')"
+
+          echo
+          echo '=== nohumans cheap readback ==='
+          curl -sS 'https://api.nohumans.directory/v1/listings/64403ef1-4ad' | jq .
+
+          echo
+          echo '=== x402dash cheap readback ==='
+          curl -sS -G 'https://api.x402dash.com/v1/liveness' --data-urlencode "endpoint=$CHEAP" | jq .
+
+          echo
+          echo '=== Arena cheap readback ==='
+          curl -sS 'https://core.x402arena.gg/agents' | jq '.agents[] | select(.agentId=="pa-entity-best-match")'
+
+          echo
+          echo '=== 402 Index cheap readback ==='
+          curl -sS 'https://402index.io/api/v1/services/3d5b06e5-9d2b-43e3-bc73-db35c4725253' | jq .
+
+          echo
+          echo '=== Market402 cheap badge ==='
+          curl -sS 'https://market402.com/badge/api-v2.appdeploy.ai' | jq .
