@@ -6,65 +6,35 @@ on:
       - '.github/workflows/pa-entity-red-team.yml'
 
 jobs:
-  consistency:
+  bypass:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 5
     steps:
-      - name: Cross-surface consistency and PayAI behavior
+      - name: Payment bypass and accidental free-route probes
         shell: bash
         run: |
-          set -euo pipefail
+          set +e
           ORIGIN='https://pa-entity-x402.floot.app'
-          ENDPOINT="$ORIGIN/_api/pa-business"
+          E="$ORIGIN/_api/pa-business"
 
-          curl -fsSL "$ORIGIN/openapi.json" -o /tmp/openapi.json
-          curl -fsSL "$ORIGIN/.well-known/x402-service.json" -o /tmp/service.json
-          curl -fsSL "$ORIGIN/.well-known/x402-catalog.json" -o /tmp/catalog.json
+          probe () {
+            echo "=== $1 ==="; shift
+            curl -sS --max-time 10 -D /tmp/h -o /tmp/b -w 'status=%{http_code} time=%{time_total} bytes=%{size_download}\n' "$@" || true
+            grep -Ei '^(content-type|payment-required|payment-response|x402-settled|x-floot-status|location|cache-control):' /tmp/h || true
+            head -c 600 /tmp/b; echo; echo
+          }
 
-          echo '=== OPENAPI CORE ==='
-          jq '{
-            title:.info.title,
-            version:.info.version,
-            contact:.info.contact,
-            guidance:.info["x-guidance"],
-            operation:.paths["/_api/pa-business"].get.operationId,
-            summary:.paths["/_api/pa-business"].get.summary,
-            description:.paths["/_api/pa-business"].get.description,
-            tags:.paths["/_api/pa-business"].get.tags,
-            payment:.paths["/_api/pa-business"].get["x-payment-info"]
-          }' /tmp/openapi.json
-
-          echo '=== X402 SERVICE ==='
-          jq . /tmp/service.json
-
-          echo '=== X402 CATALOG ==='
-          jq . /tmp/catalog.json
-
-          echo '=== CROSS-SURFACE STRING FLAGS ==='
-          for phrase in 'active Pennsylvania' 'active business' 'good standing' 'sanctions' 'risk score' '$0.005' '5000' 'eip155:8453' '0x708f7b52b56eafd7fc1de65fc7752ed732914021'; do
-            echo "-- $phrase"
-            for file in /tmp/openapi.json /tmp/service.json /tmp/catalog.json; do
-              printf '%s: ' "$file"
-              grep -Fic "$phrase" "$file" || true
-            done
-          done
-
-          echo '=== PAYAI SUPPORTED ==='
-          curl -sS 'https://facilitator.payai.network/supported' | jq . | head -c 16000
-
-          echo
-          echo '=== PAYAI DIRECT VERIFY EMPTY PAYLOAD ==='
-          curl -sS -i -X POST 'https://facilitator.payai.network/verify'             -H 'content-type: application/json'             --data '{"x402Version":2,"paymentPayload":{},"paymentRequirements":{"scheme":"exact","network":"eip155:8453","amount":"5000","asset":"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913","payTo":"0x708f7b52b56eafd7fc1de65fc7752ed732914021","maxTimeoutSeconds":60,"extra":{"name":"USD Coin","version":"2"}}}' | head -c 8000
-
-          echo
-          echo '=== PAYAI RESOURCE STATS ==='
-          ENC=$(python3 - <<'PY'
-          import urllib.parse
-          print(urllib.parse.quote('https://pa-entity-x402.floot.app/_api/pa-business', safe=''))
-          PY
-          )
-          curl -sS -i "https://facilitator.payai.network/discovery/resources/$ENC/stats" | head -c 8000
-
-          echo
-          echo '=== CORS GET ==='
-          curl -sS -D - -o /dev/null -H 'Origin: https://buyer.example' "$ENDPOINT?q=OpenAI&limit=1" | grep -Ei '^(HTTP/|access-control|vary:|cache-control:|content-type:|payment-required:)'
+          probe 'possible demo route' "$ORIGIN/_api/demo?q=OpenAI"
+          probe 'possible single-match route' "$ORIGIN/_api/pa-entity-one?q=OpenAI"
+          probe 'legacy API route' "$ORIGIN/api/pa-business?q=OpenAI&limit=1"
+          probe 'trailing slash' "$E/?q=OpenAI&limit=1"
+          probe 'paid=true query spoof' "$E?q=OpenAI&limit=1&paid=true"
+          probe 'settled query spoof' "$E?q=OpenAI&limit=1&x402-settled=true"
+          probe 'settled header spoof' -H 'x402-settled: true' "$E?q=OpenAI&limit=1"
+          probe 'payment response spoof' -H 'PAYMENT-RESPONSE: eyJzdWNjZXNzIjp0cnVlfQ==' "$E?q=OpenAI&limit=1"
+          probe 'authorization spoof' -H 'Authorization: Bearer paid' "$E?q=OpenAI&limit=1"
+          probe 'method override spoof' -X POST -H 'X-HTTP-Method-Override: GET' "$E?q=OpenAI&limit=1"
+          probe 'HEAD request' -I "$E?q=OpenAI&limit=1"
+          probe 'internal floot status spoof' -H 'x-floot-status: 200' "$E?q=OpenAI&limit=1"
+          probe 'range request' -H 'Range: bytes=0-99' "$E?q=OpenAI&limit=1"
+          probe 'security.txt' "$ORIGIN/.well-known/security.txt"
