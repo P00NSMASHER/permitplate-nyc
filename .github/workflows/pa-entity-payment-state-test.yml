@@ -1,0 +1,15 @@
+name: PA Entity payment-state regression
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-payment-state-test.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run payment-state tests
+        run: node --test tests/pa-entity-payment-state.test.mjs
