@@ -15,6 +15,7 @@ const llms = read('llms.txt')
 const llmsFull = read('llms-full.txt')
 const sitemap = read('sitemap.xml')
 const endpoint = read('pa-business_GET.ts')
+const bestEndpoint = read('pa-entity-one_GET.ts')
 
 assert.deepEqual(x402Services, x402, 'x402 JSON aliases must be byte-semantic equivalents')
 assert.equal(x402.x402Version, 2)
@@ -38,6 +39,7 @@ assert.equal(
 )
 
 const op = openapi.paths['/_api/pa-business'].get
+const bestOp = openapi.paths['/_api/pa-entity-one'].get
 assert.equal(op.operationId, 'pennsylvaniaBusinessRegistryCompanyIdentityLookup')
 assert.match(op.summary, /Pennsylvania business registry/i)
 assert.match(op.description, /company name/i)
@@ -55,6 +57,17 @@ assert.equal(q.schema.maxLength, 120)
 assert.equal(limit.schema.minimum, 1)
 assert.equal(limit.schema.maximum, 25)
 assert.equal(op.responses['200'].content['application/json'].example.count, 1)
+assert.equal(bestOp.operationId, 'resolvePennsylvaniaBusinessBestMatch')
+assert.match(bestOp.summary, /best Pennsylvania legal-entity match/i)
+assert.equal(bestOp['x-payment-info'].price.amount, '0.001000')
+assert.equal(bestOp['x-payment-info'].network, 'eip155:8453')
+assert.equal(
+  bestOp['x-payment-info'].payTo.toLowerCase(),
+  '0x708f7b52b56eafd7fc1de65fc7752ed732914021',
+)
+assert.deepEqual(bestOp.parameters.map(p => p.name), ['q'])
+assert.equal(bestOp.parameters[0].schema.maxLength, 120)
+assert.equal(bestOp.responses['200'].content['application/json'].example.count, 1)
 assert.equal(
   op.responses['200'].content['application/json'].example.results[0].businessName,
   'Openai, L.l.c.',
@@ -63,7 +76,14 @@ assert.equal(
 assert.equal(catalog.x402Version, 2)
 assert.match(catalog.skill, /^https:\/\/raw\.githubusercontent\.com\//)
 assert.ok(!catalog.skill.includes('pa-entity-x402.floot.app/skill.md'))
-assert.equal(catalog.resources[0].accepts[0].amount, '5000')
+assert.equal(catalog.resources.length, 2)
+const catalogMain = catalog.resources.find(r => r.resource.endsWith('/_api/pa-business'))
+const catalogBest = catalog.resources.find(r => r.resource.endsWith('/_api/pa-entity-one'))
+assert.ok(catalogMain)
+assert.ok(catalogBest)
+assert.equal(catalogMain.accepts[0].amount, '5000')
+assert.equal(catalogBest.accepts[0].amount, '1000')
+assert.deepEqual(catalogBest.extensions.bazaar.info.input.queryParams, { q: 'OpenAI' })
 
 assert.equal(service.x402Version, 2)
 assert.equal(service.protocol.version, 2)
@@ -75,6 +95,10 @@ assert.equal(card.version, '2.0.0')
 assert.ok(card.skills[0].tags.includes('pennsylvania-business-registry'))
 assert.ok(card.skills[0].tags.includes('vendor-verification'))
 
+assert.match(llms, /\$0\.001/)
+assert.match(llms, /pa-entity-one/)
+assert.match(llms, /\$0\.005/)
+assert.match(llmsFull, /best match/i)
 assert.match(llms, /settlement_pending/)
 assert.match(llms, /same PAYMENT-SIGNATURE/)
 assert.match(llmsFull, /duplicate settlement/i)
@@ -93,5 +117,14 @@ assert.ok(!endpoint.includes('verified.success'), 'verification must never accep
 assert.match(endpoint, /SOURCE_TIMEOUT_MS/)
 assert.match(endpoint, /FACILITATOR_TIMEOUT_MS/)
 assert.match(endpoint, /access-control-expose-headers/i)
+
+assert.match(bestEndpoint, /const AMOUNT = '1000'/)
+assert.match(bestEndpoint, /const PRICE = '\$0\.001'/)
+assert.match(bestEndpoint, /\/pa-entity-one'/)
+assert.match(bestEndpoint, /searchPennsylvania\(query, 1\)/)
+assert.match(bestEndpoint, /settlement_pending/)
+assert.match(bestEndpoint, /duplicate_settlement/)
+assert.match(bestEndpoint, /retrySamePayment/)
+assert.ok(!bestEndpoint.includes('verified.success'))
 
 console.log('PA Entity discovery fixture tests passed')
