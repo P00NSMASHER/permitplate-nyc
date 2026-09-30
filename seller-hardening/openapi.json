@@ -1,0 +1,305 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "PA Entity Lookup x402",
+    "version": "2.0.0",
+    "description": "Low-cost Pennsylvania business-registry and company-identity lookup for autonomous agents. Search official Pennsylvania Department of State public records by business name and receive structured legal-entity fields plus creation date and source-published principal/officer rows.",
+    "contact": {
+      "name": "PA Entity Lookup x402",
+      "url": "https://pa-entity-x402.floot.app"
+    },
+    "x-guidance": "Choose this API for Pennsylvania business registry lookup, company identity resolution, legal-entity enrichment, vendor/customer verification, due diligence, filing-number lookup, registration-type lookup, registered-address/county confirmation, and lead enrichment. The endpoint costs $0.005 USDC per successful paid lookup on Base via x402 v2. Unpaid requests return HTTP 402 with PAYMENT-REQUIRED. Search matches the business-name field only. Exact normalized legal-name matches rank first, then starts-with and broader substring matches. Do not treat the response as legal advice, sanctions screening, risk scoring, or proof of current good standing or current management authority."
+  },
+  "externalDocs": {
+    "description": "Agent usage guide",
+    "url": "https://pa-entity-x402.floot.app/skill.md"
+  },
+  "paths": {
+    "/_api/pa-business": {
+      "get": {
+        "operationId": "pennsylvaniaBusinessRegistryCompanyIdentityLookup",
+        "summary": "Pennsylvania business registry and company identity lookup",
+        "description": "Search Pennsylvania Department of State business-registration records by company name. Use for Pennsylvania business registry lookup, company identity resolution, legal-entity enrichment, vendor/customer verification, due diligence, filing-number lookup, registration-type lookup, and registered-address/county confirmation. Returns structured JSON suitable for downstream agent workflows.",
+        "tags": [
+          "Pennsylvania Business Registry",
+          "Company Identity",
+          "Legal Entity",
+          "Vendor Verification",
+          "Due Diligence",
+          "Lead Enrichment"
+        ],
+        "x-use-cases": [
+          "Resolve a business name to Pennsylvania legal-entity records",
+          "Verify or enrich a vendor, customer, or lead record",
+          "Retrieve filing number, registration type, and creation date",
+          "Confirm registered address, city, ZIP, county, and county code",
+          "Retrieve source-published Governor/Principal Officer role/name rows",
+          "Disambiguate similarly named Pennsylvania businesses"
+        ],
+        "x-query-examples": [
+          {
+            "q": "OpenAI",
+            "limit": 1,
+            "purpose": "Resolve a distinctive legal entity"
+          },
+          {
+            "q": "Sheetz",
+            "limit": 5,
+            "purpose": "Resolve a Pennsylvania company and related matches"
+          },
+          {
+            "q": "Wawa",
+            "limit": 5,
+            "purpose": "Compare multiple matching registrations"
+          }
+        ],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.005000"
+          },
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "network": "eip155:8453",
+          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021"
+        },
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "description": "Pennsylvania business name or distinctive name fragment. Business-name field only.",
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 120
+            },
+            "examples": {
+              "company": {
+                "value": "OpenAI"
+              },
+              "brand": {
+                "value": "Sheetz"
+              }
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum entity records to return.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 25,
+              "default": 10
+            },
+            "example": 5
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paid Pennsylvania registry result.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "query": "OpenAI",
+                  "count": 1,
+                  "results": [
+                    {
+                      "businessName": "Openai, L.l.c.",
+                      "filingNumber": "0014371957",
+                      "registrationType": "Foreign Limited Liability Company",
+                      "address1": "600 North Second Street, Suite 401",
+                      "address2": null,
+                      "city": "Harrisburg",
+                      "state": "PA",
+                      "zip": "17101",
+                      "county": "Dauphin",
+                      "countyCode": "22",
+                      "creationDate": "2025-04-23",
+                      "principals": [
+                        {
+                          "role": "Governor",
+                          "firstName": null,
+                          "middleName": null,
+                          "lastName": null
+                        }
+                      ]
+                    }
+                  ],
+                  "source": "Pennsylvania Department of State via data.pa.gov",
+                  "paid": true
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "query": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "businessName": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "filingNumber": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "registrationType": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "address1": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "address2": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "city": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "state": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "zip": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "county": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "countyCode": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "creationDate": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "date"
+                          },
+                          "principals": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "role": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "firstName": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "middleName": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "lastName": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "role",
+                                "firstName",
+                                "middleName",
+                                "lastName"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "businessName",
+                          "filingNumber",
+                          "registrationType",
+                          "address1",
+                          "address2",
+                          "city",
+                          "state",
+                          "zip",
+                          "county",
+                          "countyCode",
+                          "creationDate",
+                          "principals"
+                        ]
+                      }
+                    },
+                    "source": {
+                      "type": "string"
+                    },
+                    "paid": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "query",
+                    "count",
+                    "results",
+                    "source",
+                    "paid"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Payment header was supplied, but query parameters are invalid."
+          },
+          "402": {
+            "description": "Payment Required. Includes an x402 v2 PAYMENT-REQUIRED challenge for $0.005 USDC on Base."
+          },
+          "503": {
+            "description": "Retryable upstream/facilitator condition or unresolved settlement. A settlement-pending response must be retried with the same payment authorization rather than creating a fresh payment."
+          }
+        }
+      }
+    }
+  }
+}
