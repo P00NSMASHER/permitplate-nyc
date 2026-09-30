@@ -1,5 +1,5 @@
 name: PA Entity hardened release tests
-# rerun after hardened endpoint fix
+# run endpoint and discovery regressions
 
 on:
   push:
@@ -9,8 +9,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
       - name: Run hardened seller regressions
         run: npx -y tsx@latest scripts/test-pa-entity-floot-release.mts
+      - name: Run discovery fixture regressions
+        run: node scripts/test-pa-entity-discovery-fixtures.mjs
