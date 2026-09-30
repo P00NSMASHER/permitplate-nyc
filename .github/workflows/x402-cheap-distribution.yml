@@ -1,0 +1,55 @@
+name: x402 cheap SKU distribution
+
+on:
+  push:
+    paths:
+      - '.github/workflows/x402-cheap-distribution.yml'
+
+jobs:
+  distribute:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - name: Submit $0.001 SKU to buyer surfaces
+        shell: bash
+        run: |
+          set +e
+          URL='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI'
+          BASE='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one'
+          PAYTO='0x708f7b52b56eafd7fc1de65fc7752ed732914021'
+          NAME='PA Entity Best Match x402'
+          DESC='Low-friction Pennsylvania company identity lookup by business name. Returns one best-ranked legal-entity registry record with filing number, registration type, registered address, city, ZIP, and county for $0.001 USDC.'
+
+          post () {
+            label="$1"; endpoint="$2"; payload="$3"
+            echo
+            echo "=== $label ==="
+            curl -sS -D /tmp/h -o /tmp/b -X POST "$endpoint" -H 'content-type: application/json' --data "$payload"
+            awk 'toupper($1) ~ /^HTTP\// {c=$2} END{print "HTTP " c}' /tmp/h
+            cat /tmp/b
+            echo
+          }
+
+          post 'Market402' 'https://market402.com/submit'             "$(jq -nc --arg resource "$URL" '{resource:$resource}')"
+
+          post 'x402dash' 'https://api.x402dash.com/v1/register'             "$(jq -nc --arg url "$URL" --arg name "$NAME" --arg description "$DESC" '{url:$url,name:$name,description:$description,category:"data-enrichment",tags:["pennsylvania","company-identity","legal-entity","business-registry","best-match","low-cost"]}')"
+
+          post 'x402 Arena' 'https://core.x402arena.gg/register'             "$(jq -nc --arg endpoint "$URL" --arg description "$DESC" --arg walletAddress "$PAYTO" '{name:"pa-entity-best-match",endpoint:$endpoint,niche:"company-enrichment",description:$description,walletAddress:$walletAddress,method:"GET",resourceType:"http",inputSchema:{type:"object",properties:{q:{type:"string",description:"Pennsylvania business name or distinctive fragment",minLength:2}},required:["q"]},outputSchema:{type:"object",properties:{query:{type:"string"},found:{type:"boolean"},match:{type:["object","null"]},source:{type:"string"},paid:{type:"boolean"}},required:["query","found","match","source","paid"]}}')"
+
+          post 'nohumans' 'https://api.nohumans.directory/v1/listings'             "$(jq -nc --arg endpoint "$BASE" --arg sample "$URL" --arg description "$DESC" '{name:"PA Entity Best Match x402",description:$description,endpoint_url:$endpoint,category:"data.company",price_amount:0.001,price_currency:"USDC",chains:["base"],sample_query:$sample,request_schema:{type:"object",required:["q"],properties:{q:{type:"string",minLength:2,example:"OpenAI",description:"Pennsylvania business name or distinctive fragment"}}},response_schema:{type:"object",required:["query","found","match","source","paid"],properties:{query:{type:"string"},found:{type:"boolean"},match:{type:["object","null"]},source:{type:"string"},paid:{type:"boolean"}}}}')"
+
+          post '402 Index' 'https://402index.io/api/v1/register'             "$(jq -nc --arg url "$URL" --arg name "$NAME" --arg description "$DESC" '{url:$url,name:$name,protocol:"x402",http_method:"GET",description:$description,price_usd:0.001,payment_asset:"USDC",payment_network:"Base",category:"data/company"}')"
+
+          post 'Cinderwright' 'https://api.ideafactorylab.org/submit'             "$(jq -nc --arg url "$URL" --arg name "$NAME" --arg description "$DESC" '{url:$url,name:$name,description:$description,type:"x402"}')"
+
+          echo
+          echo '=== Market402 selftest readback ==='
+          curl -sS -X POST 'https://market402.com/selftest' -H 'content-type: application/json' --data "$(jq -nc --arg url "$URL" '{url:$url}')" | jq .
+
+          echo
+          echo '=== 402 Index search readback ==='
+          curl -sS -G 'https://402index.io/api/v1/services' --data-urlencode 'q=PA Entity Best Match x402' --data-urlencode 'protocol=x402' --data-urlencode 'limit=10' | jq .
+
+          echo
+          echo '=== x402 Arena readback ==='
+          curl -sS 'https://core.x402arena.gg/agents' | jq '.agents[]? | select(.agentId=="pa-entity-best-match")'
