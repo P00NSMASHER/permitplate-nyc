@@ -114,7 +114,7 @@ assert.match(llmsFull, /best match/i)
 assert.match(llms, /settlement_pending/)
 assert.match(llms, /same PAYMENT-SIGNATURE/)
 assert.match(llmsFull, /duplicate settlement/i)
-assert.match(llmsFull, /no fresh PAYMENT-REQUIRED/i)
+assert.match(llmsFull, /no fresh PAYMENT-REQUIRED/i)\nassert.match(llms, /https:\/\/pa-entity-x402\.floot\.app\/skill\.txt/)\nassert.match(llmsFull, /https:\/\/pa-entity-x402\.floot\.app\/skill\.txt/)\nassert.ok(!llmsFull.includes('/.well-known/agent-card.json'))\nassert.equal(openapi.externalDocs.url, 'https://pa-entity-x402.floot.app/skill.txt')
 
 assert.ok(!sitemap.includes('/skill.md'), 'broken Floot /skill.md must not be advertised')
 assert.ok(sitemap.includes('/skill.txt'))
