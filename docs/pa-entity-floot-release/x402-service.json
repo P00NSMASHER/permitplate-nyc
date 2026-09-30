@@ -1,0 +1,34 @@
+{
+  "x402": "1.0",
+  "x402Version": 2,
+  "protocol": {
+    "name": "x402",
+    "version": 2
+  },
+  "name": "pa-entity-lookup-x402",
+  "capabilities": [
+    "data",
+    "business-registry",
+    "company-enrichment",
+    "entity-resolution",
+    "pennsylvania",
+    "company-identity",
+    "legal-entity",
+    "principal-officer-records"
+  ],
+  "pricing": {
+    "currency": "USDC",
+    "base": "0.005",
+    "unit": "request"
+  },
+  "payment": {
+    "address": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+    "chain": "base",
+    "network": "eip155:8453",
+    "facilitator": "https://facilitator.payai.network"
+  },
+  "endpoint": "https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1",
+  "description": "Pennsylvania business registry and company identity lookup with filing number, registration type, creation date, registered address, county, and source-published principal/officer roles.",
+  "documentation": "https://pa-entity-x402.floot.app/llms.txt",
+  "skill": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/main/PA_ENTITY_SKILL.md"
+}
