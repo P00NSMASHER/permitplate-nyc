@@ -1,0 +1,381 @@
+{
+  "listing_id": "64403ef1-4ad",
+  "queries": [
+    {
+      "query": "Pennsylvania business registry",
+      "rank": 18,
+      "count": 20,
+      "top5": [
+        {
+          "id": "8e8f7ba0-126",
+          "name": "data.greeneris.io/v1/fi/company",
+          "status": "verified",
+          "score": 1,
+          "price": 0.003,
+          "paid_verified": true
+        },
+        {
+          "id": "c8bb29f3-005",
+          "name": "www.celerapi.com/v1/company/search",
+          "status": "verified",
+          "score": 1,
+          "price": 0.005,
+          "paid_verified": true
+        },
+        {
+          "id": "64671a38-40f",
+          "name": "api.eucompliance.tools/x402/company",
+          "status": "verified",
+          "score": 0.9999823033156575,
+          "price": 0.01,
+          "paid_verified": false
+        },
+        {
+          "id": "2a8c99fb-e81",
+          "name": "israel-counterparty-intelligence.vercel.app/v1/company-changes/mainnet",
+          "status": "verified",
+          "score": 1,
+          "price": 0.01,
+          "paid_verified": false
+        },
+        {
+          "id": "8a968cee-f56",
+          "name": "BABYDOV Company Registry / LEI Search",
+          "status": "verified",
+          "score": 0.9999140495544117,
+          "price": 0.002,
+          "paid_verified": false
+        }
+      ]
+    },
+    {
+      "query": "Pennsylvania company identity",
+      "rank": 17,
+      "count": 20,
+      "top5": [
+        {
+          "id": "48152a7d-721",
+          "name": "agents.withzero.xyz/api/v1/pipe0/company/identity",
+          "status": "verified",
+          "score": 0.9999999607399073,
+          "price": 0.01,
+          "paid_verified": false
+        },
+        {
+          "id": "8e8f7ba0-126",
+          "name": "data.greeneris.io/v1/fi/company",
+          "status": "verified",
+          "score": 1,
+          "price": 0.003,
+          "paid_verified": true
+        },
+        {
+          "id": "64671a38-40f",
+          "name": "api.eucompliance.tools/x402/company",
+          "status": "verified",
+          "score": 0.9999823033156575,
+          "price": 0.01,
+          "paid_verified": false
+        },
+        {
+          "id": "54279bc8-29e",
+          "name": "data.greeneris.io/v1/uk/company",
+          "status": "verified",
+          "score": 1,
+          "price": 0.01,
+          "paid_verified": false
+        },
+        {
+          "id": "c7d8370d-c1c",
+          "name": "agentdata-api.sander-van-aard.workers.dev/ch/company",
+          "status": "verified",
+          "score": 1,
+          "price": 0.01,
+          "paid_verified": false
+        }
+      ]
+    },
+    {
+      "query": "Pennsylvania legal entity enrichment",
+      "rank": 8,
+      "count": 20,
+      "top5": [
+        {
+          "id": "65362e60-a8c",
+          "name": "phion.systems/v1/paid/trust/company-enrichment-evidence",
+          "status": "verified",
+          "score": 1,
+          "price": 0.005,
+          "paid_verified": false
+        },
+        {
+          "id": "aa8744a5-9d3",
+          "name": "win.oneshotagent.com/v1/tools/enrich/company",
+          "status": "verified",
+          "score": 1,
+          "price": 0.005,
+          "paid_verified": false
+        },
+        {
+          "id": "f0532659-7bd",
+          "name": "StableEnrich \u2014 premium data enrichment",
+          "status": "verified",
+          "score": 0.9999999999999994,
+          "price": 0.01,
+          "paid_verified": false
+        },
+        {
+          "id": "d844d425-7dc",
+          "name": "AgentData Archive",
+          "status": "verified",
+          "score": 1,
+          "price": 0.01,
+          "paid_verified": true
+        },
+        {
+          "id": "d911c5af-e0b",
+          "name": "api.oblique.markets/api/v1/paid/gleif-resolve",
+          "status": "verified",
+          "score": 1,
+          "price": 0.01,
+          "paid_verified": false
+        }
+      ]
+    },
+    {
+      "query": "Pennsylvania vendor verification",
+      "rank": 15,
+      "count": 20,
+      "top5": [
+        {
+          "id": "164daa6c-b72",
+          "name": "AgentResolver x402 Settlement Verify \u2014 Base USDC Receipt",
+          "status": "verified",
+          "score": 0.9999999999999994,
+          "price": 0.001,
+          "paid_verified": true
+        },
+        {
+          "id": "e2391b65-dd5",
+          "name": "AgentResolver \u2014 x402 Settlement Verification",
+          "status": "verified",
+          "score": 1,
+          "price": 0.001,
+          "paid_verified": true
+        },
+        {
+          "id": "1fc6aa20-1f2",
+          "name": "AgentResolver x402 Settlement Receipt Verify",
+          "status": "verified",
+          "score": 1,
+          "price": 0.001,
+          "paid_verified": true
+        },
+        {
+          "id": "a2e7141d-b33",
+          "name": "x402.halowerk.com/settlement/verify",
+          "status": "verified",
+          "score": 0.999995378905993,
+          "price": 0.002,
+          "paid_verified": false
+        },
+        {
+          "id": "3bd7c35c-1d7",
+          "name": "agents.samedaydesk.com/commerce/seller-integrity-audit",
+          "status": "verified",
+          "score": 1,
+          "price": 0.01,
+          "paid_verified": false
+        }
+      ]
+    },
+    {
+      "query": "Pennsylvania business registration lookup",
+      "rank": 19,
+      "count": 20,
+      "top5": [
+        {
+          "id": "64671a38-40f",
+          "name": "api.eucompliance.tools/x402/company",
+          "status": "verified",
+          "score": 0.9999823033156575,
+          "price": 0.01,
+          "paid_verified": false
+        },
+        {
+          "id": "8e8f7ba0-126",
+          "name": "data.greeneris.io/v1/fi/company",
+          "status": "verified",
+          "score": 1,
+          "price": 0.003,
+          "paid_verified": true
+        },
+        {
+          "id": "ca55aa81-7a0",
+          "name": "California Contractor License Lookup",
+          "status": "verified",
+          "score": 0.9999999999999994,
+          "price": 0.01,
+          "paid_verified": true
+        },
+        {
+          "id": "c8bb29f3-005",
+          "name": "www.celerapi.com/v1/company/search",
+          "status": "verified",
+          "score": 1,
+          "price": 0.005,
+          "paid_verified": true
+        },
+        {
+          "id": "28678abd-2e7",
+          "name": "api.eckari.com/v1/companies/uk/search",
+          "status": "verified",
+          "score": 1,
+          "price": 0.002,
+          "paid_verified": false
+        }
+      ]
+    },
+    {
+      "query": "Pennsylvania company due diligence",
+      "rank": 8,
+      "count": 20,
+      "top5": [
+        {
+          "id": "667dbcaa-69a",
+          "name": "loop2 /mkt/diligence (agent due-diligence bundle)",
+          "status": "verified",
+          "score": 0.9897613017783797,
+          "price": 0.001,
+          "paid_verified": true
+        },
+        {
+          "id": "d7bf98bc-671",
+          "name": "jmt-x402-proxy.jmthomasofficial.workers.dev/v2/api/edgar-company-lookup",
+          "status": "verified",
+          "score": 1,
+          "price": 0.002,
+          "paid_verified": true
+        },
+        {
+          "id": "65362e60-a8c",
+          "name": "phion.systems/v1/paid/trust/company-enrichment-evidence",
+          "status": "verified",
+          "score": 1,
+          "price": 0.005,
+          "paid_verified": false
+        },
+        {
+          "id": "54279bc8-29e",
+          "name": "data.greeneris.io/v1/uk/company",
+          "status": "verified",
+          "score": 1,
+          "price": 0.01,
+          "paid_verified": false
+        },
+        {
+          "id": "2a8c99fb-e81",
+          "name": "israel-counterparty-intelligence.vercel.app/v1/company-changes/mainnet",
+          "status": "verified",
+          "score": 1,
+          "price": 0.01,
+          "paid_verified": false
+        }
+      ]
+    },
+    {
+      "query": "find Pennsylvania filing number by company name",
+      "rank": 18,
+      "count": 20,
+      "top5": [
+        {
+          "id": "cead2b77-11c",
+          "name": "api.eckari.com/v1/companies/uk/:company_number/filings",
+          "status": "verified",
+          "score": 1,
+          "price": 0.005,
+          "paid_verified": false
+        },
+        {
+          "id": "8e8f7ba0-126",
+          "name": "data.greeneris.io/v1/fi/company",
+          "status": "verified",
+          "score": 1,
+          "price": 0.003,
+          "paid_verified": true
+        },
+        {
+          "id": "28678abd-2e7",
+          "name": "api.eckari.com/v1/companies/uk/search",
+          "status": "verified",
+          "score": 1,
+          "price": 0.002,
+          "paid_verified": false
+        },
+        {
+          "id": "c8bb29f3-005",
+          "name": "www.celerapi.com/v1/company/search",
+          "status": "verified",
+          "score": 1,
+          "price": 0.005,
+          "paid_verified": true
+        },
+        {
+          "id": "9c93e5eb-cf0",
+          "name": "houjin.agentic-jp.com/search",
+          "status": "verified",
+          "score": 1,
+          "price": 0.009,
+          "paid_verified": false
+        }
+      ]
+    },
+    {
+      "query": "verify Pennsylvania company registered address",
+      "rank": 17,
+      "count": 20,
+      "top5": [
+        {
+          "id": "64671a38-40f",
+          "name": "api.eucompliance.tools/x402/company",
+          "status": "verified",
+          "score": 0.9999823033156575,
+          "price": 0.01,
+          "paid_verified": false
+        },
+        {
+          "id": "c8bb29f3-005",
+          "name": "www.celerapi.com/v1/company/search",
+          "status": "verified",
+          "score": 1,
+          "price": 0.005,
+          "paid_verified": true
+        },
+        {
+          "id": "779a9bb8-158",
+          "name": "houjin.agentic-jp.com/verify",
+          "status": "verified",
+          "score": 1,
+          "price": 0.005,
+          "paid_verified": false
+        },
+        {
+          "id": "42e329f6-ef8",
+          "name": "api.eckari.com/v1/companies/uk/:company_number",
+          "status": "verified",
+          "score": 1,
+          "price": 0.004,
+          "paid_verified": false
+        },
+        {
+          "id": "8e8f7ba0-126",
+          "name": "data.greeneris.io/v1/fi/company",
+          "status": "verified",
+          "score": 1,
+          "price": 0.003,
+          "paid_verified": true
+        }
+      ]
+    }
+  ]
+}
