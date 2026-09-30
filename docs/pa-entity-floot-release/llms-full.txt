@@ -155,7 +155,10 @@ https://pa-entity-x402.floot.app/openapi.json
 llms.txt:
 https://pa-entity-x402.floot.app/llms.txt
 
-Durable skill document:
+Skill document:
+https://pa-entity-x402.floot.app/skill.txt
+
+Fallback source copy:
 https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/main/PA_ENTITY_SKILL.md
 
 x402 JSON alias:
@@ -170,5 +173,3 @@ https://pa-entity-x402.floot.app/.well-known/x402-service.json
 Catalog:
 https://pa-entity-x402.floot.app/.well-known/x402-catalog.json
 
-Agent card:
-https://pa-entity-x402.floot.app/.well-known/agent-card.json
