@@ -1,0 +1,28 @@
+name: x402 cheap production check
+
+on:
+  push:
+    paths:
+      - '.github/workflows/x402-cheap-production-check.yml'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validate cheap SKU and Market402
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI'
+          curl -sS -D /tmp/h -o /tmp/b -w 'STATUS=%{http_code}\n' "$URL"
+          echo '=== headers ==='
+          grep -iE '^(payment-required|x402-price|x402-network|x402-pay-to|content-type):' /tmp/h || true
+          echo '=== body ==='
+          cat /tmp/b | jq .
+          echo '=== strict body assertions ==='
+          jq -e '.x402Version==2 and (.accepts|length>0) and .accepts[0].payTo and .accepts[0].amount and .accepts[0].network' /tmp/b >/dev/null
+          echo PASS
+          echo '=== Market402 selftest ==='
+          curl -sS -X POST 'https://market402.com/selftest' -H 'content-type: application/json' --data "$(jq -nc --arg url "$URL" '{url:$url}')" | tee /tmp/m
+          jq -e '.summary.verdict=="spec_compliant"' /tmp/m >/dev/null
