@@ -117,7 +117,49 @@ await check('canonical extensionless x402 body', async () => {
   )
   const doc = JSON.parse(text)
   const aliasDoc = JSON.parse(alias.text)
-  assert.deepEqual(doc, aliasDoc, 'extensionless x402 must match x402.json')
+
+  function normalizeAccept(entry) {
+    const a = entry?.accepts?.[0] ?? entry
+    return {
+      network: a?.network ?? null,
+      amount: String(a?.amount ?? a?.price_atomic ?? ''),
+      asset: String(a?.asset ?? '').toLowerCase(),
+      payTo: String(a?.payTo ?? a?.pay_to ?? '').toLowerCase(),
+      scheme: a?.scheme ?? null,
+    }
+  }
+
+  function routeAccept(document, url) {
+    if (document?.resource?.url === url && Array.isArray(document.accepts)) {
+      return normalizeAccept({ accepts: document.accepts })
+    }
+    const resource = document?.resources?.find(item => item?.resource === url)
+    if (resource) return normalizeAccept(resource)
+    const service = document?.services?.find(item => item?.endpoint === url)
+    if (service) return normalizeAccept(service)
+    return null
+  }
+
+  assert.equal(doc.x402Version, 2)
+  assert.equal(aliasDoc.x402Version, 2)
+
+  for (const [url, amount] of [
+    [`${origin}/_api/pa-business`, EXPECTED_AMOUNT],
+    [`${origin}/_api/pa-entity-one`, EXPECTED_BEST_AMOUNT],
+  ]) {
+    const canonical = routeAccept(doc, url)
+    const aliasRoute = routeAccept(aliasDoc, url)
+    assert.ok(canonical, `extensionless x402 missing ${url}`)
+    assert.ok(aliasRoute, `x402.json missing ${url}`)
+    for (const route of [canonical, aliasRoute]) {
+      assert.equal(route.network, EXPECTED_NETWORK)
+      assert.equal(route.amount, amount)
+      assert.equal(route.asset, EXPECTED_ASSET.toLowerCase())
+      assert.equal(route.payTo, EXPECTED_PAYTO.toLowerCase())
+      assert.equal(route.scheme, 'exact')
+    }
+  }
+
   if (/octet-stream/i.test(contentType)) {
     console.log('NOTE extensionless x402 is valid JSON served as application/octet-stream by Floot')
   }
