@@ -26,7 +26,11 @@ jobs:
           fi
 
           echo '=== CREATE/REFRESH CLAIM ==='
-          curl -sS -D /tmp/claim-headers -o /tmp/claim.json             -X POST 'https://402index.io/api/v1/claim'             -H 'content-type: application/json'             --data "{"domain":"$DOMAIN"}"
+          payload=$(jq -nc --arg domain "$DOMAIN" '{domain:$domain}')
+          curl -sS -D /tmp/claim-headers -o /tmp/claim.json \
+            -X POST 'https://402index.io/api/v1/claim' \
+            -H 'content-type: application/json' \
+            --data "$payload"
 
           status=$(awk 'toupper($1) ~ /^HTTP\// {code=$2} END{print code}' /tmp/claim-headers)
           echo "http_status=$status"
@@ -39,6 +43,11 @@ jobs:
           jq '{domain,verification_hash,verification_url,instructions,expires_at,status,error,message}' /tmp/claim.json
 
           hash=$(jq -r '.verification_hash // empty' /tmp/claim.json)
-          test -n "$hash"
-          test "$(printf '%s' "$hash" | wc -c)" -eq 64
-          echo "PUBLIC_VERIFICATION_HASH=$hash"
+          if [ "$status" = "200" ] || [ "$status" = "201" ]; then
+            test -n "$hash"
+            test "$(printf '%s' "$hash" | wc -c)" -eq 64
+            echo "PUBLIC_VERIFICATION_HASH=$hash"
+          else
+            echo "CLAIM_NOT_CREATED"
+            exit 1
+          fi
