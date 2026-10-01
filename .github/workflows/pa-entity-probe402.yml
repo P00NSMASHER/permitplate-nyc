@@ -1,0 +1,24 @@
+name: probe402 PA Entity visibility
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-probe402.yml'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Query free probe402 grade
+        shell: bash
+        run: |
+          set -euo pipefail
+          for u in             'https://pa-entity-x402.floot.app/_api/pa-entity-one?q=OpenAI'             'https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
+          do
+            echo "=== $u ==="
+            curl -sS -L --max-time 20 -G 'https://probe402.com/grade'               -H 'Accept: application/json'               --data-urlencode "url=$u"               -D /tmp/h -o /tmp/b || true
+            head -n 30 /tmp/h || true
+            head -c 30000 /tmp/b || true
+            echo
+          done
