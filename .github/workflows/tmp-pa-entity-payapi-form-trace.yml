@@ -1,4 +1,4 @@
-name: PA Entity PayAPI listing form trace
+name: PA Entity PayAPI free listing submission
 
 on:
   push:
@@ -6,35 +6,89 @@ on:
       - '.github/workflows/tmp-pa-entity-payapi-form-trace.yml'
 
 jobs:
-  trace:
+  submit:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 4
     steps:
-      - name: Extract exact PayAPI submission handler
+      - name: Submit PA Entity to PayAPI Market free review
         shell: bash
+        env:
+          GH_REPOSITORY: ${{ github.repository }}
+          GH_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          curl -fsSL 'https://payapi.market/list' -o /tmp/list.html
+
+          COMMIT_JSON=$(curl -fsSL \
+            -H 'Accept: application/vnd.github+json' \
+            "https://api.github.com/repos/$GH_REPOSITORY/commits/$GH_SHA")
+          CONTACT_NAME=$(printf '%s' "$COMMIT_JSON" | jq -r '.commit.author.name // .commit.committer.name // empty')
+          CONTACT_EMAIL=$(printf '%s' "$COMMIT_JSON" | jq -r '.commit.author.email // .commit.committer.email // empty')
+
+          test -n "$CONTACT_NAME"
+          test -n "$CONTACT_EMAIL"
+
+          PAYLOAD=$(jq -nc \
+            --arg contact_name "$CONTACT_NAME" \
+            --arg contact_email "$CONTACT_EMAIL" \
+            '{
+              provider:{
+                name:$contact_name,
+                email:$contact_email,
+                company_name:"PA Entity Lookup x402",
+                wallet_address:"0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+                solana_payto:""
+              },
+              api:{
+                name:"PA Entity Lookup x402",
+                description:"Pennsylvania business-registry entity resolution: $0.001 single best match or $0.005 enriched multi-result search with filing, creation-date, address and officer data.",
+                category:"Verification",
+                base_url:"https://pa-entity-x402.floot.app",
+                mcp_endpoint:"",
+                paid_route_url:"https://pa-entity-x402.floot.app/_api/pa-entity-one?q=OpenAI",
+                paid_route_method:"GET",
+                paid_route_example_body:"",
+                paid_route_quote_usdc:"0.001",
+                endpoints_count:"2",
+                tools_count:"0",
+                price_min:"0.001",
+                price_max:"0.005"
+              },
+              tier:"free"
+            }')
+
+          HTTP=$(curl -sS -o /tmp/resp.json -w '%{http_code}' \
+            -X POST 'https://payapi.market/api/submit-listing' \
+            -H 'content-type: application/json' \
+            --data "$PAYLOAD")
+
+          echo "HTTP_STATUS=$HTTP"
+
           python3 - <<'PY'
-          import re, urllib.parse, subprocess, pathlib
-          base='https://payapi.market'
-          html=pathlib.Path('/tmp/list.html').read_text(errors='ignore')
-          chunks=[]
-          for i,src in enumerate(re.findall(r'<script[^>]+src=["\x27]([^"\x27]+)["\x27]',html,re.I)):
-              u=urllib.parse.urljoin(base+'/',src)
-              out=pathlib.Path(f'/tmp/s{i}.js')
-              if subprocess.run(['curl','-fsSL','--max-time','20',u,'-o',str(out)]).returncode==0 and out.exists():
-                  chunks.append(out.read_text(errors='ignore'))
-          s='\n'.join(chunks)
-          needles=['/api/submit-listing','submit-listing','endpoints_count','price_per_request','wallet_address','base_url']
-          low=s.lower()
-          for needle in needles:
-              print(f'=== {needle} ===')
-              start=0; shown=0; n=needle.lower()
-              while shown<12:
-                  i=low.find(n,start)
-                  if i<0: break
-                  print(s[max(0,i-2200):min(len(s),i+4200)].replace('\n',' ')[:6400])
-                  print('\n---\n')
-                  start=i+len(n); shown+=1
+          import json
+          p='/tmp/resp.json'
+          try:
+              d=json.load(open(p))
+          except Exception:
+              print(open(p,errors='ignore').read()[:6000])
+              raise SystemExit
+
+          SENSITIVE={'email','name'}
+          def redact(x,parent=None):
+              if isinstance(x,dict):
+                  out={}
+                  for k,v in x.items():
+                      if k.lower()=='email':
+                          out[k]='[redacted]'
+                      elif parent=='provider' and k.lower()=='name':
+                          out[k]='[redacted]'
+                      else:
+                          out[k]=redact(v,k)
+                  return out
+              if isinstance(x,list):
+                  return [redact(v,parent) for v in x]
+              return x
+          print(json.dumps(redact(d),indent=2)[:12000])
           PY
+
+          test "$HTTP" -ge 200
+          test "$HTTP" -lt 300
