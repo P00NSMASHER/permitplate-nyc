@@ -10,49 +10,31 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Extract PayAPI listing submission handler
+      - name: Extract exact PayAPI submission handler
         shell: bash
         run: |
           set -euo pipefail
           curl -fsSL 'https://payapi.market/list' -o /tmp/list.html
-
           python3 - <<'PY'
           import re, urllib.parse, subprocess, pathlib
           base='https://payapi.market'
           html=pathlib.Path('/tmp/list.html').read_text(errors='ignore')
-          srcs=[]
-          for src in re.findall(r'<script[^>]+src=["\x27]([^"\x27]+)["\x27]', html, re.I):
-              u=urllib.parse.urljoin(base+'/',src)
-              if u not in srcs: srcs.append(u)
-          print('SCRIPT_COUNT',len(srcs))
           chunks=[]
-          for i,u in enumerate(srcs):
+          for i,src in enumerate(re.findall(r'<script[^>]+src=["\x27]([^"\x27]+)["\x27]',html,re.I)):
+              u=urllib.parse.urljoin(base+'/',src)
               out=pathlib.Path(f'/tmp/s{i}.js')
-              p=subprocess.run(['curl','-fsSL','--max-time','20',u,'-o',str(out)])
-              if p.returncode==0 and out.exists():
+              if subprocess.run(['curl','-fsSL','--max-time','20',u,'-o',str(out)]).returncode==0 and out.exists():
                   chunks.append(out.read_text(errors='ignore'))
           s='\n'.join(chunks)
+          needles=['/api/submit-listing','submit-listing','endpoints_count','price_per_request','wallet_address','base_url']
           low=s.lower()
-          for needle in [
-              'jane@company.com','acme corp','jane smith',
-              'wallet','price per request','submit for verification',
-              '/api/','fetch(','axios','provider','listing'
-          ]:
+          for needle in needles:
               print(f'=== {needle} ===')
               start=0; shown=0; n=needle.lower()
-              while shown<30:
+              while shown<12:
                   i=low.find(n,start)
                   if i<0: break
-                  print(s[max(0,i-1200):min(len(s),i+2600)].replace('\n',' ')[:3800])
+                  print(s[max(0,i-2200):min(len(s),i+4200)].replace('\n',' ')[:6400])
                   print('\n---\n')
                   start=i+len(n); shown+=1
-          print('=== URL/PATH CANDIDATES ===')
-          vals=set()
-          for pat in [
-              r'https://payapi\.market[^"\x27\s<>]{0,260}',
-              r'/api/[A-Za-z0-9._~!$&()*+,;=:@%/?-]{1,220}',
-              r'/[A-Za-z0-9_-]{1,80}(?:submit|listing|provider|verify)[A-Za-z0-9_/-]{0,180}'
-          ]:
-              vals.update(m.group(0) for m in re.finditer(pat,s,re.I))
-          for v in sorted(vals): print(v)
           PY
