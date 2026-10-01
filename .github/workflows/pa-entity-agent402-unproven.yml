@@ -10,21 +10,34 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Inspect proven vs unproven candidates
+      - name: Find PA-specific intents with minimal proven competition
         shell: bash
         run: |
           set -euo pipefail
-          for q in             'one Pennsylvania legal entity'             'Pennsylvania business registry best match'             'Pennsylvania business best match'             'Pennsylvania vendor verification'
-          do
-            echo "=== $q ==="
-            curl -sS -G 'https://agent402.tools/api/route'               --data-urlencode "q=$q"               --data-urlencode 'include=external'               --data-urlencode 'top=15' > /tmp/r.json
-            jq '{
-              query:.query,
-              results:[.results[] | {
-                seller,slug,name,price,score,
-                routerDispatchEligible,routerDispatchReason,
-                routerDispatchByChain,executeVia,executeViaWhenEligible,
-                settled,payers
-              }]
-            }' /tmp/r.json
+          queries=(
+            'Pennsylvania Department of State filing number lookup'
+            'Pennsylvania registered business address county'
+            'Pennsylvania entity filing number and county'
+            'Pennsylvania Department of State company match'
+            'Pennsylvania company registration type lookup'
+            'Pennsylvania business filing number best match'
+            'Pennsylvania legal entity registered address'
+          )
+          : >/tmp/out.ndjson
+          for q in "${queries[@]}"; do
+            curl -sS -G 'https://agent402.tools/api/route'               --data-urlencode "q=$q"               --data-urlencode 'include=external'               --data-urlencode 'top=12' > /tmp/r.json
+            jq -c --arg q "$q" '
+              (.results // []) as $r
+              | {
+                  query:$q,
+                  ours:[
+                    $r[] | select(.seller=="https://pa-entity-x402.floot.app" or (.seller|startswith("https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402")))
+                    | {seller,slug,name,price,score,routerDispatchEligible,routerDispatchReason,unproven:(.routerDispatchByChain.base.unprovenTier // false)}
+                  ],
+                  proven:[ $r[] | select(.routerDispatchEligible==true) | {seller,slug,name,price,score} ],
+                  provenCount:([$r[] | select(.routerDispatchEligible==true)]|length)
+                }' /tmp/r.json | tee -a /tmp/out.ndjson
+            sleep 1
           done
+          echo '=== SUMMARY ==='
+          jq -s 'sort_by(.provenCount, -((.ours[0].score // 0)))' /tmp/out.ndjson
