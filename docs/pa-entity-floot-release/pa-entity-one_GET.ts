@@ -132,7 +132,6 @@ function representativeExample() {
     result,
     count: 1,
     results: [result],
-    ],
     enrichment: { principals: 'complete' },
     source: SOURCE_LABEL,
     paid: true,
