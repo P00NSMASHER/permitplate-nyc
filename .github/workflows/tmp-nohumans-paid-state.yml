@@ -1,0 +1,50 @@
+name: inspect nohumans paid probe state
+
+on:
+  push:
+    paths:
+      - '.github/workflows/tmp-nohumans-paid-state.yml'
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Inspect matching PA Entity listings
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --max-time 30             'https://nohumans.directory/v1/discover?q=Pennsylvania%20business%20registry&min_score=0.8'             -o /tmp/discover.json
+          echo '=== matching discover rows ==='
+          jq '
+            ..
+            | objects
+            | select(((.endpoint_url // .url // "") | tostring | test("pa-entity-x402|pa-entity-lookup-x402-4fbm4s"; "i")))
+            | {
+                id,name,description,endpoint_url,url,status,score,price_amount,
+                paid_verified,distinct_payers,onchain_unique_payers_30d,
+                evidence_tier,evidence_note,probe_count,probes_passed,probes_failed,
+                consecutive_failures,last_probed,last_probed_at_iso,next_check_by_iso,
+                last_error,payment_error,paid_probe_error,paid_probe_status
+              }' /tmp/discover.json | tee /tmp/rows.txt
+
+          echo '=== IDs ==='
+          jq -r '
+            ..
+            | objects
+            | select(((.endpoint_url // .url // "") | tostring | test("pa-entity-x402|pa-entity-lookup-x402-4fbm4s"; "i")))
+            | .id // empty' /tmp/discover.json | sort -u > /tmp/ids
+
+          while read -r id; do
+            [ -n "$id" ] || continue
+            echo "=== DETAIL $id ==="
+            curl -fsSL --max-time 30 "https://nohumans.directory/v1/listings/$id" |
+              jq '{
+                id,name,description,endpoint_url,status,score,category,price_amount,chains,
+                paid_verified,distinct_payers,onchain_unique_payers_30d,evidence_tier,evidence_note,
+                probe_count,probes_passed,probes_failed,consecutive_failures,
+                last_probed,last_probed_at_iso,next_check_by_iso,last_error,
+                paid_probe_status,paid_probe_error,payment_error,
+                request_schema,response_schema,sample_query
+              }'
+          done < /tmp/ids
