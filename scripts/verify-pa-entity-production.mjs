@@ -104,10 +104,7 @@ await check('security.txt plain text', async () => {
 })
 
 await check('canonical extensionless x402 body', async () => {
-  const [{ res, text }, alias] = await Promise.all([
-    fetchText('/.well-known/x402'),
-    fetchText('/.well-known/x402.json'),
-  ])
+  const { res, text } = await fetchText('/.well-known/x402')
   assert.equal(res.status, 200)
   const contentType = res.headers.get('content-type') || ''
   assert.match(
@@ -116,8 +113,28 @@ await check('canonical extensionless x402 body', async () => {
     `${res.url} unexpected content-type`,
   )
   const doc = JSON.parse(text)
-  const aliasDoc = JSON.parse(alias.text)
-  assert.deepEqual(doc, aliasDoc, 'extensionless x402 must match x402.json')
+  assert.equal(doc.x402Version, 2)
+  assert.equal(doc.resources?.length, 2, 'canonical manifest must advertise both paid routes')
+
+  const enriched = doc.resources.find(item =>
+    String(item.resource || '').endsWith('/_api/pa-business'),
+  )
+  const best = doc.resources.find(item =>
+    String(item.resource || '').endsWith('/_api/pa-entity-one'),
+  )
+
+  assert.ok(enriched, 'canonical manifest missing enriched route')
+  assert.ok(best, 'canonical manifest missing best-match route')
+  assert.equal(enriched.accepts?.[0]?.amount, EXPECTED_AMOUNT)
+  assert.equal(best.accepts?.[0]?.amount, EXPECTED_BEST_AMOUNT)
+  for (const item of [enriched, best]) {
+    const accept = item.accepts?.[0]
+    assert.equal(accept?.network, EXPECTED_NETWORK)
+    assert.equal(String(accept?.asset || '').toLowerCase(), EXPECTED_ASSET.toLowerCase())
+    assert.equal(String(accept?.payTo || '').toLowerCase(), EXPECTED_PAYTO.toLowerCase())
+    assert.equal(accept?.extra?.name, 'USD Coin')
+  }
+
   if (/octet-stream/i.test(contentType)) {
     console.log('NOTE extensionless x402 is valid JSON served as application/octet-stream by Floot')
   }
