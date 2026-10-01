@@ -1,0 +1,37 @@
+name: validate PA Entity manifest with Agent402
+
+on:
+  push:
+    paths:
+      - '.github/workflows/validate-pa-entity-agent402-manifest.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse staged manifest with current Agent402
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/MikeyPetrillo/Agent402.git /tmp/agent402
+          cp x402-manifest.json /tmp/agent402/pa-entity-manifest.json
+          cd /tmp/agent402
+          npm ci --no-audit --no-fund >/dev/null
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          process.env.X402_INDEX_CRAWL='off';
+          const { normaliseManifestTools } = await import('./src/x402-index.js');
+          const origin='https://pa-entity-x402.floot.app';
+          const manifest=JSON.parse(fs.readFileSync('./pa-entity-manifest.json','utf8'));
+          const rows=normaliseManifestTools(manifest, origin);
+          console.log(JSON.stringify(rows,null,2));
+          const main=rows.find(r=>r.route==='/_api/pa-business');
+          if(!main) throw new Error('main route missing');
+          if(Number(String(main.price).replace('$',''))!==0.005) throw new Error('main price changed');
+          if(!main.networks?.includes('eip155:8453')) throw new Error('network changed');
+          if(main.payToByNetwork?.['eip155:8453']?.toLowerCase()!=='0x708f7b52b56eafd7fc1de65fc7752ed732914021') throw new Error('payTo changed');
+          if(main.evmDomainByNetwork?.['eip155:8453']?.name!=='USD Coin') throw new Error('USDC domain changed');
+          console.log('AGENT402_STAGED_MANIFEST_COMPATIBLE=true');
+          NODE
