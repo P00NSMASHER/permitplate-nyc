@@ -1,0 +1,35 @@
+name: PA Entity verifier status
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-verifier-status.yml'
+
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read independent verifier state
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo '=== PAYAI MAIN ==='
+          curl -sS 'https://facilitator.payai.network/discovery/resources/https%3A%2F%2Fpa-entity-x402.floot.app%2F_api%2Fpa-business/stats' | jq .
+
+          echo
+          echo '=== PAYAI CHEAP ==='
+          curl -sS 'https://facilitator.payai.network/discovery/resources/https%3A%2F%2Fpa-entity-x402.floot.app%2F_api%2Fpa-entity-one/stats' | jq .
+
+          echo
+          echo '=== NOHUMANS MAIN ==='
+          curl -sS 'https://api.nohumans.directory/v1/listings/958fd262-287' | jq '{id,name,status,score,probe_count,probes_passed,probes_failed,consecutive_failures,paid_verified,distinct_payers,evidence_tier,onchain_unique_payers_30d,last_probed_at_iso,next_check_by_iso}'
+
+          echo
+          echo '=== NOHUMANS CHEAP ==='
+          curl -sS 'https://api.nohumans.directory/v1/listings/9f2f7a33-cb2' | jq '{id,name,status,score,probe_count,probes_passed,probes_failed,consecutive_failures,paid_verified,distinct_payers,evidence_tier,onchain_unique_payers_30d,last_probed_at_iso,next_check_by_iso}'
+
+          echo
+          echo '=== MARKET402 OPERATOR ==='
+          curl -sS -i 'https://market402.com/op/pa-entity-x402.floot.app.json' | head -c 12000
