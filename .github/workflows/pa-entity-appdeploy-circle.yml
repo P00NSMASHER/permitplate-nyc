@@ -1,0 +1,26 @@
+name: PA Entity AppDeploy Circle readiness
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-appdeploy-circle.yml'
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Score hardened AppDeploy mirror
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s'
+          for target in "$BASE" "$BASE/openapi.json"; do
+            echo "=== Circle readiness: $target ==="
+            curl -sS -X POST 'https://agents.circle.com/sell/score/check'               -H 'content-type: application/json'               --data "$(jq -nc --arg url "$target" '{url:$url}')" | tee /tmp/circle.json
+            echo
+            jq . /tmp/circle.json
+          done
+
+          echo '=== Circle public marketplace search ==='
+          curl -sS --get 'https://api.circle.com/v2/x402/discovery/resources'             --data-urlencode 'query=Pennsylvania business registry vendor verification' | jq .
