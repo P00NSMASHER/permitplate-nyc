@@ -36,3 +36,26 @@ jobs:
         run: node scripts/test-pa-entity-discovery-fixtures.mjs
       - name: Verify atomic Floot patch parity
         run: node scripts/verify-pa-entity-floot-patches.mjs
+      - name: Verify minimal live Floot delta
+        run: node scripts/verify-pa-entity-live-delta.mjs
+      - name: Validate post-deploy verifier syntax
+        run: |
+          node --check scripts/verify-pa-entity-production.mjs
+          grep -F "canonical resources[] must fan out to both paid routes" scripts/verify-pa-entity-production.mjs
+          if grep -Fq "extensionless x402 must match x402.json" scripts/verify-pa-entity-production.mjs; then
+            echo "stale single-route canonical-manifest assertion detected" >&2
+            exit 1
+          fi
+      - name: Record current live Floot baseline
+        shell: bash
+        run: |
+          set +e
+          origin='https://pa-entity-x402.floot.app'
+          for url in             "$origin/_api/pa-business?q=OpenAI&limit=1"             "$origin/_api/pa-entity-one?q=OpenAI"             "$origin/.well-known/x402"             "$origin/.well-known/x402.json"             "$origin/skill.txt"
+          do
+            code=$(curl -sS --max-time 15 -o /tmp/body -w '%{http_code}' "$url")
+            ctype=$(curl -sSI --max-time 15 "$url" | awk 'BEGIN{IGNORECASE=1}/^content-type:/{print $2}' | tr -d '\r' | tail -1)
+            printf 'LIVE_BASELINE status=%s content_type=%s url=%s\n' "$code" "$ctype" "$url"
+          done
+      - name: Run full live production verifier
+        run: node scripts/verify-pa-entity-production.mjs https://pa-entity-x402.floot.app

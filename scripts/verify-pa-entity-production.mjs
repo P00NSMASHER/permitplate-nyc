@@ -104,10 +104,7 @@ await check('security.txt plain text', async () => {
 })
 
 await check('canonical extensionless x402 body', async () => {
-  const [{ res, text }, alias] = await Promise.all([
-    fetchText('/.well-known/x402'),
-    fetchText('/.well-known/x402.json'),
-  ])
+  const { res, text } = await fetchText('/.well-known/x402')
   assert.equal(res.status, 200)
   const contentType = res.headers.get('content-type') || ''
   assert.match(
@@ -116,10 +113,51 @@ await check('canonical extensionless x402 body', async () => {
     `${res.url} unexpected content-type`,
   )
   const doc = JSON.parse(text)
-  const aliasDoc = JSON.parse(alias.text)
-  assert.deepEqual(doc, aliasDoc, 'extensionless x402 must match x402.json')
+  assert.equal(doc.version, 1, 'canonical fan-out manifest must use version 1')
+  assert.equal(doc.x402Version, 2, 'canonical manifest must declare x402 v2')
+
+  const expectedUrls = [
+    `${origin}/_api/pa-entity-one`,
+    `${origin}/_api/pa-business`,
+  ]
+  assert.deepEqual(
+    [...doc.resources].sort(),
+    [...expectedUrls].sort(),
+    'canonical resources[] must fan out to both paid routes',
+  )
+
+  assert.equal(
+    doc.resourceCatalog?.length,
+    2,
+    'canonical resourceCatalog must describe both paid routes',
+  )
+  const best = doc.resourceCatalog.find(item =>
+    String(item.url || '').endsWith('/_api/pa-entity-one'),
+  )
+  const enriched = doc.resourceCatalog.find(item =>
+    String(item.url || '').endsWith('/_api/pa-business'),
+  )
+  assert.ok(best, 'canonical manifest missing best-match catalog row')
+  assert.ok(enriched, 'canonical manifest missing enriched catalog row')
+  assert.equal(best.method, 'GET')
+  assert.equal(enriched.method, 'GET')
+  assert.equal(best.price?.amount, '0.001')
+  assert.equal(enriched.price?.amount, '0.005')
+
+  for (const item of [best, enriched]) {
+    assert.equal(item.network, EXPECTED_NETWORK)
+    assert.equal(String(item.asset || '').toLowerCase(), EXPECTED_ASSET.toLowerCase())
+    assert.equal(String(item.payTo || '').toLowerCase(), EXPECTED_PAYTO.toLowerCase())
+    assert.equal(item.scheme, 'exact')
+    assert.equal(item.accepts?.[0]?.extra?.name, 'USD Coin')
+  }
+
+  assert.equal(doc.payment?.network, EXPECTED_NETWORK)
+  assert.equal(String(doc.payment?.asset || '').toLowerCase(), EXPECTED_ASSET.toLowerCase())
+  assert.equal(String(doc.payment?.payTo || '').toLowerCase(), EXPECTED_PAYTO.toLowerCase())
+
   if (/octet-stream/i.test(contentType)) {
-    console.log('NOTE extensionless x402 is valid JSON served as application/octet-stream by Floot')
+    console.log('NOTE extensionless x402 fan-out manifest is valid JSON served as application/octet-stream by Floot')
   }
 })
 
