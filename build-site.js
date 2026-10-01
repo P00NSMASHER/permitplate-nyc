@@ -31,6 +31,7 @@ const PUBLIC_FILES=Object.freeze([
   'manifest.webmanifest',
   'methodology.html',
   'og-card.png',
+  'permit-pack.html',
   'privacy.html',
   'refunds.html',
   'release-manifest.json',
