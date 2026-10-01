@@ -6,24 +6,13 @@ on:
       - '.github/workflows/pa-entity-live-buyer-audit.yml'
 
 jobs:
-  promote:
+  refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 4
     steps:
-      - name: Expand best-match discovery
+      - name: Refresh x402scan origin
         shell: bash
         run: |
           set +e
           ORIGIN='https://pa-entity-x402.floot.app'
-          BEST='https://pa-entity-x402.floot.app/_api/pa-entity-one?q=OpenAI'
-
-          echo '=== TRUE402 REFRESH ==='
-          curl -sS -i -X POST 'https://true402.dev/api/v1/services'             -H 'content-type: application/json'             --data "$(jq -nc --arg url "$ORIGIN" '{url:$url}')" | head -c 14000
-
-          echo
-          echo '=== X402DASH BEST REGISTER ==='
-          curl -sS -i -X POST 'https://api.x402dash.com/v1/register'             -H 'content-type: application/json'             --data "$(jq -nc               --arg url "$BEST"               --arg name 'PA Entity Best Match x402'               --arg description 'Low-cost Pennsylvania business-registry best-match resolver with filing number, entity type, creation date, address, county, and source-published principal/officer records.'               '{url:$url,name:$name,description:$description,category:"Business Data",tags:["pennsylvania","business-registry","company-identity","entity-resolution","vendor-verification","best-match"]}')" | head -c 16000
-
-          echo
-          echo '=== X402SCAN ORIGIN REFRESH ==='
-          curl -sS -i -X POST 'https://x402scan.com/api/x402/registry/register-origin'             -H 'content-type: application/json'             --data "$(jq -nc --arg origin "$ORIGIN" '{origin:$origin}')" | head -c 12000
+          curl -sS -i -X POST 'https://www.x402scan.com/api/x402/registry/register-origin'             -H 'content-type: application/json'             --data "$(jq -nc --arg origin "$ORIGIN" '{origin:$origin}')" | head -c 16000
