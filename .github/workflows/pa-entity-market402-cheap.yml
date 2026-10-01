@@ -1,0 +1,30 @@
+name: PA Entity Market402 cheap route
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-market402-cheap.yml'
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Selftest and submit both PA Entity routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          MAIN='https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
+          CHEAP='https://pa-entity-x402.floot.app/_api/pa-entity-one?q=OpenAI'
+
+          for name in main cheap; do
+            if [ "$name" = main ]; then URL="$MAIN"; else URL="$CHEAP"; fi
+            echo "=== SELFTEST $name ==="
+            curl -sS -X POST 'https://market402.com/selftest'               -H 'content-type: application/json'               --data "$(jq -nc --arg url "$URL" '{url:$url}')" | jq .
+            echo "=== SUBMIT $name ==="
+            curl -sS -i -X POST 'https://market402.com/submit'               -H 'content-type: application/json'               --data "$(jq -nc --arg resource "$URL" '{resource:$resource}')" | head -c 12000
+            echo
+          done
+
+          echo '=== OPERATOR RECORD ==='
+          curl -sS -i 'https://market402.com/op/pa-entity-x402.floot.app.json' | head -c 24000
