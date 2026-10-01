@@ -1,0 +1,89 @@
+name: PA Entity Agent402 slug lab
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-agent402-slug-lab.yml'
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Score best-match operation IDs with Agent402 current router
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/MikeyPetrillo/Agent402.git /tmp/agent402
+          cd /tmp/agent402
+          npm ci --no-audit --no-fund >/dev/null
+
+          node --input-type=module <<'NODE'
+          process.env.X402_INDEX_CRAWL = 'off'
+          const { routeQuery } = await import('./src/x402-index.js')
+
+          const candidates = [
+            'resolvePennsylvaniaBusinessBestMatch',
+            'pennsylvaniaBusinessRegistryCompanyIdentityBestMatchLookup',
+            'pennsylvaniaBusinessRegistryCompanyIdentityLegalEntityBestMatchLookup',
+            'pennsylvaniaBusinessRegistryLegalEntityBestMatchLookup',
+            'pennsylvaniaCompanyIdentityLegalEntityBestMatchLookup'
+          ]
+
+          const queries = [
+            'Pennsylvania business registry',
+            'Pennsylvania business registry filing number',
+            'Pennsylvania company identity lookup',
+            'Pennsylvania legal entity lookup',
+            'Pennsylvania company lookup',
+            'vendor verification Pennsylvania'
+          ]
+
+          const name = 'Pennsylvania business registry and company identity best-match lookup'
+          const description = 'Low-friction Pennsylvania business registry, company identity, and legal-entity lookup that returns the single highest-ranked legal-entity match for a company name. Use for vendor verification, filing-number lookup, entity resolution, and one likely Pennsylvania entity.'
+
+          const rows = []
+          for (const slug of candidates) {
+            const catalog = {
+              ['GET /api/' + slug]: {
+                route: 'GET /api/' + slug,
+                slug,
+                name,
+                description,
+                price: '$0.001',
+                tags: ['Pennsylvania Business Registry','Company Identity','Legal Entity','Vendor Verification','Best Match'],
+                category: 'Pennsylvania Business Registry',
+                discovery: { input: {} },
+                handler: async () => ({})
+              }
+            }
+
+            let total = 0
+            const details = []
+            for (const query of queries) {
+              const res = routeQuery({
+                query,
+                top: 5,
+                include: 'local',
+                baseUrl: 'https://agent402.test',
+                catalog,
+                prices: { [slug]: 0.001 },
+                network: 'base',
+                toolCount: 1,
+                walletName: 'test'
+              }).results[0]
+              const score = res?.score ?? 0
+              total += score
+              details.push({
+                query,
+                score,
+                matchedOn: res?.why?.matchedOn ?? null
+              })
+            }
+            rows.push({ slug, total, avg: total / queries.length, details })
+          }
+
+          rows.sort((a,b) => b.total - a.total || a.slug.length - b.slug.length)
+          console.log(JSON.stringify(rows, null, 2))
+          console.log('WINNER=' + rows[0].slug)
+          NODE
