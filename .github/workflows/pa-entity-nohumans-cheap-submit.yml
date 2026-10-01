@@ -1,0 +1,41 @@
+name: PA Entity nohumans cheap submit
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-nohumans-cheap-submit.yml'
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Submit $0.001 PA Entity best-match route
+        shell: bash
+        run: |
+          set -euo pipefail
+          PAYLOAD=$(jq -nc '{
+            name:"PA Entity Best Match x402",
+            description:"$0.001 Pennsylvania business registry best-match lookup by company name. Returns one ranked legal entity with filing number, registration type, creation date, registered address, county, and source-published principal/officer roles.",
+            endpoint_url:"https://pa-entity-x402.floot.app/_api/pa-entity-one",
+            category:"data.company",
+            price_amount:0.001,
+            chains:["base"],
+            sample_query:"https://pa-entity-x402.floot.app/_api/pa-entity-one?q=OpenAI"
+          }')
+
+          echo '=== SUBMIT ==='
+          code=$(curl -sS -o /tmp/body -w '%{http_code}'             -X POST 'https://nohumans.directory/v1/listings'             -H 'content-type: application/json'             --data "$PAYLOAD")
+          echo "HTTP=$code"
+          cat /tmp/body | jq . || cat /tmp/body
+
+          echo
+          echo '=== DISCOVER ==='
+          curl -sS -G 'https://nohumans.directory/v1/discover'             --data-urlencode 'q=Pennsylvania business registry best match company identity'             --data-urlencode 'limit=20' | jq . | head -c 24000
+
+          if [ "$code" = "402" ]; then
+            echo 'Submission requires payment; zero-spend rule means stop without paying.'
+            exit 0
+          fi
+
+          test "$code" = "200" -o "$code" = "201"
