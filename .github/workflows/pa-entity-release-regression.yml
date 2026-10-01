@@ -55,3 +55,5 @@ jobs:
             ctype=$(curl -sSI --max-time 15 "$url" | awk 'BEGIN{IGNORECASE=1}/^content-type:/{print $2}' | tr -d '\r' | tail -1)
             printf 'LIVE_BASELINE status=%s content_type=%s url=%s\n' "$code" "$ctype" "$url"
           done
+      - name: Run full live production verifier
+        run: node scripts/verify-pa-entity-production.mjs https://pa-entity-x402.floot.app
