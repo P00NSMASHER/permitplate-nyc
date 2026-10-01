@@ -1,17 +1,55 @@
 *** Begin Patch
 *** Add File: static/.well-known/x402
 +{
++  "version": 1,
 +  "x402Version": 2,
 +  "name": "PA Entity Lookup x402",
-+  "description": "Two Pennsylvania business-registry products for agents: a $0.001 single best-match resolver and a $0.005 multi-result enriched company-identity search.",
++  "description": "Pennsylvania business-registry APIs for agents: a $0.001 single best-match resolver and a $0.005 enriched multi-result company-identity search.",
 +  "openapi": "https://pa-entity-x402.floot.app/openapi.json",
 +  "llms": "https://pa-entity-x402.floot.app/llms.txt",
 +  "skill": "https://pa-entity-x402.floot.app/skill.txt",
 +  "resources": [
++    "https://pa-entity-x402.floot.app/_api/pa-entity-one",
++    "https://pa-entity-x402.floot.app/_api/pa-business"
++  ],
++  "resourceCatalog": [
 +    {
-+      "resource": "https://pa-entity-x402.floot.app/_api/pa-business",
-+      "type": "http",
-+      "x402Version": 2,
++      "id": "pa-entity-enriched-search",
++      "name": "Pennsylvania Business Registry — Enriched Search",
++      "method": "GET",
++      "url": "https://pa-entity-x402.floot.app/_api/pa-business",
++      "description": "Search Pennsylvania business registrations and return ranked filing, registration, address, creation-date, county, and principal/officer data.",
++      "price": {
++        "amount": "0.005",
++        "currency": "USDC"
++      },
++      "network": "eip155:8453",
++      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
++      "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
++      "scheme": "exact",
++      "maxTimeoutSeconds": 60,
++      "inputSchema": {
++        "type": "object",
++        "properties": {
++          "q": {
++            "type": "string",
++            "minLength": 2,
++            "maxLength": 120,
++            "description": "Pennsylvania business name or distinctive name fragment"
++          },
++          "limit": {
++            "type": "integer",
++            "minimum": 1,
++            "maximum": 25,
++            "default": 10,
++            "description": "Maximum number of ranked results"
++          }
++        },
++        "required": [
++          "q"
++        ],
++        "additionalProperties": false
++      },
 +      "accepts": [
 +        {
 +          "scheme": "exact",
@@ -139,9 +177,35 @@
 +      }
 +    },
 +    {
-+      "resource": "https://pa-entity-x402.floot.app/_api/pa-entity-one",
-+      "type": "http",
-+      "x402Version": 2,
++      "id": "pa-entity-best-match",
++      "name": "Pennsylvania Business Registry — Best Match",
++      "method": "GET",
++      "url": "https://pa-entity-x402.floot.app/_api/pa-entity-one",
++      "description": "Resolve one Pennsylvania company name to the highest-ranked legal-entity registry record.",
++      "price": {
++        "amount": "0.001",
++        "currency": "USDC"
++      },
++      "network": "eip155:8453",
++      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
++      "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
++      "scheme": "exact",
++      "maxTimeoutSeconds": 60,
++      "inputSchema": {
++        "type": "object",
++        "properties": {
++          "q": {
++            "type": "string",
++            "minLength": 2,
++            "maxLength": 120,
++            "description": "Pennsylvania business name or distinctive name fragment"
++          }
++        },
++        "required": [
++          "q"
++        ],
++        "additionalProperties": false
++      },
 +      "accepts": [
 +        {
 +          "scheme": "exact",
@@ -198,7 +262,29 @@
 +                  "principals": "complete"
 +                },
 +                "source": "Pennsylvania Department of State via data.pa.gov",
-+                "paid": true
++                "paid": true,
++                "found": true,
++                "result": {
++                  "businessName": "Openai, L.l.c.",
++                  "filingNumber": "0014371957",
++                  "registrationType": "Foreign Limited Liability Company",
++                  "creationDate": "2025-04-23",
++                  "address1": "600 North Second Street, Suite 401",
++                  "address2": null,
++                  "city": "Harrisburg",
++                  "state": "PA",
++                  "zip": "17101",
++                  "county": "Dauphin",
++                  "countyCode": "22",
++                  "principals": [
++                    {
++                      "role": "Governor",
++                      "firstName": null,
++                      "middleName": null,
++                      "lastName": null
++                    }
++                  ]
++                }
 +              }
 +            }
 +          },
@@ -262,6 +348,19 @@
 +        }
 +      }
 +    }
-+  ]
++  ],
++  "payment": {
++    "protocol": "x402",
++    "x402Version": 2,
++    "scheme": "exact",
++    "network": "eip155:8453",
++    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
++    "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
++    "facilitator": "https://facilitator.payai.network",
++    "extra": {
++      "name": "USD Coin",
++      "version": "2"
++    }
++  }
 +}
 *** End Patch
