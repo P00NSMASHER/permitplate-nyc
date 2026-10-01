@@ -1,0 +1,65 @@
+name: PA Entity live buyer audit
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-live-buyer-audit.yml'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Audit live buyer surfaces
+        shell: bash
+        run: |
+          set +e
+          ORIGIN='https://pa-entity-x402.floot.app'
+          ENDPOINT="$ORIGIN/_api/pa-business?q=OpenAI&limit=1"
+
+          echo '=== NOHUMANS EXACT DOMAIN DISCOVER ==='
+          curl -sS --get 'https://nohumans.directory/v1/discover'             --data-urlencode 'q=pa-entity-x402.floot.app'             --data-urlencode 'limit=100' | tee /tmp/nohumans-domain.json
+          echo
+          echo '=== NOHUMANS INTENT QUERIES ==='
+          for q in             'Pennsylvania business registry'             'Pennsylvania company identity'             'Pennsylvania legal entity enrichment'             'Pennsylvania vendor verification'             'Pennsylvania company due diligence'
+          do
+            echo "--- $q"
+            curl -sS --get 'https://nohumans.directory/v1/discover'               --data-urlencode "q=$q"               --data-urlencode 'limit=100' |               python3 -c 'import json,sys; d=json.load(sys.stdin); print(json.dumps(d)[:30000])'
+            echo
+          done
+
+          echo '=== NOHUMANS KNOWN IDS ==='
+          for id in '64403ef1-4ad' '958fd262-287'; do
+            echo "--- $id"
+            curl -sS -i "https://nohumans.directory/v1/listings/$id" | head -c 12000
+            echo
+          done
+
+          echo '=== PAYAI STATS ==='
+          ENC=$(python3 - <<'PY'
+          import urllib.parse
+          print(urllib.parse.quote('https://pa-entity-x402.floot.app/_api/pa-business', safe=''))
+          PY
+          )
+          curl -sS "https://facilitator.payai.network/discovery/resources/$ENC/stats" | jq .
+          echo
+
+          echo '=== PAYAI DISCOVERY BY payTo ==='
+          curl -sS --get 'https://facilitator.payai.network/discovery/resources'             --data-urlencode 'payTo=0x708f7b52b56eafd7fc1de65fc7752ed732914021'             --data-urlencode 'limit=100' | head -c 30000
+          echo
+
+          echo '=== MARKET402 OPERATOR ==='
+          curl -sS -i 'https://market402.com/op/pa-entity-x402.floot.app.json' | head -c 16000
+          echo
+
+          echo '=== CINDERWRIGHT RESUBMIT/STATUS ==='
+          curl -sS -i -X POST 'https://api.ideafactorylab.org/submit'             -H 'content-type: application/json'             --data '{"url":"https://pa-entity-x402.floot.app","name":"PA Entity Lookup x402","description":"Pennsylvania business registry and company identity lookup by company name."}' | head -c 12000
+          echo
+
+          echo '=== AGENT402 SELLER ==='
+          curl -sS 'https://agent402.tools/api/index?seller=pa-entity-x402.floot.app' | head -c 30000
+          echo
+
+          echo '=== AGENT402 ROUTE ==='
+          curl -sS --get 'https://agent402.tools/api/route'             --data-urlencode 'q=Pennsylvania business registry'             --data-urlencode 'include=external' | head -c 30000
+          echo
