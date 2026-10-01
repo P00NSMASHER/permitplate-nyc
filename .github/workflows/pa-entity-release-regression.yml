@@ -6,8 +6,8 @@ on:
       - 'docs/pa-entity-floot-release/**'
       - 'scripts/test-pa-entity-floot-release.mts'
       - 'scripts/test-pa-entity-best-match-release.mts'
-      - 'scripts/test-pa-entity-best-match-release.mts'
-      - 'scripts/test-pa-entity-discovery-fixtures.mjs'\n      - 'scripts/verify-pa-entity-floot-patches.mjs'
+      - 'scripts/test-pa-entity-discovery-fixtures.mjs'
+      - 'scripts/verify-pa-entity-floot-patches.mjs'
       - 'PA_ENTITY_SKILL.md'
       - 'x402-manifest.json'
       - '.github/workflows/pa-entity-release-regression.yml'
@@ -15,7 +15,9 @@ on:
     paths:
       - 'docs/pa-entity-floot-release/**'
       - 'scripts/test-pa-entity-floot-release.mts'
+      - 'scripts/test-pa-entity-best-match-release.mts'
       - 'scripts/test-pa-entity-discovery-fixtures.mjs'
+      - 'scripts/verify-pa-entity-floot-patches.mjs'
       - 'PA_ENTITY_SKILL.md'
       - 'x402-manifest.json'
   workflow_dispatch:
@@ -32,3 +34,5 @@ jobs:
         run: npx -y tsx@latest scripts/test-pa-entity-best-match-release.mts
       - name: Test discovery fixture parity
         run: node scripts/test-pa-entity-discovery-fixtures.mjs
+      - name: Verify atomic Floot patch parity
+        run: node scripts/verify-pa-entity-floot-patches.mjs
