@@ -1,0 +1,53 @@
+name: PA Entity free readiness evidence
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-free-readiness.yml'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Run zero-cost Ontario readiness and policy checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          for row in             'cheap|https://pa-entity-x402.floot.app/_api/pa-entity-one?q=OpenAI|0.001'             'main|https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1|0.005'
+          do
+            IFS='|' read -r label endpoint price <<< "$row"
+            echo "=== READINESS $label ==="
+            curl -sS -X POST 'https://ontarioprotocol.com/api/verify/x402-readiness'               -H 'content-type: application/json'               --data "$(jq -nc --arg target "$endpoint" '{target_url:$target}')" | tee "/tmp/$label-readiness.json"
+            echo
+
+            echo "=== CAN-PAY $label ==="
+            curl -sS -X POST 'https://ontarioprotocol.com/api/agent/can-pay'               -H 'content-type: application/json'               --data "$(jq -nc --arg endpoint "$endpoint" '{endpoint:$endpoint,agent_policy:"strict",max_usdc:"0.01",verify_live:true}')" | tee "/tmp/$label-canpay.json"
+            echo
+          done
+
+          echo '=== SUMMARY ==='
+          python3 - <<'PY'
+          import json
+          for label in ('cheap','main'):
+              r=json.load(open(f'/tmp/{label}-readiness.json'))
+              c=json.load(open(f'/tmp/{label}-canpay.json'))
+              print(json.dumps({
+                'route':label,
+                'readiness':{
+                  'report_id':r.get('report_id') or r.get('id'),
+                  'report_url':r.get('report_url') or r.get('url'),
+                  'grade':r.get('grade') or r.get('status'),
+                  'score':r.get('score') or r.get('readiness_score'),
+                  'ready':r.get('ready'),
+                  'warnings':r.get('warnings'),
+                  'blockers':r.get('blockers') or r.get('errors')
+                },
+                'can_pay':{
+                  'decision':c.get('decision'),
+                  'decision_code':c.get('decision_code') or c.get('code'),
+                  'report_id':c.get('report_id'),
+                  'reason':c.get('reason') or c.get('reasons')
+                }
+              },indent=2))
+          PY
