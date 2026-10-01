@@ -134,6 +134,12 @@ Both the $0.005 enriched route and $0.001 best-match route pass x402 validation 
 - Market402 says paid-probe qualification will be re-evaluated automatically when the resource appears in its weekly refreshed public Bazaar catalog
 - no seller-funded probe was used
 
+### PayAI Bazaar
+
+PayAI now supports verify-only cataloging for GET resources, so a settlement is not strictly required to create a Bazaar row. A zero-spend verify-only trigger was tested against both AppDeploy paid routes with an ephemeral unfunded Base wallet using the official x402 client. The client echoed the Bazaar declaration correctly, but PayAI rejected verification with `invalid_exact_evm_insufficient_balance`; `/discovery/listing-status` remained 404 for both resources.
+
+Conclusion: the verify-only path moves no funds, but still requires a verifier-valid payer authorization with sufficient USDC balance. Under the standing $0-additional-spend rule and without using a funded signing wallet, this path is exhausted. No funds moved, no listing was manufactured, and the attempt is not counted as payment or revenue.
+
 ### nohumans.directory
 
 Current buyer search for `Pennsylvania business registry` returns our $0.001 AppDeploy best-match route first, the Floot $0.005 route second, and the Floot $0.001 route third.
