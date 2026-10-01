@@ -32,6 +32,14 @@ The staged `x402` file has been parsed successfully by Agent402's current `norma
 
 Keep `x402.json` and `x402-services.json` as conservative single-resource compatibility aliases. If Floot cannot serve the extensionless static file as HTTP 200 `application/json`, record that platform limitation and do not claim Agent402 canonical discovery is fixed.
 
+## Approved deployment payloads
+
+Use the seven `FLOOT_SAFE_PATCH_*.txt` files described in `FLOOT_MIN_ACTION_DEPLOY.md`. They are the only approved live-deployment payloads.
+
+The older `FLOOT_PATCH_CORE.txt` and `FLOOT_PATCH_DISCOVERY.txt` files are retained only as historical build artifacts. **Do not deploy them.** They are oversized for the conservative patch lane, and the old core payload contains explicit OPTIONS endpoint files that Floot does not support.
+
+Permanent CI verifies the seven safe patches reconstruct the current supported release bundle byte-for-byte and rejects any OPTIONS endpoint target.
+
 ## Skill discovery
 
 The current Floot deployment serves `/skill.md` as the SPA HTML shell, so do not advertise that path.
