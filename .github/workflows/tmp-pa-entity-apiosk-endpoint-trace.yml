@@ -15,43 +15,63 @@ jobs:
         run: |
           set -euo pipefail
           curl -fsSL 'https://dashboard.apiosk.com/' -o /tmp/index.html
+
           python3 - <<'PY'
-          import re, urllib.parse, subprocess, pathlib
+          import re, urllib.parse, subprocess, pathlib, json
+
           base='https://dashboard.apiosk.com'
-          html=open('/tmp/index.html',errors='ignore').read()
+          html=pathlib.Path('/tmp/index.html').read_text(errors='ignore')
           urls=[]
-          for src in re.findall(r'(?:src|href)=["\x27]([^"\x27]+\.js)["\x27]',html):
-              u=urllib.parse.urljoin(base+'/',src)
-              if u not in urls: urls.append(u)
+          for src in re.findall(r'(?:src|href)=["\x27]([^"\x27]+\.js)["\x27]', html):
+              u=urllib.parse.urljoin(base+'/', src)
+              if u not in urls:
+                  urls.append(u)
+
+          chunks=[]
           for i,u in enumerate(urls):
-              out=f'/tmp/chunk-{i}.js'
-              subprocess.run(['curl','-fsSL','--max-time','20',u,'-o',out],check=False)
-          PY
+              out=pathlib.Path(f'/tmp/chunk-{i}.js')
+              p=subprocess.run(['curl','-fsSL','--max-time','20',u,'-o',str(out)])
+              if p.returncode == 0 and out.exists():
+                  chunks.append(out.read_text(errors='ignore'))
 
-          cat /tmp/chunk-*.js > /tmp/all.js
+          s='\n'.join(chunks)
+          print('CHUNK_COUNT', len(chunks))
 
-          echo '=== FEDERATED CONTEXT ==='
-          python3 - <<'PY'
-          import re
-          s=open('/tmp/all.js',errors='ignore').read()
-          pats=[
-            r'.{0,700}federated.{0,1400}',
-            r'.{0,700}manifest.{0,1400}',
-            r'.{0,700}submit.{0,1400}',
-            r'.{0,700}review.{0,1400}',
-            r'.{0,700}preview.{0,1400}',
-            r'.{0,700}external_x402.{0,1400}',
+          needles=[
+              'federated',
+              'manifest',
+              '/.well-known/x402',
+              'submit for review',
+              'external_x402_fetches',
+              'federated_execution_readiness',
+              '/functions/v1/',
+              'api.apiosk.com',
           ]
-          seen=set()
-          for pat in pats:
-              for m in re.finditer(pat,s,re.I|re.S):
-                  v=m.group(0).replace('\n',' ')
-                  if v in seen: continue
-                  seen.add(v)
-                  print(v[:2400])
-                  print('\n---\n')
-                  if len(seen)>=100: raise SystemExit
-          PY
 
-          echo '=== API/FUNCTION STRINGS ==='
-          grep -Eo 'https://api\.apiosk\.com[^"'''[:space:]<>]{0,220}|/functions/v1/[A-Za-z0-9._~!$&()*+,;=:@%/?-]{1,180}|invoke\([^)]{0,400}\)|\.from\([^)]{0,300}\)' /tmp/all.js |             grep -Ei 'federat|manifest|submit|review|preview|x402|external' | sort -u | head -n 300 || true
+          for needle in needles:
+              print(f'=== {needle} ===')
+              start=0
+              shown=0
+              low=s.lower()
+              nlow=needle.lower()
+              while shown < 20:
+                  i=low.find(nlow,start)
+                  if i < 0: break
+                  a=max(0,i-900); b=min(len(s),i+1800)
+                  print(s[a:b].replace('\n',' ')[:2700])
+                  print('\n---\n')
+                  start=i+len(needle)
+                  shown+=1
+
+          print('=== API CANDIDATES ===')
+          candidates=set()
+          for pat in [
+              r'https://api\.apiosk\.com[^"\x27\s<>]{0,260}',
+              r'/functions/v1/[A-Za-z0-9._~!$&()*+,;=:@%/?-]{1,220}',
+              r'[A-Za-z0-9_-]{2,80}(?:manifest|federat|x402|review|preview|submit)[A-Za-z0-9_/-]{0,120}',
+          ]:
+              for m in re.finditer(pat,s,re.I):
+                  candidates.add(m.group(0))
+          for v in sorted(candidates):
+              print(v)
+          PY
