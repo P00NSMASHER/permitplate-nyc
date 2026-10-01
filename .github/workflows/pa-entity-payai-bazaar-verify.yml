@@ -39,7 +39,7 @@ jobs:
 
           const client=new x402Client();
           client.register('eip155:*', new ExactEvmScheme(account));
-          const api=wrapAxiosWithPayment(axios.create({timeout:15000, validateStatus:()=>true}), client);
+          const api=wrapAxiosWithPayment(axios.create({timeout:15000}), client);
 
           for(const url of routes){
             console.log('\n=== VERIFY-ONLY BUYER ATTEMPT ===');
@@ -54,6 +54,8 @@ jobs:
               console.log('ERROR_BODY='+JSON.stringify(r?.data ?? {message:String(err?.message ?? err)}).slice(0,4000));
             }
           }
+
+          await new Promise(r=>setTimeout(r,3000));
 
           for(const resource of [
             origin+'/api/pa-entity-one',
