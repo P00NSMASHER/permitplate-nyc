@@ -140,6 +140,36 @@ PayAI now supports verify-only cataloging for GET resources, so a settlement is 
 
 Conclusion: the verify-only path moves no funds, but still requires a verifier-valid payer authorization with sufficient USDC balance. Under the standing $0-additional-spend rule and without using a funded signing wallet, this path is exhausted. No funds moved, no listing was manufactured, and the attempt is not counted as payment or revenue.
 
+### Circle agent-readiness
+
+The live AppDeploy mirror was rescored after correcting `info.contact` placement and expanding the paid-response schemas to advertise the actual enriched fields. Current Circle score remains **93/100, grade A, tier strong**:
+
+- Discovery & Structure: 30/30
+- Payment Readiness: 40/40
+- Agent Consumability: 23/30
+
+The only point deductions are:
+- no public contact email: 2 points
+- no second blockchain payment rail: 5 points
+
+Those are intentionally not being added. The service will not expose the user's personal email for a score, and it will not advertise an unsupported second payment chain. Circle also warns that the OpenAPI spec is below the shared AppDeploy host root rather than `https://api-v2.appdeploy.ai/openapi.json`; that host-level path is outside this app's control.
+
+### ForgeMesh
+
+ForgeMesh can independently purchase eligible sellers after its own scoring/probe conditions are met, but its contribution rules require an existing Base USDC transfer to the seller payout wallet as proof before submission.
+
+A public Base Blockscout check of the payout wallet and Base USDC contract on 2026-10-01 found:
+- token-specific USDC transfer count: **0**
+- next page: none
+
+Therefore there is no pre-existing proof transaction to reuse. No self-transfer or seller-funded payment will be created under the $0-additional-spend rule. This lane becomes actionable only after the wallet receives a legitimate USDC transfer that satisfies ForgeMesh's proof rules.
+
+### probe402
+
+All four PA Entity paid URLs (AppDeploy $0.001/$0.005 and Floot $0.001/$0.005) currently return `kind: not-covered`, reason `not-in-seed-list` from probe402.
+
+probe402 explicitly states that this is a coverage statement, **not** a negative health finding. Neither `api-v2.appdeploy.ai` nor `pa-entity-x402.floot.app` is in its current measurement seed for these routes. There is no seller-controlled free intake path currently being used, so this lane is externally controlled until its seed set changes.
+
 ### nohumans.directory
 
 Current buyer search for `Pennsylvania business registry` returns our $0.001 AppDeploy best-match route first, the Floot $0.005 route second, and the Floot $0.001 route third.
