@@ -622,7 +622,7 @@ function header(request: Request, name: string): string | null {
   return request.headers.get(name)
 }
 
-export async function handle({ request }: { request: Request }) {
+export async function handle(request: Request) {
   const signature =
     header(request, 'payment-signature') ?? header(request, 'x-payment')
 
