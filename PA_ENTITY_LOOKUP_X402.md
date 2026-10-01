@@ -87,7 +87,7 @@ Independent checks on 2026-10-01:
 
 - AppDeploy deployment: ready; no frontend/backend errors
 - Agent402: listed, health 1, routable, two paid tools observed
-- Agent402 buyer search: top five for `Pennsylvania business registry` and `company identity Pennsylvania` on the last completed crawl
+- Agent402 fresh crawl: the $0.001 best-match route ranks **#1** for `Pennsylvania business registry`, **#1** for `company identity Pennsylvania`, and **#1** for `vendor verification Pennsylvania`; health 1; unproven-tier eligible
 - Market402: both routes pass 11/11 self-test checks and are queued for Market402's own probes
 - Coinbase/CDP: both routes return `valid: true` with accepted simulation
 - Circle agent-readiness score against the hosted OpenAPI: **93/100, grade A, tier strong**
@@ -104,7 +104,7 @@ The remaining Agent402 dispatch gate is independent settlement history (`settlem
 - health: 1
 - routable: true
 - paid tools discovered: 2
-- main route ranked first for the query `Pennsylvania business registry`
+- $0.001 best-match route ranked first for `Pennsylvania business registry`, `company identity Pennsylvania`, and `vendor verification Pennsylvania` after the fresh 2026-10-01 crawl
 - current router gate: `settlement_required`
 - the seller is eligible for Agent402's low-price unproven tier, but proven sellers are preferred until independent settlement history exists
 
