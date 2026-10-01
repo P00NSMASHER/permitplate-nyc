@@ -29,7 +29,7 @@
     "facilitator": "https://facilitator.payai.network"
   },
   "endpoint": "https://pa-entity-x402.floot.app/_api/pa-entity-one?q=OpenAI",
-  "description": "Low-cost Pennsylvania business registry and company-identity best-match lookup for $0.001 USDC. Returns the highest-ranked legal entity with filing, registration, creation-date, address, county, and source-published principal/officer data; use OpenAPI for the $0.005 multi-result enriched search.",
+  "description": "Low-cost Pennsylvania business registry best-match lookup for $0.001 USDC. Returns one ranked legal entity with filing, registration type, creation date, address, county, and published principal/officer records.",
   "documentation": "https://pa-entity-x402.floot.app/llms.txt",
   "skill": "https://pa-entity-x402.floot.app/skill.txt"
 }
