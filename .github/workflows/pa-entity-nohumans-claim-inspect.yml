@@ -14,7 +14,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for id in 64403ef1-4ad 958fd262-287 9f2f7a33-cb2; do
+          for id in 958fd262-287 9f2f7a33-cb2; do
             echo "=== $id ==="
             curl -sS -i "https://api.nohumans.directory/v1/listings/$id/claim" | head -c 16000
             echo
