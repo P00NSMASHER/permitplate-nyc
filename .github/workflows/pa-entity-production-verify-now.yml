@@ -1,0 +1,15 @@
+name: PA Entity production verify now
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-production-verify-now.yml'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify live PA Entity seller
+        run: node scripts/verify-pa-entity-production.mjs https://pa-entity-x402.floot.app
