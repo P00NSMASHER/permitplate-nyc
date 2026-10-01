@@ -1,0 +1,44 @@
+name: PA Entity 402 Index domain claim
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-402index-claim.yml'
+
+jobs:
+  claim:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Claim domain without exposing token
+        shell: bash
+        run: |
+          set -euo pipefail
+          DOMAIN='pa-entity-x402.floot.app'
+
+          echo '=== CURRENT LIVE VERIFY FILE ==='
+          code=$(curl -sS -o /tmp/live-verify -w '%{http_code}' "https://$DOMAIN/.well-known/402index-verify.txt" || true)
+          echo "status=$code"
+          if [ "$code" = "200" ]; then
+            printf 'body='
+            head -c 200 /tmp/live-verify
+            echo
+          fi
+
+          echo '=== CREATE/REFRESH CLAIM ==='
+          curl -sS -D /tmp/claim-headers -o /tmp/claim.json             -X POST 'https://402index.io/api/v1/claim'             -H 'content-type: application/json'             --data "{"domain":"$DOMAIN"}"
+
+          status=$(awk 'toupper($1) ~ /^HTTP\// {code=$2} END{print code}' /tmp/claim-headers)
+          echo "http_status=$status"
+
+          token=$(jq -r '.verification_token // empty' /tmp/claim.json)
+          if [ -n "$token" ]; then
+            echo "::add-mask::$token"
+          fi
+
+          jq '{domain,verification_hash,verification_url,instructions,expires_at,status}' /tmp/claim.json
+
+          hash=$(jq -r '.verification_hash // empty' /tmp/claim.json)
+          test -n "$hash"
+          test "$(printf '%s' "$hash" | wc -c)" -eq 64
+          echo "PUBLIC_VERIFICATION_HASH=$hash"
