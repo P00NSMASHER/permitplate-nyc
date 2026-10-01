@@ -10,68 +10,70 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 4
     steps:
-      - name: Extract public federated manifest submission endpoints
+      - name: Render unauthenticated Apiosk dashboard and inspect federated form
         shell: bash
         run: |
           set -euo pipefail
-          curl -fsSL 'https://dashboard.apiosk.com/' -o /tmp/index.html
 
+          CHROME=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
+          echo "CHROME=$CHROME"
+
+          "$CHROME" \
+            --headless \
+            --no-sandbox \
+            --disable-gpu \
+            --disable-dev-shm-usage \
+            --virtual-time-budget=12000 \
+            --dump-dom \
+            'https://dashboard.apiosk.com/' > /tmp/dom.html 2>/tmp/chrome.err || true
+
+          echo '=== DOM TEXT HITS ==='
           python3 - <<'PY'
-          import re, urllib.parse, subprocess, pathlib, json
-
-          base='https://dashboard.apiosk.com'
-          html=pathlib.Path('/tmp/index.html').read_text(errors='ignore')
-          urls=[]
-          for src in re.findall(r'(?:src|href)=["\x27]([^"\x27]+\.js)["\x27]', html):
-              u=urllib.parse.urljoin(base+'/', src)
-              if u not in urls:
-                  urls.append(u)
-
-          chunks=[]
-          for i,u in enumerate(urls):
-              out=pathlib.Path(f'/tmp/chunk-{i}.js')
-              p=subprocess.run(['curl','-fsSL','--max-time','20',u,'-o',str(out)])
-              if p.returncode == 0 and out.exists():
-                  chunks.append(out.read_text(errors='ignore'))
-
-          s='\n'.join(chunks)
-          print('CHUNK_COUNT', len(chunks))
-
-          needles=[
-              'federated',
-              'manifest',
-              '/.well-known/x402',
-              'submit for review',
-              'external_x402_fetches',
-              'federated_execution_readiness',
-              '/functions/v1/',
-              'api.apiosk.com',
-          ]
-
-          for needle in needles:
-              print(f'=== {needle} ===')
-              start=0
-              shown=0
-              low=s.lower()
-              nlow=needle.lower()
-              while shown < 20:
-                  i=low.find(nlow,start)
-                  if i < 0: break
-                  a=max(0,i-900); b=min(len(s),i+1800)
-                  print(s[a:b].replace('\n',' ')[:2700])
-                  print('\n---\n')
-                  start=i+len(needle)
-                  shown+=1
-
-          print('=== API CANDIDATES ===')
-          candidates=set()
-          for pat in [
-              r'https://api\.apiosk\.com[^"\x27\s<>]{0,260}',
-              r'/functions/v1/[A-Za-z0-9._~!$&()*+,;=:@%/?-]{1,220}',
-              r'[A-Za-z0-9_-]{2,80}(?:manifest|federat|x402|review|preview|submit)[A-Za-z0-9_/-]{0,120}',
+          import re, html
+          s=open('/tmp/dom.html',errors='ignore').read()
+          text=re.sub(r'<script\b[^>]*>.*?</script>',' ',s,flags=re.I|re.S)
+          text=re.sub(r'<style\b[^>]*>.*?</style>',' ',text,flags=re.I|re.S)
+          text=re.sub(r'<[^>]+>',' ',text)
+          text=html.unescape(re.sub(r'\s+',' ',text))
+          for needle in [
+              'federated','manifest','well-known/x402','discovery URL',
+              'submit for review','preview','list your x402','without an account'
           ]:
-              for m in re.finditer(pat,s,re.I):
-                  candidates.add(m.group(0))
-          for v in sorted(candidates):
-              print(v)
+              print(f'--- {needle} ---')
+              low=text.lower(); n=needle.lower(); start=0; shown=0
+              while shown<10:
+                  i=low.find(n,start)
+                  if i<0: break
+                  print(text[max(0,i-400):min(len(text),i+900)])
+                  start=i+len(n); shown+=1
           PY
+
+          echo '=== INPUTS / FORMS / BUTTONS ==='
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          class P(HTMLParser):
+              def handle_starttag(self,tag,attrs):
+                  if tag in ('form','input','button','textarea','a'):
+                      a=dict(attrs)
+                      blob=' '.join(f'{k}={v!r}' for k,v in a.items())
+                      if any(x in (blob.lower()) for x in ['manifest','federat','x402','submit','review','preview','discovery']) or tag in ('form','input'):
+                          print(tag, blob[:1400])
+          P().feed(open('/tmp/dom.html',errors='ignore').read())
+          PY
+
+          echo '=== DOM ROUTE/API STRINGS ==='
+          python3 - <<'PY'
+          import re
+          s=open('/tmp/dom.html',errors='ignore').read()
+          vals=set()
+          for pat in [
+              r'https://[^"\x27\s<>]+',
+              r'/[A-Za-z0-9._~!$&()*+,;=:@%/?-]*(?:manifest|federat|x402|submit|review|preview)[A-Za-z0-9._~!$&()*+,;=:@%/?-]*'
+          ]:
+              vals.update(m.group(0) for m in re.finditer(pat,s,re.I))
+          for v in sorted(vals):
+              print(v[:1800])
+          PY
+
+          echo '=== CHROME STDERR ==='
+          tail -n 80 /tmp/chrome.err || true
