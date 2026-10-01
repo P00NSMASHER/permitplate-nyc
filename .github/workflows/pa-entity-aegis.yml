@@ -1,0 +1,37 @@
+name: PA Entity Aegis listing
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-aegis.yml'
+
+jobs:
+  list:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Lint then submit both routes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          MAIN='https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
+          CHEAP='https://pa-entity-x402.floot.app/_api/pa-entity-one?q=OpenAI'
+
+          echo '=== LINT MAIN ==='
+          curl -sS -G 'https://aegis.borisinc.com/lint' --data-urlencode "url=$MAIN" | tee /tmp/lint-main.json
+          echo
+          echo '=== LINT CHEAP ==='
+          curl -sS -G 'https://aegis.borisinc.com/lint' --data-urlencode "url=$CHEAP" | tee /tmp/lint-cheap.json
+
+          echo
+          echo '=== SUBMIT MAIN ==='
+          curl -sS -G 'https://aegis.borisinc.com/submit'             --data-urlencode "url=$MAIN"             --data-urlencode 'name=Pennsylvania Business Registry Enriched Search'             --data-urlencode 'category=business-registry'             --data-urlencode 'price_usd=0.005' | tee /tmp/submit-main.json
+
+          echo
+          echo '=== SUBMIT CHEAP ==='
+          curl -sS -G 'https://aegis.borisinc.com/submit'             --data-urlencode "url=$CHEAP"             --data-urlencode 'name=Pennsylvania Business Registry Best Match'             --data-urlencode 'category=business-registry'             --data-urlencode 'price_usd=0.001' | tee /tmp/submit-cheap.json
+
+          echo
+          echo '=== DISCOVER READBACK ==='
+          curl -sS -G 'https://aegis.borisinc.com/discover'             --data-urlencode 'q=Pennsylvania business registry' | tee /tmp/discover.json
