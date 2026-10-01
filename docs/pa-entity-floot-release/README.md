@@ -12,10 +12,6 @@ Copy these files into Floot after the daily action reset:
 | pa-business_GET.schema.ts | endpoints/pa-business_GET.schema.ts |
 | pa-entity-one_GET.ts | endpoints/pa-entity-one_GET.ts |
 | pa-entity-one_GET.schema.ts | endpoints/pa-entity-one_GET.schema.ts |
-| pa-business_OPTIONS.ts | endpoints/pa-business_OPTIONS.ts |
-| pa-entity-one_OPTIONS.ts | endpoints/pa-entity-one_OPTIONS.ts |
-| pa-entity-one_OPTIONS.schema.ts | endpoints/pa-entity-one_OPTIONS.schema.ts |
-| pa-business_OPTIONS.schema.ts | endpoints/pa-business_OPTIONS.schema.ts |
 | openapi.json | static/openapi.json |
 | llms.txt | static/llms.txt |
 | llms-full.txt | static/llms-full.txt |
@@ -47,6 +43,10 @@ https://pa-entity-x402.floot.app/skill.txt
 The raw GitHub `PA_ENTITY_SKILL.md` remains a durable fallback/reference, but the live service metadata should prefer the same-origin `/skill.txt`.
 
 Do not publish an A2A `/.well-known/agent-card.json` unless the service actually implements an A2A protocol binding. This release is an HTTP/x402 API, not an A2A message server.
+
+## Floot OPTIONS limitation
+
+Floot endpoint files support GET/POST only. Explicit OPTIONS endpoint files are rejected by the platform. The live gateway currently answers OPTIONS with HTTP 204 but does not expose custom CORS headers. GET responses do expose the x402 CORS headers. Treat browser preflight support as a Floot platform limitation; server-to-server x402 clients are unaffected.
 
 ## Required post-deploy gates
 
