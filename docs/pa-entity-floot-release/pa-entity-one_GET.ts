@@ -105,34 +105,16 @@ function requirements() {
 }
 
 function representativeExample() {
-  const result = {
+  return {
+    query: 'OpenAI',
+    count: 1,
+    results: [
+      {
         businessName: 'Openai, L.l.c.',
         filingNumber: '0014371957',
         registrationType: 'Foreign Limited Liability Company',
-        creationDate: '2025-04-23',
-        address1: '600 North Second Street, Suite 401',
-        address2: null,
-        city: 'Harrisburg',
-        state: 'PA',
-        zip: '17101',
-        county: 'Dauphin',
-        countyCode: '22',
-        principals: [
-          {
-            role: 'Governor',
-            firstName: null,
-            middleName: null,
-            lastName: null,
-          },
-        ],
-      }
-  return {
-    query: 'OpenAI',
-    found: true,
-    result,
-    count: 1,
-    results: [result],
-    enrichment: { principals: 'complete' },
+      },
+    ],
     source: SOURCE_LABEL,
     paid: true,
   }
@@ -198,7 +180,7 @@ export function paymentDocument() {
     resource: {
       url: PUBLIC_ENDPOINT,
       description:
-        'Low-friction Pennsylvania business registry best-match lookup. Returns the single highest-ranked legal-entity record with filing number, registration type, creation date, registered address, county, and source-published principal/officer roles.',
+        'Pennsylvania business registry best match by company name. Returns one ranked legal entity with filing and registration facts.',
       mimeType: 'application/json',
       serviceName: 'Pennsylvania Business Registry — Best Entity Match',
       tags: [
