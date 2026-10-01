@@ -7,7 +7,7 @@ on:
       - 'scripts/test-pa-entity-floot-release.mts'
       - 'scripts/test-pa-entity-best-match-release.mts'
       - 'scripts/test-pa-entity-best-match-release.mts'
-      - 'scripts/test-pa-entity-discovery-fixtures.mjs'
+      - 'scripts/test-pa-entity-discovery-fixtures.mjs'\n      - 'scripts/verify-pa-entity-floot-patches.mjs'
       - 'PA_ENTITY_SKILL.md'
       - 'x402-manifest.json'
       - '.github/workflows/pa-entity-release-regression.yml'
