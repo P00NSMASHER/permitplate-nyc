@@ -14,11 +14,12 @@
     "pennsylvania",
     "company-identity",
     "legal-entity",
-    "principal-officer-records"
+    "principal-officer-records",
+    "best-match"
   ],
   "pricing": {
     "currency": "USDC",
-    "base": "0.005",
+    "base": "0.001",
     "unit": "request"
   },
   "payment": {
@@ -27,8 +28,8 @@
     "network": "eip155:8453",
     "facilitator": "https://facilitator.payai.network"
   },
-  "endpoint": "https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1",
-  "description": "Pennsylvania business registry and company identity lookup with filing number, registration type, creation date, registered address, county, and source-published principal/officer roles.",
+  "endpoint": "https://pa-entity-x402.floot.app/_api/pa-entity-one?q=OpenAI",
+  "description": "Low-cost Pennsylvania business registry and company-identity best-match lookup for $0.001 USDC. Returns the highest-ranked legal entity with filing, registration, creation-date, address, county, and source-published principal/officer data; use OpenAPI for the $0.005 multi-result enriched search.",
   "documentation": "https://pa-entity-x402.floot.app/llms.txt",
   "skill": "https://pa-entity-x402.floot.app/skill.txt"
 }
