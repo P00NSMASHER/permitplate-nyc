@@ -1,0 +1,30 @@
+name: inspect Agent402 unproven PA path
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-agent402-unproven.yml'
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Inspect proven vs unproven candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          for q in             'one Pennsylvania legal entity'             'Pennsylvania business registry best match'             'Pennsylvania business best match'             'Pennsylvania vendor verification'
+          do
+            echo "=== $q ==="
+            curl -sS -G 'https://agent402.tools/api/route'               --data-urlencode "q=$q"               --data-urlencode 'include=external'               --data-urlencode 'top=15' > /tmp/r.json
+            jq '{
+              query:.query,
+              results:[.results[] | {
+                seller,slug,name,price,score,
+                routerDispatchEligible,routerDispatchReason,
+                routerDispatchByChain,executeVia,executeViaWhenEligible,
+                settled,payers
+              }]
+            }' /tmp/r.json
+          done
