@@ -63,7 +63,7 @@ assert.equal(normalizeCreationDate('1768-04-01T00:00:00.000'), '1768-04-01')
 assert.equal(normalizeCreationDate('2025-04-23T00:00:00.000'), '2025-04-23')
 
 {
-  const res = await handle({ request: req() })
+  const res = await handle(req())
   assert.equal(status(res), 402)
   assert.ok(res.headers.get('PAYMENT-REQUIRED'))
   assert.equal(res.headers.get('cache-control'), 'no-store')
@@ -75,18 +75,16 @@ assert.equal(normalizeCreationDate('2025-04-23T00:00:00.000'), '2025-04-23')
     'https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1',
     { headers: { 'PAYMENT-SIGNATURE': 'not-json' } },
   )
-  const res = await handle({ request })
+  const res = await handle(request)
   assert.equal(status(res), 402)
   assert.equal((await body(res)).error, 'invalid_payment_header')
 }
 
 await withMockFetch(async calls => {
-  const res = await handle({
-    request: req(
+  const res = await handle(req(
       'https://pa-entity-x402.floot.app/_api/pa-business',
       { x402Version: 2 },
-    ),
-  })
+    ))
   assert.equal(status(res), 400)
   assert.equal(calls.length, 0, 'invalid query must not call facilitator')
 }, () => {
@@ -94,9 +92,7 @@ await withMockFetch(async calls => {
 })
 
 await withMockFetch(async calls => {
-  const res = await handle({
-    request: req(undefined, { x402Version: 2 }),
-  })
+  const res = await handle(req(undefined, { x402Version: 2 }))
   const parsed = await body(res)
   assert.equal(status(res), 402)
   assert.equal(parsed.error, 'invalid_payload')
@@ -114,9 +110,7 @@ await withMockFetch(async calls => {
 })
 
 await withMockFetch(async () => {
-  const res = await handle({
-    request: req(undefined, { x402Version: 2 }),
-  })
+  const res = await handle(req(undefined, { x402Version: 2 }))
   const parsed = await body(res)
   assert.equal(status(res), 503)
   assert.equal(parsed.error, 'payment_verifier_unavailable')
@@ -127,9 +121,7 @@ await withMockFetch(async () => {
 })
 
 await withMockFetch(async calls => {
-  const res = await handle({
-    request: req(undefined, { x402Version: 2 }),
-  })
+  const res = await handle(req(undefined, { x402Version: 2 }))
   assert.equal(status(res), 502)
   assert.equal(
     calls.filter(c => c.url.endsWith('/settle')).length,
@@ -150,9 +142,7 @@ await withMockFetch(async calls => {
 })
 
 await withMockFetch(async calls => {
-  const res = await handle({
-    request: req(undefined, { x402Version: 2 }),
-  })
+  const res = await handle(req(undefined, { x402Version: 2 }))
   const parsed = await body(res)
 
   assert.equal(status(res), 200)
@@ -251,9 +241,7 @@ await withMockFetch(async calls => {
 })
 
 await withMockFetch(async calls => {
-  const res = await handle({
-    request: req(undefined, { x402Version: 2 }),
-  })
+  const res = await handle(req(undefined, { x402Version: 2 }))
   const parsed = await body(res)
   assert.equal(status(res), 503)
   assert.equal(parsed.paymentState, 'unresolved')
