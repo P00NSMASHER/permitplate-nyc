@@ -64,7 +64,12 @@ assert.equal(normalizeCreationDate('2025-04-23T00:00:00.000'), '2025-04-23')
   const res = await handle(req())
   assert.equal(status(res), 402)
   assert.equal((await body(res)).price, '$0.001')
-  assert.ok(res.headers.get('PAYMENT-REQUIRED'))
+  const paymentRequired = res.headers.get('PAYMENT-REQUIRED')
+  assert.ok(paymentRequired)
+  assert.ok(
+    Buffer.byteLength(paymentRequired, 'utf8') < 4096,
+    'best-match PAYMENT-REQUIRED must stay below 4 KB for proxy/client compatibility',
+  )
 }
 
 await withMockFetch(async calls => {
