@@ -157,3 +157,18 @@ Distinct third-party payers: 0
 Revenue: $0.00
 
 Technical verification, rankings, registrations, self-tests, simulations, and unpaid probes are not revenue.
+
+
+## Post-release zero-spend acquisition
+
+24K Labs / Gold-402 free probe at 2026-10-01T18:09Z:
+- $0.001 best-match: LIVE 402, correct Base/USDC terms, canonical manifest found with 2 resources, gold402 listed=false
+- $0.005 enriched: LIVE 402, correct Base/USDC terms, canonical manifest found with 2 resources, gold402 listed=false
+- Gold-402 GitHub submission attempted through the connected GitHub integration; write failed HTTP 403 Resource not accessible by integration. No email or paid workaround used.
+
+Market402 post-release:
+- $0.001 best-match selftest: 11/11, spec_compliant
+- $0.005 enriched selftest: 11/11, spec_compliant
+- both final URLs resubmitted successfully
+- both returned already_listed=true and remain queued for Market402's own scheduled unpaid probes
+- no paid probe or seller-funded action used
