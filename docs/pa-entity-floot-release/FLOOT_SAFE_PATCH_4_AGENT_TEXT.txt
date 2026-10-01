@@ -1,0 +1,356 @@
+*** Begin Patch
+*** Add File: static/llms.txt
++# PA Entity Lookup x402
++
++> Pennsylvania business registry and company identity lookup for autonomous agents.
++
++Canonical origin: https://pa-entity-x402.floot.app
++OpenAPI: https://pa-entity-x402.floot.app/openapi.json
++Low-cost best-match endpoint: GET https://pa-entity-x402.floot.app/_api/pa-entity-one?q=NAME
++Best-match price: $0.001 USDC per successful settled lookup
++Enriched search endpoint: GET https://pa-entity-x402.floot.app/_api/pa-business?q=NAME&limit=10
++Enriched search price: $0.005 USDC per successful settled lookup
++Protocol: x402 v2
++Network: Base mainnet (eip155:8453)
++Source: Pennsylvania Department of State public business-registration data via data.pa.gov
++
++## Use this API for
++
++- Pennsylvania business registry lookup
++- company identity resolution
++- legal-entity enrichment
++- vendor or customer verification
++- due diligence support
++- filing-number lookup
++- registration-type lookup
++- creation-date lookup
++- registered address, ZIP, and county confirmation
++- source-published principal/officer role enrichment
++
++## Choose an endpoint
++
++For one highest-ranked entity at the lowest price:
++
++GET /_api/pa-entity-one?q=NAME
++
++For multiple enriched candidates:
++
++GET /_api/pa-business?q=NAME&limit=10
++
++Parameters:
++- q: required on both routes, 2-120 characters
++- limit: only on /_api/pa-business; optional integer 1-25, default 10
++
++The $0.001 route always returns at most one result in the same result-array schema.
++
++Matching is case-insensitive against the Pennsylvania business_name field.
++The service uses a fast starts-with query first and a broader contains query only when needed.
++Normalized legal-name matches are ranked before broader matches.
++
++## Payment
++
++The first unpaid request returns HTTP 402 with a PAYMENT-REQUIRED x402 v2 challenge.
++
++If the payment authorization is invalid, the service returns 402 with a machine-readable reason.
++
++If settlement is unresolved, such as settlement_pending or duplicate_settlement, retry the same request with the same PAYMENT-SIGNATURE. Do not generate a new authorization merely because a transient 503 was returned.
++
++## Response
++
++Each result includes:
++
++- businessName
++- filingNumber
++- registrationType
++- creationDate
++- address1
++- address2
++- city
++- state
++- zip
++- county
++- countyCode
++- principals[].role
++- principals[].firstName
++- principals[].middleName
++- principals[].lastName
++
++The response also includes enrichment.principals, source, and paid.
++
++## Example
++
++GET /_api/pa-entity-one?q=OpenAI
++
++or
++
++GET /_api/pa-business?q=OpenAI&limit=1
++
++Representative result:
++
++- Openai, L.l.c.
++- filing number 0014371957
++- Foreign Limited Liability Company
++- creation date 2025-04-23
++- Harrisburg, PA
++- Dauphin County
++
++## Limitations
++
++Do not treat this API as:
++- legal advice
++- proof of current good standing
++- sanctions screening
++- a risk or legitimacy score
++- independent proof of current management authority
++
++Principal/officer rows are source-published Pennsylvania registry records.
++
++## Machine-readable resources
++
++OpenAPI: https://pa-entity-x402.floot.app/openapi.json
++Full LLM reference: https://pa-entity-x402.floot.app/llms-full.txt
++Skill document: https://pa-entity-x402.floot.app/skill.txt
++Fallback source copy: https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/main/PA_ENTITY_SKILL.md
++x402 service manifest: https://pa-entity-x402.floot.app/.well-known/x402-service.json
++x402 catalog: https://pa-entity-x402.floot.app/.well-known/x402-catalog.json
+*** Add File: static/llms-full.txt
++# PA Entity Lookup x402 — Full Agent Reference
++
++Canonical origin: https://pa-entity-x402.floot.app
++
++## Purpose
++
++Resolve Pennsylvania business names into structured Pennsylvania Department of State registration records for machine-to-machine company identity, legal-entity enrichment, vendor/customer verification, due diligence, and lead enrichment.
++
++## Paid endpoints
++
++### $0.001 best match
++
++GET https://pa-entity-x402.floot.app/_api/pa-entity-one?q=NAME
++
++Returns at most one highest-ranked Pennsylvania legal-entity result using the same enriched result schema.
++
++### $0.005 enriched search
++
++GET https://pa-entity-x402.floot.app/_api/pa-business?q=NAME&limit=10
++
++Returns up to 25 ranked entity candidates.
++
++Prices apply per successful settled lookup.
++Protocol: x402 v2.
++Network: Base mainnet (eip155:8453).
++Asset: Base USDC.
++Payment recipient: 0x708f7b52b56eafd7fc1de65fc7752ed732914021.
++
++## Input contract
++
++q:
++- required string
++- 2-120 characters
++- Pennsylvania company name or distinctive legal-name fragment
++
++limit:
++- accepted only by /_api/pa-business
++- optional integer
++- 1-25
++- default 10
++
++/_api/pa-entity-one is fixed at one returned match.
++
++The service removes SQL wildcard characters from the search term, rejects control-only/too-short queries, uses strict integer parsing for limit, and will not contact the payment facilitator for an invalid paid retry.
++
++## Matching strategy
++
++1. Case-insensitive starts-with query against business_name.
++2. Rank normalized legal-name matches first, ignoring common suffixes such as LLC or Inc.
++3. Run a broader contains query only when the starts-with result set does not fill the requested limit.
++4. Deduplicate by filing number before returning results.
++
++This avoids whole-record search false positives such as a company matching only because its address contains a brand name.
++
++## Entity fields
++
++Each result preserves:
++
++- businessName
++- filingNumber
++- registrationType
++- address1
++- address2
++- city
++- state
++- zip
++- county
++
++and adds:
++
++- creationDate
++- countyCode
++- principals[]
++
++Each principals entry contains:
++- role
++- firstName
++- middleName
++- lastName
++
++Exact duplicate principal rows are removed. Missing names are not inferred.
++
++The top-level enrichment.principals field is "complete" when principal enrichment succeeded and "unavailable" if the secondary enrichment query failed while the base registry result remained deliverable.
++
++## Payment-state behavior
++
++Unpaid request:
++- HTTP 402
++- PAYMENT-REQUIRED present
++- no-store
++
++Invalid PAYMENT-SIGNATURE:
++- HTTP 402
++- machine-readable invalid-payment reason
++- never misreported as a verifier outage
++
++Verifier transport/outage:
++- HTTP 503
++- Retry-After
++- no fresh PAYMENT-REQUIRED
++- retrySamePayment=true
++
++Primary PA registry failure:
++- HTTP 502
++- no settlement attempted
++
++Settlement pending, duplicate settlement, transient 429, or transient facilitator failure:
++- retry the identical settlement body a bounded number of times
++- if still unresolved, HTTP 503 + Retry-After
++- no fresh PAYMENT-REQUIRED
++- caller should retry the same PAYMENT-SIGNATURE
++
++Successful settlement:
++- HTTP 200
++- PAYMENT-RESPONSE present
++- x402-settled:true
++- paid:true
++
++## Representative source records
++
++OpenAI:
++- Openai, L.l.c.
++- filing 0014371957
++- creation date 2025-04-23
++- Foreign Limited Liability Company
++
++Sheetz:
++- Sheetz, Inc.
++- filing 0000326968
++- creation date 1969-12-11
++- source publishes Governor, President, Vice President, and Secretary roles
++
++Wawa:
++- Wawa, Inc.
++- filing 0000233685
++- creation date 1933-08-08
++- source publishes multiple Governor/officer roles including CEO, President, CFO, Treasurer, Vice President, Secretary, and Assistant Secretary
++
++## Limitations
++
++This API does not establish:
++- current good standing
++- sanctions status
++- a risk score
++- legitimacy
++- current legal authority of a listed principal/officer
++
++It returns factual public registry records and source-published role/name rows.
++
++## Discovery
++
++OpenAPI:
++https://pa-entity-x402.floot.app/openapi.json
++
++llms.txt:
++https://pa-entity-x402.floot.app/llms.txt
++
++Skill document:
++https://pa-entity-x402.floot.app/skill.txt
++
++Fallback source copy:
++https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/main/PA_ENTITY_SKILL.md
++
++x402 JSON alias:
++https://pa-entity-x402.floot.app/.well-known/x402.json
++
++x402 services alias:
++https://pa-entity-x402.floot.app/.well-known/x402-services.json
++
++Service manifest:
++https://pa-entity-x402.floot.app/.well-known/x402-service.json
++
++Catalog:
++https://pa-entity-x402.floot.app/.well-known/x402-catalog.json
++
+*** Add File: static/skill.txt
++# PA Entity Lookup x402
++
++Use this tool for Pennsylvania business-registry lookup, company identity resolution, legal-entity enrichment, vendor/customer verification, due diligence, filing-number lookup, registration-type lookup, creation-date lookup, and registered-address/county confirmation.
++
++Choose one of two paid endpoints:
++
++Low-cost best match:
++
++GET https://pa-entity-x402.floot.app/_api/pa-entity-one?q=NAME
++
++Price: $0.001 USDC per successful settled call. Returns at most one highest-ranked entity.
++
++Multi-result enriched search:
++
++GET https://pa-entity-x402.floot.app/_api/pa-business?q=NAME&limit=10
++
++Price: $0.005 USDC per successful settled call. Returns up to 25 ranked candidates.
++Protocol: x402 v2.
++Network: Base mainnet (eip155:8453).
++
++## Input
++
++- q: required on both endpoints; company name or distinctive name fragment, 2-120 characters.
++- limit: only on /_api/pa-business; optional integer 1-25, default 10.
++
++## Matching
++
++The service queries the Pennsylvania business_name field case-insensitively.
++It uses a fast starts-with search first and a broader contains search only when needed.
++Normalized legal-name matches are ranked before broader matches.
++
++## Output
++
++Each result preserves the original fields:
++
++- businessName
++- filingNumber
++- registrationType
++- address1
++- address2
++- city
++- state
++- zip
++- county
++
++and adds:
++
++- creationDate
++- countyCode
++- principals[] with source-published role, firstName, middleName, lastName
++
++The response also reports whether principal enrichment completed.
++
++## Limitations
++
++The Pennsylvania source does not by itself establish current good standing, sanctions status, legal authority, risk score, or a legitimacy verdict. Principal/officer rows are source-published records and should not be treated as independent proof of current management authority.
++
++## Payment recovery
++
++If settlement is unresolved, retry the same request with the same PAYMENT-SIGNATURE. Do not generate a new authorization merely because the service returned settlement_pending or a transient 503.
++
++OpenAPI: https://pa-entity-x402.floot.app/openapi.json
++LLM guide: https://pa-entity-x402.floot.app/llms.txt
+*** End Patch
