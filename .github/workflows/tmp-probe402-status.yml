@@ -1,0 +1,37 @@
+name: inspect PA Entity in probe402
+
+on:
+  push:
+    paths:
+      - '.github/workflows/tmp-probe402-status.yml'
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Query probe402 public grade records
+        shell: bash
+        run: |
+          set -euo pipefail
+          urls=(
+            'https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI'
+            'https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-business?q=OpenAI&limit=1'
+            'https://pa-entity-x402.floot.app/_api/pa-entity-one?q=OpenAI'
+            'https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
+          )
+          for u in "${urls[@]}"; do
+            enc=$(python3 -c 'import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1],safe=""))' "$u")
+            echo "=== $u ==="
+            code=$(curl -sS --max-time 25 -H 'Accept: application/json' -o /tmp/body -w '%{http_code}' "https://probe402.com/grade?url=$enc")
+            echo "HTTP=$code"
+            cat /tmp/body | head -c 16000
+            echo
+          done
+
+          echo '=== endpoint catalog host search ==='
+          for p in             '/endpoints?host=api-v2.appdeploy.ai'             '/endpoints?host=pa-entity-x402.floot.app'             '/api/endpoints?host=api-v2.appdeploy.ai'             '/api/endpoints?host=pa-entity-x402.floot.app'; do
+            code=$(curl -sS --max-time 20 -H 'Accept: application/json' -o /tmp/body -w '%{http_code}' "https://probe402.com$p")
+            echo "--- $p => $code"
+            head -c 12000 /tmp/body; echo
+          done
