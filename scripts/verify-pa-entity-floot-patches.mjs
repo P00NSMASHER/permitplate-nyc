@@ -78,6 +78,45 @@ for (const target of combined.keys()) {
   assert.ok(mapping[target], `unexpected Floot target in patch: ${target}`)
 }
 
+
+const safePatchNames = [
+  'FLOOT_SAFE_PATCH_1_BUSINESS.txt',
+  'FLOOT_SAFE_PATCH_2_BEST_MATCH.txt',
+  'FLOOT_SAFE_PATCH_3_OPENAPI.txt',
+  'FLOOT_SAFE_PATCH_4_AGENT_TEXT.txt',
+  'FLOOT_SAFE_PATCH_5_X402_ALIASES.txt',
+  'FLOOT_SAFE_PATCH_6_X402_CATALOG.txt',
+]
+
+const safeCombined = new Map()
+for (const name of safePatchNames) {
+  const parsed = parsePatch(`${root}/${name}`)
+  for (const [target, content] of parsed) {
+    assert.ok(!safeCombined.has(target), `duplicate safe-patch target: ${target}`)
+    safeCombined.set(target, content)
+  }
+}
+
+assert.equal(safeCombined.size, 18, 'safe patches 1-6 must contain exactly 18 unique Floot files')
+for (const [target, fixture] of Object.entries(mapping)) {
+  assert.ok(safeCombined.has(target), `safe patches missing Floot target ${target}`)
+  const actual = safeCombined.get(target)
+  const expected = fs.readFileSync(`${root}/${fixture}`, 'utf8').replace(/\r\n/g, '\n')
+  assert.equal(actual, expected, `safe patch drift for ${target} vs ${fixture}`)
+}
+
+const extensionless = parsePatch(`${root}/FLOOT_SAFE_PATCH_7_EXTENSIONLESS.txt`)
+assert.deepEqual(
+  [...extensionless.keys()],
+  ['static/.well-known/x402'],
+  'safe patch 7 must contain only the extensionless canonical x402 manifest',
+)
+assert.equal(
+  extensionless.get('static/.well-known/x402'),
+  fs.readFileSync(`${root}/x402.json`, 'utf8').replace(/\r\n/g, '\n'),
+  'extensionless canonical x402 patch must equal x402.json exactly',
+)
+
 const fingerprintInput = Object.entries(mapping)
   .sort(([a], [b]) => a.localeCompare(b))
   .map(([target, fixture]) => {
@@ -93,4 +132,5 @@ const fingerprint = crypto
   .digest('hex')
 
 console.log('PA Entity Floot atomic patch parity: 18/18 exact')
+console.log('PA Entity Floot safe patch parity: 18/18 exact + canonical extensionless exact')
 console.log('FLOOT_RELEASE_FINGERPRINT=' + fingerprint)
