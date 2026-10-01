@@ -1,0 +1,25 @@
+name: inspect ag3ntsearch contribution
+
+on:
+  push:
+    paths:
+      - '.github/workflows/inspect-ag3ntsearch-contribute.yml'
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read public ag3ntsearch contribution interface
+        shell: bash
+        run: |
+          set -euo pipefail
+          for url in             'https://ag3ntsearch.com/contribute.html'             'https://ag3ntsearch.com/llms.txt'             'https://ag3ntsearch.com/index.json'             'https://ag3ntsearch.com/offer'             'https://ag3ntsearch.com/offer.html'             'https://ag3ntsearch.com/buyer-packet'             'https://ag3ntsearch.com/buyer-packet.html'
+          do
+            echo "=== $url ==="
+            curl -sS -L --max-time 15 -D /tmp/h "$url" -o /tmp/b || true
+            head -n 30 /tmp/h || true
+            echo "--- body ---"
+            head -c 30000 /tmp/b || true
+            echo
+          done
