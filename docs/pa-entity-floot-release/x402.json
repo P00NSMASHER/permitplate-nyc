@@ -309,6 +309,11 @@
             "additionalProperties": false
           }
         }
+      },
+      "amount": "1000",
+      "extra": {
+        "name": "USD Coin",
+        "version": "2"
       }
     },
     {
@@ -447,6 +452,11 @@
             "additionalProperties": false
           }
         }
+      },
+      "amount": "5000",
+      "extra": {
+        "name": "USD Coin",
+        "version": "2"
       }
     }
   ]
