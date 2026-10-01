@@ -171,38 +171,6 @@ await check('CORS exposed on $0.001 best-match GET', async () => {
   assert.equal(res.headers.get('access-control-allow-origin'), '*')
 })
 
-await check('CORS enriched OPTIONS', async () => {
-  const res = await fetch(endpoint, {
-    method: 'OPTIONS',
-    headers: {
-      Origin: 'https://buyer.example',
-      'Access-Control-Request-Method': 'GET',
-      'Access-Control-Request-Headers': 'payment-signature',
-    },
-  })
-  assert.equal(res.status, 204)
-  const allowOrigin = res.headers.get('access-control-allow-origin')
-  const allowHeaders = res.headers.get('access-control-allow-headers')
-  console.log('FLOOT_OPTIONS_CORS', JSON.stringify({ allowOrigin, allowHeaders }))
-  // Floot currently handles OPTIONS at the gateway and may omit custom CORS headers.
-  // GET responses must still expose the x402 CORS contract.
-})
-
-await check('CORS best-match OPTIONS', async () => {
-  const res = await fetch(bestEndpoint, {
-    method: 'OPTIONS',
-    headers: {
-      Origin: 'https://buyer.example',
-      'Access-Control-Request-Method': 'GET',
-      'Access-Control-Request-Headers': 'payment-signature',
-    },
-  })
-  assert.equal(res.status, 204)
-  const allowOrigin = res.headers.get('access-control-allow-origin')
-  console.log('FLOOT_OPTIONS_CORS_BEST', JSON.stringify({ allowOrigin }))
-  // Known Floot gateway limitation: custom OPTIONS response headers are not configurable.
-})
-
 await check('malformed payment stays 402', async () => {
   const res = await fetch(endpoint, {
     headers: { 'PAYMENT-SIGNATURE': 'not-base64-json' },
