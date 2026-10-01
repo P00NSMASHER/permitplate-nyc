@@ -8,22 +8,21 @@ on:
 jobs:
   promote:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 6
     steps:
-      - name: Submit $0.001 best-match route to buyer surfaces
+      - name: Finish best-match marketplace coverage
         shell: bash
         run: |
           set +e
           BEST='https://pa-entity-x402.floot.app/_api/pa-entity-one?q=OpenAI'
-          BARE='https://pa-entity-x402.floot.app/_api/pa-entity-one'
 
-          echo '=== MARKET402 SUBMIT ==='
-          curl -sS -i -X POST 'https://market402.com/submit'             -H 'content-type: application/json'             --data "$(jq -nc --arg url "$BEST" '{url:$url}')" | head -c 12000
-
-          echo
-          echo '=== 402 INDEX REGISTER ==='
-          curl -sS -i -X POST 'https://402index.io/api/v1/register'             -H 'content-type: application/json'             --data "$(jq -nc               --arg url "$BEST"               --arg name 'PA Entity Best Match x402'               --arg description 'Low-cost Pennsylvania business-registry best-match resolver. Give a company name and receive the highest-ranked Pennsylvania legal entity with filing number, registration type, creation date, registered address, county, and source-published principal/officer records.'               '{url:$url,name:$name,protocol:"x402",http_method:"GET",description:$description,price_usd:0.001,payment_asset:"USDC",payment_network:"Base",category:"data/company",provider:"PA Entity Lookup x402"}')" | head -c 16000
+          echo '=== MARKET402 SUBMIT CORRECTED ==='
+          curl -sS -i -X POST 'https://market402.com/submit'             -H 'content-type: application/json'             --data "$(jq -nc --arg resource "$BEST" '{resource:$resource}')" | head -c 14000
 
           echo
-          echo '=== NOHUMANS SUBMIT ==='
-          curl -sS -i -X POST 'https://nohumans.directory/v1/listings'             -H 'content-type: application/json'             --data "$(jq -nc               --arg endpoint "$BARE"               --arg sample "$BEST"               --arg description 'Low-cost Pennsylvania company identity and legal-entity best-match lookup. Returns one highest-ranked Department of State entity with filing number, registration type, creation date, registered address, county, and source-published principal/officer records for vendor verification, due diligence, and lead enrichment.'               '{name:"PA Entity Best Match x402",description:$description,endpoint_url:$endpoint,category:"data.company",price_amount:0.001,chains:["base"],sample_query:$sample}')" | head -c 16000
+          echo '=== NOHUMANS BEST LISTING ==='
+          curl -sS 'https://nohumans.directory/v1/listings/9f2f7a33-cb2' | jq .
+
+          echo
+          echo '=== 402 INDEX BEST READBACK ==='
+          curl -sS 'https://402index.io/api/v1/services/07c46db0-c899-4475-8a1b-2a789021eeff' | jq .
