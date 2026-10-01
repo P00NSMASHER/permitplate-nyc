@@ -33,8 +33,9 @@ GET responses still expose the x402 CORS headers.
 ## Interruption-safe resume checkpoint
 
 Last verified safe-patch integrity:
-- GitHub Actions run: `36896143511`
+- GitHub Actions run: `36896460882`
 - result: `success`
+- verified commit: `985ea4b306d8fc35c2e4d7f4427696eb16b66afb`
 - standard deploy files: `14/14 exact`
 - extensionless canonical manifest: `1/1 exact`
 - safe patch count: `7`
