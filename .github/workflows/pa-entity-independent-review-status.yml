@@ -1,0 +1,42 @@
+name: PA Entity independent review status
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-independent-review-status.yml'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check ag3ntsearch receipt and probe402 paths
+        shell: bash
+        run: |
+          set +e
+          ID='contribution:2026-10-01T13:38:23.066Z:244eccd0-c9ce-43da-af59-a541dde5f632'
+          BASE='https://ag3ntsearch.fullyagentnativeapps.com'
+          for u in             "$BASE/api/contributions/$ID"             "$BASE/api/contributions?id=$ID"             "$BASE/api/contributions?contribution_id=$ID"             "$BASE/api/contributions/status?id=$ID"             "$BASE/api/status/contributions/$ID"
+          do
+            echo "=== $u ==="
+            curl -sS -i --max-time 15 "$u" | head -c 12000
+            echo
+          done
+
+          echo '=== ag3ntsearch root/API hints ==='
+          for p in / /llms.txt /openapi.json /api /api/contributions; do
+            echo "--- $p"
+            curl -sS -i --max-time 15 "$BASE$p" | head -c 8000
+            echo
+          done
+
+          echo '=== probe402 exact URL searches ==='
+          for base in             'https://probe402.com'             'https://api.probe402.com'
+          do
+            for p in               '/?url=https%3A%2F%2Fpa-entity-x402.floot.app%2F_api%2Fpa-entity-one%3Fq%3DOpenAI'               '/api/resolve?url=https%3A%2F%2Fpa-entity-x402.floot.app%2F_api%2Fpa-entity-one%3Fq%3DOpenAI'               '/resolve?url=https%3A%2F%2Fpa-entity-x402.floot.app%2F_api%2Fpa-entity-one%3Fq%3DOpenAI'
+            do
+              echo "--- $base$p"
+              curl -sS -i --max-time 15 "$base$p" | head -c 8000
+              echo
+            done
+          done
