@@ -1,0 +1,121 @@
+{
+  "releaseCandidateBranch": "pa-entity-floot-rc-20261001",
+  "releaseCandidateCommit": "d26b382f6ca75a09d54a58498018dc8b3df2efaa",
+  "flootProjectId": "b69a3ee6-eb01-430d-aa51-da2fc7beeac4",
+  "liveOrigin": "https://pa-entity-x402.floot.app",
+  "files": [
+    {
+      "source": "docs/pa-entity-floot-release/pa-business_GET.ts",
+      "target": "endpoints/pa-business_GET.ts",
+      "gitBlobSha": "8afcf4ebe1e6c15fb7ed9e36d1a5817564a6f64e",
+      "characters": 19949
+    },
+    {
+      "source": "docs/pa-entity-floot-release/pa-business_GET.schema.ts",
+      "target": "endpoints/pa-business_GET.schema.ts",
+      "gitBlobSha": "636b6e5bf19657fc8622595738370d178e5f01a0",
+      "characters": 169
+    },
+    {
+      "source": "docs/pa-entity-floot-release/pa-entity-one_GET.ts",
+      "target": "endpoints/pa-entity-one_GET.ts",
+      "gitBlobSha": "0440d9a768021a844d2129e402a3f81582777415",
+      "characters": 19309
+    },
+    {
+      "source": "docs/pa-entity-floot-release/pa-entity-one_GET.schema.ts",
+      "target": "endpoints/pa-entity-one_GET.schema.ts",
+      "gitBlobSha": "6f3d74dd7f202327d2d35c27cb7f68d6b849dda4",
+      "characters": 137
+    },
+    {
+      "source": "docs/pa-entity-floot-release/pa-business_OPTIONS.ts",
+      "target": "endpoints/pa-business_OPTIONS.ts",
+      "gitBlobSha": "0744d7f1042dfa33bbb8e581c15649c9d0cc0c1b",
+      "characters": 461
+    },
+    {
+      "source": "docs/pa-entity-floot-release/pa-business_OPTIONS.schema.ts",
+      "target": "endpoints/pa-business_OPTIONS.schema.ts",
+      "gitBlobSha": "aec1823dea8c6dbc85f00f08c5e1275e66ca6020",
+      "characters": 107
+    },
+    {
+      "source": "docs/pa-entity-floot-release/pa-entity-one_OPTIONS.ts",
+      "target": "endpoints/pa-entity-one_OPTIONS.ts",
+      "gitBlobSha": "0744d7f1042dfa33bbb8e581c15649c9d0cc0c1b",
+      "characters": 461
+    },
+    {
+      "source": "docs/pa-entity-floot-release/pa-entity-one_OPTIONS.schema.ts",
+      "target": "endpoints/pa-entity-one_OPTIONS.schema.ts",
+      "gitBlobSha": "aec1823dea8c6dbc85f00f08c5e1275e66ca6020",
+      "characters": 107
+    },
+    {
+      "source": "docs/pa-entity-floot-release/openapi.json",
+      "target": "static/openapi.json",
+      "gitBlobSha": "334f1cb513a1d39e2d340854725b435380e86b76",
+      "characters": 24209
+    },
+    {
+      "source": "docs/pa-entity-floot-release/llms.txt",
+      "target": "static/llms.txt",
+      "gitBlobSha": "8d9d1c7d1c0bf42f2c8ade19b1d1b5d823df3962",
+      "characters": 3415
+    },
+    {
+      "source": "docs/pa-entity-floot-release/llms-full.txt",
+      "target": "static/llms-full.txt",
+      "gitBlobSha": "5fa31d5cac22bf9dc0c1edddf43bd514e4b06053",
+      "characters": 4506
+    },
+    {
+      "source": "docs/pa-entity-floot-release/skill.txt",
+      "target": "static/skill.txt",
+      "gitBlobSha": "eb7c2136e5f2754c8bf31019101c6ab9e34121fa",
+      "characters": 2134
+    },
+    {
+      "source": "docs/pa-entity-floot-release/x402.json",
+      "target": "static/.well-known/x402.json",
+      "gitBlobSha": "89151585fbc5afe0578b19a5032bde0ccbb2e83e",
+      "characters": 14262
+    },
+    {
+      "source": "docs/pa-entity-floot-release/x402-services.json",
+      "target": "static/.well-known/x402-services.json",
+      "gitBlobSha": "89151585fbc5afe0578b19a5032bde0ccbb2e83e",
+      "characters": 14262
+    },
+    {
+      "source": "docs/pa-entity-floot-release/x402-service.json",
+      "target": "static/.well-known/x402-service.json",
+      "gitBlobSha": "2c90fc001495e686a9f8273896dab654910bb256",
+      "characters": 1065
+    },
+    {
+      "source": "docs/pa-entity-floot-release/x402-catalog.json",
+      "target": "static/.well-known/x402-catalog.json",
+      "gitBlobSha": "a963b962ca7890e18973ebf1e567c857eeb8ff8d",
+      "characters": 8875
+    },
+    {
+      "source": "docs/pa-entity-floot-release/security.txt",
+      "target": "static/.well-known/security.txt",
+      "gitBlobSha": "8633f76b16af225715c72c01517294bacc8029f8",
+      "characters": 259
+    },
+    {
+      "source": "docs/pa-entity-floot-release/sitemap.xml",
+      "target": "static/sitemap.xml",
+      "gitBlobSha": "5c7fde1bc04b9e19ad41980dc5a649c70f98d103",
+      "characters": 865
+    }
+  ],
+  "extensionlessAlias": {
+    "target": "static/.well-known/x402",
+    "source": "docs/pa-entity-floot-release/x402.json",
+    "note": "Attempt only if Floot accepts extensionless static file; otherwise record platform limitation."
+  }
+}
