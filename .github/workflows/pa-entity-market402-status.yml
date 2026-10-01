@@ -1,0 +1,64 @@
+name: PA Entity Market402 measured-index check
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-market402-status.yml'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Check Market402 measured index for PA Entity mirror
+        shell: bash
+        run: |
+          set -euo pipefail
+          ID='pa-entity-lookup-x402-4fbm4s'
+          BASE='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s'
+
+          curl -fsSL 'https://market402.com/operators.json' -o /tmp/operators.json
+          curl -fsSL 'https://market402.com/index.json' -o /tmp/index.json
+
+          echo '=== operators matches ==='
+          python3 - <<'PY'
+          import json
+          needle='pa-entity-lookup-x402-4fbm4s'
+          d=json.load(open('/tmp/operators.json'))
+          def walk(x,path=''):
+              if isinstance(x,dict):
+                  if needle in json.dumps(x):
+                      print('MATCH',path,json.dumps(x,indent=2)[:16000])
+                  for k,v in x.items(): walk(v,path+'/'+str(k))
+              elif isinstance(x,list):
+                  for i,v in enumerate(x): walk(v,path+'/'+str(i))
+          walk(d)
+          PY
+
+          echo '=== index matches ==='
+          python3 - <<'PY'
+          import json
+          needle='pa-entity-lookup-x402-4fbm4s'
+          d=json.load(open('/tmp/index.json'))
+          hits=[]
+          def walk(x,path=''):
+              if isinstance(x,dict):
+                  blob=json.dumps(x)
+                  if needle in blob:
+                      hits.append((path,x))
+                  for k,v in x.items(): walk(v,path+'/'+str(k))
+              elif isinstance(x,list):
+                  for i,v in enumerate(x): walk(v,path+'/'+str(i))
+          walk(d)
+          print('HIT_COUNT',len(hits))
+          for path,x in hits[:20]:
+              print('MATCH',path,json.dumps(x,indent=2)[:16000])
+          PY
+
+          echo '=== likely operator pages ==='
+          for slug in             'api-v2.appdeploy.ai'             'appdeploy.ai'             'api-v2.appdeploy.ai%2Fapp%2Fpa-entity-lookup-x402-4fbm4s'
+          do
+            code=$(curl -sS -o /tmp/op -w '%{http_code}' "https://market402.com/op/$slug.json")
+            echo "$slug => $code"
+            if [ "$code" = "200" ]; then head -c 16000 /tmp/op; echo; fi
+          done
