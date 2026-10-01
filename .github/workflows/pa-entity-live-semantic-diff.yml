@@ -35,13 +35,18 @@ jobs:
 
           echo '=== SERVICE JSON SEMANTIC ==='
           python3 - <<'PY'
-          import json
-          a=json.load(open('/tmp/live/service.json'))
-          b=json.load(open('docs/pa-entity-floot-release/x402-service.json'))
+          import json,difflib
+          live_text=open('/tmp/live/service.json').read().replace('\\r\\n','\\n')
+          fixture_text=open('docs/pa-entity-floot-release/x402-service.json').read().replace('\\r\\n','\\n')
+          a=json.loads(live_text); b=json.loads(fixture_text)
           print('semantic_equal=',a==b)
           if a!=b:
-            print('live=',json.dumps(a,sort_keys=True))
-            print('fixture=',json.dumps(b,sort_keys=True))
+            for line in difflib.unified_diff(
+              json.dumps(a,indent=2,sort_keys=True).splitlines(),
+              json.dumps(b,indent=2,sort_keys=True).splitlines(),
+              fromfile='live',tofile='fixture',lineterm=''
+            ):
+              print(line)
           PY
 
           echo '=== OPENAPI KEY DIFFERENCES ==='
