@@ -2,152 +2,158 @@
 
 A pay-per-call Pennsylvania business-registry lookup for autonomous agents.
 
-## What it does
+## Live product ladder
 
-Resolve a Pennsylvania company name or distinctive name fragment into structured Pennsylvania Department of State registration records.
-
-Common agent use cases:
-
-- company identity resolution
-- legal-entity enrichment
-- corporate identity checks
-- vendor and customer verification
-- due diligence
-- filing-number lookup
-- registration-type lookup
-- registered address, city, ZIP, and county confirmation
-- lead enrichment
-
-## Paid product ladder
-
-Current production:
-
-```text
-GET https://pa-entity-x402.floot.app/_api/pa-business?q=NAME&limit=10
-```
-
-Price: **$0.005 USDC per successful settled lookup**
-
-Prepared for the next hardened production release:
+### $0.001 best match
 
 ```text
 GET https://pa-entity-x402.floot.app/_api/pa-entity-one?q=NAME
 ```
 
-Price: **$0.001 USDC per successful settled lookup**
+Returns one highest-ranked Pennsylvania legal-entity match.
 
-The $0.001 route returns at most one best-ranked legal entity. The $0.005 route returns multiple ranked candidates for disambiguation and enrichment.
-
-Protocol: **x402 v2**
-
-Network: **Base mainnet (eip155:8453)**
-
-No account or API key is required. An unpaid request returns HTTP 402 with a `PAYMENT-REQUIRED` challenge.
-
-## Example
+### $0.005 enriched search
 
 ```text
-GET https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1
+GET https://pa-entity-x402.floot.app/_api/pa-business?q=NAME&limit=10
 ```
 
-The hardened response schema is JSON with:
+Returns multiple ranked Pennsylvania entities for disambiguation and enrichment.
 
-- `query`
-- `count`
-- `results[].businessName`
-- `results[].filingNumber`
-- `results[].registrationType`
-- `results[].creationDate`
-- `results[].address1`
-- `results[].address2`
-- `results[].city`
-- `results[].state`
-- `results[].zip`
-- `results[].county`
-- `results[].countyCode`
-- `results[].principals[]`
-- `enrichment.principals`
-- `source`
-- `paid`
+Both are live on:
 
-## Matching behavior
+- protocol: x402 v2
+- network: Base mainnet (eip155:8453)
+- asset: USDC
+- payTo: 0x708f7b52b56eafd7fc1de65fc7752ed732914021
+- source: Pennsylvania Department of State public data via data.pa.gov
+
+No account or API key is required. Unpaid requests return HTTP 402 with `PAYMENT-REQUIRED`.
+
+## Response data
+
+The enriched entity schema includes:
+
+- businessName
+- filingNumber
+- registrationType
+- creationDate
+- address1
+- address2
+- city
+- state
+- zip
+- county
+- countyCode
+- principals[].role
+- principals[].firstName
+- principals[].middleName
+- principals[].lastName
+
+The $0.001 route preserves its original `found/result` response fields and also exposes additive `count/results` fields for machine consistency.
+
+The API does not establish current good standing, sanctions status, a risk score, legitimacy, or independent proof of current management authority.
+
+## Search behavior
 
 Search is case-insensitive against the Pennsylvania `business_name` field.
 
-Results are ranked to prefer normalized legal-name matches first, ignoring common suffixes such as LLC or Inc., followed by starts-with and broader substring matches.
+The live hardened search:
 
-Examples:
+1. uses a fast starts-with lookup first;
+2. ranks normalized legal-name matches first, ignoring common suffixes such as LLC or Inc.;
+3. falls back to a broader contains search only when necessary;
+4. deduplicates by filing number;
+5. never uses whole-record `$q` matching that can accidentally match only an address.
 
-- `OpenAI` prioritizes `Openai, L.l.c.`
-- `Sheetz` prioritizes `Sheetz, Inc.`
-- `Wawa` prioritizes `Wawa, Inc.`
+Representative intended matches:
 
-## Source
+- OpenAI → Openai, L.l.c. / 0014371957
+- Sheetz → Sheetz, Inc. / 0000326968
+- Wawa → Wawa, Inc. / 0000233685
 
-Pennsylvania Department of State registered-business public data via data.pa.gov.
+## Payment hardening
 
-This service is a factual lookup/enrichment API. It is not legal advice and should not be treated as proof of current good-standing status unless the underlying Pennsylvania source explicitly establishes that fact.
+The production seller now:
+
+- requires explicit PayAI `isValid:true`; generic success flags do not verify payment;
+- parses structured invalid-payment bodies even when the facilitator returns HTTP 4xx;
+- returns invalid payment as 402 rather than misreporting it as a verifier outage;
+- never turns `settlement_pending` or `duplicate_settlement` into a fresh payment request;
+- retries the same settlement authorization in bounded recovery attempts;
+- returns an unresolved retryable state without `PAYMENT-REQUIRED` when settlement is ambiguous;
+- does not settle when the primary Pennsylvania source fails;
+- limits payment header size and query length;
+- validates paid-retry input before spending facilitator/upstream capacity;
+- uses bounded PayAI and PA Open Data timeouts;
+- emits `Cache-Control: no-store` on payment/unresolved states;
+- exposes x402 payment headers on GET responses for browser clients.
+
+Known platform limitation: Floot owns the OPTIONS gateway. OPTIONS returns HTTP 204 but currently does not expose custom CORS headers. Server-to-server x402 buyers are unaffected.
 
 ## Machine discovery
 
-Currently working live surfaces:
+Live:
 
-- Landing page: https://pa-entity-x402.floot.app
-- OpenAPI: https://pa-entity-x402.floot.app/openapi.json
-- llms.txt: https://pa-entity-x402.floot.app/llms.txt
-- llms-full.txt: https://pa-entity-x402.floot.app/llms-full.txt
-- x402 catalog: https://pa-entity-x402.floot.app/.well-known/x402-catalog.json
-- provider-specific x402 service manifest: https://pa-entity-x402.floot.app/.well-known/x402-service.json
+- https://pa-entity-x402.floot.app/openapi.json
+- https://pa-entity-x402.floot.app/llms.txt
+- https://pa-entity-x402.floot.app/llms-full.txt
+- https://pa-entity-x402.floot.app/skill.txt
+- https://pa-entity-x402.floot.app/.well-known/x402
+- https://pa-entity-x402.floot.app/.well-known/x402.json
+- https://pa-entity-x402.floot.app/.well-known/x402-services.json
+- https://pa-entity-x402.floot.app/.well-known/x402-service.json
+- https://pa-entity-x402.floot.app/.well-known/x402-catalog.json
+- https://pa-entity-x402.floot.app/.well-known/security.txt
 
-Known discovery defects pending the next production release:
+The canonical extensionless x402 document is live. Floot serves that extensionless file as `application/octet-stream`; the JSON aliases return `application/json`.
 
-- `/.well-known/x402`, `/.well-known/x402.json`, and `/.well-known/x402-services.json` are not yet live.
-- `/skill.md` currently resolves to Floot's HTML application shell rather than raw Markdown, so it should **not** be treated as a working machine-readable surface.
+## Independent validation snapshot
 
-The parser-tested canonical manifest intended for the next release is tracked in `x402-manifest.json`.
+Latest completed checks after the hardened production release:
 
-## External discovery / verification status
-
-Current red-team snapshot on 2026-09-30:
-
-- Coinbase/CDP x402 validator: **valid=true**, simulation **accepted** in the most recent completed validation; required preflights passed for live HTTP 402, `PAYMENT-REQUIRED`, x402 v2, Base, USDC, exact scheme, resource metadata, Bazaar extension, input metadata, and Bazaar schema.
-- x402scan: registered.
-- true402: registered, but the current record has **0 transactions**, **trustScore 0**, and an old `lastSeen`; refresh after the next production release.
-- nohumans.directory main $0.005 listing: **verified by probe**; latest commercial sweep improved the score to about **0.896** and moved the seller to about **#18** for the buyer query "Pennsylvania business registry"; **not paid-verified**, 0 distinct payers.
-- 402 Index: **active** and **healthy**. Its current record says `approval_reason: domain-verified` but also reports `domain_verified: 0`, `verified: 0`, and `x402_payment_valid: null`; do not describe it as currently verified until those fields agree.
-- Agent402: indexed and parses the paid OpenAPI route, but currently **routable=false** because the canonical x402 manifest path still returns 403. The parser-tested manifest repair is prepared for the next production release.
-- Market402: the exact $0.005 endpoint is now **actually queued and present in the paid-probe opt-in roster** with a valid sample input. Its instant self-test passes **11/11**. Paid-probe qualification is currently blocked only by `not_in_catalog` until the resource appears in the public Bazaar catalog. This is not yet a verified badge or a paid settlement.
-- Cinderwright Discovery Hub: an earlier submission was accepted into its verification queue; no independent paid verification has been established.
-- x402dash and x402 Arena were previously accepted by their registration APIs; they were not re-audited in the latest red-team sweep.
-
-Historical 402 Index buyer-search snapshot from earlier on 2026-09-30:
-
-- `Pennsylvania business registry`: rank **#1**
-- `company identity Pennsylvania`: rank **#1**
-- `vendor verification Pennsylvania`: rank **#2**
-
-AgentCash has also previously discovered the seller as one paid GET route at $0.005 USD over x402.
-
-## Lower-cost product
-
-A legacy AppDeploy **$0.001** single-best-match route is live and independently passes Market402's 11/11 x402 self-test and Coinbase/CDP validation. However, its older settlement-recovery implementation predates the latest red-team hardening, so it is **not being promoted to funded paid probes**.
-
-A hardened $0.001 best-match route is prepared for the Floot origin and covered by the same settlement-pending, invalid-payment, timeout, CORS, ranking, and enrichment protections as the $0.005 route. Once deployed, the intended product ladder is:
-
-- $0.001: one best-ranked entity;
-- $0.005: multi-result enriched search.
-
-Neither route counts as revenue until an independent buyer actually settles USDC.
+- Coinbase/CDP validator:
+  - $0.005 enriched route: **valid=true**, simulation **accepted**
+  - $0.001 best-match route: **valid=true**, simulation **accepted**
+- Market402:
+  - both routes: **11/11** instant spec checks
+  - both routes are queued for scheduled independent probing
+- Agent402:
+  - current origin registration: **listed=true**
+  - seller: **routable=true**
+  - paid tools indexed: **2**
+  - current crawl health: **0.4**, reflecting older failed crawls still present in its five-crawl history
+  - remaining route-execution blocker: **settlement_required**, not discovery failure
+- nohumans.directory:
+  - $0.005 listing: **verified**, score about **0.990**, zero consecutive failures
+  - $0.005 listing ranks about **#2** for both “Pennsylvania business registry” and “company identity Pennsylvania”
+  - $0.001 best-match listing id `9f2f7a33-cb2`: submitted with request schema, response schema, and executable sample URL; awaiting its initial probe streak
+- 402 Index:
+  - $0.005 service: active + healthy
+  - $0.001 best-match service id `07c46db0-c899-4475-8a1b-2a789021eeff`: active + healthy immediately after registration
+  - “Pennsylvania business registry”: $0.005 rank **#1**, $0.001 rank **#2**
+  - “best Pennsylvania company match”: $0.001 rank **#1**
+- true402:
+  - registered, but still has no transaction history
+- x402scan:
+  - previously registered; its registration endpoint now requires SIWX wallet authentication, so the origin was not re-submitted during this release
 
 ## Revenue
 
-At the latest PayAI resource-stat readback:
+PayAI public resource statistics after the hardened release:
 
-- settlements: **0**
-- unique buyers: **0**
-- total volume: **$0**
+- settlements.total: **0**
+- buyers.unique: **0**
+- volume.totalUsd: **$0**
+- reliability: **100**
 
-Third-party revenue remains **$0.00**.
+Third-party revenue remains **$0.00** until an outside payer actually settles USDC.
+
+## Public source and limitations
+
+Pennsylvania Department of State registered-business data via data.pa.gov.
+
+This is a factual registry lookup/enrichment API. It is not legal advice and should not be treated as proof of current good standing unless the underlying source explicitly establishes that fact.
 
 ## Wallet
 
