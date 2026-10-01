@@ -103,14 +103,24 @@ await check('security.txt plain text', async () => {
   assert.match(text, /Policy: https:\/\/github\.com\/P00NSMASHER\/permitplate-nyc\/security\/policy/)
 })
 
-await check('canonical extensionless x402 if supported', async () => {
-  const { res, text } = await fetchText('/.well-known/x402')
-  if (res.status === 403 || res.status === 404) {
-    throw new Error(`canonical path unavailable: HTTP ${res.status}`)
-  }
+await check('canonical extensionless x402 body', async () => {
+  const [{ res, text }, alias] = await Promise.all([
+    fetchText('/.well-known/x402'),
+    fetchText('/.well-known/x402.json'),
+  ])
   assert.equal(res.status, 200)
-  expectContentType(res, /application\/json/i)
-  JSON.parse(text)
+  const contentType = res.headers.get('content-type') || ''
+  assert.match(
+    contentType,
+    /application\/(?:json|octet-stream)/i,
+    `${res.url} unexpected content-type`,
+  )
+  const doc = JSON.parse(text)
+  const aliasDoc = JSON.parse(alias.text)
+  assert.deepEqual(doc, aliasDoc, 'extensionless x402 must match x402.json')
+  if (/octet-stream/i.test(contentType)) {
+    console.log('NOTE extensionless x402 is valid JSON served as application/octet-stream by Floot')
+  }
 })
 
 let paymentDoc
