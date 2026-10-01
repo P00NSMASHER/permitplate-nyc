@@ -1,0 +1,43 @@
+name: PA Entity Circle discovery once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/tmp-pa-entity-circle-discovery-once.yml'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Query Circle keyless x402 discovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='https://api.circle.com/v2/x402/discovery/resources'
+          for q in             'pa-entity-x402.floot.app'             'Pennsylvania business registry'             'company identity Pennsylvania'             'vendor verification Pennsylvania'
+          do
+            echo "=== $q ==="
+            curl -fsSL --get "$BASE" --data-urlencode "query=$q" -o /tmp/circle.json
+            python3 - "$q" <<'PY'
+          import json,sys
+          q=sys.argv[1]
+          d=json.load(open('/tmp/circle.json'))
+          blob=json.dumps(d)
+          rows=[]
+          def walk(x):
+              if isinstance(x,dict):
+                  if any(k in x for k in ('resource','url','endpoint')):
+                      rows.append(x)
+                  for v in x.values(): walk(v)
+              elif isinstance(x,list):
+                  for v in x: walk(v)
+          walk(d)
+          hits=[]
+          for r in rows:
+              b=json.dumps(r).lower()
+              if 'pa-entity-x402.floot.app' in b or 'pa-entity-lookup-x402-4fbm4s' in b:
+                  hits.append(r)
+          print(json.dumps({'query':q,'matchCount':len(hits),'matches':hits[:10]},indent=2))
+          PY
+          done
