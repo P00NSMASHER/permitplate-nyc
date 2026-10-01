@@ -1,0 +1,77 @@
+name: PA Entity 402 Index refresh
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-402index-refresh.yml'
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Re-register verified-domain services
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          register () {
+            label="$1"
+            url="$2"
+            name="$3"
+            description="$4"
+            price="$5"
+
+            echo "=== REGISTER $label ==="
+            payload=$(jq -nc \
+              --arg url "$url" \
+              --arg name "$name" \
+              --arg description "$description" \
+              --argjson price "$price" \
+              '{
+                url:$url,
+                name:$name,
+                protocol:"x402",
+                http_method:"GET",
+                description:$description,
+                price_usd:$price,
+                payment_asset:"USDC",
+                payment_network:"Base",
+                category:"data/company",
+                provider:"PA Entity Lookup x402"
+              }')
+
+            curl -sS -D "/tmp/$label.headers" -o "/tmp/$label.json" \
+              -X POST 'https://402index.io/api/v1/register' \
+              -H 'content-type: application/json' \
+              --data "$payload"
+
+            code=$(awk 'toupper($1) ~ /^HTTP\// {v=$2} END{print v}' "/tmp/$label.headers")
+            echo "http_status=$code"
+            jq '{
+              id,name,url,protocol,price_usd,payment_asset,payment_network,category,
+              health_status,reliability_score,x402_payment_valid,domain_verified,
+              source,status,error,message,probe
+            }' "/tmp/$label.json"
+            test "$code" = "201" -o "$code" = "200"
+          }
+
+          register main \
+            'https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1' \
+            'Pennsylvania Business Registry — Entity Lookup x402' \
+            'Pennsylvania business registry and company identity lookup with filing number, registration type, registered address, county, and structured entity data for vendor verification, due diligence, and enrichment.' \
+            0.005
+
+          register cheap \
+            'https://pa-entity-x402.floot.app/_api/pa-entity-one?q=OpenAI' \
+            'Pennsylvania Business Registry — Best Match' \
+            'Low-cost Pennsylvania business registry resolver that returns the single best-ranked legal-entity match for company identity and vendor verification workflows.' \
+            0.001
+
+          echo '=== READBACK ==='
+          for id in '2a92dcd4-206a-42ad-b6e5-e457635bb75a' '07c46db0-c899-4475-8a1b-2a789021eeff'; do
+            curl -fsSL "https://402index.io/api/v1/services/$id" | jq '{
+              id,name,url,price_usd,category,health_status,reliability_score,
+              x402_payment_valid,domain_verified,source,last_checked
+            }'
+          done
