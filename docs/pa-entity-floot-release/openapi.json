@@ -323,15 +323,6 @@
             "description": "Verifier/settlement temporarily unavailable or settlement outcome unresolved. Retry the same payment authorization; do not create a fresh authorization."
           }
         }
-      },
-      "options": {
-        "operationId": "pennsylvaniaBusinessRegistryPreflight",
-        "summary": "CORS preflight for the paid registry route",
-        "responses": {
-          "204": {
-            "description": "CORS preflight accepted"
-          }
-        }
       }
     },
     "/_api/pa-entity-one": {
@@ -649,15 +640,6 @@
           },
           "503": {
             "description": "Verifier/settlement temporarily unavailable or settlement outcome unresolved. Retry the same payment authorization; do not create a fresh authorization."
-          }
-        }
-      },
-      "options": {
-        "operationId": "pennsylvaniaBusinessBestMatchPreflight",
-        "summary": "CORS preflight for the low-cost best-match route",
-        "responses": {
-          "204": {
-            "description": "CORS preflight accepted"
           }
         }
       }
