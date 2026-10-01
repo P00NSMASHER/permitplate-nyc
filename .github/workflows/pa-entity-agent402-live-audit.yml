@@ -1,0 +1,32 @@
+name: PA Entity Agent402 live audit
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-agent402-live-audit.yml'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Refresh seller and inspect routing
+        shell: bash
+        run: |
+          set -euo pipefail
+          ORIGIN='https://pa-entity-x402.floot.app'
+          echo '=== REGISTER ==='
+          curl -sS -X POST 'https://agent402.tools/api/index/register'             -H 'content-type: application/json'             --data "$(jq -nc --arg origin "$ORIGIN" '{origin:$origin}')" | tee /tmp/register.json
+
+          echo
+          echo '=== SELLER ==='
+          curl -sS -G 'https://agent402.tools/api/index'             --data-urlencode 'seller=pa-entity-x402.floot.app' | tee /tmp/seller.json
+
+          echo
+          echo '=== ROUTING ==='
+          for q in             'Pennsylvania business registry'             'Pennsylvania company identity lookup'             'vendor verification Pennsylvania'             'one Pennsylvania company registration by business name'
+          do
+            echo "--- QUERY: $q"
+            curl -sS -G 'https://agent402.tools/api/route'               --data-urlencode "q=$q"               --data-urlencode 'include=external'
+            echo
+          done
