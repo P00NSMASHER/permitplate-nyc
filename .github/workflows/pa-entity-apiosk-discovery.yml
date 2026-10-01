@@ -1,0 +1,47 @@
+name: PA Entity Apiosk discovery
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-apiosk-discovery.yml'
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Inspect public Apiosk federated submission app
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/apiosk
+          curl -sSL 'https://dashboard.apiosk.com/' -o /tmp/apiosk/index.html
+          echo '=== INDEX HEAD ==='
+          head -c 20000 /tmp/apiosk/index.html
+          echo
+          echo '=== SCRIPT URLS ==='
+          python3 - <<'PY'
+          import re
+          s=open('/tmp/apiosk/index.html').read()
+          urls=re.findall(r'<script[^>]+src=["\x27]([^"\x27]+)',s)
+          for u in urls: print(u)
+          open('/tmp/apiosk/scripts.txt','w').write('\n'.join(urls))
+          PY
+
+          i=0
+          while IFS= read -r src; do
+            [ -n "$src" ] || continue
+            case "$src" in
+              http*) url="$src" ;;
+              /*) url="https://dashboard.apiosk.com$src" ;;
+              *) url="https://dashboard.apiosk.com/$src" ;;
+            esac
+            out="/tmp/apiosk/js-$i.js"
+            curl -sSL "$url" -o "$out"
+            echo "=== SCRIPT $i $url bytes=$(wc -c < "$out") ==="
+            grep -Eo '.{0,180}(manifest|federat|x402|submit|preview|review|well-known|api/).{0,260}' "$out" | head -n 120 || true
+            i=$((i+1))
+          done < /tmp/apiosk/scripts.txt
+
+          echo '=== ALL URL-LIKE API STRINGS ==='
+          grep -RhoE 'https?://[^"'\''[:space:]<>]+|/[A-Za-z0-9._~!$&()*+,;=:@%/?-]*(manifest|federat|submit|preview|x402)[A-Za-z0-9._~!$&()*+,;=:@%/?-]*' /tmp/apiosk/js-*.js 2>/dev/null | sort -u | head -n 300 || true
