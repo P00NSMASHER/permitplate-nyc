@@ -89,7 +89,11 @@ assert.deepEqual(catalogBest.extensions.bazaar.info.input.queryParams, { q: 'Ope
 assert.equal(service.x402Version, 2)
 assert.equal(service.protocol.version, 2)
 assert.equal(service.payment.network, 'eip155:8453')
-assert.equal(service.pricing.base, '0.005')
+assert.equal(service.pricing.base, '0.001')
+assert.equal(
+  service.endpoint,
+  'https://pa-entity-x402.floot.app/_api/pa-entity-one?q=OpenAI',
+)
 assert.equal(service.skill, 'https://pa-entity-x402.floot.app/skill.txt')
 
 assert.match(skill, /^# PA Entity Lookup x402/m)
