@@ -8,40 +8,56 @@ on:
 jobs:
   inspect:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     steps:
-      - name: Inspect public Apiosk federated submission app
+      - name: Recursively inspect public Apiosk Vite chunks
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p /tmp/apiosk
           curl -sSL 'https://dashboard.apiosk.com/' -o /tmp/apiosk/index.html
-          echo '=== INDEX HEAD ==='
-          head -c 20000 /tmp/apiosk/index.html
-          echo
-          echo '=== SCRIPT URLS ==='
+
           python3 - <<'PY'
-          import re
-          s=open('/tmp/apiosk/index.html').read()
-          urls=re.findall(r'<script[^>]+src=["\x27]([^"\x27]+)',s)
-          for u in urls: print(u)
-          open('/tmp/apiosk/scripts.txt','w').write('\n'.join(urls))
+          import re, subprocess, os, urllib.parse, collections
+          base='https://dashboard.apiosk.com'
+          html=open('/tmp/apiosk/index.html').read()
+          seeds=re.findall(r'(?:src|href)=["\x27]([^"\x27]+\.js)["\x27]',html)
+          q=collections.deque(seeds)
+          seen=set()
+          records=[]
+          while q and len(seen)<250:
+              rel=q.popleft()
+              url=urllib.parse.urljoin(base+'/',rel)
+              if url in seen: continue
+              seen.add(url)
+              out=f'/tmp/apiosk/chunk-{len(seen):03d}.js'
+              p=subprocess.run(['curl','-fsSL','--max-time','20',url,'-o',out])
+              if p.returncode: continue
+              try: txt=open(out,errors='ignore').read()
+              except: continue
+              records.append((url,out,len(txt)))
+              refs=re.findall(r'["\x27]([^"\x27]+\.js)["\x27]',txt)
+              for r in refs:
+                  if '/assets/' in r or r.startswith('./') or r.startswith('/'):
+                      q.append(urllib.parse.urljoin(url,r))
+          print('CHUNKS',len(records))
+          with open('/tmp/apiosk/records.tsv','w') as fh:
+              for u,o,n in records:
+                  print(n,u)
+                  fh.write(f'{o}\t{u}\n')
           PY
 
-          i=0
-          while IFS= read -r src; do
-            [ -n "$src" ] || continue
-            case "$src" in
-              http*) url="$src" ;;
-              /*) url="https://dashboard.apiosk.com$src" ;;
-              *) url="https://dashboard.apiosk.com/$src" ;;
-            esac
-            out="/tmp/apiosk/js-$i.js"
-            curl -sSL "$url" -o "$out"
-            echo "=== SCRIPT $i $url bytes=$(wc -c < "$out") ==="
-            grep -Eo '.{0,180}(manifest|federat|x402|submit|preview|review|well-known|api/).{0,260}' "$out" | head -n 120 || true
-            i=$((i+1))
-          done < /tmp/apiosk/scripts.txt
+          echo '=== FEDERATED / MANIFEST HITS ==='
+          while IFS=$'\t' read -r file url; do
+            hits=$(grep -Eo '.{0,260}(federat|manifest|well-known/x402|x402|submit.{0,80}review|preview.{0,80}manifest|review.{0,80}submit).{0,500}' "$file" | head -n 100 || true)
+            if [ -n "$hits" ]; then
+              echo "--- $url"
+              printf '%s\n' "$hits"
+            fi
+          done < /tmp/apiosk/records.tsv
 
-          echo '=== ALL URL-LIKE API STRINGS ==='
-          grep -RhoE 'https?://[^"'\''[:space:]<>]+|/[A-Za-z0-9._~!$&()*+,;=:@%/?-]*(manifest|federat|submit|preview|x402)[A-Za-z0-9._~!$&()*+,;=:@%/?-]*' /tmp/apiosk/js-*.js 2>/dev/null | sort -u | head -n 300 || true
+          echo '=== API PATH STRINGS ==='
+          cat /tmp/apiosk/chunk-*.js |             grep -Eo 'https?://[^"'\''[:space:]<>]+|/[A-Za-z0-9._~!$&()*+,;=:@%/?-]{0,100}(federat|manifest|x402|submit|preview|review)[A-Za-z0-9._~!$&()*+,;=:@%/?-]{0,150}' |             sort -u | head -n 500 || true
+
+          echo '=== SUPABASE / FUNCTIONS HITS ==='
+          cat /tmp/apiosk/chunk-*.js |             grep -Eo '.{0,220}(supabase|functions/v1|rpc\(|\.from\(|invoke\().{0,520}' |             grep -Ei 'manifest|federat|x402|review|submit|provider' | head -n 300 || true
