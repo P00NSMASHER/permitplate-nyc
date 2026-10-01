@@ -1,4 +1,5 @@
 name: PA Entity postdeploy once
+# rerun: semantic-manifest-verifier
 on:
   push:
     paths:
