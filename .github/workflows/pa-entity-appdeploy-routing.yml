@@ -1,4 +1,4 @@
-name: PA Entity AppDeploy buyer routing
+name: PA Entity AppDeploy buyer routing refresh
 
 on:
   push:
@@ -16,6 +16,10 @@ jobs:
           set -euo pipefail
           BASE='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s'
           RESOURCE="$BASE/api/pa-business"
+
+          echo '=== Force Agent402 recrawl ==='
+          payload=$(jq -nc --arg origin "$BASE" '{origin:$origin}')
+          curl -sS -X POST 'https://agent402.tools/api/index/register' -H 'content-type: application/json' --data "$payload" | jq .
 
           for q in             'Pennsylvania business registry'             'company identity Pennsylvania'             'vendor verification Pennsylvania'
           do
