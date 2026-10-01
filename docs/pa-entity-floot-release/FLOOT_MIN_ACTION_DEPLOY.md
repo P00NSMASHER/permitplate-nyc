@@ -10,6 +10,45 @@ Project:
 Production origin:
 `https://pa-entity-x402.floot.app`
 
+## Live production delta — 2026-10-01 17:13 UTC
+
+A fresh external production audit narrowed the remaining drift after the partial live deployment.
+
+Already live and passing:
+- both paid routes return real HTTP 402;
+- $0.005 and $0.001 payment terms are correct;
+- malformed and decoded-invalid payments return 402 rather than fake 503;
+- invalid paid query returns 400;
+- GET CORS headers are exposed;
+- Market402 self-tests pass for both paid routes;
+- Coinbase/CDP validation passes for both paid routes;
+- PayAI reports reliability 100;
+- /skill.txt, /llms-full.txt, /.well-known/x402-catalog.json, /.well-known/security.txt, and /sitemap.xml match the frozen bundle byte-for-byte.
+
+Non-blocking drift:
+- /llms.txt differs by one character but passes the production semantic verifier;
+- /.well-known/x402-service.json differs only in capability-array ordering.
+
+Remaining substantive drift:
+- /openapi.json still advertises the older best-match operationId/summary;
+- /.well-known/x402 is still the older single-resource PaymentRequired-style document instead of the two-route canonical manifest;
+- /.well-known/x402.json and /.well-known/x402-services.json are still the older single-resource form.
+
+Therefore the next free Floot window should use only these three patch payloads, in order:
+
+1. `FLOOT_SAFE_PATCH_3_OPENAPI.txt`
+2. `FLOOT_SAFE_PATCH_5_X402_ALIASES.txt`
+3. `FLOOT_SAFE_PATCH_7_EXTENSIONLESS.txt`
+
+Skip patches 1, 2, 4, and 6 unless a fresh external audit shows that production regressed. Reapplying already-live files wastes quota and increases risk.
+
+After these three writes:
+1. typecheck the two GET endpoints;
+2. create one checkpoint;
+3. republish once;
+4. run `scripts/verify-pa-entity-production.mjs`;
+5. refresh buyer directories only if the verifier is green.
+
 ## Approved safe patches
 
 Use these seven smaller patch payloads in order:
