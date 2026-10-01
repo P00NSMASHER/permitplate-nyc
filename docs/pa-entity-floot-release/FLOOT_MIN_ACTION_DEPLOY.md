@@ -46,6 +46,8 @@ After any chat/stream interruption:
 3. compare the printed `FLOOT_RELEASE_FINGERPRINT` to the value above;
 4. if unchanged and green, resume at the next unfinished execution-order step—do not reconstruct the release.
 
+Current-head integrity must be green immediately before any Floot write.
+
 ## Execution order
 
 1. Read current Floot file tree once and capture `expected_version`.
