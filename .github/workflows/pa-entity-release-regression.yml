@@ -41,7 +41,7 @@ jobs:
       - name: Validate post-deploy verifier syntax
         run: |
           node --check scripts/verify-pa-entity-production.mjs
-          grep -F "canonical manifest must advertise both paid routes" scripts/verify-pa-entity-production.mjs
+          grep -F "canonical resources[] must fan out to both paid routes" scripts/verify-pa-entity-production.mjs
           if grep -Fq "extensionless x402 must match x402.json" scripts/verify-pa-entity-production.mjs; then
             echo "stale single-route canonical-manifest assertion detected" >&2
             exit 1
