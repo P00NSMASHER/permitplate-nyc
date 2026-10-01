@@ -1,0 +1,25 @@
+name: inspect PA Entity nohumans schema
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-nohumans-schema.yml'
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Inspect cheap listing schema metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://api.nohumans.directory/v1/listings/9f2f7a33-cb2'
+          curl -fsSL --max-time 20 "$URL" > /tmp/listing.json
+          jq '{
+            id,name,description,endpoint_url,category,price_amount,price_currency,
+            status,score,probe_count,probes_passed,probes_failed,
+            paid_verified,distinct_payers,evidence_tier,
+            sample_query,request_schema,response_schema,
+            observed_network,x402_version,last_probed_at_iso,next_check_by_iso
+          }' /tmp/listing.json
