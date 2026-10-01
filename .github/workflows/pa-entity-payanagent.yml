@@ -1,0 +1,25 @@
+name: PA Entity PayanAgent catalog check
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-payanagent.yml'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Search PayanAgent public catalog
+        shell: bash
+        run: |
+          set -euo pipefail
+          for q in             'Pennsylvania business registry'             'vendor verification Pennsylvania'             'company legal entity identification'
+          do
+            echo "=== $q ==="
+            curl -sS -G 'https://payanagent.com/api/v1/discover'               --data-urlencode "q=$q" | tee /tmp/payan.json
+            echo
+            echo '--- our matches ---'
+            jq '[.. | objects | select(((.endpoint? // .endpointUrl? // .url? // "")|tostring|contains("pa-entity-x402.floot.app")) or ((.endpoint? // .endpointUrl? // .url? // "")|tostring|contains("pa-entity-lookup-x402-4fbm4s")))]' /tmp/payan.json
+            echo
+          done
