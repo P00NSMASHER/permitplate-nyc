@@ -1,0 +1,22 @@
+name: PA Entity Floot patch integrity
+
+on:
+  push:
+    paths:
+      - 'docs/pa-entity-floot-release/**'
+      - 'scripts/verify-pa-entity-floot-patches.mjs'
+      - '.github/workflows/pa-entity-floot-patch-integrity.yml'
+  pull_request:
+    paths:
+      - 'docs/pa-entity-floot-release/**'
+      - 'scripts/verify-pa-entity-floot-patches.mjs'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify atomic Floot patches exactly match tested fixtures
+        run: node scripts/verify-pa-entity-floot-patches.mjs
