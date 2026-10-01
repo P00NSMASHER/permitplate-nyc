@@ -10,16 +10,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Read public ag3ntsearch contribution interface
+      - name: Read ag3ntsearch contribution schema and API
         shell: bash
         run: |
           set -euo pipefail
-          for url in             'https://ag3ntsearch.com/contribute.html'             'https://ag3ntsearch.com/llms.txt'             'https://ag3ntsearch.com/index.json'             'https://ag3ntsearch.com/offer'             'https://ag3ntsearch.com/offer.html'             'https://ag3ntsearch.com/buyer-packet'             'https://ag3ntsearch.com/buyer-packet.html'
+          for url in             'https://ag3ntsearch.com/contribution-schema.json'             'https://ag3ntsearch.fullyagentnativeapps.com/api/contributions'             'https://ag3ntsearch.com/outreach.json'             'https://ag3ntsearch.com/payments.json'
           do
             echo "=== $url ==="
             curl -sS -L --max-time 15 -D /tmp/h "$url" -o /tmp/b || true
             head -n 30 /tmp/h || true
             echo "--- body ---"
-            head -c 30000 /tmp/b || true
+            head -c 50000 /tmp/b || true
             echo
           done
