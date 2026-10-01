@@ -1,0 +1,79 @@
+name: inspect independent paid-proof coverage
+
+on:
+  push:
+    paths:
+      - '.github/workflows/tmp-paid-proof-coverage.yml'
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Check Assay and ResolveBots public coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+          urls=(
+            'https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI'
+            'https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-business?q=OpenAI&limit=1'
+            'https://pa-entity-x402.floot.app/_api/pa-entity-one?q=OpenAI'
+            'https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
+          )
+
+          echo '=== ASSAY TIERS ==='
+          for u in "${urls[@]}"; do
+            enc=$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=""))' "$u")
+            echo "--- $u"
+            code=$(curl -sS --max-time 25 -H 'Accept: application/json' -o /tmp/body -w '%{http_code}' "https://assay.nominal-labs.com/tier/$enc")
+            echo "HTTP=$code"
+            head -c 4000 /tmp/body; echo
+          done
+
+          echo '=== RESOLVEBOTS TRUST FEED MATCHES ==='
+          curl -fsSL --max-time 30 'https://resolvebots.com/x402-trust-index/feed.json' -o /tmp/trust.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/trust.json'))
+          needles=['pa-entity-x402.floot.app','pa-entity-lookup-x402-4fbm4s','api-v2.appdeploy.ai']
+          def walk(x,path='$'):
+              if isinstance(x,dict):
+                  s=json.dumps(x)
+                  if any(n.lower() in s.lower() for n in needles):
+                      print(json.dumps({'path':path,'value':x},indent=2)[:12000])
+                  for k,v in x.items(): walk(v,path+'.'+str(k))
+              elif isinstance(x,list):
+                  for i,v in enumerate(x): walk(v,f'{path}[{i}]')
+          walk(d)
+          PY
+
+          echo '=== RESOLVEBOTS SAMPLE CATALOG MATCHES ==='
+          curl -fsSL --max-time 30 'https://resolvebots.com/x402-sample-outputs/catalog.json' -o /tmp/samples.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/samples.json'))
+          needles=['pa-entity-x402.floot.app','pa-entity-lookup-x402-4fbm4s','api-v2.appdeploy.ai']
+          rows=[]
+          def walk(x):
+              if isinstance(x,dict):
+                  s=json.dumps(x)
+                  if any(n.lower() in s.lower() for n in needles): rows.append(x)
+                  for v in x.values(): walk(v)
+              elif isinstance(x,list):
+                  for v in x: walk(v)
+          walk(d)
+          seen=set()
+          for r in rows:
+              key=json.dumps(r,sort_keys=True)
+              if key in seen: continue
+              seen.add(key); print(json.dumps(r,indent=2)[:12000])
+          print('MATCH_COUNT',len(seen))
+          PY
+
+          echo '=== VET402 RESOLVE ==='
+          for u in "${urls[@]}"; do
+            enc=$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=""))' "$u")
+            echo "--- $u"
+            curl -sS --max-time 25 "https://vet402.com/api/v1/resolve?q=$enc" | head -c 4000
+            echo
+          done
