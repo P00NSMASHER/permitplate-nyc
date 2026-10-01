@@ -1,0 +1,33 @@
+name: PA Entity AppDeploy verifier submissions
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-appdeploy-verifiers.yml'
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Submit hardened mirror to free verifiers
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s'
+          MAIN="$BASE/api/pa-business?q=OpenAI&limit=1"
+          BEST="$BASE/api/pa-entity-one?q=OpenAI"
+
+          for url in "$MAIN" "$BEST"; do
+            echo "=== Market402 selftest: $url ==="
+            curl -sS -X POST 'https://market402.com/selftest'               -H 'content-type: application/json'               --data "$(jq -nc --arg url "$url" '{url:$url}')" | jq .
+
+            echo "=== Market402 submit: $url ==="
+            curl -sS -X POST 'https://market402.com/submit'               -H 'content-type: application/json'               --data "$(jq -nc --arg resource "$url" '{resource:$resource}')" | jq .
+
+            echo "=== CDP validate: $url ==="
+            curl -sS -X POST 'https://api.cdp.coinbase.com/platform/v2/x402/validate'               -H 'content-type: application/json'               --data "$(jq -nc --arg resource "$url" '{resource:$resource,method:"GET"}')"               | jq '{valid,index,simulation,statusCode,x402Version}'
+          done
+
+          echo '=== Cinderwright submit origin ==='
+          curl -sS -X POST 'https://api.ideafactorylab.org/submit'             -H 'content-type: application/json'             --data "$(jq -nc --arg url "$BASE" --arg name 'PA Entity Lookup x402' --arg description 'Pennsylvania business registry and company identity lookup for vendor/customer verification, due diligence, filing-number lookup, creation date and public principal/officer records. Two x402 Base USDC routes at $0.001 and $0.005.' '{url:$url,name:$name,description:$description}')" | jq .
