@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/pa-entity-production-verify-now.yml'
+      - 'scripts/verify-pa-entity-production.mjs'
 
 jobs:
   verify:
