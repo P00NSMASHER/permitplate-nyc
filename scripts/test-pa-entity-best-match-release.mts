@@ -61,18 +61,16 @@ assert.equal(normalizeCreationDate('1768-04-01T00:00:00.000'), '1768-04-01')
 assert.equal(normalizeCreationDate('2025-04-23T00:00:00.000'), '2025-04-23')
 
 {
-  const res = await handle({ request: req() })
+  const res = await handle(req())
   assert.equal(status(res), 402)
   assert.equal((await body(res)).price, '$0.001')
   assert.ok(res.headers.get('PAYMENT-REQUIRED'))
 }
 
 await withMockFetch(async calls => {
-  const res = await handle({
-    request: req('https://pa-entity-x402.floot.app/_api/pa-entity-one?q=A', {
+  const res = await handle(req('https://pa-entity-x402.floot.app/_api/pa-entity-one?q=A', {
       x402Version: 2,
-    }),
-  })
+    }))
   assert.equal(status(res), 400)
   assert.equal(calls.length, 0)
 }, () => {
@@ -80,7 +78,7 @@ await withMockFetch(async calls => {
 })
 
 await withMockFetch(async calls => {
-  const res = await handle({ request: req(undefined, { x402Version: 2 }) })
+  const res = await handle(req(undefined, { x402Version: 2 }))
   const parsed = await body(res)
   assert.equal(status(res), 200)
   assert.equal(parsed.found, true)
@@ -150,7 +148,7 @@ await withMockFetch(async calls => {
 })
 
 await withMockFetch(async calls => {
-  const res = await handle({ request: req(undefined, { x402Version: 2 }) })
+  const res = await handle(req(undefined, { x402Version: 2 }))
   const parsed = await body(res)
   assert.equal(status(res), 503)
   assert.equal(parsed.retrySamePayment, true)
