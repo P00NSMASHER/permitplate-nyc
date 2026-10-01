@@ -1,4 +1,4 @@
-name: PA Entity AppDeploy Circle readiness
+name: PA Entity AppDeploy Circle readiness refresh
 
 on:
   push:
@@ -10,17 +10,32 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Score hardened AppDeploy mirror
+      - name: Verify paid boundary and rescore hosted spec
         shell: bash
         run: |
           set -euo pipefail
           BASE='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s'
-          for target in "$BASE" "$BASE/openapi.json"; do
-            echo "=== Circle readiness: $target ==="
-            curl -sS -X POST 'https://agents.circle.com/sell/score/check'               -H 'content-type: application/json'               --data "$(jq -nc --arg url "$target" '{url:$url}')" | tee /tmp/circle.json
-            echo
-            jq . /tmp/circle.json
+
+          echo '=== Fixed sample still works ==='
+          curl -fsSL "$BASE/api/demo?q=OpenAI" | tee /tmp/sample.json | jq .
+          jq -e '.sample == true and .snapshot == true and .liveLookup == false and .count == 1' /tmp/sample.json >/dev/null
+
+          echo '=== Arbitrary free query is blocked ==='
+          code=$(curl -sS -o /tmp/arbitrary.json -w '%{http_code}'             "$BASE/api/demo?q=Bank%20of%20America%20Corporation")
+          echo "status=$code"
+          cat /tmp/arbitrary.json
+          test "$code" = "400"
+          grep -qi 'paid x402 endpoints' /tmp/arbitrary.json
+
+          echo '=== Paid routes remain 402 ==='
+          for url in             "$BASE/api/pa-entity-one?q=OpenAI"             "$BASE/api/pa-business?q=OpenAI&limit=1"
+          do
+            code=$(curl -sS -o /tmp/paid.json -w '%{http_code}' "$url")
+            echo "$url => $code"
+            test "$code" = "402"
           done
 
-          echo '=== Circle public marketplace search ==='
-          curl -sS --get 'https://api.circle.com/v2/x402/discovery/resources'             --data-urlencode 'query=Pennsylvania business registry vendor verification' | jq .
+          echo '=== Circle exact hosted-spec readiness ==='
+          curl -sS -X POST 'https://agents.circle.com/sell/score/check'             -H 'content-type: application/json'             --data "$(jq -nc --arg url "$BASE/openapi.json" '{url:$url}')"             | tee /tmp/circle.json | jq .
+          jq -e '.ok == true and .result.score >= 90' /tmp/circle.json >/dev/null
+          jq '{score:.result.score,grade:.result.grade,tier:.result.tier,dimensions:.result.dimensions,warnings:.result.warnings}' /tmp/circle.json
