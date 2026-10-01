@@ -36,6 +36,8 @@ jobs:
         run: node scripts/test-pa-entity-discovery-fixtures.mjs
       - name: Verify atomic Floot patch parity
         run: node scripts/verify-pa-entity-floot-patches.mjs
+      - name: Verify minimal live Floot delta
+        run: node scripts/verify-pa-entity-live-delta.mjs
       - name: Validate post-deploy verifier syntax
         run: |
           node --check scripts/verify-pa-entity-production.mjs
