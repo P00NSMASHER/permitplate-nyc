@@ -172,25 +172,39 @@ probe402 explicitly states that this is a coverage statement, **not** a negative
 
 ### nohumans.directory
 
-Current buyer search for `Pennsylvania business registry` returns our $0.001 AppDeploy best-match route first, the Floot $0.005 route second, and the Floot $0.001 route third.
+Fresh buyer-search measurements on 2026-10-01 show that the two Floot routes now occupy top-three positions across all four high-intent queries tested:
+
+- `Pennsylvania business registry`: $0.005 route **#2**, $0.001 route **#3**
+- `vendor verification Pennsylvania`: $0.005 route **#2**, $0.001 route **#3**
+- `company identity Pennsylvania`: $0.001 route **#1**, $0.005 route **#3**
+- `Pennsylvania legal entity lookup`: $0.005 route **#1**, $0.001 route **#3**
+
+This is a material improvement from the earlier ~#50 placement.
 
 Main $0.005 listing:
 - id: `958fd262-287`
 - status: verified
-- score: ~0.999
+- score: `0.9997434097368173`
+- probes: **76 total / 71 passing**
+- consecutive failures: **0**
+- evidence tier: `probe_verified`
 - paid-verified: false
 - distinct payers: 0
 
 Best-match $0.001 listing:
 - id: `9f2f7a33-cb2`
 - status: verified
-- score: 1.0
-- probes: 26/26 passing at the latest read
+- score: **1.0**
+- probes: **37/37 passing**
+- consecutive failures: **0**
+- evidence tier: `probe_verified`
 - paid-verified: false
 - distinct payers: 0
 - payment terms observed correctly at 1000 atomic Base USDC
 
 ### 402 Index
+
+Main and best-match services were both refreshed on 2026-10-01 and read back healthy with x402 payment validation passing and reliability score 77.
 
 Best-match service:
 - id: `07c46db0-c899-4475-8a1b-2a789021eeff`
@@ -198,6 +212,8 @@ Best-match service:
 - health: healthy
 - x402 payment valid: yes
 - price: $0.001 USDC
+
+The live verification file is present at `/.well-known/402index-verify.txt`, and a fresh claim attempt returned `Domain already verified`. Treat the domain-claim requirement as satisfied even if a stale service field temporarily reports otherwise.
 
 ### Cinderwright
 
