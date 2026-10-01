@@ -36,7 +36,7 @@ jobs:
             echo "::add-mask::$token"
           fi
 
-          jq '{domain,verification_hash,verification_url,instructions,expires_at,status}' /tmp/claim.json
+          jq '{domain,verification_hash,verification_url,instructions,expires_at,status,error,message}' /tmp/claim.json
 
           hash=$(jq -r '.verification_hash // empty' /tmp/claim.json)
           test -n "$hash"
