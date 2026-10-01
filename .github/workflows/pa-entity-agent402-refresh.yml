@@ -29,6 +29,7 @@ jobs:
           for q in             'Pennsylvania business registry'             'Pennsylvania company identity lookup'             'vendor verification Pennsylvania'             'one Pennsylvania company registration by business name'
           do
             echo "--- $q"
-            curl -sS -G 'https://agent402.tools/api/route'               --data-urlencode "q=$q"               --data-urlencode 'include=external' | head -c 18000
+            curl -sS -G 'https://agent402.tools/api/route'               --data-urlencode "q=$q"               --data-urlencode 'include=external' > /tmp/route.json
+            head -c 18000 /tmp/route.json
             echo
           done
