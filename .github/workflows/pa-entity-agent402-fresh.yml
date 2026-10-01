@@ -1,0 +1,61 @@
+name: PA Entity AppDeploy Agent402 fresh crawl
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-agent402-fresh.yml'
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Force fresh Agent402 crawl and measure buyer ranking
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s'
+
+          echo '=== REGISTER ==='
+          payload=$(jq -nc --arg origin "$BASE" '{origin:$origin}')
+          curl -sS -X POST 'https://agent402.tools/api/index/register'             -H 'content-type: application/json'             --data "$payload" | tee /tmp/register.json | jq .
+
+          echo '=== OPENAPI IDS ==='
+          curl -fsSL "$BASE/openapi.json" | jq '[
+            .paths["/api/pa-entity-one"].get | {operationId,summary,description},
+            .paths["/api/pa-business"].get | {operationId,summary,description}
+          ]'
+
+          for q in             'Pennsylvania business registry'             'company identity Pennsylvania'             'vendor verification Pennsylvania'
+          do
+            echo "=== ROUTE $q ==="
+            curl -sS -G 'https://agent402.tools/api/route'               --data-urlencode "q=$q"               --data-urlencode 'include=external' > /tmp/route.json
+            python3 - "$BASE" "$q" <<'PY'
+          import json,sys
+          base,q=sys.argv[1],sys.argv[2]
+          d=json.load(open('/tmp/route.json'))
+          rows=d.get('results') or []
+          idx=next((i for i,r in enumerate(rows) if r.get('seller')==base),None)
+          out={
+            'query':q,
+            'present':idx is not None,
+            'rank':None if idx is None else idx+1,
+            'returned':len(rows),
+          }
+          if idx is not None:
+            r=rows[idx]
+            out.update({
+              'slug':r.get('slug'),
+              'name':r.get('name'),
+              'score':r.get('score'),
+              'health':r.get('health'),
+              'routerDispatchReason':r.get('routerDispatchReason'),
+              'unprovenTier':((r.get('routerDispatchByChain') or {}).get('base') or {}).get('unprovenTier'),
+              'priceUsd':r.get('priceUsd')
+            })
+          print(json.dumps(out,sort_keys=True))
+          PY
+          done
+
+          echo '=== SELLER INDEX ==='
+          curl -sS -G 'https://agent402.tools/api/index'             --data-urlencode 'seller=api-v2.appdeploy.ai' | head -c 30000
