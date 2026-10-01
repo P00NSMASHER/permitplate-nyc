@@ -105,11 +105,7 @@ function requirements() {
 }
 
 function representativeExample() {
-  return {
-    query: 'OpenAI',
-    count: 1,
-    results: [
-      {
+  const result = {
         businessName: 'Openai, L.l.c.',
         filingNumber: '0014371957',
         registrationType: 'Foreign Limited Liability Company',
@@ -129,7 +125,13 @@ function representativeExample() {
             lastName: null,
           },
         ],
-      },
+      }
+  return {
+    query: 'OpenAI',
+    found: true,
+    result,
+    count: 1,
+    results: [result],
     ],
     enrichment: { principals: 'complete' },
     source: SOURCE_LABEL,
@@ -726,9 +728,12 @@ export async function handle({ request }: { request: Request }) {
     )
   }
 
+  const result = results[0] ?? null
   return flootJson(
     {
       query,
+      found: result !== null,
+      result,
       count: results.length,
       results,
       enrichment: { principals: principalStatus },
