@@ -1,0 +1,47 @@
+name: PA Entity PayAPI listing form trace
+
+on:
+  push:
+    paths:
+      - '.github/workflows/tmp-pa-entity-payapi-form-trace.yml'
+
+jobs:
+  trace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Render PayAPI free listing form
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
+            --virtual-time-budget=8000 --dump-dom 'https://payapi.market/list' \
+            > /tmp/dom.html 2>/tmp/chrome.err || true
+
+          echo '=== FORMS ==='
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          import re
+          class P(HTMLParser):
+              def handle_starttag(self,tag,attrs):
+                  if tag in ('form','input','select','option','textarea','button'):
+                      print(tag, dict(attrs))
+          P().feed(open('/tmp/dom.html',errors='ignore').read())
+          PY
+
+          echo '=== API/FORM STRINGS ==='
+          python3 - <<'PY'
+          import re
+          s=open('/tmp/dom.html',errors='ignore').read()
+          vals=set()
+          for pat in [
+              r'https://[^"\x27\s<>]+',
+              r'/[A-Za-z0-9._~!$&()*+,;=:@%/?-]*(?:submit|list|provider|api)[A-Za-z0-9._~!$&()*+,;=:@%/?-]*',
+              r'name=["\x27][^"\x27]+["\x27]',
+              r'placeholder=["\x27][^"\x27]+["\x27]'
+          ]:
+              vals.update(m.group(0) for m in re.finditer(pat,s,re.I))
+          for v in sorted(vals):
+              if len(v)<800: print(v)
+          PY
