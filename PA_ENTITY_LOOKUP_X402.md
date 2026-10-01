@@ -62,6 +62,40 @@ The service does not claim current good standing, sanctions status, a legitimacy
 - service manifest: https://pa-entity-x402.floot.app/.well-known/x402-service.json
 - catalog: https://pa-entity-x402.floot.app/.well-known/x402-catalog.json
 
+## Zero-cost live mirror
+
+A second production origin is live on AppDeploy so the service can keep improving while Floot's daily build quota is unavailable:
+
+```text
+https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s
+```
+
+Paid routes:
+
+- $0.001 best match: `GET /api/pa-entity-one?q=NAME`
+- $0.005 enriched search: `GET /api/pa-business?q=NAME&limit=N`
+
+Discovery:
+
+- OpenAPI: `/openapi.json`
+- canonical x402 manifest: `/.well-known/x402`
+- JSON aliases: `/.well-known/x402.json` and `/.well-known/x402-services.json`
+
+The mirror preserves the same Base USDC asset, payout wallet, PayAI facilitator, payment-state protections, strict input validation, and Pennsylvania Department of State source. Its public preview is sample-only: OpenAI, Sheetz, and Wawa are fixed cached examples; arbitrary company names return HTTP 400 and must use the paid x402 routes.
+
+Independent checks on 2026-10-01:
+
+- AppDeploy deployment: ready; no frontend/backend errors
+- Agent402: listed, health 1, routable, two paid tools observed
+- Agent402 buyer search: top five for `Pennsylvania business registry` and `company identity Pennsylvania` on the last completed crawl
+- Market402: both routes pass 11/11 self-test checks and are queued for Market402's own probes
+- Coinbase/CDP: both routes return `valid: true` with accepted simulation
+- Circle agent-readiness score against the hosted OpenAPI: **93/100, grade A, tier strong**
+- Cinderwright submission: `sub_1790864783590`, queued
+- PayAI public stats: zero settlements, zero distinct buyers, $0 volume at the latest check
+
+The remaining Agent402 dispatch gate is independent settlement history (`settlement_required`), not crawl health. No self-funded settlement is being used to manufacture that history.
+
 ## External status — 2026-10-01
 
 ### Agent402
