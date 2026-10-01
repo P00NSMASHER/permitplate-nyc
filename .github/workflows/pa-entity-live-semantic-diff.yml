@@ -1,0 +1,81 @@
+name: PA Entity live semantic diff
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-live-semantic-diff.yml'
+
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Print normalized semantic differences
+        shell: bash
+        run: |
+          set -euo pipefail
+          ORIGIN='https://pa-entity-x402.floot.app'
+          ROOT='docs/pa-entity-floot-release'
+          mkdir -p /tmp/live
+
+          curl -fsSL "$ORIGIN/llms.txt" -o /tmp/live/llms.txt
+          curl -fsSL "$ORIGIN/.well-known/x402-service.json" -o /tmp/live/service.json
+          curl -fsSL "$ORIGIN/openapi.json" -o /tmp/live/openapi.json
+          curl -fsSL "$ORIGIN/.well-known/x402" -o /tmp/live/x402
+          curl -fsSL "$ORIGIN/.well-known/x402.json" -o /tmp/live/x402.json
+
+          echo '=== LLMS NORMALIZED ==='
+          python3 - <<'PY'
+          import pathlib
+          a=pathlib.Path('/tmp/live/llms.txt').read_text().replace('\r\n','\n').rstrip('\n')
+          b=pathlib.Path('docs/pa-entity-floot-release/llms.txt').read_text().replace('\r\n','\n').rstrip('\n')
+          print('semantic_equal=',a==b,'live_len=',len(a),'fixture_len=',len(b))
+          PY
+
+          echo '=== SERVICE JSON SEMANTIC ==='
+          python3 - <<'PY'
+          import json
+          a=json.load(open('/tmp/live/service.json'))
+          b=json.load(open('docs/pa-entity-floot-release/x402-service.json'))
+          print('semantic_equal=',a==b)
+          if a!=b:
+            print('live=',json.dumps(a,sort_keys=True))
+            print('fixture=',json.dumps(b,sort_keys=True))
+          PY
+
+          echo '=== OPENAPI KEY DIFFERENCES ==='
+          python3 - <<'PY'
+          import json
+          a=json.load(open('/tmp/live/openapi.json'))
+          b=json.load(open('docs/pa-entity-floot-release/openapi.json'))
+          for path in [
+            ('info','version'),
+            ('externalDocs','url'),
+            ('paths','/_api/pa-business','get','operationId'),
+            ('paths','/_api/pa-entity-one','get','operationId'),
+            ('paths','/_api/pa-entity-one','get','summary')
+          ]:
+            x=a; y=b
+            for k in path:
+              x=x.get(k) if isinstance(x,dict) else None
+              y=y.get(k) if isinstance(y,dict) else None
+            if x!=y: print('.'.join(path), 'LIVE=',repr(x),'FIXTURE=',repr(y))
+          PY
+
+          echo '=== X402 SHAPE DIFFERENCES ==='
+          python3 - <<'PY'
+          import json
+          live=json.load(open('/tmp/live/x402'))
+          ext=json.load(open('docs/pa-entity-floot-release/x402'))
+          alias=json.load(open('docs/pa-entity-floot-release/x402.json'))
+          print('live_keys=',sorted(live))
+          print('extensionless_fixture_keys=',sorted(ext))
+          print('alias_fixture_keys=',sorted(alias))
+          print('live_resources=',len(live.get('resources',[])))
+          print('extensionless_fixture_resources=',len(ext.get('resources',[])))
+          print('alias_fixture_resources=',len(alias.get('resources',[])))
+          print('live_resource=',live.get('resource',{}).get('url'))
+          print('ext_resource=',ext.get('resource',{}).get('url'))
+          print('alias_resource=',alias.get('resource',{}).get('url'))
+          PY
