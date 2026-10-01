@@ -327,7 +327,7 @@
     },
     "/_api/pa-entity-one": {
       "get": {
-        "operationId": "pennsylvaniaBusinessRegistryCompanyIdentityBestMatchLookup",
+        "operationId": "pennsylvaniaCompanyIdentityLegalEntityBestMatchLookup",
         "summary": "Pennsylvania business registry and company identity best-match lookup",
         "description": "Low-friction Pennsylvania business registry, company identity, and legal-entity lookup that returns the single highest-ranked legal-entity match for a company name. Use when an agent wants one likely Pennsylvania entity rather than a broader candidate list.",
         "tags": [
