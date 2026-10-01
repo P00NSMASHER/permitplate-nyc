@@ -22,6 +22,18 @@ Returns up to 25 ranked Pennsylvania entity candidates.
 
 Both routes use x402 v2 on Base mainnet (eip155:8453), Base USDC, and require no API key or account. An unpaid request returns HTTP 402 with a PAYMENT-REQUIRED challenge.
 
+## Buyer task examples
+
+The $0.001 route is the lowest-friction choice when an agent needs one likely Pennsylvania entity rather than a candidate list. High-intent tasks include:
+
+- one Pennsylvania legal entity
+- Pennsylvania business registry best match
+- Pennsylvania business best match
+- Pennsylvania legal entity lookup
+- Pennsylvania filing-number lookup
+
+Use the $0.005 route when the buyer needs multiple candidates, richer comparison, or a broader company-name search.
+
 ## Data returned
 
 The enriched schema includes:
@@ -61,6 +73,16 @@ The service does not claim current good standing, sanctions status, a legitimacy
 - main route ranked first for the query `Pennsylvania business registry`
 - current router gate: `settlement_required`
 - the seller is eligible for Agent402's low-price unproven tier, but proven sellers are preferred until independent settlement history exists
+
+### ag3ntsearch
+
+A machine-signed, public-evidence contribution nominating the $0.001 route for independent re-execution was accepted into ag3ntsearch's review queue on 2026-10-01.
+
+- receipt: `contribution:2026-10-01T13:38:23.066Z:244eccd0-c9ce-43da-af59-a541dde5f632`
+- status: `received_unreviewed`
+- reference task: pay 0.001 USDC with a funded Base wallet and no API key/account, then read one Pennsylvania registry result
+
+This is **not** a verification, endorsement, paid call, or revenue event. It is only an attributed nomination that ag3ntsearch may independently re-run.
 
 ### Coinbase/CDP
 
