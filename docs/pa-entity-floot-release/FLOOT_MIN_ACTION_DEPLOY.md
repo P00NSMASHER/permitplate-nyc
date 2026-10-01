@@ -30,6 +30,22 @@ Do **not** create custom `*_OPTIONS.ts` endpoints. Floot rejects explicit OPTION
 
 GET responses still expose the x402 CORS headers.
 
+## Interruption-safe resume checkpoint
+
+Last verified safe-patch integrity:
+- GitHub Actions run: `36896143511`
+- result: `success`
+- standard deploy files: `14/14 exact`
+- extensionless canonical manifest: `1/1 exact`
+- safe patch count: `7`
+- release fingerprint: `f287450bbad293b8efe3bf628b53744a33ce67427e63f4eabb52a2389f47a9f7`
+
+After any chat/stream interruption:
+1. re-read current `main`;
+2. rerun/confirm the Floot patch-integrity gate if any file under this release directory changed;
+3. compare the printed `FLOOT_RELEASE_FINGERPRINT` to the value above;
+4. if unchanged and green, resume at the next unfinished execution-order step—do not reconstruct the release.
+
 ## Execution order
 
 1. Read current Floot file tree once and capture `expected_version`.
