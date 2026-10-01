@@ -1,0 +1,24 @@
+name: PA Entity x402scan refresh once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/tmp-pa-entity-x402scan-refresh.yml'
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Re-register production origin with x402scan
+        shell: bash
+        run: |
+          set -euo pipefail
+          ORIGIN='https://pa-entity-x402.floot.app'
+          echo '=== X402SCAN REGISTER ==='
+          code=$(curl -sS -o /tmp/x402scan.json -w '%{http_code}' -X POST 'https://x402scan.com/api/x402/registry/register-origin' \
+            -H 'content-type: application/json' \
+            --data "$(jq -nc --arg origin "$ORIGIN" '{origin:$origin}')")
+          echo "HTTP_STATUS=$code"
+          cat /tmp/x402scan.json
+          echo
