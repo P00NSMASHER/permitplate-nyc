@@ -1,0 +1,56 @@
+name: PA Entity Circle discovery check
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-circle-discovery.yml'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Check Circle catalog and seller readiness surface
+        shell: bash
+        run: |
+          set +e
+          WALLET='0x708f7b52b56eafd7fc1de65fc7752ed732914021'
+
+          echo '=== CIRCLE DISCOVERY EXACT DOMAIN QUERY ==='
+          curl -sS --max-time 20             'https://api.circle.com/v2/x402/discovery/resources?query=pa-entity-x402.floot.app'             -o /tmp/domain.json
+          head -c 24000 /tmp/domain.json
+          echo
+
+          echo '=== CIRCLE DISCOVERY BUSINESS QUERY ==='
+          curl -sS --max-time 20             --get 'https://api.circle.com/v2/x402/discovery/resources'             --data-urlencode 'query=Pennsylvania business registry company identity'             -o /tmp/business.json
+          head -c 24000 /tmp/business.json
+          echo
+
+          echo '=== CIRCLE DISCOVERY WALLET QUERY ==='
+          curl -sS --max-time 20             --get 'https://api.circle.com/v2/x402/discovery/resources'             --data-urlencode "query=$WALLET"             -o /tmp/wallet.json
+          head -c 24000 /tmp/wallet.json
+          echo
+
+          echo '=== EXACT RESOURCE/WALLET MATCH COUNTS ==='
+          python3 - <<'PY'
+          import json
+          wallet='0x708f7b52b56eafd7fc1de65fc7752ed732914021'.lower()
+          origin='pa-entity-x402.floot.app'
+          for p in ['/tmp/domain.json','/tmp/business.json','/tmp/wallet.json']:
+              try: d=json.load(open(p))
+              except Exception as e:
+                  print(p,'PARSE_ERROR',e); continue
+              blob=json.dumps(d).lower()
+              print(p,'origin=',blob.count(origin),'wallet=',blob.count(wallet))
+              if isinstance(d,dict):
+                  print('keys=',list(d.keys()))
+                  for key in ['data','items','resources','results']:
+                      if isinstance(d.get(key),list):
+                          print(key,'count=',len(d[key]))
+          PY
+
+          echo '=== CIRCLE SELL PAGE API STRINGS ==='
+          curl -sS --max-time 20 'https://agents.circle.com/sell' -o /tmp/sell.html
+          grep -oE '<script[^>]+src="[^"]+"' /tmp/sell.html | head -30
+          grep -oE 'https?://[^" <]+' /tmp/sell.html | grep -Ei 'api|score|discovery|sell' | head -50 || true
+          grep -oiE '.{0,100}(score|readiness|api domain|check your).{0,180}' /tmp/sell.html | head -50 || true
