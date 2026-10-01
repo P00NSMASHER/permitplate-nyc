@@ -1,0 +1,47 @@
+name: PA Entity Market402 refresh
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-market402-refresh.yml'
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Submit both live routes and read operator state
+        shell: bash
+        run: |
+          set -euo pipefail
+          ORIGIN='https://pa-entity-x402.floot.app'
+          ENRICHED="$ORIGIN/_api/pa-business?q=OpenAI&limit=1"
+          CHEAP="$ORIGIN/_api/pa-entity-one?q=OpenAI"
+
+          submit () {
+            label="$1"
+            target="$2"
+            echo "=== SUBMIT $label ==="
+            curl -sS -i -X POST 'https://market402.com/submit'               -H 'content-type: application/json'               --data "$(jq -nc --arg resource "$target" '{resource:$resource}')"               | head -c 12000
+            echo
+          }
+
+          selftest () {
+            label="$1"
+            target="$2"
+            echo "=== SELFTEST $label ==="
+            curl -sS -X POST 'https://market402.com/selftest'               -H 'content-type: application/json'               --data "$(jq -nc --arg url "$target" '{url:$url}')"               | jq .
+            echo
+          }
+
+          submit enriched "$ENRICHED"
+          submit cheap "$CHEAP"
+          selftest enriched "$ENRICHED"
+          selftest cheap "$CHEAP"
+
+          echo '=== OPERATOR JSON ==='
+          curl -sS -i 'https://market402.com/op/pa-entity-x402.floot.app.json' | head -c 20000
+          echo
+
+          echo '=== OPERATOR DIRECTORY SEARCH ==='
+          curl -sS 'https://market402.com/operators.json' |             jq '[.. | objects | select((.operator? // .host? // .domain? // "") | tostring | contains("pa-entity-x402.floot.app"))]' | head -c 20000
