@@ -1,6 +1,6 @@
 # PA Entity x402 — minimum-action Floot deployment
 
-This is the execution order for the next free Floot window. Do not spend money or upgrade the Floot plan.
+This is the approved execution order for the next free Floot window. **Do not spend money or upgrade the Floot plan.**
 
 ## Inputs
 
@@ -10,49 +10,50 @@ Project:
 Production origin:
 `https://pa-entity-x402.floot.app`
 
-Preferred atomic patches:
-- `FLOOT_PATCH_CORE.txt` — 8 endpoint/schema files
-- `FLOOT_PATCH_DISCOVERY.txt` — 10 static/discovery files
+## Approved safe patches
 
-Bounded fallback patches if a large patch is rejected or interrupted:
-1. `FLOOT_SAFE_PATCH_1_BUSINESS.txt`
-2. `FLOOT_SAFE_PATCH_2_BEST_MATCH.txt`
-3. `FLOOT_SAFE_PATCH_3_OPENAPI.txt`
-4. `FLOOT_SAFE_PATCH_4_AGENT_TEXT.txt`
-5. `FLOOT_SAFE_PATCH_5_X402_ALIASES.txt`
-6. `FLOOT_SAFE_PATCH_6_X402_CATALOG.txt`
-7. `FLOOT_SAFE_PATCH_7_EXTENSIONLESS.txt`
+Use these seven smaller patch payloads in order:
 
-Patches 1–6 reproduce the same 18 tested release files as the two preferred atomic patches. Patch 7 contains only the extensionless canonical manifest and is allowed to fail if Floot does not support an extensionless static path.
+1. `FLOOT_SAFE_PATCH_1_BUSINESS.txt` — main $0.005 GET endpoint + schema
+2. `FLOOT_SAFE_PATCH_2_BEST_MATCH.txt` — $0.001 GET endpoint + schema
+3. `FLOOT_SAFE_PATCH_3_OPENAPI.txt` — OpenAPI, sitemap, security.txt
+4. `FLOOT_SAFE_PATCH_4_AGENT_TEXT.txt` — llms.txt, llms-full.txt, skill.txt
+5. `FLOOT_SAFE_PATCH_5_X402_ALIASES.txt` — x402.json + x402-services.json
+6. `FLOOT_SAFE_PATCH_6_X402_CATALOG.txt` — x402-service.json + x402-catalog.json
+7. `FLOOT_SAFE_PATCH_7_EXTENSIONLESS.txt` — isolated canonical `static/.well-known/x402`
 
-Canonical extensionless source:
-- `x402.json` -> `static/.well-known/x402`
+The legacy `FLOOT_PATCH_CORE.txt` and `FLOOT_PATCH_DISCOVERY.txt` payloads are **superseded and must not be deployed**. They are too large for the conservative Floot patch lane and the old core payload includes unsupported custom OPTIONS endpoints.
+
+## Floot platform limitation
+
+Do **not** create custom `*_OPTIONS.ts` endpoints. Floot rejects explicit OPTIONS endpoint files. The gateway currently answers OPTIONS itself, but custom preflight headers cannot be guaranteed. Server-to-server x402 clients are the supported path.
+
+GET responses still expose the x402 CORS headers.
 
 ## Execution order
 
-1. Read current Floot file tree and version once.
-2. Apply `FLOOT_PATCH_CORE.txt` atomically using that expected version.
-   - If the patch is rejected because of size/transport interruption, switch immediately to safe patches 1 then 2. Do not reconstruct files manually.
-3. Re-read only as needed to obtain the new version.
-4. Apply `FLOOT_PATCH_DISCOVERY.txt` atomically.
-   - If the patch is rejected because of size/transport interruption, use safe patches 3–6 in order.
-5. Apply `FLOOT_SAFE_PATCH_7_EXTENSIONLESS.txt` to create the canonical extensionless path.
-   - If Floot rejects an extensionless static path, record the platform limitation.
-   - Do not roll back the valid JSON aliases.
-6. Typecheck:
+1. Read current Floot file tree once and capture `expected_version`.
+2. Apply safe patches 1 through 6 sequentially.
+   - Use the version returned by each successful Floot write as the next `expected_version` when available.
+   - Do not reread the whole project between patches unless a write response does not expose the new version.
+3. Apply patch 7 separately.
+   - If Floot rejects the extensionless static path, record the platform limitation.
+   - Do **not** roll back the six valid standard patches.
+4. Typecheck only the supported endpoint files:
    - `endpoints/pa-business_GET.ts`
    - `endpoints/pa-entity-one_GET.ts`
-   - both OPTIONS endpoints
-7. Create one named checkpoint only after the code/static bundle is coherent.
-8. Republish the already-live app once.
-9. Run `scripts/verify-pa-entity-production.mjs` externally.
-10. Only after production verification passes:
-    - re-register Agent402;
-    - refresh x402scan;
-    - re-check nohumans;
-    - re-check 402 Index;
-    - re-check Market402;
-    - read PayAI public settlement stats.
+5. Create one named checkpoint after the coherent source/static bundle passes typecheck.
+6. Republish the already-live app once using the available Floot publish flow.
+7. Run `scripts/verify-pa-entity-production.mjs` externally.
+8. Only after production verification passes:
+   - re-register Agent402;
+   - refresh/re-check x402scan where authentication permits;
+   - re-check nohumans;
+   - re-check 402 Index;
+   - re-check Market402;
+   - read PayAI public settlement stats.
+
+Expected Floot build actions: roughly 10–12, well below the 100/day free cap.
 
 ## Non-negotiable release invariants
 
@@ -69,13 +70,15 @@ Canonical extensionless source:
 - Bazaar examples show a real OpenAI result.
 - `/skill.txt` must be text, not SPA HTML.
 - No A2A agent-card claim unless an A2A server is actually implemented.
+- Do not advertise browser-preflight compatibility on Floot.
 - Revenue remains $0 until a real third-party settlement is observed.
 
 ## Prepared-patch verification
 
-Permanent CI runs `scripts/verify-pa-entity-floot-patches.mjs` and enforces:
-- preferred core patch: 8/8 exact
-- preferred discovery/static patch: 10/10 exact
-- safe patches 1–6: the same 18/18 release targets exact
-- safe patch 7: extensionless canonical manifest exactly equals `x402.json`
-- a deterministic `FLOOT_RELEASE_FINGERPRINT` is printed for handoff/resume checks
+Permanent CI reconstructs all seven approved safe patches and compares them byte-for-byte to the current release fixtures:
+
+- standard supported files: 14/14 exact
+- isolated extensionless manifest: 1/1 exact
+- total: 15/15 exact
+- any unsupported OPTIONS target fails the release gate
+- any patch >= the conservative size threshold fails the release gate
