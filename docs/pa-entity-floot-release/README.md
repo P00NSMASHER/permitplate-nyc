@@ -77,3 +77,7 @@ Floot endpoint files support GET/POST only. Explicit OPTIONS endpoint files are 
 25. Re-register Agent402 and inspect routable/health state.
 26. Re-check 402 Index and nohumans rankings.
 27. Revenue remains $0 until a third-party settlement is observed.
+
+## Floot CORS limitation
+
+Floot currently does not permit custom OPTIONS endpoints. The paid GET responses include CORS headers, but browser clients that require a preflight for PAYMENT-SIGNATURE may not be able to call the seller directly from the browser. Do not advertise browser-preflight compatibility. Server-to-server x402 clients remain the supported buyer path.
