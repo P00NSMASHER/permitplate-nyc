@@ -1,0 +1,71 @@
+name: PA Entity PayAI Bazaar verify-only trigger
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-payai-bazaar-verify.yml'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Trigger zero-spend PayAI Bazaar cataloging
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/x402verify
+          cd /tmp/x402verify
+          npm init -y >/dev/null 2>&1
+          npm install --silent --no-audit --no-fund @x402/axios @x402/evm viem axios
+
+          cat > verify.mjs <<'NODE'
+          import crypto from 'node:crypto';
+          import axios from 'axios';
+          import { wrapAxiosWithPayment, x402Client } from '@x402/axios';
+          import { ExactEvmScheme } from '@x402/evm/exact/client';
+          import { privateKeyToAccount } from 'viem/accounts';
+
+          const origin='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s';
+          const routes=[
+            origin+'/api/pa-entity-one?q=OpenAI',
+            origin+'/api/pa-business?q=OpenAI&limit=1'
+          ];
+
+          const privateKey=('0x'+crypto.randomBytes(32).toString('hex'));
+          const account=privateKeyToAccount(privateKey);
+          console.log('EPHEMERAL_PAYER='+account.address);
+          console.log('EPHEMERAL_FUNDED=false');
+
+          const client=new x402Client();
+          client.register('eip155:*', new ExactEvmScheme(account));
+          const api=wrapAxiosWithPayment(axios.create({timeout:15000, validateStatus:()=>true}), client);
+
+          for(const url of routes){
+            console.log('\n=== VERIFY-ONLY BUYER ATTEMPT ===');
+            console.log(url);
+            try{
+              const res=await api.get(url);
+              console.log('HTTP_STATUS='+res.status);
+              console.log('BODY='+JSON.stringify(res.data).slice(0,4000));
+            }catch(err){
+              const r=err?.response;
+              console.log('ERROR_STATUS='+(r?.status ?? 'none'));
+              console.log('ERROR_BODY='+JSON.stringify(r?.data ?? {message:String(err?.message ?? err)}).slice(0,4000));
+            }
+          }
+
+          for(const resource of [
+            origin+'/api/pa-entity-one',
+            origin+'/api/pa-business'
+          ]){
+            const u='https://facilitator.payai.network/discovery/listing-status?resource='+encodeURIComponent(resource);
+            const res=await fetch(u);
+            console.log('\n=== LISTING STATUS ===');
+            console.log(resource);
+            console.log('HTTP_STATUS='+res.status);
+            console.log((await res.text()).slice(0,12000));
+          }
+          NODE
+
+          node verify.mjs
