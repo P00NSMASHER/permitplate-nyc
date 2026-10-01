@@ -1,0 +1,73 @@
+name: PA Entity directory status
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-directory-status.yml'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Check 402 Index, nohumans, and PayAI
+        shell: bash
+        run: |
+          set -euo pipefail
+          FLOOT='https://pa-entity-x402.floot.app'
+          APP='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s'
+          PAYTO='0x708f7b52b56eafd7fc1de65fc7752ed732914021'
+
+          echo '=== 402 INDEX QUERIES ==='
+          for Q in             'pa-entity-x402.floot.app'             'Pennsylvania business registry'             'company identity Pennsylvania'             'vendor verification Pennsylvania'
+          do
+            echo "--- $Q ---"
+            curl -fsSL --get 'https://402index.io/api/v1/services'               --data-urlencode "q=$Q"               --data-urlencode 'protocol=x402'               --data-urlencode 'limit=50' > /tmp/idx.json
+            python3 - "$Q" "$FLOOT" "$APP" <<'PY'
+          import json,sys
+          q,floot,app=sys.argv[1:4]
+          d=json.load(open('/tmp/idx.json'))
+          rows=d.get('services') or d.get('results') or d.get('data') or []
+          out=[]
+          for i,r in enumerate(rows,1):
+              blob=json.dumps(r).lower()
+              if 'pa-entity-x402.floot.app' in blob or 'pa-entity-lookup-x402-4fbm4s' in blob:
+                  out.append({
+                      'rank':i,
+                      'id':r.get('id'),
+                      'name':r.get('name'),
+                      'url':r.get('url'),
+                      'price_usd':r.get('price_usd'),
+                      'health_status':r.get('health_status'),
+                      'verified':r.get('verified'),
+                      'domain_verified':r.get('domain_verified'),
+                      'x402_payment_valid':r.get('x402_payment_valid'),
+                      'reliability_score':r.get('reliability_score'),
+                      'source':r.get('source'),
+                  })
+          print(json.dumps({'query':q,'returned':len(rows),'ours':out},sort_keys=True))
+          PY
+          done
+
+          echo '=== NOHUMANS FLOOT LISTING ==='
+          curl -fsSL 'https://api.nohumans.directory/v1/listings/958fd262-287' |             jq '{id,name,status,score,probe_count,probes_passed,probes_failed,consecutive_failures,paid_verified,distinct_payers,evidence_tier,evidence_note,last_probed_at_iso,next_check_by_iso,onchain_unique_payers_30d,sample_query}'
+
+          echo '=== NOHUMANS CHEAP LISTING ==='
+          curl -fsSL 'https://api.nohumans.directory/v1/listings/9f2f7a33-cb2' |             jq '{id,name,status,score,probe_count,probes_passed,probes_failed,consecutive_failures,paid_verified,distinct_payers,evidence_tier,evidence_note,last_probed_at_iso,next_check_by_iso,onchain_unique_payers_30d,sample_query}'
+
+          echo '=== PAYAI MAIN STATS ==='
+          ENC_MAIN=$(python3 - <<'PY'
+          import urllib.parse
+          print(urllib.parse.quote('https://pa-entity-x402.floot.app/_api/pa-business',safe=''))
+          PY
+          )
+          curl -fsSL "https://facilitator.payai.network/discovery/resources/$ENC_MAIN/stats" |             jq '{resource,settlements,volume,buyers,reliability,uptime,networks,cachedAt}'
+
+          echo '=== PAYAI CHEAP STATS ==='
+          ENC_CHEAP=$(python3 - <<'PY'
+          import urllib.parse
+          print(urllib.parse.quote('https://pa-entity-x402.floot.app/_api/pa-entity-one',safe=''))
+          PY
+          )
+          curl -fsSL "https://facilitator.payai.network/discovery/resources/$ENC_CHEAP/stats" |             jq '{resource,settlements,volume,buyers,reliability,uptime,networks,cachedAt}'
