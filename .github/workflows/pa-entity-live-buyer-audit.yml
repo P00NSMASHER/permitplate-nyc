@@ -6,40 +6,58 @@ on:
       - '.github/workflows/pa-entity-live-buyer-audit.yml'
 
 jobs:
-  routing:
+  vet402:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - name: Audit cheap-route discovery and buyer routing
+      - name: Check vet402 independent measurement
         shell: bash
         run: |
-          set +e
+          set -euo pipefail
 
-          echo '=== NOHUMANS FLOOT CHEAP LISTING ==='
-          curl -sS -i 'https://nohumans.directory/v1/listings/9f2f7a33-cb2' | head -c 16000
-          echo
-
-          echo '=== NOHUMANS APPDEPLOY CHEAP LISTING ==='
-          curl -sS -i 'https://nohumans.directory/v1/listings/64403ef1-4ad' | head -c 16000
-          echo
-
-          echo '=== AGENT402 ROUTING RETRIES ==='
-          for q in             'Pennsylvania business registry'             'Pennsylvania business registry filing number'             'Pennsylvania company identity lookup'             'Pennsylvania legal entity lookup'             'resolve Pennsylvania company name'
-          do
-            echo "--- QUERY: $q"
-            for attempt in 1 2 3 4; do
-              body=$(curl -sS --get 'https://agent402.tools/api/route'                 --data-urlencode "q=$q"                 --data-urlencode 'include=external')
-              echo "$body" | head -c 24000
-              echo
-              if ! echo "$body" | grep -q '"server is busy"'; then break; fi
-              sleep 2
-            done
-          done
-
-          echo '=== 402 INDEX CHEAP SEARCH ==='
-          for q in             'Pennsylvania business registry'             'Pennsylvania company identity'             'Pennsylvania legal entity'
-          do
-            echo "--- QUERY: $q"
-            curl -sS --get 'https://www.402index.io/api/search'               --data-urlencode "q=$q"               --data-urlencode 'limit=20' | head -c 20000
+          check_url () {
+            label="$1"
+            target="$2"
+            echo "=== RESOLVE $label ==="
+            curl -sS --get 'https://vet402.com/api/v1/resolve'               --data-urlencode "q=$target" | tee "/tmp/$label.json"
             echo
-          done
+
+            RID=$(python3 - "$label" <<'PY'
+          import json,sys
+          p='/tmp/'+sys.argv[1]+'.json'
+          d=json.load(open(p))
+          r=d.get('resource') or {}
+          print(r.get('resource_id') or '')
+          PY
+            )
+
+            OID=$(python3 - "$label" <<'PY'
+          import json,sys
+          p='/tmp/'+sys.argv[1]+'.json'
+          d=json.load(open(p))
+          r=d.get('resource') or {}
+          print(r.get('observatory_id') or '')
+          PY
+            )
+
+            echo "RESOURCE_ID=$RID OBSERVATORY_ID=$OID"
+
+            if [ -n "$RID" ]; then
+              echo "--- DECISION $label"
+              curl -sS "https://vet402.com/api/v1/resources/$RID/decision?role=payer&amount_usd=0.01&max_per_tx_usd=0.01" | tee "/tmp/$label-decision.json"
+              echo
+              echo "--- RESOURCE $label"
+              curl -sS "https://vet402.com/api/v1/resources/$RID"
+              echo
+            fi
+
+            if [ -n "$OID" ]; then
+              echo "--- PURCHASES $label"
+              curl -sS "https://vet402.com/api/v1/observatory/endpoints/$OID/purchases"
+              echo
+            fi
+          }
+
+          check_url flootcheap 'https://pa-entity-x402.floot.app/_api/pa-entity-one?q=OpenAI'
+          check_url flootmain 'https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
+          check_url appdeploycheap 'https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI'
