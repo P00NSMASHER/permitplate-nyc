@@ -184,8 +184,8 @@ This is a material improvement from the earlier ~#50 placement.
 Main $0.005 listing:
 - id: `958fd262-287`
 - status: verified
-- score: `0.9997434097368173`
-- probes: **76 total / 71 passing**
+- score: `0.9997690687631355`
+- probes: **77 total / 72 passing**
 - consecutive failures: **0**
 - evidence tier: `probe_verified`
 - paid-verified: false
@@ -195,7 +195,7 @@ Best-match $0.001 listing:
 - id: `9f2f7a33-cb2`
 - status: verified
 - score: **1.0**
-- probes: **37/37 passing**
+- probes: **38/38 passing**
 - consecutive failures: **0**
 - evidence tier: `probe_verified`
 - paid-verified: false
@@ -205,6 +205,11 @@ Best-match $0.001 listing:
 ### 402 Index
 
 Main and best-match services were both refreshed on 2026-10-01 and read back healthy with x402 payment validation passing and reliability score 77.
+
+Fresh 2026-10-01 buyer-query ranks:
+- `Pennsylvania business registry`: best-match **#1**, enriched search **#2**
+- `company identity Pennsylvania`: enriched search **#1**, best-match **#2**
+- `vendor verification Pennsylvania`: enriched search **#2**, best-match **#3**
 
 Best-match service:
 - id: `07c46db0-c899-4475-8a1b-2a789021eeff`
