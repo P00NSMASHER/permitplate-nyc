@@ -1,0 +1,29 @@
+name: PA Entity x402scan redirect trace
+
+on:
+  push:
+    paths:
+      - '.github/workflows/tmp-pa-entity-x402scan-redirect-trace.yml'
+
+jobs:
+  trace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Trace x402scan registry redirect without writing
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://x402scan.com/api/x402/registry/register-origin'
+          echo '=== GET HEADERS ==='
+          curl -sS -D - -o /dev/null "$URL"
+          echo
+          echo '=== HEAD HEADERS ==='
+          curl -sS -I "$URL"
+          echo
+          echo '=== FOLLOW GET REDIRECTS ==='
+          curl -sS -L -D /tmp/headers -o /tmp/body "$URL"
+          cat /tmp/headers
+          echo '--- BODY PREFIX ---'
+          head -c 4000 /tmp/body
+          echo
