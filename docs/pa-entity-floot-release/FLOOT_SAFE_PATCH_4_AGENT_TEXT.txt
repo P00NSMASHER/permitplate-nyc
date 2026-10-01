@@ -113,6 +113,7 @@
 +Fallback source copy: https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/main/PA_ENTITY_SKILL.md
 +x402 service manifest: https://pa-entity-x402.floot.app/.well-known/x402-service.json
 +x402 catalog: https://pa-entity-x402.floot.app/.well-known/x402-catalog.json
++
 *** Add File: static/llms-full.txt
 +# PA Entity Lookup x402 — Full Agent Reference
 +
@@ -289,6 +290,7 @@
 +Catalog:
 +https://pa-entity-x402.floot.app/.well-known/x402-catalog.json
 +
++
 *** Add File: static/skill.txt
 +# PA Entity Lookup x402
 +
@@ -353,4 +355,5 @@
 +
 +OpenAPI: https://pa-entity-x402.floot.app/openapi.json
 +LLM guide: https://pa-entity-x402.floot.app/llms.txt
++
 *** End Patch
