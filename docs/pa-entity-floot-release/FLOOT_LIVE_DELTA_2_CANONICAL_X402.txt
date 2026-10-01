@@ -1,0 +1,267 @@
+*** Begin Patch
+*** Add File: static/.well-known/x402
++{
++  "x402Version": 2,
++  "name": "PA Entity Lookup x402",
++  "description": "Two Pennsylvania business-registry products for agents: a $0.001 single best-match resolver and a $0.005 multi-result enriched company-identity search.",
++  "openapi": "https://pa-entity-x402.floot.app/openapi.json",
++  "llms": "https://pa-entity-x402.floot.app/llms.txt",
++  "skill": "https://pa-entity-x402.floot.app/skill.txt",
++  "resources": [
++    {
++      "resource": "https://pa-entity-x402.floot.app/_api/pa-business",
++      "type": "http",
++      "x402Version": 2,
++      "accepts": [
++        {
++          "scheme": "exact",
++          "network": "eip155:8453",
++          "amount": "5000",
++          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
++          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
++          "maxTimeoutSeconds": 60,
++          "extra": {
++            "name": "USD Coin",
++            "version": "2"
++          }
++        }
++      ],
++      "extensions": {
++        "bazaar": {
++          "info": {
++            "input": {
++              "type": "http",
++              "method": "GET",
++              "queryParams": {
++                "q": "OpenAI",
++                "limit": 1
++              }
++            },
++            "output": {
++              "type": "json",
++              "example": {
++                "query": "OpenAI",
++                "count": 1,
++                "results": [
++                  {
++                    "businessName": "Openai, L.l.c.",
++                    "filingNumber": "0014371957",
++                    "registrationType": "Foreign Limited Liability Company",
++                    "creationDate": "2025-04-23",
++                    "address1": "600 North Second Street, Suite 401",
++                    "address2": null,
++                    "city": "Harrisburg",
++                    "state": "PA",
++                    "zip": "17101",
++                    "county": "Dauphin",
++                    "countyCode": "22",
++                    "principals": [
++                      {
++                        "role": "Governor",
++                        "firstName": null,
++                        "middleName": null,
++                        "lastName": null
++                      }
++                    ]
++                  }
++                ],
++                "enrichment": {
++                  "principals": "complete"
++                },
++                "source": "Pennsylvania Department of State via data.pa.gov",
++                "paid": true
++              }
++            }
++          },
++          "schema": {
++            "type": "object",
++            "properties": {
++              "input": {
++                "type": "object",
++                "properties": {
++                  "type": {
++                    "const": "http"
++                  },
++                  "method": {
++                    "const": "GET"
++                  },
++                  "queryParams": {
++                    "type": "object",
++                    "properties": {
++                      "q": {
++                        "type": "string",
++                        "minLength": 2,
++                        "maxLength": 120
++                      },
++                      "limit": {
++                        "type": "integer",
++                        "minimum": 1,
++                        "maximum": 25
++                      }
++                    },
++                    "required": [
++                      "q"
++                    ],
++                    "additionalProperties": false
++                  }
++                },
++                "required": [
++                  "type",
++                  "method",
++                  "queryParams"
++                ],
++                "additionalProperties": false
++              },
++              "output": {
++                "type": "object",
++                "properties": {
++                  "type": {
++                    "const": "json"
++                  },
++                  "example": {
++                    "type": "object"
++                  }
++                },
++                "required": [
++                  "type",
++                  "example"
++                ],
++                "additionalProperties": false
++              }
++            },
++            "required": [
++              "input",
++              "output"
++            ],
++            "additionalProperties": false
++          }
++        }
++      }
++    },
++    {
++      "resource": "https://pa-entity-x402.floot.app/_api/pa-entity-one",
++      "type": "http",
++      "x402Version": 2,
++      "accepts": [
++        {
++          "scheme": "exact",
++          "network": "eip155:8453",
++          "amount": "1000",
++          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
++          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
++          "maxTimeoutSeconds": 60,
++          "extra": {
++            "name": "USD Coin",
++            "version": "2"
++          }
++        }
++      ],
++      "extensions": {
++        "bazaar": {
++          "info": {
++            "input": {
++              "type": "http",
++              "method": "GET",
++              "queryParams": {
++                "q": "OpenAI"
++              }
++            },
++            "output": {
++              "type": "json",
++              "example": {
++                "query": "OpenAI",
++                "count": 1,
++                "results": [
++                  {
++                    "businessName": "Openai, L.l.c.",
++                    "filingNumber": "0014371957",
++                    "registrationType": "Foreign Limited Liability Company",
++                    "creationDate": "2025-04-23",
++                    "address1": "600 North Second Street, Suite 401",
++                    "address2": null,
++                    "city": "Harrisburg",
++                    "state": "PA",
++                    "zip": "17101",
++                    "county": "Dauphin",
++                    "countyCode": "22",
++                    "principals": [
++                      {
++                        "role": "Governor",
++                        "firstName": null,
++                        "middleName": null,
++                        "lastName": null
++                      }
++                    ]
++                  }
++                ],
++                "enrichment": {
++                  "principals": "complete"
++                },
++                "source": "Pennsylvania Department of State via data.pa.gov",
++                "paid": true
++              }
++            }
++          },
++          "schema": {
++            "type": "object",
++            "properties": {
++              "input": {
++                "type": "object",
++                "properties": {
++                  "type": {
++                    "const": "http"
++                  },
++                  "method": {
++                    "const": "GET"
++                  },
++                  "queryParams": {
++                    "type": "object",
++                    "properties": {
++                      "q": {
++                        "type": "string",
++                        "minLength": 2,
++                        "maxLength": 120
++                      }
++                    },
++                    "required": [
++                      "q"
++                    ],
++                    "additionalProperties": false
++                  }
++                },
++                "required": [
++                  "type",
++                  "method",
++                  "queryParams"
++                ],
++                "additionalProperties": false
++              },
++              "output": {
++                "type": "object",
++                "properties": {
++                  "type": {
++                    "const": "json"
++                  },
++                  "example": {
++                    "type": "object"
++                  }
++                },
++                "required": [
++                  "type",
++                  "example"
++                ],
++                "additionalProperties": false
++              }
++            },
++            "required": [
++              "input",
++              "output"
++            ],
++            "additionalProperties": false
++          }
++        }
++      }
++    }
++  ]
++}
+*** End Patch
