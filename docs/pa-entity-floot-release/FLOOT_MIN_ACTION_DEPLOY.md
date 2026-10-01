@@ -10,20 +10,33 @@ Project:
 Production origin:
 `https://pa-entity-x402.floot.app`
 
-Atomic patches:
+Preferred atomic patches:
 - `FLOOT_PATCH_CORE.txt` — 8 endpoint/schema files
 - `FLOOT_PATCH_DISCOVERY.txt` — 10 static/discovery files
 
+Bounded fallback patches if a large patch is rejected or interrupted:
+1. `FLOOT_SAFE_PATCH_1_BUSINESS.txt`
+2. `FLOOT_SAFE_PATCH_2_BEST_MATCH.txt`
+3. `FLOOT_SAFE_PATCH_3_OPENAPI.txt`
+4. `FLOOT_SAFE_PATCH_4_AGENT_TEXT.txt`
+5. `FLOOT_SAFE_PATCH_5_X402_ALIASES.txt`
+6. `FLOOT_SAFE_PATCH_6_X402_CATALOG.txt`
+7. `FLOOT_SAFE_PATCH_7_EXTENSIONLESS.txt`
+
+Patches 1–6 reproduce the same 18 tested release files as the two preferred atomic patches. Patch 7 contains only the extensionless canonical manifest and is allowed to fail if Floot does not support an extensionless static path.
+
 Canonical extensionless source:
-- `x402.json` -> attempt `static/.well-known/x402`
+- `x402.json` -> `static/.well-known/x402`
 
 ## Execution order
 
 1. Read current Floot file tree and version once.
 2. Apply `FLOOT_PATCH_CORE.txt` atomically using that expected version.
+   - If the patch is rejected because of size/transport interruption, switch immediately to safe patches 1 then 2. Do not reconstruct files manually.
 3. Re-read only as needed to obtain the new version.
 4. Apply `FLOOT_PATCH_DISCOVERY.txt` atomically.
-5. Attempt to create `static/.well-known/x402` with the exact contents of `x402.json`.
+   - If the patch is rejected because of size/transport interruption, use safe patches 3–6 in order.
+5. Apply `FLOOT_SAFE_PATCH_7_EXTENSIONLESS.txt` to create the canonical extensionless path.
    - If Floot rejects an extensionless static path, record the platform limitation.
    - Do not roll back the valid JSON aliases.
 6. Typecheck:
@@ -60,6 +73,9 @@ Canonical extensionless source:
 
 ## Prepared-patch verification
 
-The two atomic patch files were reconstructed and compared byte-for-byte with all 18 release fixtures before deployment:
-- core: 8/8 exact
-- discovery/static: 10/10 exact
+Permanent CI runs `scripts/verify-pa-entity-floot-patches.mjs` and enforces:
+- preferred core patch: 8/8 exact
+- preferred discovery/static patch: 10/10 exact
+- safe patches 1–6: the same 18/18 release targets exact
+- safe patch 7: extensionless canonical manifest exactly equals `x402.json`
+- a deterministic `FLOOT_RELEASE_FINGERPRINT` is printed for handoff/resume checks
