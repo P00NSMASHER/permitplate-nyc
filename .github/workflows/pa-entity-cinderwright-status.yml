@@ -1,0 +1,45 @@
+name: PA Entity Cinderwright discovery status
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-cinderwright-status.yml'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check Cinderwright discovery for hardened PA Entity mirror
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s'
+          MAIN="$BASE/api/pa-business?q=OpenAI&limit=1"
+
+          for q in             'pa-entity-lookup-x402-4fbm4s'             'Pennsylvania business registry'             'vendor verification Pennsylvania'
+          do
+            echo "=== DISCOVER $q ==="
+            curl -sS --get 'https://api.ideafactorylab.org/discover'               --data-urlencode "q=$q" | tee /tmp/discover.json
+            echo
+            python3 - "$BASE" "$q" <<'PY'
+          import json,sys
+          base,q=sys.argv[1],sys.argv[2]
+          try: d=json.load(open('/tmp/discover.json'))
+          except Exception as e:
+              print(json.dumps({'query':q,'parseError':str(e)})); raise SystemExit
+          blob=json.dumps(d)
+          print(json.dumps({
+            'query':q,
+            'mirrorPresent': base in blob,
+            'keys': list(d.keys()) if isinstance(d,dict) else None,
+            'resultCount': len(d.get('results',[])) if isinstance(d,dict) and isinstance(d.get('results'),list) else None
+          }))
+          if base in blob:
+              print(json.dumps(d,indent=2)[:20000])
+          PY
+          done
+
+          echo '=== ONCHAIN MAIN ROUTE ==='
+          curl -sS --get 'https://api.ideafactorylab.org/onchain'             --data-urlencode "endpoint=$MAIN" | head -c 12000
+          echo
