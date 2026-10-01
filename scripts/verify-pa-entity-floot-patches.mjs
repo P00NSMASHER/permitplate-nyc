@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
+import crypto from 'node:crypto'
 
 const root = 'docs/pa-entity-floot-release'
 
@@ -77,4 +78,19 @@ for (const target of combined.keys()) {
   assert.ok(mapping[target], `unexpected Floot target in patch: ${target}`)
 }
 
+const fingerprintInput = Object.entries(mapping)
+  .sort(([a], [b]) => a.localeCompare(b))
+  .map(([target, fixture]) => {
+    const bytes = fs.readFileSync(`${root}/${fixture}`)
+    const sha = crypto.createHash('sha256').update(bytes).digest('hex')
+    return `${target}\0${sha}`
+  })
+  .join('\n')
+
+const fingerprint = crypto
+  .createHash('sha256')
+  .update(fingerprintInput)
+  .digest('hex')
+
 console.log('PA Entity Floot atomic patch parity: 18/18 exact')
+console.log('FLOOT_RELEASE_FINGERPRINT=' + fingerprint)
