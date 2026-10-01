@@ -8,49 +8,54 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 7
     steps:
-      - name: Check Circle catalog and seller readiness surface
+      - name: Extract Circle seller-score API route
         shell: bash
         run: |
-          set +e
-          WALLET='0x708f7b52b56eafd7fc1de65fc7752ed732914021'
+          set -euo pipefail
+          for page in sell sell/score; do
+            curl -sS --max-time 20 "https://agents.circle.com/$page" -o "/tmp/${page//\//-}.html"
+          done
 
-          echo '=== CIRCLE DISCOVERY EXACT DOMAIN QUERY ==='
-          curl -sS --max-time 20             'https://api.circle.com/v2/x402/discovery/resources?query=pa-entity-x402.floot.app'             -o /tmp/domain.json
-          head -c 24000 /tmp/domain.json
-          echo
-
-          echo '=== CIRCLE DISCOVERY BUSINESS QUERY ==='
-          curl -sS --max-time 20             --get 'https://api.circle.com/v2/x402/discovery/resources'             --data-urlencode 'query=Pennsylvania business registry company identity'             -o /tmp/business.json
-          head -c 24000 /tmp/business.json
-          echo
-
-          echo '=== CIRCLE DISCOVERY WALLET QUERY ==='
-          curl -sS --max-time 20             --get 'https://api.circle.com/v2/x402/discovery/resources'             --data-urlencode "query=$WALLET"             -o /tmp/wallet.json
-          head -c 24000 /tmp/wallet.json
-          echo
-
-          echo '=== EXACT RESOURCE/WALLET MATCH COUNTS ==='
           python3 - <<'PY'
-          import json
-          wallet='0x708f7b52b56eafd7fc1de65fc7752ed732914021'.lower()
-          origin='pa-entity-x402.floot.app'
-          for p in ['/tmp/domain.json','/tmp/business.json','/tmp/wallet.json']:
-              try: d=json.load(open(p))
-              except Exception as e:
-                  print(p,'PARSE_ERROR',e); continue
-              blob=json.dumps(d).lower()
-              print(p,'origin=',blob.count(origin),'wallet=',blob.count(wallet))
-              if isinstance(d,dict):
-                  print('keys=',list(d.keys()))
-                  for key in ['data','items','resources','results']:
-                      if isinstance(d.get(key),list):
-                          print(key,'count=',len(d[key]))
+          import re, subprocess, urllib.parse, pathlib
+          base='https://agents.circle.com'
+          urls=[]
+          for p in pathlib.Path('/tmp').glob('sell*.html'):
+              s=p.read_text(errors='ignore')
+              for src in re.findall(r'<script[^>]+src="([^"]+)"',s):
+                  u=urllib.parse.urljoin(base,src)
+                  if u not in urls: urls.append(u)
+          print('SCRIPT_COUNT',len(urls))
+          for i,u in enumerate(urls):
+              out=f'/tmp/chunk-{i}.js'
+              subprocess.run(['curl','-sS','--max-time','20',u,'-o',out],check=False)
+              try: s=open(out,errors='ignore').read()
+              except: continue
+              if re.search(r'readiness|score|sell/score|openapi|x402',s,re.I):
+                  print('\n=== ASSET',u,'===')
+                  patterns=[
+                    r'https?://[^"\'\\ ]+',
+                    r'["\'](/api/[^"\']+)["\']',
+                    r'fetch\(([^)]{0,500})\)',
+                    r'.{0,140}(?:readiness|sell/score|scoreApi|openapi\.json|x402).{0,260}'
+                  ]
+                  seen=set()
+                  for pat in patterns:
+                      for m in re.finditer(pat,s,re.I|re.S):
+                          val=m.group(0).replace('\n',' ')
+                          if val in seen: continue
+                          seen.add(val)
+                          if len(val)>700: val=val[:700]
+                          print(val)
+                          if len(seen)>=120: break
+                      if len(seen)>=120: break
           PY
 
-          echo '=== CIRCLE SELL PAGE API STRINGS ==='
-          curl -sS --max-time 20 'https://agents.circle.com/sell' -o /tmp/sell.html
-          grep -oE '<script[^>]+src="[^"]+"' /tmp/sell.html | head -30
-          grep -oE 'https?://[^" <]+' /tmp/sell.html | grep -Ei 'api|score|discovery|sell' | head -50 || true
-          grep -oiE '.{0,100}(score|readiness|api domain|check your).{0,180}' /tmp/sell.html | head -50 || true
+          echo '=== SCORE PAGE QUERY VARIANTS ==='
+          for q in             'domain=pa-entity-x402.floot.app'             'url=https%3A%2F%2Fpa-entity-x402.floot.app'             'endpoint=pa-entity-x402.floot.app'
+          do
+            echo "--- $q"
+            curl -sS --max-time 20 "https://agents.circle.com/sell/score?$q" |               grep -oiE '.{0,120}(score|pa-entity-x402|scanning|readiness).{0,240}' | head -30 || true
+          done
