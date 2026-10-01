@@ -1,0 +1,49 @@
+name: PA Entity AppDeploy completion check
+
+on:
+  push:
+    paths:
+      - '.github/workflows/verify-pa-entity-appdeploy3.yml'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Complete live verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s'
+
+          echo '=== AppDeploy OPTIONS platform behavior ==='
+          curl -sS -D /tmp/options-h -o /dev/null -X OPTIONS             -H 'Origin: https://buyer.example'             -H 'Access-Control-Request-Method: GET'             -H 'Access-Control-Request-Headers: payment-signature'             "$BASE/api/pa-business?q=OpenAI&limit=1"
+          grep -Ei '^(HTTP/|access-control)' /tmp/options-h || true
+          if grep -Eqi '^access-control-allow-origin:' /tmp/options-h; then
+            echo 'CORS_EDGE_HEADERS=PRESENT'
+          else
+            echo 'CORS_EDGE_HEADERS=STRIPPED_BY_APPDEPLOY'
+          fi
+
+          echo '=== Enriched demo ==='
+          curl -fsSL "$BASE/api/demo?q=OpenAI" -o /tmp/demo.json
+          jq . /tmp/demo.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/demo.json'))
+          assert d['count'] >= 1
+          r=d['results'][0]
+          assert r['businessName'].lower().startswith('openai')
+          assert 'creationDate' in r
+          assert 'countyCode' in r
+          assert 'principals' in r
+          print('ENRICHED_SEARCH_SHAPE=PASS')
+          PY
+
+          echo '=== Agent402 refresh ==='
+          payload=$(jq -nc --arg origin "$BASE" '{origin:$origin}')
+          curl -sS -X POST 'https://agent402.tools/api/index/register'             -H 'content-type: application/json'             --data "$payload" | tee /tmp/agent402.json
+          jq . /tmp/agent402.json
+
+          echo '=== Agent402 lookup ==='
+          curl -sS "https://agent402.tools/api/index?seller=api-v2.appdeploy.ai" | head -c 30000
