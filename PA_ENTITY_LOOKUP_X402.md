@@ -2,7 +2,7 @@
 
 A pay-per-call Pennsylvania business-registry lookup for autonomous agents.
 
-## Live product ladder
+## Live endpoints
 
 ### $0.001 best match
 
@@ -18,144 +18,124 @@ Returns one highest-ranked Pennsylvania legal-entity match.
 GET https://pa-entity-x402.floot.app/_api/pa-business?q=NAME&limit=10
 ```
 
-Returns multiple ranked Pennsylvania entities for disambiguation and enrichment.
+Returns up to 25 ranked Pennsylvania entity candidates.
 
-Both are live on:
+Both routes use x402 v2 on Base mainnet (eip155:8453), Base USDC, and require no API key or account. An unpaid request returns HTTP 402 with a PAYMENT-REQUIRED challenge.
 
-- protocol: x402 v2
-- network: Base mainnet (eip155:8453)
-- asset: USDC
-- payTo: 0x708f7b52b56eafd7fc1de65fc7752ed732914021
-- source: Pennsylvania Department of State public data via data.pa.gov
+## Data returned
 
-No account or API key is required. Unpaid requests return HTTP 402 with `PAYMENT-REQUIRED`.
+The enriched schema includes:
 
-## Response data
+- business name
+- filing number
+- registration type
+- creation date
+- registered address
+- city/state/ZIP
+- county and county code
+- source-published principal/officer role and name records
 
-The enriched entity schema includes:
+Source: Pennsylvania Department of State public business-registration data via data.pa.gov.
 
-- businessName
-- filingNumber
-- registrationType
-- creationDate
-- address1
-- address2
-- city
-- state
-- zip
-- county
-- countyCode
-- principals[].role
-- principals[].firstName
-- principals[].middleName
-- principals[].lastName
-
-The $0.001 route preserves its original `found/result` response fields and also exposes additive `count/results` fields for machine consistency.
-
-The API does not establish current good standing, sanctions status, a risk score, legitimacy, or independent proof of current management authority.
-
-## Search behavior
-
-Search is case-insensitive against the Pennsylvania `business_name` field.
-
-The live hardened search:
-
-1. uses a fast starts-with lookup first;
-2. ranks normalized legal-name matches first, ignoring common suffixes such as LLC or Inc.;
-3. falls back to a broader contains search only when necessary;
-4. deduplicates by filing number;
-5. never uses whole-record `$q` matching that can accidentally match only an address.
-
-Representative intended matches:
-
-- OpenAI → Openai, L.l.c. / 0014371957
-- Sheetz → Sheetz, Inc. / 0000326968
-- Wawa → Wawa, Inc. / 0000233685
-
-## Payment hardening
-
-The production seller now:
-
-- requires explicit PayAI `isValid:true`; generic success flags do not verify payment;
-- parses structured invalid-payment bodies even when the facilitator returns HTTP 4xx;
-- returns invalid payment as 402 rather than misreporting it as a verifier outage;
-- never turns `settlement_pending` or `duplicate_settlement` into a fresh payment request;
-- retries the same settlement authorization in bounded recovery attempts;
-- returns an unresolved retryable state without `PAYMENT-REQUIRED` when settlement is ambiguous;
-- does not settle when the primary Pennsylvania source fails;
-- limits payment header size and query length;
-- validates paid-retry input before spending facilitator/upstream capacity;
-- uses bounded PayAI and PA Open Data timeouts;
-- emits `Cache-Control: no-store` on payment/unresolved states;
-- exposes x402 payment headers on GET responses for browser clients.
-
-Known platform limitation: Floot owns the OPTIONS gateway. OPTIONS returns HTTP 204 but currently does not expose custom CORS headers. Server-to-server x402 buyers are unaffected.
+The service does not claim current good standing, sanctions status, a legitimacy/risk score, or independent proof of current management authority.
 
 ## Machine discovery
 
-Live:
+- OpenAPI: https://pa-entity-x402.floot.app/openapi.json
+- llms.txt: https://pa-entity-x402.floot.app/llms.txt
+- llms-full.txt: https://pa-entity-x402.floot.app/llms-full.txt
+- skill: https://pa-entity-x402.floot.app/skill.txt
+- canonical x402 manifest: https://pa-entity-x402.floot.app/.well-known/x402
+- JSON alias: https://pa-entity-x402.floot.app/.well-known/x402.json
+- service manifest: https://pa-entity-x402.floot.app/.well-known/x402-service.json
+- catalog: https://pa-entity-x402.floot.app/.well-known/x402-catalog.json
 
-- https://pa-entity-x402.floot.app/openapi.json
-- https://pa-entity-x402.floot.app/llms.txt
-- https://pa-entity-x402.floot.app/llms-full.txt
-- https://pa-entity-x402.floot.app/skill.txt
-- https://pa-entity-x402.floot.app/.well-known/x402
-- https://pa-entity-x402.floot.app/.well-known/x402.json
-- https://pa-entity-x402.floot.app/.well-known/x402-services.json
-- https://pa-entity-x402.floot.app/.well-known/x402-service.json
-- https://pa-entity-x402.floot.app/.well-known/x402-catalog.json
-- https://pa-entity-x402.floot.app/.well-known/security.txt
+## External status — 2026-10-01
 
-The canonical extensionless x402 document is live. Floot serves that extensionless file as `application/octet-stream`; the JSON aliases return `application/json`.
+### Agent402
 
-## Independent validation snapshot
+- origin crawl: healthy
+- health: 1
+- routable: true
+- paid tools discovered: 2
+- main route ranked first for the query `Pennsylvania business registry`
+- current router gate: `settlement_required`
+- the seller is eligible for Agent402's low-price unproven tier, but proven sellers are preferred until independent settlement history exists
 
-Latest completed checks after the hardened production release:
+### Coinbase/CDP
 
-- Coinbase/CDP validator:
-  - $0.005 enriched route: **valid=true**, simulation **accepted**
-  - $0.001 best-match route: **valid=true**, simulation **accepted**
-- Market402:
-  - both routes: **11/11** instant spec checks
-  - both routes are queued for scheduled independent probing
-- Agent402:
-  - current origin registration: **listed=true**
-  - seller: **routable=true**
-  - paid tools indexed: **2**
-  - current crawl health: **0.4**, reflecting older failed crawls still present in its five-crawl history
-  - remaining route-execution blocker: **settlement_required**, not discovery failure
-- nohumans.directory:
-  - $0.005 listing: **verified**, score about **0.990**, zero consecutive failures
-  - $0.005 listing ranks about **#2** for both “Pennsylvania business registry” and “company identity Pennsylvania”
-  - $0.001 best-match listing id `9f2f7a33-cb2`: submitted with request schema, response schema, and executable sample URL; awaiting its initial probe streak
-- 402 Index:
-  - $0.005 service: active + healthy
-  - $0.001 best-match service id `07c46db0-c899-4475-8a1b-2a789021eeff`: active + healthy immediately after registration
-  - “Pennsylvania business registry”: $0.005 rank **#1**, $0.001 rank **#2**
-  - “best Pennsylvania company match”: $0.001 rank **#1**
-- true402:
-  - registered, but still has no transaction history
-- x402scan:
-  - previously registered; its registration endpoint now requires SIWX wallet authentication, so the origin was not re-submitted during this release
+Both the $0.005 enriched route and $0.001 best-match route pass x402 validation with `valid: true` and accepted simulation.
 
-## Revenue
+### Market402
 
-PayAI public resource statistics after the hardened release:
+- $0.005 route: 11/11 self-test checks pass
+- $0.001 route: 11/11 self-test checks pass
+- $0.001 route submitted and queued for Market402's own scheduled probes
+- Market402 verification is not seller-controlled and requires their own real paid purchase
 
-- settlements.total: **0**
-- buyers.unique: **0**
-- volume.totalUsd: **$0**
-- reliability: **100**
+### nohumans.directory
 
-Third-party revenue remains **$0.00** until an outside payer actually settles USDC.
+Main $0.005 listing:
+- id: `958fd262-287`
+- status: verified
+- score: ~0.999
+- paid-verified: false
+- distinct payers: 0
 
-## Public source and limitations
+Best-match $0.001 listing:
+- id: `9f2f7a33-cb2`
+- status: verified
+- score: 1.0
+- probes: 26/26 passing at the latest read
+- paid-verified: false
+- distinct payers: 0
+- payment terms observed correctly at 1000 atomic Base USDC
 
-Pennsylvania Department of State registered-business data via data.pa.gov.
+### 402 Index
 
-This is a factual registry lookup/enrichment API. It is not legal advice and should not be treated as proof of current good standing unless the underlying source explicitly establishes that fact.
+Best-match service:
+- id: `07c46db0-c899-4475-8a1b-2a789021eeff`
+- status: active
+- health: healthy
+- x402 payment valid: yes
+- price: $0.001 USDC
 
-## Wallet
+### true402
+
+The origin listing now advertises the $0.001 best-match route as its front door.
+
+### x402dash
+
+The $0.001 route is already registered.
+
+### x402scan
+
+The origin was registered previously. As of 2026-10-01, its refresh endpoint requires SIWX wallet authentication, so no unauthenticated refresh was forced.
+
+## Payment reliability
+
+The seller now:
+- parses PayAI structured invalid-payment responses even on non-2xx facilitator responses;
+- does not treat a generic `success:true` as verification;
+- retries unresolved settlement using the same authorization;
+- does not issue a fresh payment challenge for `settlement_pending` or duplicate settlement;
+- avoids settlement when the primary PA registry lookup fails;
+- applies bounded facilitator/source timeouts;
+- blocks malformed query/limit input before facilitator work once a payment header is present.
+
+## Current commercial scoreboard
+
+As of 2026-10-01:
+
+- third-party settled calls: **0**
+- distinct third-party payers: **0**
+- PayAI-recorded revenue: **$0**
+- nohumans paid verification: **not yet**
+- Market402 paid verification: **not yet**
+
+Technical verification, directory registration, probes, and self-tests are not counted as revenue.
+
+## Payout
 
 Seller payout address:
 
@@ -163,7 +143,7 @@ Seller payout address:
 0x708f7b52b56eafd7fc1de65fc7752ed732914021
 ```
 
-Base USDC contract:
+Base USDC:
 
 ```text
 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
