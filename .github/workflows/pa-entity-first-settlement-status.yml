@@ -1,0 +1,47 @@
+name: PA Entity first-settlement status
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-first-settlement-status.yml'
+
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check independent verifier state
+        shell: bash
+        run: |
+          set +e
+          echo '=== NOHUMANS FLOOT LISTING ==='
+          curl -sS -i 'https://api.nohumans.directory/v1/listings/958fd262-287' | head -c 24000
+          echo
+
+          echo '=== MARKET402 FLOOT OPERATOR ==='
+          curl -sS -i 'https://market402.com/op/pa-entity-x402.floot.app.json' | head -c 24000
+          echo
+
+          echo '=== MARKET402 INDEX SEARCH ==='
+          curl -fsSL 'https://market402.com/index.json' -o /tmp/index.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/index.json'))
+          needle='pa-entity-x402.floot.app'
+          hits=[]
+          def walk(x,path=''):
+              if isinstance(x,dict):
+                  if needle in json.dumps(x):
+                      hits.append((path,x))
+                  for k,v in x.items(): walk(v,path+'/'+str(k))
+              elif isinstance(x,list):
+                  for i,v in enumerate(x): walk(v,path+'/'+str(i))
+          walk(d)
+          print('HIT_COUNT',len(hits))
+          for path,x in hits[:20]:
+              print('MATCH',path,json.dumps(x,indent=2)[:18000])
+          PY
+
+          echo '=== PAYAI FLOOT STATS ==='
+          curl -sS 'https://facilitator.payai.network/discovery/resources/https%3A%2F%2Fpa-entity-x402.floot.app%2F_api%2Fpa-business/stats'
+          echo
