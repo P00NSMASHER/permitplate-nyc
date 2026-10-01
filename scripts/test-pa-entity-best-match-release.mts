@@ -83,6 +83,8 @@ await withMockFetch(async calls => {
   const res = await handle({ request: req(undefined, { x402Version: 2 }) })
   const parsed = await body(res)
   assert.equal(status(res), 200)
+  assert.equal(parsed.found, true)
+  assert.equal(parsed.result.businessName, 'Openai, L.l.c.')
   assert.equal(parsed.count, 1)
   assert.equal(parsed.results.length, 1)
   assert.equal(parsed.results[0].businessName, 'Openai, L.l.c.')
