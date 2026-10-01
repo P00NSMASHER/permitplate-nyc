@@ -1,0 +1,57 @@
+name: PA Entity Apiosk federated endpoint trace
+
+on:
+  push:
+    paths:
+      - '.github/workflows/tmp-pa-entity-apiosk-endpoint-trace.yml'
+
+jobs:
+  trace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Extract public federated manifest submission endpoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL 'https://dashboard.apiosk.com/' -o /tmp/index.html
+          python3 - <<'PY'
+          import re, urllib.parse, subprocess, pathlib
+          base='https://dashboard.apiosk.com'
+          html=open('/tmp/index.html',errors='ignore').read()
+          urls=[]
+          for src in re.findall(r'(?:src|href)=["\x27]([^"\x27]+\.js)["\x27]',html):
+              u=urllib.parse.urljoin(base+'/',src)
+              if u not in urls: urls.append(u)
+          for i,u in enumerate(urls):
+              out=f'/tmp/chunk-{i}.js'
+              subprocess.run(['curl','-fsSL','--max-time','20',u,'-o',out],check=False)
+          PY
+
+          cat /tmp/chunk-*.js > /tmp/all.js
+
+          echo '=== FEDERATED CONTEXT ==='
+          python3 - <<'PY'
+          import re
+          s=open('/tmp/all.js',errors='ignore').read()
+          pats=[
+            r'.{0,700}federated.{0,1400}',
+            r'.{0,700}manifest.{0,1400}',
+            r'.{0,700}submit.{0,1400}',
+            r'.{0,700}review.{0,1400}',
+            r'.{0,700}preview.{0,1400}',
+            r'.{0,700}external_x402.{0,1400}',
+          ]
+          seen=set()
+          for pat in pats:
+              for m in re.finditer(pat,s,re.I|re.S):
+                  v=m.group(0).replace('\n',' ')
+                  if v in seen: continue
+                  seen.add(v)
+                  print(v[:2400])
+                  print('\n---\n')
+                  if len(seen)>=100: raise SystemExit
+          PY
+
+          echo '=== API/FUNCTION STRINGS ==='
+          grep -Eo 'https://api\.apiosk\.com[^"'''[:space:]<>]{0,220}|/functions/v1/[A-Za-z0-9._~!$&()*+,;=:@%/?-]{1,180}|invoke\([^)]{0,400}\)|\.from\([^)]{0,300}\)' /tmp/all.js |             grep -Ei 'federat|manifest|submit|review|preview|x402|external' | sort -u | head -n 300 || true
