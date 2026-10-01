@@ -1,0 +1,76 @@
+name: PA Entity live buyer audit
+
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-live-buyer-audit.yml'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Reindex and verify live seller
+        shell: bash
+        run: |
+          set +e
+          ORIGIN='https://pa-entity-x402.floot.app'
+          MAIN="$ORIGIN/_api/pa-business?q=OpenAI&limit=1"
+          BEST="$ORIGIN/_api/pa-entity-one?q=OpenAI"
+
+          echo '=== LIVE DISCOVERY ==='
+          for p in '/.well-known/x402' '/.well-known/x402.json' '/.well-known/x402-services.json' '/skill.txt' '/openapi.json'; do
+            curl -sS -D /tmp/h -o /tmp/b -w "$p status=%{http_code} time=%{time_total} bytes=%{size_download}\n" "$ORIGIN$p"
+            grep -i '^content-type:' /tmp/h | head -1
+          done
+
+          echo
+          echo '=== AGENT402 REGISTER ==='
+          PAYLOAD=$(jq -nc --arg origin "$ORIGIN" '{origin:$origin}')
+          curl -sS -i -X POST 'https://agent402.tools/api/index/register'             -H 'content-type: application/json' --data "$PAYLOAD" | head -c 12000
+
+          echo
+          echo '=== AGENT402 INDEX READBACK ==='
+          curl -sS 'https://agent402.tools/api/index?seller=pa-entity-x402.floot.app' | head -c 22000
+
+          echo
+          echo '=== AGENT402 ROUTE QUERY ==='
+          curl -sS 'https://agent402.tools/api/route?q=Pennsylvania%20business%20registry&include=external' | head -c 22000
+
+          echo
+          echo '=== MARKET402 MAIN ==='
+          curl -sS -i -X POST 'https://market402.com/selftest'             -H 'content-type: application/json'             --data "$(jq -nc --arg url "$MAIN" '{url:$url}')" | head -c 12000
+
+          echo
+          echo '=== MARKET402 BEST ==='
+          curl -sS -i -X POST 'https://market402.com/selftest'             -H 'content-type: application/json'             --data "$(jq -nc --arg url "$BEST" '{url:$url}')" | head -c 12000
+
+          echo
+          echo '=== CDP MAIN ==='
+          curl -sS -i -X POST 'https://api.cdp.coinbase.com/platform/v2/x402/validate'             -H 'content-type: application/json'             --data "$(jq -nc --arg resource "$MAIN" '{resource:$resource,method:"GET"}')" | head -c 16000
+
+          echo
+          echo '=== CDP BEST ==='
+          curl -sS -i -X POST 'https://api.cdp.coinbase.com/platform/v2/x402/validate'             -H 'content-type: application/json'             --data "$(jq -nc --arg resource "$BEST" '{resource:$resource,method:"GET"}')" | head -c 16000
+
+          echo
+          echo '=== NOHUMANS ==='
+          curl -sS 'https://api.nohumans.directory/v1/listings/958fd262-287' |             jq '{id,name,status,score,probe_count,probes_passed,consecutive_failures,paid_verified,distinct_payers,evidence_tier,last_probed_at_iso,next_check_by_iso,onchain_unique_payers_30d}'
+
+          echo
+          echo '=== PAYAI MAIN STATS ==='
+          ENC=$(python3 - <<'PY'
+          import urllib.parse
+          print(urllib.parse.quote('https://pa-entity-x402.floot.app/_api/pa-business',safe=''))
+          PY
+          )
+          curl -sS "https://facilitator.payai.network/discovery/resources/$ENC/stats" | jq .
+
+          echo
+          echo '=== PAYAI BEST STATS ==='
+          ENC2=$(python3 - <<'PY'
+          import urllib.parse
+          print(urllib.parse.quote('https://pa-entity-x402.floot.app/_api/pa-entity-one',safe=''))
+          PY
+          )
+          curl -sS "https://facilitator.payai.network/discovery/resources/$ENC2/stats" | jq .
