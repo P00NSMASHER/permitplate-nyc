@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Inspect cheap listing schema metadata
+      - name: Inspect cheap listing schema metadata (run)
         shell: bash
         run: |
           set -euo pipefail
