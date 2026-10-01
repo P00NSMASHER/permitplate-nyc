@@ -56,7 +56,7 @@ await check('openapi JSON', async () => {
   )
   assert.equal(
     doc.paths['/_api/pa-entity-one'].get.operationId,
-    'resolvePennsylvaniaBusinessBestMatch',
+    'pennsylvaniaBusinessRegistryCompanyIdentityBestMatchLookup',
   )
   assert.equal(
     doc.paths['/_api/pa-entity-one'].get['x-payment-info'].price.amount,
