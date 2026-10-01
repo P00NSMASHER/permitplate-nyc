@@ -433,7 +433,29 @@
                     "principals": "complete"
                   },
                   "source": "Pennsylvania Department of State via data.pa.gov",
-                  "paid": true
+                  "paid": true,
+                  "found": true,
+                  "result": {
+                    "businessName": "Openai, L.l.c.",
+                    "filingNumber": "0014371957",
+                    "registrationType": "Foreign Limited Liability Company",
+                    "creationDate": "2025-04-23",
+                    "address1": "600 North Second Street, Suite 401",
+                    "address2": null,
+                    "city": "Harrisburg",
+                    "state": "PA",
+                    "zip": "17101",
+                    "county": "Dauphin",
+                    "countyCode": "22",
+                    "principals": [
+                      {
+                        "role": "Governor",
+                        "firstName": null,
+                        "middleName": null,
+                        "lastName": null
+                      }
+                    ]
+                  }
                 },
                 "schema": {
                   "type": "object",
@@ -591,6 +613,15 @@
                     },
                     "paid": {
                       "type": "boolean"
+                    },
+                    "found": {
+                      "type": "boolean"
+                    },
+                    "result": {
+                      "type": [
+                        "object",
+                        "null"
+                      ]
                     }
                   },
                   "required": [
@@ -599,7 +630,9 @@
                     "results",
                     "enrichment",
                     "source",
-                    "paid"
+                    "paid",
+                    "found",
+                    "result"
                   ]
                 }
               }
