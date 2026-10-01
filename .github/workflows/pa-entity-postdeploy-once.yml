@@ -1,0 +1,13 @@
+name: PA Entity postdeploy once
+on:
+  push:
+    paths:
+      - '.github/workflows/pa-entity-postdeploy-once.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify live production
+        run: node scripts/verify-pa-entity-production.mjs https://pa-entity-x402.floot.app
