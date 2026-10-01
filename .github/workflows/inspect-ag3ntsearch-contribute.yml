@@ -10,16 +10,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Read ag3ntsearch contribution schema and API
+      - name: Read FANA signing docs
         shell: bash
         run: |
           set -euo pipefail
-          for url in             'https://ag3ntsearch.com/contribution-schema.json'             'https://ag3ntsearch.fullyagentnativeapps.com/api/contributions'             'https://ag3ntsearch.com/outreach.json'             'https://ag3ntsearch.com/payments.json'
+          for url in             'https://fullyagentnativeapps.com/llms.txt'             'https://fullyagentnativeapps.com/.well-known/agent.json'             'https://fullyagentnativeapps.com/api'             'https://fullyagentnativeapps.com/docs'             'https://ag3ntsearch.fullyagentnativeapps.com/llms.txt'
           do
             echo "=== $url ==="
             curl -sS -L --max-time 15 -D /tmp/h "$url" -o /tmp/b || true
-            head -n 30 /tmp/h || true
-            echo "--- body ---"
-            head -c 50000 /tmp/b || true
+            head -n 25 /tmp/h || true
+            echo "--- auth/signing matches ---"
+            grep -Ein -C 4 'ag3nt-req|ed25519|signature|public.?key|x-ag3nt|bech32|nonce|timestamp' /tmp/b | head -n 300 || true
+            echo "--- body start ---"
+            head -c 25000 /tmp/b || true
             echo
           done
