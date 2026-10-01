@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Query probe402 public grade records
+      - name: Query probe402 coverage concisely
         shell: bash
         run: |
           set -euo pipefail
@@ -23,15 +23,6 @@ jobs:
           for u in "${urls[@]}"; do
             enc=$(python3 -c 'import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1],safe=""))' "$u")
             echo "=== $u ==="
-            code=$(curl -sS --max-time 25 -H 'Accept: application/json' -o /tmp/body -w '%{http_code}' "https://probe402.com/grade?url=$enc")
-            echo "HTTP=$code"
-            cat /tmp/body | head -c 16000
-            echo
-          done
-
-          echo '=== endpoint catalog host search ==='
-          for p in             '/endpoints?host=api-v2.appdeploy.ai'             '/endpoints?host=pa-entity-x402.floot.app'             '/api/endpoints?host=api-v2.appdeploy.ai'             '/api/endpoints?host=pa-entity-x402.floot.app'; do
-            code=$(curl -sS --max-time 20 -H 'Accept: application/json' -o /tmp/body -w '%{http_code}' "https://probe402.com$p")
-            echo "--- $p => $code"
-            head -c 12000 /tmp/body; echo
+            curl -fsSL --max-time 25 -H 'Accept: application/json'               "https://probe402.com/grade?url=$enc" |
+              jq '{kind,reason,statement,query,grade,score,verdict,last_observed_at}'
           done
