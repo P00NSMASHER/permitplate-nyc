@@ -16,11 +16,13 @@ jobs:
           set -euo pipefail
           ORIGIN='https://pa-entity-x402.floot.app'
           echo '=== REGISTER ==='
-          curl -sS -i -X POST 'https://agent402.tools/api/index/register'             -H 'content-type: application/json'             --data "$(jq -nc --arg origin "$ORIGIN" '{origin:$origin}')" | head -c 12000
+          curl -sS -i -X POST 'https://agent402.tools/api/index/register'             -H 'content-type: application/json'             --data "$(jq -nc --arg origin "$ORIGIN" '{origin:$origin}')" > /tmp/register.txt
+          head -c 12000 /tmp/register.txt
 
           echo
           echo '=== SELLER ==='
-          curl -sS -G 'https://agent402.tools/api/index'             --data-urlencode 'seller=pa-entity-x402.floot.app' | tee /tmp/seller.json | head -c 30000
+          curl -sS -G 'https://agent402.tools/api/index'             --data-urlencode 'seller=pa-entity-x402.floot.app' > /tmp/seller.json
+          head -c 30000 /tmp/seller.json
 
           echo
           echo '=== ROUTES ==='
