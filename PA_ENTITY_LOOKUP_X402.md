@@ -91,7 +91,7 @@ Independent checks on 2026-10-01:
 - Market402: both routes pass 11/11 self-test checks and are queued for Market402's own probes
 - Coinbase/CDP: both routes return `valid: true` with accepted simulation
 - Circle agent-readiness score against the hosted OpenAPI: **93/100, grade A, tier strong**
-- Cinderwright submission: `sub_1790864783590`, queued
+- nohumans.directory buyer search: the $0.001 AppDeploy best-match route is currently the first result for `Pennsylvania business registry`; the Floot $0.005 route is second and the Floot $0.001 route is third
 - PayAI public stats: zero settlements, zero distinct buyers, $0 volume at the latest check
 
 The remaining Agent402 dispatch gate is independent settlement history (`settlement_required`), not crawl health. No self-funded settlement is being used to manufacture that history.
@@ -110,13 +110,14 @@ The remaining Agent402 dispatch gate is independent settlement history (`settlem
 
 ### ag3ntsearch
 
-A machine-signed, public-evidence contribution nominating the $0.001 route for independent re-execution was accepted into ag3ntsearch's review queue on 2026-10-01.
+Two machine-signed, public-evidence contributions nominating the $0.001 route for independent re-execution were accepted into ag3ntsearch's review intake on 2026-10-01:
 
-- receipt: `contribution:2026-10-01T13:38:23.066Z:244eccd0-c9ce-43da-af59-a541dde5f632`
-- status: `received_unreviewed`
+- Floot receipt: `contribution:2026-10-01T13:38:23.066Z:244eccd0-c9ce-43da-af59-a541dde5f632`
+- AppDeploy mirror receipt: `contribution:2026-10-01T14:53:23.291Z:90ea1a5d-f6db-4ee9-969e-47c072985e7a`
+- current status on both submissions: `received_unreviewed`
 - reference task: pay 0.001 USDC with a funded Base wallet and no API key/account, then read one Pennsylvania registry result
 
-This is **not** a verification, endorsement, paid call, or revenue event. It is only an attributed nomination that ag3ntsearch may independently re-run.
+These receipts are **not** verification, endorsement, paid calls, or revenue events. They are attributed nominations that ag3ntsearch may independently re-run.
 
 ### Coinbase/CDP
 
@@ -124,12 +125,18 @@ Both the $0.005 enriched route and $0.001 best-match route pass x402 validation 
 
 ### Market402
 
-- $0.005 route: 11/11 self-test checks pass
-- $0.001 route: 11/11 self-test checks pass
-- $0.001 route submitted and queued for Market402's own scheduled probes
-- Market402 verification is not seller-controlled and requires their own real paid purchase
+- Floot $0.005 route: 11/11 self-test checks pass
+- Floot $0.001 route: 11/11 self-test checks pass
+- AppDeploy $0.005 route: 11/11 self-test checks pass
+- AppDeploy $0.001 route: 11/11 self-test checks pass
+- all four were accepted/queued for normal unpaid probes
+- funded paid-probe qualification is currently **false** with reason `not_in_catalog`
+- Market402 says paid-probe qualification will be re-evaluated automatically when the resource appears in its weekly refreshed public Bazaar catalog
+- no seller-funded probe was used
 
 ### nohumans.directory
+
+Current buyer search for `Pennsylvania business registry` returns our $0.001 AppDeploy best-match route first, the Floot $0.005 route second, and the Floot $0.001 route third.
 
 Main $0.005 listing:
 - id: `958fd262-287`
@@ -155,6 +162,10 @@ Best-match service:
 - health: healthy
 - x402 payment valid: yes
 - price: $0.001 USDC
+
+### Cinderwright
+
+A previous submission was accepted into Cinderwright's queue, but the current public `/discover` endpoint returns zero matches for the PA Entity mirror and the previously tested `/onchain` path now returns 404. Treat this lane as non-actionable until Cinderwright exposes a current discoverable record or supported status path.
 
 ### true402
 
