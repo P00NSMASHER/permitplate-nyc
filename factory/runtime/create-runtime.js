@@ -26,6 +26,8 @@ const {createTreasuryRateSpreadService}=require("../products/treasury-average-ra
 const {createPaidTreasuryRateSpreadHandler}=require("../products/treasury-average-rate-spread/paid-handler");
 const {createOfacReviewService}=require("../products/ofac-name-review-gate/service");
 const {createPaidOfacReviewHandler}=require("../products/ofac-name-review-gate/paid-handler");
+const {createPaEntityOfacReviewService}=require("../products/pa-entity-ofac-review/service");
+const {createPaidPaEntityOfacHandler}=require("../products/pa-entity-ofac-review/paid-handler");
 const {createFormationAgeService}=require("../products/pa-business-formation-age/service");
 const {createPaidFormationAgeHandler}=require("../products/pa-business-formation-age/paid-handler");
 const {createDomainExpirationService}=require("../products/domain-expiration-horizon/service");
@@ -102,6 +104,7 @@ function createFactoryRuntime({
     "treasury-average-rate-trend":createTreasuryRateTrendService({treasury:a.treasury,now}),
     "treasury-average-rate-spread":createTreasuryRateSpreadService({treasury:a.treasury,now}),
     "ofac-name-review-gate":createOfacReviewService({ofac:a.ofac,now}),
+    "pa-entity-ofac-review":createPaEntityOfacReviewService({registry:a.registry,ofac:a.ofac,now}),
     "pa-business-formation-age":createFormationAgeService({registry:a.registry,now}),
     "domain-expiration-horizon":createDomainExpirationService({rdap:a.rdap,now}),
     "domain-last-changed-recency":createDomainLastChangedService({rdap:a.rdap,now})
@@ -118,6 +121,7 @@ function createFactoryRuntime({
     "treasury-average-rate-trend":createPaidTreasuryTrendHandler,
     "treasury-average-rate-spread":createPaidTreasuryRateSpreadHandler,
     "ofac-name-review-gate":createPaidOfacReviewHandler,
+    "pa-entity-ofac-review":createPaidPaEntityOfacHandler,
     "pa-business-formation-age":createPaidFormationAgeHandler,
     "domain-expiration-horizon":createPaidDomainExpirationHandler,
     "domain-last-changed-recency":createPaidDomainLastChangedHandler
