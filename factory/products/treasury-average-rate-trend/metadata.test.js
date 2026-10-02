@@ -22,6 +22,6 @@ test("OpenAPI documents trend inputs and payment",()=>{
 test("llms text preserves source and non-advice boundary",()=>{
   const t=llmsText("https://example.test");
   assert.match(t,/Treasury Fiscal Data/);
-  assert.match(t,/not a live market yield/);
+  assert.match(t,/not a long-term trend determination, live market yield/);
   assert.match(t,/same PAYMENT-SIGNATURE/);
 });
