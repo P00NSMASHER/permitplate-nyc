@@ -141,3 +141,16 @@ test("every staged route validates required input before facilitator verificatio
   }
   assert.equal(networkCalls,0);
 });
+
+test("runtime serves canonical product index aligned with staged routes",async()=>{
+  const runtime=createFactoryRuntime({
+    publicApiBase:"https://candidate.example",
+    adapters:adapters()
+  });
+  const response=await runtime.handle({path:"/product-index.json"});
+  assert.equal(response.statusCode,200);
+  const index=JSON.parse(response.body);
+  assert.deepEqual(index.products.map(p=>p.id),runtime.stagingProducts.map(p=>p.id));
+  assert.deepEqual(index.products.map(p=>p.path),runtime.stagingProducts.map(p=>p.path));
+  assert.deepEqual(index.products.map(p=>p.price_usdc),runtime.stagingProducts.map(p=>p.price_usdc));
+});
