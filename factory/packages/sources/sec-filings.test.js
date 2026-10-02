@@ -23,14 +23,16 @@ test("normalizes CIK and ticker", () => {
   assert.equal(normalizeCik("CIK 320193"), "0000320193");
   assert.equal(normalizeCik(""), null);
   assert.equal(normalizeTicker(" aapl "), "AAPL");
-  assert.equal(normalizeTicker("brk.b"), "BRK.B");
+  assert.equal(normalizeTicker("brk.b"), "BRK-B");
 });
 
 test("ticker resolves through SEC map and returns filings", async () => {
   const calls = [];
+  const headers = [];
   const adapter = createSecFilingsAdapter({
-    fetchImpl: async (url) => {
+    fetchImpl: async (url, init) => {
       calls.push(url);
+      headers.push(init?.headers || {});
       if (url === TICKERS_URL) {
         return response({
           "0": { cik_str: 320193, ticker: "AAPL", title: "Apple Inc." },
@@ -60,6 +62,8 @@ test("ticker resolves through SEC map and returns filings", async () => {
 
   const result = await adapter.lookup({ ticker: "AAPL", limit: 25 });
   assert.equal(calls.length, 2);
+  assert.match(String(headers[0]["user-agent"]), /x402-sec-filings\/1\.0/);
+  assert.match(String(headers[1]["user-agent"]), /sec-recent-filings-x402-f9qatj\.v2\.appdeploy\.ai/);
   assert.equal(result.available, true);
   assert.equal(result.found, true);
   assert.equal(result.company.cik, "0000320193");
@@ -117,4 +121,25 @@ test("invalid SEC recent-filings shape throws contract error", async () => {
     () => adapter.lookup({ cik: "320193" }),
     (error) => error.code === "SOURCE_CONTRACT_INVALID"
   );
+});
+
+test("dotted ticker alias resolves against SEC hyphen form", async () => {
+  const adapter = createSecFilingsAdapter({
+    fetchImpl: async (url) => {
+      if (url === TICKERS_URL) {
+        return response({
+          "0": { cik_str: 1067983, ticker: "BRK-B", title: "Berkshire Hathaway Inc." },
+        });
+      }
+      return response({
+        name: "Berkshire Hathaway Inc.",
+        tickers: ["BRK-B"],
+        exchanges: ["NYSE"],
+        filings: { recent: { form: [], filingDate: [], accessionNumber: [], primaryDocument: [] } },
+      });
+    },
+  });
+  const result = await adapter.lookup({ ticker: "BRK.B" });
+  assert.equal(result.found, true);
+  assert.equal(result.company.cik, "0001067983");
 });
