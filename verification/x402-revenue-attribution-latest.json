@@ -1,29 +1,84 @@
 {
-  "generated_at": "2026-10-02T12:36:45.552Z",
+  "generated_at": "2026-10-02T15:15:02.662Z",
   "source_snapshot": "verification/pa-entity-directory-status-latest.json",
   "source_snapshot_checked_at": "2026-10-02T12:31:35.494840+00:00",
+  "portfolio_target": "recovery/x402-portfolio-target.json",
   "policy": {
     "unknown_payer": "external_unattributed",
     "count_unknown_as_revenue": false,
     "count_probe_or_verifier_as_revenue": false,
     "count_self_or_internal_as_revenue": false,
-    "require_resource_specific_settlement_evidence": true
+    "require_resource_specific_settlement_evidence": true,
+    "same_price_multi_resource_rule": "When multiple resources sharing one price report settlements, amount-only wallet transfers are not allocated to individual resources and remain unresolved."
   },
   "summary": {
+    "portfolio_resources": 8,
     "resource_specific_settlements_observed_last24h": 1,
     "observed_gross_settlement_value_usd_last24h": 0.001,
     "verified_customer_revenue_usd_last24h": 0,
     "unresolved_settlements_last24h": 1,
-    "revenue_scoreboard_rule": "Only verified_customer settlements count as third-party revenue. Unknown external addresses, probes/verifiers, self-payments, tests, registrations and marketplace checks remain excluded."
+    "revenue_scoreboard_rule": "Only settlements supported by exact resource stats and verified customer provenance count as third-party revenue. Same-price multi-resource ambiguity, unknown external addresses, probes/verifiers, self-payments, tests, registrations and marketplace checks remain excluded."
+  },
+  "price_groups": {
+    "0.001000": {
+      "price_usd": 0.001,
+      "resources": [
+        "pa-best-match"
+      ],
+      "active_resources_last24h": [
+        "pa-best-match"
+      ],
+      "resource_specific_settlements_last24h": 1,
+      "verified_customer_transfer_candidates_last24h": 0,
+      "countable_verified_customer_settlements_last24h": 0,
+      "counted_customer_revenue_usd_last24h": 0,
+      "allocation_state": "single_resource_unattributed",
+      "note": "A settlement can be attributed only when exact resource stats match the endpoint and customer provenance is verified."
+    },
+    "0.005000": {
+      "price_usd": 0.005,
+      "resources": [
+        "pa-enriched-search",
+        "sec-recent-filings",
+        "census-geocoder",
+        "ofac-sdn-screen",
+        "domain-rdap",
+        "treasury-average-rates"
+      ],
+      "active_resources_last24h": [],
+      "resource_specific_settlements_last24h": 0,
+      "verified_customer_transfer_candidates_last24h": 0,
+      "countable_verified_customer_settlements_last24h": 0,
+      "counted_customer_revenue_usd_last24h": 0,
+      "allocation_state": "no_settlement_observed",
+      "note": "A settlement can be attributed only when exact resource stats match the endpoint and customer provenance is verified."
+    },
+    "0.020000": {
+      "price_usd": 0.02,
+      "resources": [
+        "vendor-intake-gate"
+      ],
+      "active_resources_last24h": [],
+      "resource_specific_settlements_last24h": 0,
+      "verified_customer_transfer_candidates_last24h": 0,
+      "countable_verified_customer_settlements_last24h": 0,
+      "counted_customer_revenue_usd_last24h": 0,
+      "allocation_state": "no_settlement_observed",
+      "note": "A settlement can be attributed only when exact resource stats match the endpoint and customer provenance is verified."
+    }
   },
   "resources": {
     "best_match": {
-      "name": "Pennsylvania Company Identity Best-Match Lookup",
+      "id": "pa-best-match",
+      "name": "Pennsylvania Business Registry Best Match",
       "endpoint": "https://pa-entity-x402.floot.app/_api/pa-entity-one",
       "price_usd": 0.001,
       "payai_resource_matches_endpoint": true,
       "facilitator": {
         "status_ok": true,
+        "stats_usable_for_attribution": true,
+        "reported_resource": "https://pa-entity-x402.floot.app/_api/pa-entity-one",
+        "raw_settlements_last24h": 1,
         "settlements_last24h": 1,
         "settlements_last7d": 1,
         "settlements_last30d": 1,
@@ -44,6 +99,7 @@
             "payer_classification": "external_unattributed"
           }
         ],
+        "verified_customer_transfer_candidates_last24h": 0,
         "note": "The payout wallet is shared across listings. Exact-price transfers corroborate money movement but do not alone identify the resource or payer purpose."
       },
       "attribution": {
@@ -56,12 +112,16 @@
       }
     },
     "enriched": {
-      "name": "Pennsylvania Business Registry Search",
+      "id": "pa-enriched-search",
+      "name": "Pennsylvania Business Registry Enriched Search",
       "endpoint": "https://pa-entity-x402.floot.app/_api/pa-business",
       "price_usd": 0.005,
       "payai_resource_matches_endpoint": true,
       "facilitator": {
         "status_ok": true,
+        "stats_usable_for_attribution": true,
+        "reported_resource": "https://pa-entity-x402.floot.app/_api/pa-business",
+        "raw_settlements_last24h": 0,
         "settlements_last24h": 0,
         "settlements_last7d": 0,
         "settlements_last30d": 0,
@@ -72,6 +132,7 @@
       },
       "onchain": {
         "exact_price_transfer_candidates_last24h": [],
+        "verified_customer_transfer_candidates_last24h": 0,
         "note": "The payout wallet is shared across listings. Exact-price transfers corroborate money movement but do not alone identify the resource or payer purpose."
       },
       "attribution": {
@@ -84,12 +145,16 @@
       }
     },
     "vendor_gate": {
-      "name": "Pennsylvania Vendor Intake Gate",
-      "endpoint": "https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-gate",
+      "id": "vendor-intake-gate",
+      "name": "Pennsylvania Vendor Intake Decision Gate",
+      "endpoint": "https://pa-entity-x402.floot.app/_api/vendor-intake-gate",
       "price_usd": 0.02,
-      "payai_resource_matches_endpoint": true,
+      "payai_resource_matches_endpoint": false,
       "facilitator": {
         "status_ok": true,
+        "stats_usable_for_attribution": false,
+        "reported_resource": "https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-gate",
+        "raw_settlements_last24h": 0,
         "settlements_last24h": 0,
         "settlements_last7d": 0,
         "settlements_last30d": 0,
@@ -100,6 +165,172 @@
       },
       "onchain": {
         "exact_price_transfer_candidates_last24h": [],
+        "verified_customer_transfer_candidates_last24h": 0,
+        "note": "The payout wallet is shared across listings. Exact-price transfers corroborate money movement but do not alone identify the resource or payer purpose."
+      },
+      "attribution": {
+        "state": "no_settlement_observed",
+        "verified_customer_settlements_last24h": 0,
+        "unresolved_settlements_last24h": 0,
+        "counted_customer_revenue_usd_last24h": 0,
+        "observed_gross_settlement_value_usd_last24h": 0,
+        "count_as_revenue": false
+      }
+    },
+    "sec": {
+      "id": "sec-recent-filings",
+      "name": "SEC Recent Filings",
+      "endpoint": "https://pa-entity-x402.floot.app/_api/sec-filings",
+      "price_usd": 0.005,
+      "payai_resource_matches_endpoint": false,
+      "facilitator": {
+        "status_ok": false,
+        "stats_usable_for_attribution": false,
+        "reported_resource": null,
+        "raw_settlements_last24h": 0,
+        "settlements_last24h": 0,
+        "settlements_last7d": null,
+        "settlements_last30d": null,
+        "settlements_total_bucket": null,
+        "unique_buyers_bucket": null,
+        "volume_total_usd_bucket": null,
+        "cached_at": null
+      },
+      "onchain": {
+        "exact_price_transfer_candidates_last24h": [],
+        "verified_customer_transfer_candidates_last24h": 0,
+        "note": "The payout wallet is shared across listings. Exact-price transfers corroborate money movement but do not alone identify the resource or payer purpose."
+      },
+      "attribution": {
+        "state": "no_settlement_observed",
+        "verified_customer_settlements_last24h": 0,
+        "unresolved_settlements_last24h": 0,
+        "counted_customer_revenue_usd_last24h": 0,
+        "observed_gross_settlement_value_usd_last24h": 0,
+        "count_as_revenue": false
+      }
+    },
+    "census": {
+      "id": "census-geocoder",
+      "name": "US Census Address Geocoder",
+      "endpoint": "https://pa-entity-x402.floot.app/_api/us-address-geocode",
+      "price_usd": 0.005,
+      "payai_resource_matches_endpoint": false,
+      "facilitator": {
+        "status_ok": false,
+        "stats_usable_for_attribution": false,
+        "reported_resource": null,
+        "raw_settlements_last24h": 0,
+        "settlements_last24h": 0,
+        "settlements_last7d": null,
+        "settlements_last30d": null,
+        "settlements_total_bucket": null,
+        "unique_buyers_bucket": null,
+        "volume_total_usd_bucket": null,
+        "cached_at": null
+      },
+      "onchain": {
+        "exact_price_transfer_candidates_last24h": [],
+        "verified_customer_transfer_candidates_last24h": 0,
+        "note": "The payout wallet is shared across listings. Exact-price transfers corroborate money movement but do not alone identify the resource or payer purpose."
+      },
+      "attribution": {
+        "state": "no_settlement_observed",
+        "verified_customer_settlements_last24h": 0,
+        "unresolved_settlements_last24h": 0,
+        "counted_customer_revenue_usd_last24h": 0,
+        "observed_gross_settlement_value_usd_last24h": 0,
+        "count_as_revenue": false
+      }
+    },
+    "ofac": {
+      "id": "ofac-sdn-screen",
+      "name": "OFAC SDN Name Screen",
+      "endpoint": "https://pa-entity-x402.floot.app/_api/ofac-sdn-screen",
+      "price_usd": 0.005,
+      "payai_resource_matches_endpoint": false,
+      "facilitator": {
+        "status_ok": false,
+        "stats_usable_for_attribution": false,
+        "reported_resource": null,
+        "raw_settlements_last24h": 0,
+        "settlements_last24h": 0,
+        "settlements_last7d": null,
+        "settlements_last30d": null,
+        "settlements_total_bucket": null,
+        "unique_buyers_bucket": null,
+        "volume_total_usd_bucket": null,
+        "cached_at": null
+      },
+      "onchain": {
+        "exact_price_transfer_candidates_last24h": [],
+        "verified_customer_transfer_candidates_last24h": 0,
+        "note": "The payout wallet is shared across listings. Exact-price transfers corroborate money movement but do not alone identify the resource or payer purpose."
+      },
+      "attribution": {
+        "state": "no_settlement_observed",
+        "verified_customer_settlements_last24h": 0,
+        "unresolved_settlements_last24h": 0,
+        "counted_customer_revenue_usd_last24h": 0,
+        "observed_gross_settlement_value_usd_last24h": 0,
+        "count_as_revenue": false
+      }
+    },
+    "rdap": {
+      "id": "domain-rdap",
+      "name": "Domain RDAP Lookup",
+      "endpoint": "https://pa-entity-x402.floot.app/_api/domain-rdap",
+      "price_usd": 0.005,
+      "payai_resource_matches_endpoint": false,
+      "facilitator": {
+        "status_ok": false,
+        "stats_usable_for_attribution": false,
+        "reported_resource": null,
+        "raw_settlements_last24h": 0,
+        "settlements_last24h": 0,
+        "settlements_last7d": null,
+        "settlements_last30d": null,
+        "settlements_total_bucket": null,
+        "unique_buyers_bucket": null,
+        "volume_total_usd_bucket": null,
+        "cached_at": null
+      },
+      "onchain": {
+        "exact_price_transfer_candidates_last24h": [],
+        "verified_customer_transfer_candidates_last24h": 0,
+        "note": "The payout wallet is shared across listings. Exact-price transfers corroborate money movement but do not alone identify the resource or payer purpose."
+      },
+      "attribution": {
+        "state": "no_settlement_observed",
+        "verified_customer_settlements_last24h": 0,
+        "unresolved_settlements_last24h": 0,
+        "counted_customer_revenue_usd_last24h": 0,
+        "observed_gross_settlement_value_usd_last24h": 0,
+        "count_as_revenue": false
+      }
+    },
+    "treasury": {
+      "id": "treasury-average-rates",
+      "name": "Treasury Average Interest Rates",
+      "endpoint": "https://pa-entity-x402.floot.app/_api/treasury-average-rates",
+      "price_usd": 0.005,
+      "payai_resource_matches_endpoint": false,
+      "facilitator": {
+        "status_ok": false,
+        "stats_usable_for_attribution": false,
+        "reported_resource": null,
+        "raw_settlements_last24h": 0,
+        "settlements_last24h": 0,
+        "settlements_last7d": null,
+        "settlements_last30d": null,
+        "settlements_total_bucket": null,
+        "unique_buyers_bucket": null,
+        "volume_total_usd_bucket": null,
+        "cached_at": null
+      },
+      "onchain": {
+        "exact_price_transfer_candidates_last24h": [],
+        "verified_customer_transfer_candidates_last24h": 0,
         "note": "The payout wallet is shared across listings. Exact-price transfers corroborate money movement but do not alone identify the resource or payer purpose."
       },
       "attribution": {
