@@ -86,3 +86,17 @@ jobs:
         run: node --test factory/packages/discovery/generator.test.js
       - name: Validate compiled discovery surfaces
         run: node factory/scripts/validate-discovery.js
+      - name: Test Product 007 domain age decision
+        run: node --test factory/products/domain-registration-age/decision.test.js
+      - name: Test Product 007 domain age service
+        run: node --test factory/products/domain-registration-age/service.test.js
+      - name: Test Treasury average-rates source adapter
+        run: node --test factory/packages/sources/treasury-average-rates.test.js
+      - name: Test Product 008 Treasury threshold decision
+        run: node --test factory/products/treasury-average-rate-threshold/decision.test.js
+      - name: Test Product 008 Treasury threshold service
+        run: node --test factory/products/treasury-average-rate-threshold/service.test.js
+      - name: Test Product 008 paid x402 handler
+        run: node --test factory/products/treasury-average-rate-threshold/paid-handler.test.js
+      - name: Test Product 008 discovery metadata
+        run: node --test factory/products/treasury-average-rate-threshold/metadata.test.js
