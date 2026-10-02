@@ -134,6 +134,26 @@ It is **not** a payment, buyer, settlement, endorsement, or revenue event.
 
 Any paid-route failure is a release/distribution blocker until explained.
 
+### AppDeploy availability envelope
+
+For AppDeploy-hosted routes, the verifier records:
+
+- `x-appdeploy-app-availability`
+- response body `code`
+- response body `message`
+- whether `PAYMENT-REQUIRED` is actually present
+
+A response such as:
+
+- HTTP 402
+- `x-appdeploy-app-availability: temporarily-unavailable`
+- body code `APP_TEMPORARILY_UNAVAILABLE`
+- no `PAYMENT-REQUIRED`
+
+is **not** an x402 payment challenge. It is a hosting/edge availability failure and must remain red even though the numeric HTTP status is 402.
+
+Any paid-route failure is a release/distribution blocker until explained.
+
 Examples:
 
 - route no longer returns 402
