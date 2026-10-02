@@ -17,6 +17,7 @@ const security = read('security.txt')
 const sitemap = read('sitemap.xml')
 const endpoint = read('pa-business_GET.ts')
 const bestEndpoint = read('pa-entity-one_GET.ts')
+const vendorEndpoint = read('vendor-intake-gate_GET.ts')
 
 assert.deepEqual(x402Services, x402, 'x402 JSON aliases must be byte-semantic equivalents')
 assert.equal(x402.x402Version, 2)
@@ -30,15 +31,29 @@ assert.equal(x402.facilitator, 'https://facilitator.payai.network')
 assert.equal(x402.owner_url, 'https://pa-entity-x402.floot.app')
 assert.match(x402.generated_at, /^2026-10-01T/)
 assert.equal(x402.services.length, 2)
-assert.equal(x402.resources.length, 2)
+assert.equal(x402.resources.length, 3)
+const resourceVendor = x402.resources.find(r => r.resource.endsWith('/_api/vendor-intake-gate'))
 const resourceCheap = x402.resources.find(r => r.resource.endsWith('/_api/pa-entity-one'))
 const resourceMain = x402.resources.find(r => r.resource.endsWith('/_api/pa-business'))
+assert.ok(resourceVendor)
 assert.ok(resourceCheap)
 assert.ok(resourceMain)
+assert.equal(resourceVendor.accepts[0].amount, '20000')
 assert.equal(resourceCheap.accepts[0].amount, '1000')
 assert.equal(resourceMain.accepts[0].amount, '5000')
+assert.equal(resourceVendor.accepts[0].network, 'eip155:8453')
 assert.equal(resourceCheap.accepts[0].network, 'eip155:8453')
 assert.equal(resourceMain.accepts[0].network, 'eip155:8453')
+assert.equal(
+  resourceVendor.accepts[0].payTo.toLowerCase(),
+  '0x708f7b52b56eafd7fc1de65fc7752ed732914021',
+)
+assert.deepEqual(resourceVendor.extensions.bazaar.info.input.queryParams, {
+  name: 'OpenAI OpCo',
+  address: '600 North Second Street, Suite 401, Harrisburg, PA 17101',
+  domain: 'openai.com',
+})
+assert.equal(resourceVendor.extensions.bazaar.info.output.example.decision, 'proceed')
 assert.equal(
   resourceCheap.accepts[0].payTo.toLowerCase(),
   '0x708f7b52b56eafd7fc1de65fc7752ed732914021',
@@ -80,6 +95,7 @@ assert.equal(
 
 const op = openapi.paths['/_api/pa-business'].get
 const bestOp = openapi.paths['/_api/pa-entity-one'].get
+const vendorOp = openapi.paths['/_api/vendor-intake-gate'].get
 assert.equal(op.operationId, 'pennsylvaniaBusinessRegistryCompanyIdentityLookup')
 assert.match(op.summary, /Pennsylvania business registry/i)
 assert.match(op.description, /company name/i)
@@ -110,6 +126,16 @@ assert.equal(
 assert.deepEqual(bestOp.parameters.map(p => p.name), ['q'])
 assert.equal(bestOp.parameters[0].schema.maxLength, 120)
 assert.equal(bestOp.responses['200'].content['application/json'].example.count, 1)
+assert.equal(vendorOp.operationId, 'checkPennsylvaniaVendorIntakeGate')
+assert.match(vendorOp.summary, /proceed or human_review/i)
+assert.equal(vendorOp['x-payment-info'].price.amount, '0.020000')
+assert.equal(vendorOp['x-payment-info'].network, 'eip155:8453')
+assert.equal(
+  vendorOp['x-payment-info'].payTo.toLowerCase(),
+  '0x708f7b52b56eafd7fc1de65fc7752ed732914021',
+)
+assert.deepEqual(vendorOp.parameters.map(p => p.name), ['name', 'address', 'domain'])
+assert.equal(vendorOp.responses['402'].description, 'Payment Required: $0.020 USDC on Base')
 assert.equal(
   op.responses['200'].content['application/json'].example.results[0].businessName,
   'Openai, L.l.c.',
@@ -118,11 +144,14 @@ assert.equal(
 assert.equal(catalog.x402Version, 2)
 assert.equal(catalog.skill, 'https://pa-entity-x402.floot.app/skill.txt')
 assert.ok(!catalog.skill.includes('/skill.md'))
-assert.equal(catalog.resources.length, 2)
+assert.equal(catalog.resources.length, 3)
+const catalogVendor = catalog.resources.find(r => r.resource.endsWith('/_api/vendor-intake-gate'))
 const catalogMain = catalog.resources.find(r => r.resource.endsWith('/_api/pa-business'))
 const catalogBest = catalog.resources.find(r => r.resource.endsWith('/_api/pa-entity-one'))
+assert.ok(catalogVendor)
 assert.ok(catalogMain)
 assert.ok(catalogBest)
+assert.equal(catalogVendor.accepts[0].amount, '20000')
 assert.equal(catalogMain.accepts[0].amount, '5000')
 assert.equal(catalogBest.accepts[0].amount, '1000')
 assert.deepEqual(catalogBest.extensions.bazaar.info.input.queryParams, { q: 'OpenAI' })
@@ -141,7 +170,9 @@ assert.match(skill, /^# PA Entity Lookup x402/m)
 assert.ok(!/<html|<!doctype html/i.test(skill), 'skill.txt must contain text, not SPA HTML')
 assert.match(skill, /\$0\.001/)
 assert.match(skill, /\$0\.005/)
+assert.match(skill, /\$0\.020/)
 assert.match(skill, /pa-entity-one/)
+assert.match(skill, /vendor-intake-gate/)
 
 assert.match(
   security,
@@ -155,7 +186,10 @@ assert.match(
 assert.match(llms, /\$0\.001/)
 assert.match(llms, /pa-entity-one/)
 assert.match(llms, /\$0\.005/)
+assert.match(llms, /\$0\.020/)
+assert.match(llms, /vendor-intake-gate/)
 assert.match(llmsFull, /best match/i)
+assert.match(llmsFull, /human_review/)
 assert.match(llms, /settlement_pending/)
 assert.match(llms, /same PAYMENT-SIGNATURE/)
 assert.match(llmsFull, /duplicate settlement/i)
