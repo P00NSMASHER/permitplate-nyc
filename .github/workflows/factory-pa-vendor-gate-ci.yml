@@ -234,3 +234,5 @@ jobs:
         run: node --test factory/products/pa-vendor-new-domain-review/paid-handler.test.js
       - name: Test Product 017 discovery metadata
         run: node --test factory/products/pa-vendor-new-domain-review/metadata.test.js
+      - name: Run Product 017 release gate
+        run: node factory/scripts/validate-product-017.js
