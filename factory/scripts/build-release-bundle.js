@@ -53,7 +53,9 @@ function buildReleaseBundle(publicApiBase=DEFAULT_BASE){
       number:p.number,
       path:p.path,
       price_usdc:p.price_usdc,
-      status:p.status
+      status:p.status,
+      required_env:Array.isArray(p.required_env)?p.required_env:[],
+      deployment_requirements:Array.isArray(p.deployment_requirements)?p.deployment_requirements:[]
     });
   }
 
