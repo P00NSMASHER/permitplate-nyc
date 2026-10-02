@@ -694,6 +694,11 @@ async function main() {
   }
 
   const passedServices = serviceResults.filter((x) => x.ok).length;
+  const availabilityFailures = serviceResults.filter(
+    (x) =>
+      x.appdeployAvailability != null ||
+      x.responseBodyCode === 'APP_TEMPORARILY_UNAVAILABLE'
+  ).length;
   const passedFixtures = fixtureResults.filter((x) => x.ok).length;
   const passedDiscovery = discoveryResults.filter((x) => x.ok).length;
 
@@ -705,6 +710,7 @@ async function main() {
       services: {
         passed: passedServices,
         total: serviceResults.length,
+        hostingAvailabilityFailures: availabilityFailures,
       },
       fixtures: {
         passed: passedFixtures,
