@@ -26,7 +26,8 @@
   },
   "decisions": {
     "candidate_found": "At least one current SDN primary name or alias scores at or above minScore.",
-    "no_candidate": "No current SDN primary name or alias scores at or above minScore."
+    "no_candidate": "No current SDN primary name or alias scores at or above minScore.",
+    "human_review": "Required OFAC evidence is unavailable or cannot support a completed screening result."
   },
   "claim_boundaries": [
     "candidate_found is a review signal, not a legal sanctions determination",
