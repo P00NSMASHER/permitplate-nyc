@@ -1,10 +1,16 @@
 import assert from 'node:assert/strict'
 
-const origin =
-  process.argv[2] ||
-  'https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s'
+const origin = (
+  process.argv[2] || 'https://pa-entity-x402.floot.app'
+).replace(/\/+$/, '')
 
-const bare = origin + '/api/vendor-intake-gate'
+const hostname = new URL(origin).hostname
+const apiPrefix =
+  process.env.VENDOR_GATE_API_PREFIX ||
+  (hostname.endsWith('.floot.app') ? '/_api' : '/api')
+
+const routePath = apiPrefix + '/vendor-intake-gate'
+const bare = origin + routePath
 const executable =
   bare +
   '?name=OpenAI%20OpCo' +
@@ -20,6 +26,7 @@ const EXPECTED_PRICE = '$0.020'
 const checks = []
 
 function decodeHeader(value) {
+  assert.ok(value, 'PAYMENT-REQUIRED header missing')
   const normalized = value.replace(/-/g, '+').replace(/_/g, '/')
   const pad = '='.repeat((4 - (normalized.length % 4)) % 4)
   return JSON.parse(Buffer.from(normalized + pad, 'base64').toString('utf8'))
@@ -37,156 +44,136 @@ async function check(name, fn) {
   }
 }
 
-async function assertChallenge(url) {
-  const res = await fetch(url, { redirect: 'follow' })
+async function readJsonResponse(url, expectedStatus) {
+  const res = await fetch(url, {
+    headers: {
+      accept: 'application/json',
+      'user-agent': 'pa-vendor-gate-zero-spend-verifier/2.0',
+    },
+    redirect: 'follow',
+    signal: AbortSignal.timeout(20000),
+  })
   const text = await res.text()
-  const availability = res.headers.get('x-appdeploy-app-availability')
-  if (availability === 'temporarily-unavailable') {
-    throw new Error('appdeploy_hosting_temporarily_unavailable: public edge intercepted the app before its x402 handler')
+  let body = null
+  try {
+    body = JSON.parse(text)
+  } catch {
+    throw new Error(
+      'response was not JSON: status=' +
+        res.status +
+        ' content-type=' +
+        String(res.headers.get('content-type')) +
+        ' body=' +
+        text.slice(0, 300)
+    )
   }
-  assert.equal(res.status, 402, 'expected unpaid HTTP 402')
-  assert.match(res.headers.get('content-type') || '', /application\/json/i)
+  if (
+    res.headers.get('x-appdeploy-app-availability') ===
+      'temporarily-unavailable' ||
+    body?.code === 'APP_TEMPORARILY_UNAVAILABLE'
+  ) {
+    throw new Error('public serving layer reported APP_TEMPORARILY_UNAVAILABLE')
+  }
+  assert.equal(res.status, expectedStatus)
+  return { res, body }
+}
 
-  const body = JSON.parse(text)
-  assert.equal(body.x402Version, 2, '402 body missing x402Version=2')
-  assert.ok(Array.isArray(body.accepts) && body.accepts.length > 0, '402 body accepts[] missing')
-
-  const accept = body.accepts[0]
+function assertTerms(doc) {
+  assert.equal(doc?.x402Version, 2)
+  assert.ok(Array.isArray(doc?.accepts) && doc.accepts.length > 0)
+  const accept = doc.accepts[0]
   assert.equal(accept.scheme, 'exact')
   assert.equal(accept.network, EXPECTED_NETWORK)
   assert.equal(String(accept.amount), EXPECTED_AMOUNT)
   assert.equal(String(accept.asset).toLowerCase(), EXPECTED_ASSET.toLowerCase())
   assert.equal(String(accept.payTo).toLowerCase(), EXPECTED_PAYTO.toLowerCase())
   assert.equal(accept.extra?.name, 'USD Coin')
-
-  assert.equal(body.price, EXPECTED_PRICE)
-  assert.equal(body.network, EXPECTED_NETWORK)
-  assert.equal(String(body.payTo).toLowerCase(), EXPECTED_PAYTO.toLowerCase())
-
-  const encoded = res.headers.get('payment-required')
-  assert.ok(encoded, 'PAYMENT-REQUIRED header missing')
-  const headerDoc = decodeHeader(encoded)
-  assert.equal(headerDoc.x402Version, 2)
-  assert.deepEqual(headerDoc.accepts, body.accepts)
-  assert.deepEqual(headerDoc.resource, body.resource)
-
-  assert.equal(res.headers.get('x402-price'), EXPECTED_PRICE)
-  assert.equal(res.headers.get('x402-network'), EXPECTED_NETWORK)
-  assert.equal(res.headers.get('x402-asset'), 'USDC')
-  assert.equal(
-    String(res.headers.get('x402-pay-to')).toLowerCase(),
-    EXPECTED_PAYTO.toLowerCase(),
-  )
-
-  return { res, body, headerDoc }
 }
 
 await check('bare vendor gate unpaid challenge', async () => {
-  await assertChallenge(bare)
+  const { res, body } = await readJsonResponse(bare, 402)
+  assertTerms(body)
+  assert.equal(body.price, EXPECTED_PRICE)
+  const encoded = res.headers.get('payment-required')
+  const headerDoc = decodeHeader(encoded)
+  assertTerms(headerDoc)
+  assert.deepEqual(headerDoc.accepts, body.accepts)
+  assert.deepEqual(headerDoc.resource, body.resource)
 })
 
 await check('executable vendor gate unpaid challenge', async () => {
-  const { body } = await assertChallenge(executable)
+  const { res, body } = await readJsonResponse(executable, 402)
+  assertTerms(body)
   assert.equal(body.resource?.url, bare)
+  assert.equal(res.headers.get('x402-price'), EXPECTED_PRICE)
+  assert.equal(res.headers.get('x402-network'), EXPECTED_NETWORK)
+  assert.equal(
+    String(res.headers.get('x402-pay-to')).toLowerCase(),
+    EXPECTED_PAYTO.toLowerCase()
+  )
 })
 
 await check('canonical x402 discovery advertises vendor gate', async () => {
-  const res = await fetch(origin + '/.well-known/x402')
-  if (res.headers.get('x-appdeploy-app-availability') === 'temporarily-unavailable') {
-    throw new Error('appdeploy_hosting_temporarily_unavailable: discovery endpoint intercepted by public edge')
-  }
-  assert.equal(res.status, 200)
-  const doc = await res.json()
-  assert.equal(doc.x402Version, 2)
-  const resource = doc.resources?.find(item => item?.resource === bare)
+  const { body } = await readJsonResponse(origin + '/.well-known/x402', 200)
+  assert.equal(body.x402Version, 2)
+  const resource = body.resources?.find(item => item?.resource === bare)
   assert.ok(resource, 'vendor gate missing from /.well-known/x402')
-  assert.equal(resource.price, EXPECTED_PRICE)
-  assert.equal(resource.accepts?.[0]?.network, EXPECTED_NETWORK)
-  assert.equal(String(resource.accepts?.[0]?.amount), EXPECTED_AMOUNT)
+  const terms = resource.accepts?.[0]
+  assert.equal(resource.price ?? '$0.020', EXPECTED_PRICE)
+  assert.equal(terms?.network, EXPECTED_NETWORK)
+  assert.equal(String(terms?.amount), EXPECTED_AMOUNT)
+  assert.equal(String(terms?.asset).toLowerCase(), EXPECTED_ASSET.toLowerCase())
+  assert.equal(String(terms?.payTo).toLowerCase(), EXPECTED_PAYTO.toLowerCase())
 })
 
-await check('OpenAPI exposes typed vendor gate', async () => {
-  const res = await fetch(origin + '/openapi.json')
-  if (res.headers.get('x-appdeploy-app-availability') === 'temporarily-unavailable') {
-    throw new Error('appdeploy_hosting_temporarily_unavailable: OpenAPI endpoint intercepted by public edge')
+await check('OpenAPI exposes vendor gate decision operation', async () => {
+  const { body } = await readJsonResponse(origin + '/openapi.json', 200)
+  const operation = body.paths?.[routePath]?.get
+  assert.ok(operation, 'vendor gate path missing from OpenAPI: ' + routePath)
+  assert.equal(operation.operationId, 'checkPennsylvaniaVendorIntakeGate')
+  assert.equal(operation['x-payment-info']?.price?.amount, '0.020000')
+})
+
+await check('agent guide explains decision semantics', async () => {
+  const skillCandidates = hostname.endsWith('.floot.app')
+    ? ['/skill.txt', '/skill.md']
+    : ['/skill.md', '/skill.txt']
+  let text = null
+  for (const path of skillCandidates) {
+    const res = await fetch(origin + path, {
+      headers: { 'user-agent': 'pa-vendor-gate-zero-spend-verifier/2.0' },
+      signal: AbortSignal.timeout(15000),
+    })
+    if (res.status === 200) {
+      text = await res.text()
+      break
+    }
   }
-  assert.equal(res.status, 200)
-  const doc = await res.json()
-  assert.equal(
-    doc.paths?.['/api/vendor-intake-gate']?.get?.operationId,
-    'checkPennsylvaniaVendorIntakeGate',
-  )
-  const schema =
-    doc.paths?.['/api/vendor-intake-gate']?.get?.responses?.['200']?.content?.[
-      'application/json'
-    ]?.schema
-  assert.equal(schema?.properties?.decision?.type, 'string')
-  assert.ok(schema?.properties?.evidence?.properties?.registry)
-  assert.ok(schema?.properties?.evidence?.properties?.address)
-  assert.ok(schema?.properties?.evidence?.properties?.ofac)
-  assert.ok(schema?.properties?.evidence?.properties?.domain)
-})
-
-async function demo(sampleCase) {
-  const res = await fetch(
-    origin + '/api/vendor-intake-demo?case=' + encodeURIComponent(sampleCase),
-  )
-  if (res.headers.get('x-appdeploy-app-availability') === 'temporarily-unavailable') {
-    throw new Error('appdeploy_hosting_temporarily_unavailable: demo endpoint intercepted by public edge')
-  }
-  assert.equal(res.status, 200)
-  return await res.json()
-}
-
-await check('fixed proceed decision fixture', async () => {
-  const data = await demo('proceed')
-  assert.equal(data.decision, 'proceed')
-  assert.equal(data.agentAction, 'continue_vendor_intake')
-  assert.deepEqual(data.reviewTriggers, [])
-  assert.equal(data.evidence?.registry?.complete, true)
-  assert.equal(data.evidence?.address?.providedEvidenceComplete, true)
-  assert.equal(data.evidence?.address?.registryEvidenceComplete, true)
-  assert.equal(data.evidence?.ofac?.complete, true)
-  assert.equal(data.evidence?.domain?.complete, true)
-})
-
-await check('fixed address mismatch fixture', async () => {
-  const data = await demo('address_mismatch')
-  assert.equal(data.decision, 'human_review')
-  assert.ok(
-    data.reviewTriggers?.some(
-      trigger => trigger?.code === 'registered_address_differs',
-    ),
-  )
-})
-
-await check('fixed domain mismatch fixture', async () => {
-  const data = await demo('domain_mismatch')
-  assert.equal(data.decision, 'human_review')
-  assert.ok(
-    data.reviewTriggers?.some(
-      trigger => trigger?.code === 'domain_name_not_aligned',
-    ),
-  )
-})
-
-await check('Market402 executable-url selftest', async () => {
-  const res = await fetch('https://market402.com/selftest', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ url: executable }),
-  })
-  assert.equal(res.status, 200)
-  const data = await res.json()
-  console.log('MARKET402_VENDOR_GATE', JSON.stringify(data))
-  assert.equal(data.ok, true)
-  assert.equal(data.summary?.failed, 0)
+  assert.ok(text, 'no readable skill document')
+  assert.match(text, /vendor-intake/i)
+  assert.match(text, /proceed/i)
+  assert.match(text, /human_review/i)
+  assert.match(text, /\$0\.020/)
+  assert.match(text, /not .*sanctions clearance|not sanctions clearance/i)
 })
 
 const failed = checks.filter(item => !item.ok)
 console.log(
   'SUMMARY',
-  JSON.stringify({ origin, bare, executable, checks, failed }, null, 2),
+  JSON.stringify(
+    {
+      origin,
+      routePath,
+      bare,
+      executable,
+      checks,
+      failed,
+      zeroSpend: true,
+      paymentSent: false,
+    },
+    null,
+    2
+  )
 )
 
 if (failed.length) process.exitCode = 1

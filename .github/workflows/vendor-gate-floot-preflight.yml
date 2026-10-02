@@ -1,0 +1,120 @@
+name: Vendor gate Floot release preflight
+
+on:
+  pull_request:
+    paths:
+      - 'docs/pa-entity-floot-release/vendor-intake-gate_GET.ts'
+      - 'docs/pa-entity-floot-release/vendor-intake-gate_GET.schema.ts'
+      - 'docs/pa-entity-floot-release/FLOOT_SAFE_PATCH_3_OPENAPI.txt'
+      - 'docs/pa-entity-floot-release/FLOOT_SAFE_PATCH_4_AGENT_TEXT.txt'
+      - 'docs/pa-entity-floot-release/FLOOT_SAFE_PATCH_5_X402_ALIASES.txt'
+      - 'docs/pa-entity-floot-release/FLOOT_SAFE_PATCH_6_X402_CATALOG.txt'
+      - 'docs/pa-entity-floot-release/FLOOT_SAFE_PATCH_7_EXTENSIONLESS.txt'
+      - 'docs/pa-entity-floot-release/FLOOT_SAFE_PATCH_8_X402_SERVICES.txt'
+      - 'scripts/test-floot-vendor-gate-release.mts'
+      - 'scripts/verify-vendor-gate-upstreams.mjs'
+      - 'scripts/verify-pa-vendor-gate.mjs'
+      - '.github/workflows/vendor-gate-floot-preflight.yml'
+  push:
+    paths:
+      - 'docs/pa-entity-floot-release/vendor-intake-gate_GET.ts'
+      - 'docs/pa-entity-floot-release/vendor-intake-gate_GET.schema.ts'
+      - 'docs/pa-entity-floot-release/FLOOT_SAFE_PATCH_3_OPENAPI.txt'
+      - 'docs/pa-entity-floot-release/FLOOT_SAFE_PATCH_4_AGENT_TEXT.txt'
+      - 'docs/pa-entity-floot-release/FLOOT_SAFE_PATCH_5_X402_ALIASES.txt'
+      - 'docs/pa-entity-floot-release/FLOOT_SAFE_PATCH_6_X402_CATALOG.txt'
+      - 'docs/pa-entity-floot-release/FLOOT_SAFE_PATCH_7_EXTENSIONLESS.txt'
+      - 'docs/pa-entity-floot-release/FLOOT_SAFE_PATCH_8_X402_SERVICES.txt'
+      - 'scripts/test-floot-vendor-gate-release.mts'
+      - 'scripts/verify-vendor-gate-upstreams.mjs'
+      - 'scripts/verify-pa-vendor-gate.mjs'
+      - '.github/workflows/vendor-gate-floot-preflight.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Deterministic vendor-gate decision and x402 tests
+        run: npx -y tsx@4.20.6 scripts/test-floot-vendor-gate-release.mts
+
+      - name: Verify direct public upstream readiness
+        run: node scripts/verify-vendor-gate-upstreams.mjs
+
+      - name: Verify canonical release discovery contains the vendor gate
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs'
+
+          const patch = fs.readFileSync(
+            'docs/pa-entity-floot-release/FLOOT_SAFE_PATCH_7_EXTENSIONLESS.txt',
+            'utf8'
+          )
+          const marker = '*** Add File: static/.well-known/x402\n'
+          const start = patch.indexOf(marker)
+          const end = patch.indexOf('\n*** End Patch', start)
+          if (start < 0 || end < 0) throw new Error('canonical x402 patch payload missing')
+
+          const json = patch
+            .slice(start + marker.length, end)
+            .split('\n')
+            .map(line => (line.startsWith('+') ? line.slice(1) : line))
+            .join('\n')
+            .trim()
+
+          const doc = JSON.parse(json)
+          if (doc.x402Version !== 2) throw new Error('canonical manifest is not x402 v2')
+          if (!Array.isArray(doc.resources) || doc.resources.length < 3) {
+            throw new Error('canonical manifest must preserve both PA routes and the vendor gate')
+          }
+
+          const requiredPaths = [
+            '/_api/pa-business',
+            '/_api/pa-entity-one',
+            '/_api/vendor-intake-gate',
+          ]
+          for (const path of requiredPaths) {
+            if (!doc.resources.some(item => new URL(item?.resource).pathname === path)) {
+              throw new Error('canonical manifest missing required resource ' + path)
+            }
+          }
+
+          const gate = doc.resources.find(
+            item =>
+              item?.resource ===
+              'https://pa-entity-x402.floot.app/_api/vendor-intake-gate'
+          )
+          if (!gate) throw new Error('vendor gate missing from canonical manifest')
+          const terms = gate.accepts?.[0]
+          if (String(terms?.amount) !== '20000') throw new Error('vendor gate amount mismatch')
+          if (terms?.network !== 'eip155:8453') throw new Error('vendor gate network mismatch')
+          if (
+            String(terms?.asset).toLowerCase() !==
+            '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913'
+          ) throw new Error('vendor gate asset mismatch')
+          if (
+            String(terms?.payTo).toLowerCase() !==
+            '0x708f7b52b56eafd7fc1de65fc7752ed732914021'
+          ) throw new Error('vendor gate payout mismatch')
+
+          const endpointSource = fs.readFileSync(
+            'docs/pa-entity-floot-release/vendor-intake-gate_GET.ts',
+            'utf8'
+          )
+          if (endpointSource.includes('api-v2.appdeploy.ai')) {
+            throw new Error('Floot vendor gate still depends on AppDeploy')
+          }
+
+          console.log('VENDOR_GATE_FLOOT_PREFLIGHT=PASS')
+          NODE
