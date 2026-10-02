@@ -36,7 +36,8 @@
     "005",
     "006",
     "007",
-    "008"
+    "008",
+    "009"
   ],
   "deployment_blocker": {
     "provider": "AppDeploy",
@@ -45,7 +46,6 @@
     "spend_authorized": false
   },
   "design_products": [
-    "009",
     "010"
   ]
 }
