@@ -42,6 +42,12 @@ for (const [id, path] of checks) {
       signal: AbortSignal.timeout(15000),
     });
     const text = await response.text();
+    let jsonBody = null;
+    try {
+      jsonBody = JSON.parse(text);
+    } catch {
+      jsonBody = null;
+    }
     results.push({
       id,
       path,
@@ -51,6 +57,10 @@ for (const [id, path] of checks) {
       paymentRequired: Boolean(response.headers.get('payment-required')),
       bodyLength: text.length,
       bodyPrefix: text.slice(0, 180).replace(/\s+/g, ' '),
+      resourceCount:
+        id === 'manifest' && Array.isArray(jsonBody?.resources)
+          ? jsonBody.resources.length
+          : null,
     });
   } catch (error) {
     results.push({
@@ -78,10 +88,15 @@ const futureRoutesCurrentlyLive = results.filter(
     item.status !== 404
 );
 
+const requireTwoRouteBaseline =
+  process.env.REQUIRE_TWO_ROUTE_BASELINE === '1';
+
 const report = {
   checkedAt: new Date().toISOString(),
   origin: ORIGIN,
   expectedCurrentState: 'two-route PA seller before eight-route recovery',
+  strictTwoRouteBaselineRequired: requireTwoRouteBaseline,
+  manifestResourceCount: manifest?.resourceCount ?? null,
   paidHealthy,
   futureRoutesCurrentlyLive: futureRoutesCurrentlyLive.map((item) => ({
     id: item.id,
@@ -97,3 +112,7 @@ if (reportPath) await writeFile(reportPath, json + '\n', 'utf8');
 
 if (paidHealthy !== 2) process.exitCode = 1;
 if (manifest?.status !== 200) process.exitCode = 1;
+if (requireTwoRouteBaseline) {
+  if (manifest?.resourceCount !== 2) process.exitCode = 1;
+  if (futureRoutesCurrentlyLive.length !== 0) process.exitCode = 1;
+}
