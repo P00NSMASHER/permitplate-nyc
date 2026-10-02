@@ -139,6 +139,7 @@ const paths = new Set(
   tools
     .map((tool) => {
       const raw =
+        tool?.route ??
         tool?.resource ??
         tool?.url ??
         tool?.endpoint ??
