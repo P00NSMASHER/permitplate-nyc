@@ -56,3 +56,13 @@ jobs:
         run: node --test factory/products/pa-business-domain-match/metadata.test.js
       - name: Run Product 005 release gate
         run: node factory/scripts/validate-product-005.js
+      - name: Test direct SEC EDGAR adapter
+        run: node --test factory/packages/sources/sec-filings.test.js
+      - name: Test Product 006 freshness decision
+        run: node --test factory/products/sec-filing-freshness/decision.test.js
+      - name: Test Product 006 service composition
+        run: node --test factory/products/sec-filing-freshness/service.test.js
+      - name: Test Product 006 paid x402 handler
+        run: node --test factory/products/sec-filing-freshness/paid-handler.test.js
+      - name: Test Product 006 discovery metadata
+        run: node --test factory/products/sec-filing-freshness/metadata.test.js
