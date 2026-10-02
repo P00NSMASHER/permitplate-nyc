@@ -335,6 +335,27 @@ await withMockFetch(async url => {
 // OFAC success and source-failure non-settlement.
 await withMockFetch(async url => {
   if (url.endsWith('/verify')) return json({ isValid: true })
+  if (url.endsWith('/SDN.CSV') || url.endsWith('/ALT.CSV')) {
+    return new Response('down', { status: 503 })
+  }
+  throw new Error('unexpected URL ' + url)
+}, async calls => {
+  const response = await handleOfac(
+    new Request(
+      'https://pa-entity-x402.floot.app/_api/ofac-sdn-screen?name=VLADIMIR%20PUTIN&limit=3&minScore=90',
+      { headers: { 'payment-signature': paymentHeader() } }
+    )
+  )
+  assert.equal(status(response), 502)
+  assert.equal(
+    calls.filter(call => call.url.endsWith('/settle')).length,
+    0,
+    'OFAC source failure must not settle'
+  )
+})
+
+await withMockFetch(async url => {
+  if (url.endsWith('/verify')) return json({ isValid: true })
   if (url.endsWith('/SDN.CSV')) {
     return csv(
       '35096,"PUTIN, Vladimir Vladimirovich",individual,RUSSIA-EO14024,President,-0-,-0-,-0-,-0-,-0-,-0-,fixture\n'
@@ -361,10 +382,5 @@ await withMockFetch(async url => {
   assert.equal(body.candidates[0].uid, '35096')
   assert.equal(calls.filter(call => call.url.endsWith('/settle')).length, 1)
 })
-
-// Use a new query to force source loading if the module cache was populated by the success test.
-// The already-loaded valid cache means a network outage after warmup should not break service;
-// therefore source-failure-before-settle is asserted structurally through a fresh module import elsewhere.
-assert.ok(true)
 
 console.log('Floot raw rehost endpoint tests passed: Treasury, RDAP, Census, SEC, OFAC')
