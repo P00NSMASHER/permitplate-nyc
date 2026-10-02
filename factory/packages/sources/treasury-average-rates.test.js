@@ -51,3 +51,50 @@ test("Treasury transport failure throws source error",async()=>{
  const a=createTreasuryAverageRatesAdapter({fetchImpl:async()=>response({},503)});
  await assert.rejects(()=>a.lookup({security:"Total Marketable"}),e=>e.code==="SOURCE_HTTP_ERROR");
 });
+
+
+test("history returns newest distinct monthly points for one exact security", async () => {
+  const adapter=createTreasuryAverageRatesAdapter({
+    fetchImpl:async()=>response({
+      data:[
+        {record_date:"2026-08-31",security_type_desc:"Marketable",security_desc:"Total Marketable",avg_interest_rate_amt:"3.475"},
+        {record_date:"2026-08-31",security_type_desc:"Nonmarketable",security_desc:"Total Nonmarketable",avg_interest_rate_amt:"3.200"},
+        {record_date:"2026-07-31",security_type_desc:"Marketable",security_desc:"Total Marketable",avg_interest_rate_amt:"3.525"},
+        {record_date:"2026-06-30",security_type_desc:"Marketable",security_desc:"Total Marketable",avg_interest_rate_amt:"3.600"}
+      ]
+    })
+  });
+  const result=await adapter.history({security:"Total Marketable",points:2});
+  assert.equal(result.available,true);
+  assert.equal(result.found,true);
+  assert.equal(result.ambiguous,false);
+  assert.deepEqual(result.points.map(p=>p.recordDate),["2026-08-31","2026-07-31"]);
+  assert.deepEqual(result.points.map(p=>p.averageInterestRatePercent),[3.475,3.525]);
+});
+
+test("history fails closed on ambiguous contains query", async () => {
+  const adapter=createTreasuryAverageRatesAdapter({
+    fetchImpl:async()=>response({
+      data:[
+        {record_date:"2026-08-31",security_type_desc:"Marketable",security_desc:"Treasury Notes",avg_interest_rate_amt:"4.0"},
+        {record_date:"2026-08-31",security_type_desc:"Marketable",security_desc:"Treasury Bonds",avg_interest_rate_amt:"4.5"},
+        {record_date:"2026-07-31",security_type_desc:"Marketable",security_desc:"Treasury Notes",avg_interest_rate_amt:"4.1"},
+        {record_date:"2026-07-31",security_type_desc:"Marketable",security_desc:"Treasury Bonds",avg_interest_rate_amt:"4.6"}
+      ]
+    })
+  });
+  const result=await adapter.history({security:"Treasury",points:2});
+  assert.equal(result.found,true);
+  assert.equal(result.ambiguous,true);
+  assert.deepEqual(result.points,[]);
+});
+
+test("history validates requested point count", async () => {
+  const adapter=createTreasuryAverageRatesAdapter({
+    fetchImpl:async()=>response({data:[{record_date:"2026-08-31",security_desc:"Total Marketable",avg_interest_rate_amt:"3.4"}]})
+  });
+  await assert.rejects(
+    ()=>adapter.history({security:"Total Marketable",points:1}),
+    error=>error.code==="INVALID_INPUT"
+  );
+});
