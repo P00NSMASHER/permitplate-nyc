@@ -290,3 +290,11 @@ jobs:
         run: node --test factory/products/pa-entity-type-policy/metadata.test.js
       - name: Run Product 021 release gate
         run: node factory/scripts/validate-product-021.js
+      - name: Test Product 022 decision policy
+        run: node --test factory/products/pa-registered-county-policy/decision.test.js
+      - name: Test Product 022 service composition
+        run: node --test factory/products/pa-registered-county-policy/service.test.js
+      - name: Test Product 022 paid x402 handler
+        run: node --test factory/products/pa-registered-county-policy/paid-handler.test.js
+      - name: Test Product 022 discovery metadata
+        run: node --test factory/products/pa-registered-county-policy/metadata.test.js
