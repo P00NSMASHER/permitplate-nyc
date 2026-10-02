@@ -13,7 +13,8 @@ const PRODUCT_MODULES=[
   ["pa-business-domain-match","products/pa-business-domain-match/metadata.js"],
   ["sec-filing-freshness","products/sec-filing-freshness/metadata.js"],
   ["domain-registration-age","products/domain-registration-age/metadata.js"],
-  ["treasury-average-rate-threshold","products/treasury-average-rate-threshold/metadata.js"]
+  ["treasury-average-rate-threshold","products/treasury-average-rate-threshold/metadata.js"],
+  ["pa-business-formation-age","products/pa-business-formation-age/metadata.js"]
 ];
 
 function expectedAtomic(priceUsdc){
@@ -59,7 +60,7 @@ function buildReleaseBundle(publicApiBase=DEFAULT_BASE){
     catalog:{
       x402Version:2,
       name:"x402 Product Factory staging catalog",
-      description:"Machine-generated candidate catalog for factory Products 003–008. Production references 001–002 are intentionally not replaced by this staging bundle.",
+      description:"Machine-generated candidate catalog for factory Products 003–009. Production references 001–002 are intentionally not replaced by this staging bundle.",
       resources
     },
     openapi:{
@@ -67,7 +68,7 @@ function buildReleaseBundle(publicApiBase=DEFAULT_BASE){
       info:{
         title:"x402 Product Factory staging API",
         version:"0.1.0",
-        description:"Machine-generated staging OpenAPI for Products 003–008."
+        description:"Machine-generated staging OpenAPI for Products 003–009."
       },
       servers:[{url:base}],
       paths
