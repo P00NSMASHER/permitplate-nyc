@@ -359,5 +359,26 @@
       "ofac": 2869,
       "vendorGate": 8142
     }
-  }
+  },
+  "deploymentBundles": [
+    {
+      "path": "recovery/floot-deployment-bundle-01.json",
+      "gitBlobSha": "8b040e229e25782336442b72591172645236b896",
+      "range": {
+        "from": 1,
+        "to": 13
+      },
+      "itemCount": 13
+    },
+    {
+      "path": "recovery/floot-deployment-bundle-02.json",
+      "gitBlobSha": "47a073817132dec73442b76d7fcf7eb34b4467c1",
+      "range": {
+        "from": 14,
+        "to": 26
+      },
+      "itemCount": 13
+    }
+  ],
+  "bundlePolicy": "Deployment bundles are immutable transport containers only. Fetch/verify each by the recorded Git blob SHA; every embedded item must still match the authoritative ordered write entry source/target/blob SHA/size. Never trust a bundle fetched only from mutable main."
 }
