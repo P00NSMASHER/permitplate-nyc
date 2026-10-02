@@ -29,6 +29,7 @@ const safePatchFiles = [
   'FLOOT_SAFE_PATCH_4_AGENT_TEXT.txt',
   'FLOOT_SAFE_PATCH_5_X402_ALIASES.txt',
   'FLOOT_SAFE_PATCH_6_X402_CATALOG.txt',
+  'FLOOT_SAFE_PATCH_8_X402_SERVICES.txt',
 ]
 
 function parsePatch(path) {
@@ -77,7 +78,7 @@ for (const name of safePatchFiles) {
   }
 }
 
-assert.equal(standard.size, 14, 'six standard safe patches must contain exactly 14 unique Floot files')
+assert.equal(standard.size, 14, 'seven standard safe patches must contain exactly 14 unique Floot files')
 
 for (const [target, fixture] of Object.entries(mapping)) {
   assert.ok(standard.has(target), `missing Floot target ${target}`)
@@ -121,7 +122,8 @@ const fingerprint = crypto
   .digest('hex')
 
 console.log('PA Entity Floot safe patch parity: 15/15 exact')
-console.log('SAFE_PATCH_COUNT=7')
+console.log('SAFE_PATCH_COUNT=8')
+console.log('STANDARD_SAFE_PATCH_COUNT=7')
 console.log('STANDARD_DEPLOY_FILES=14')
 console.log('EXTENSIONLESS_DEPLOY_FILES=1')
 console.log('FLOOT_RELEASE_FINGERPRINT=' + fingerprint)
