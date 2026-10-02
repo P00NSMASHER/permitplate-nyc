@@ -7,6 +7,10 @@ on:
         description: Expected resource count in pa-entity-x402.floot.app/.well-known/x402
         required: true
         default: '2'
+      rehost_base_url:
+        description: Optional same-origin replacement base, e.g. https://pa-entity-x402.floot.app
+        required: false
+        default: ''
 
 permissions:
   contents: read
