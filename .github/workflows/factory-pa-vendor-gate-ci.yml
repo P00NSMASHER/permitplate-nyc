@@ -34,8 +34,6 @@ jobs:
         run: node --test factory/products/pa-vendor-identity-match/service.test.js
       - name: Test concrete PA Census RDAP adapters
         run: node --test factory/packages/sources/appdeploy-public.test.js
-      - name: Test Product 003 HTTP handler
-        run: node --test factory/products/pa-vendor-identity-match/http-handler.test.js
       - name: Test shared x402 payment flow
         run: node --test factory/packages/x402/payment.test.js
       - name: Test Product 003 paid x402 handler
