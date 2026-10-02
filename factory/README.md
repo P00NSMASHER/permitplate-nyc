@@ -168,6 +168,11 @@ The product deliberately does **not** treat RDAP's `lastUpdateOfRdapDatabase` ev
 - `packages/sources/live-pa-identity.js` — direct PA Open Data, Census, and authoritative RDAP adapters
 - `product-registry.json` — canonical product IDs/routes/prices/statuses
 - `scripts/validate-registry.js` — collision/integrity gate
+- `runtime/create-runtime.js` — one portable runtime wiring every staged paid route and compiled discovery surface
+- `runtime/appdeploy-bridge.js` — AppDeploy-compatible GET/OPTIONS route map
+- `runtime/deployment-preflight.js` — environment prerequisite checks such as Product 006's SEC identity requirement
+- `runtime/validate-deploy-candidate.js` — unified structural deploy-candidate gate
+- `scripts/validate-no-nested-seller-calls.js` — prevents products from calling seller-owned AppDeploy APIs internally
 - product-specific deterministic release gates
 - coordinated zero-spend live-source smokes
 - resource-level x402 `accepts[]` metadata for Bazaar-compatible discovery
@@ -184,13 +189,28 @@ Products follow:
 
 Required-source transport failure is non-chargeable and must not settle.
 
+## Deployment readiness
+
+A candidate deployment must pass all of the following from the same registry head:
+
+- product-specific release gates
+- factory registry and migration-manifest integrity
+- canonical discovery bundle generation and hashes
+- portable runtime route coverage
+- CORS OPTIONS coverage for every paid route
+- malformed-payment and invalid-input ordering checks
+- no nested seller-owned AppDeploy calls
+- deployment prerequisite preflight
+
+Product 006 additionally requires a real `SEC_USER_AGENT` containing a declared client identity and contact email. CI uses a dummy contact only for structural validation; it is not production configuration.
+
 ## Current deployment blocker
 
 AppDeploy reported an account-wide Free tier pause with weekly reset at:
 
 `2026-10-05T00:00:00Z`
 
-No upgrade/payment has been authorized. Products 003–011 therefore remain staging candidates rather than production claims.
+No upgrade/payment has been authorized. Products 003–012 therefore remain staging candidates rather than production claims.
 
 ## Branch isolation
 
