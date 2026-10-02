@@ -19,6 +19,12 @@ const alias = JSON.parse(await readFile(join(out, '.well-known/x402.json'), 'utf
 const services = JSON.parse(
   await readFile(join(out, '.well-known/x402-services.json'), 'utf8')
 )
+const catalog = JSON.parse(
+  await readFile(join(out, '.well-known/x402-catalog.json'), 'utf8')
+)
+const serviceSummary = JSON.parse(
+  await readFile(join(out, '.well-known/x402-service.json'), 'utf8')
+)
 const llms = await readFile(join(out, 'llms-full.txt'), 'utf8')
 const skill = await readFile(join(out, 'skill.txt'), 'utf8')
 
@@ -27,6 +33,9 @@ assert.equal(canonical.resources.length, 8)
 assert.equal(Object.keys(openapi.paths).length, 8)
 assert.equal(alias.resources.length, 8)
 assert.equal(services.resources.length, 8)
+assert.equal(catalog.resources.length, 8)
+assert.equal(serviceSummary.resources.length, 8)
+assert.equal(serviceSummary.payment.network, 'eip155:8453')
 
 const expected = new Map([
   ['/_api/pa-entity-one', ['1000', '$0.001']],
@@ -71,10 +80,12 @@ for (const content of [
   JSON.stringify(openapi),
   JSON.stringify(alias),
   JSON.stringify(services),
+  JSON.stringify(catalog),
+  JSON.stringify(serviceSummary),
   llms,
   skill,
 ]) {
   assert.equal(content.includes('api-v2.appdeploy.ai'), false)
 }
 
-console.log('PASS generated Floot discovery bundle: 8 resources / 9 files / no AppDeploy runtime URLs')
+console.log('PASS generated Floot discovery bundle: 8 resources / 11 files / no AppDeploy runtime URLs')
