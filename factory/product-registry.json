@@ -203,8 +203,8 @@
         "SEC_USER_AGENT must contain a declared client identity and contact email before enabling live SEC EDGAR calls"
       ],
       "release_gate": "factory/scripts/validate-product-013.js",
-      "deployment_blocker": "AppDeploy weekly credit reset 2026-10-05T00:00:00Z",
-      "live_source_status": "SEC adapter/source contract shared with Product 006; truthful SEC_USER_AGENT contact required before live-source execution"
+      "deployment_blocker": "AppDeploy weekly credit reset 2026-10-05T00:00:00Z plus SEC_USER_AGENT contact identity",
+      "live_source_status": "SEC adapter transport is intentionally blocked until SEC_USER_AGENT contains a real contact email; deterministic/source-contract tests are required meanwhile"
     }
   ]
 }
