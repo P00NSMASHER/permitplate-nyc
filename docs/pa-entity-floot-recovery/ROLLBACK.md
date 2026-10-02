@@ -20,6 +20,8 @@ This is a cross-check, **not** the authoritative rollback source. Public bytes c
 
 Immediately after the post-reset `list_files`, first compare the 26 deployment targets against the current Floot file tree so new-vs-existing targets are known.
 
+Use `recovery/floot-snapshot-capture-plan.json` as the canonical machine-readable definition of the five normal `read_files` batches, and validate it with `node scripts/validate-floot-snapshot-capture-plan.mjs` before capture.
+
 Then capture these 16 current project files with **deterministic bounded `read_files` batches**. Do not put all 16 files in one call: Floot caps aggregate output and can omit whole files at the end of an oversized batch.
 
 Use this capture order:
