@@ -184,6 +184,58 @@ function createTreasuryAverageRatesAdapter({fetchImpl=fetch,timeoutMs=SOURCE_TIM
           frequency:"monthly"
         }
       };
+    },
+
+    async compare({leftSecurity,rightSecurity}){
+      const left=normalizeSecurity(leftSecurity);
+      const right=normalizeSecurity(rightSecurity);
+      for(const value of [left,right]){
+        if(value.length<2||value.length>100){
+          const error=new Error("invalid_security");
+          error.code="INVALID_INPUT";
+          throw error;
+        }
+      }
+      if(left.toLowerCase()===right.toLowerCase()){
+        const error=new Error("securities_must_differ");
+        error.code="INVALID_INPUT";
+        throw error;
+      }
+
+      const data=await rows();
+      const recordDate=String(data[0]?.record_date??"");
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(recordDate)){
+        const error=new Error("treasury_record_date_invalid");
+        error.code="SOURCE_CONTRACT_INVALID";
+        throw error;
+      }
+      const latest=data.filter(row=>String(row?.record_date??"")===recordDate);
+
+      function resolve(wanted){
+        const choice=chooseDescription(latest,wanted);
+        const selected=choice.selected
+          ? normalizeRow(latest.find(row=>String(row?.security_desc??"").trim()===choice.selected))
+          : null;
+        return {
+          query:wanted,
+          found:choice.found,
+          ambiguous:choice.ambiguous,
+          matchDescriptions:choice.descriptions,
+          selected
+        };
+      }
+
+      return {
+        available:true,
+        recordDate,
+        left:resolve(left),
+        right:resolve(right),
+        provenance:{
+          source:"U.S. Treasury Fiscal Data — Average Interest Rates on U.S. Treasury Securities",
+          url:TREASURY_API,
+          frequency:"monthly"
+        }
+      };
     }
   };
 }
