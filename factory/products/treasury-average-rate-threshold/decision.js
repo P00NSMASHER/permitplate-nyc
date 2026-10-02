@@ -23,7 +23,13 @@ function assessTreasuryRateThreshold(evidence,{thresholdPercent,operator="gte",c
     return {...base,decision:"human_review",reasonCodes:["TREASURY_SECURITY_AMBIGUOUS"]};
   }
 
-  const rate=Number(evidence?.selected?.averageInterestRatePercent);
+  const rawRate=evidence?.selected?.averageInterestRatePercent;
+  const rate=
+    typeof rawRate==="number"
+      ? rawRate
+      : typeof rawRate==="string"&&rawRate.trim()!==""
+        ? Number(rawRate)
+        : NaN;
   if(!Number.isFinite(rate)){
     return {...base,decision:"human_review",reasonCodes:["TREASURY_RATE_UNAVAILABLE"]};
   }
