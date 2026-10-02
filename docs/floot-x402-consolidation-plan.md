@@ -111,6 +111,18 @@ Therefore the consolidation rule is now stricter:
 
 The portfolio verifier at `scripts/verify-x402-portfolio.mjs` and receipt `verification/x402-portfolio-verification-latest.json` are the authority for this availability gate.
 
+## Prepared rehost assets
+
+Use these before writing new implementation from scratch:
+
+- `docs/floot-rehost-implementation-map.md` — exact source versions, public upstreams, cache behavior, migration order
+- `recovery/x402-rehost-core.mjs` — host-independent Census/OFAC/RDAP/SEC/Treasury data core
+- `scripts/test-x402-rehost-core.mjs` — official-upstream smoke test for that core
+- issue #38 — AppDeploy availability incident
+- issue #39 — Floot direct-rehost recovery checklist
+
+The host-independent core intentionally contains no AppDeploy SDK dependency and no secrets.
+
 ## First action after quota reset
 
 1. Call Floot `list_files` for project:
