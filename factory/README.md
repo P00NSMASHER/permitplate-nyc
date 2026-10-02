@@ -14,6 +14,7 @@ Build narrow, deterministic, machine-purchasable decision tools for autonomous a
 | 002 | PA Vendor Intake Gate | production reference | `/api/vendor-intake-gate` | $0.020 |
 | 003 | PA Vendor Identity Match | live-source-verified staging | `/api/pa-vendor-identity-match` | $0.005 |
 | 004 | PA Business Address Match | live-source-verified staging | `/api/pa-business-address-match` | $0.003 |
+| 005 | PA Business Domain Match | live-source-verified staging | `/api/pa-business-domain-match` | $0.003 |
 
 Product 001 has an independently verified third-party Base USDC settlement and remains the payment/distribution reference.
 
@@ -38,6 +39,21 @@ A cheaper unbundled address-only check.
 Combines:
 - Pennsylvania Department of State registry identity
 - U.S. Census address consistency
+
+Returns:
+- `match`
+- `human_review`
+
+No automatic rejection.
+
+## Product 005
+
+A cheaper company + domain identity check.
+
+Combines:
+- Pennsylvania Department of State registry identity
+- IANA bootstrap + authoritative RDAP
+- deterministic company/domain name alignment
 
 Returns:
 - `match`
