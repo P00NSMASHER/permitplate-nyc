@@ -34,6 +34,8 @@ const {createDomainExpirationService}=require("../products/domain-expiration-hor
 const {createPaidDomainExpirationHandler}=require("../products/domain-expiration-horizon/paid-handler");
 const {createDomainLastChangedService}=require("../products/domain-last-changed-recency/service");
 const {createPaidDomainLastChangedHandler}=require("../products/domain-last-changed-recency/paid-handler");
+const {createPaVendorNewDomainService}=require("../products/pa-vendor-new-domain-review/service");
+const {createPaidPaVendorNewDomainHandler}=require("../products/pa-vendor-new-domain-review/paid-handler");
 
 const PREFLIGHT_HEADERS=Object.freeze({
   "access-control-allow-origin":"*",
@@ -107,7 +109,8 @@ function createFactoryRuntime({
     "pa-entity-ofac-review":createPaEntityOfacReviewService({registry:a.registry,ofac:a.ofac,now}),
     "pa-business-formation-age":createFormationAgeService({registry:a.registry,now}),
     "domain-expiration-horizon":createDomainExpirationService({rdap:a.rdap,now}),
-    "domain-last-changed-recency":createDomainLastChangedService({rdap:a.rdap,now})
+    "domain-last-changed-recency":createDomainLastChangedService({rdap:a.rdap,now}),
+    "pa-vendor-new-domain-review":createPaVendorNewDomainService({registry:a.registry,rdap:a.rdap,now})
   };
 
   const handlerFactories={
@@ -124,7 +127,8 @@ function createFactoryRuntime({
     "pa-entity-ofac-review":createPaidPaEntityOfacHandler,
     "pa-business-formation-age":createPaidFormationAgeHandler,
     "domain-expiration-horizon":createPaidDomainExpirationHandler,
-    "domain-last-changed-recency":createPaidDomainLastChangedHandler
+    "domain-last-changed-recency":createPaidDomainLastChangedHandler,
+    "pa-vendor-new-domain-review":createPaidPaVendorNewDomainHandler
   };
 
   const routes=new Map();
