@@ -1,5 +1,5 @@
 name: inspect independent paid-proof coverage
-
+# refresh-marker: paid-proof-coverage-2026-10-02
 on:
   push:
     paths:
