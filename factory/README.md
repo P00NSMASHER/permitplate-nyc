@@ -29,6 +29,7 @@ Build narrow, deterministic, machine-purchasable decision tools for autonomous a
 | 017 | PA Vendor New-Domain Review | live-source-verified staging | `/api/pa-vendor-new-domain-review` | $0.005 |
 | 018 | PA Vendor Counterparty Review | live-source-verified staging | `/api/pa-vendor-counterparty-review` | $0.010 |
 | 019 | PA Vendor Maturity Review | live-source-verified staging | `/api/pa-vendor-maturity-review` | $0.007 |
+| 020 | PA Vendor Domain Continuity Review | live-source-verified staging | `/api/pa-vendor-domain-continuity-review` | $0.006 |
 
 Product 001 has an independently verified third-party Base USDC settlement and remains the payment/distribution reference.
 
@@ -269,6 +270,21 @@ Live smoke for `OpenAI OpCo` resolved `Openai Opco, Llc`, observed entity age 36
 
 This is a maturity/history signal only. Older entity/domain history is not proof of legitimacy, safety, ownership, authority, creditworthiness, or legal compliance, and recent registration is a review signal rather than proof of fraud.
 
+## Product 020
+
+Pennsylvania vendor domain-continuity review.
+
+Flow:
+- resolve one strong Pennsylvania legal entity,
+- align the supplied domain against the **resolved legal business name**,
+- require enough authoritative RDAP expiration runway,
+- require enough time since the authoritative `lastChanged` event,
+- return `stable_domain` or `human_review`.
+
+Live smoke for `OpenAI OpCo` resolved `Openai Opco, Llc`, observed `openai.com` expiration on `2029-01-19` (840 days away) and lastChanged on `2024-10-17` (715 days ago), and returned `stable_domain` with zero source failures.
+
+This is a continuity/timing signal only. Expiration runway does not guarantee renewal or uninterrupted service, lastChanged recency does not establish compromise or fraud, and legal-name/domain alignment does not prove domain ownership or control.
+
 ## Shared layers
 
 - `packages/x402/payment.js` — hardened Base USDC verify/settle flow
@@ -323,7 +339,7 @@ AppDeploy reported an account-wide Free tier pause with weekly reset at:
 
 `2026-10-05T00:00:00Z`
 
-No upgrade/payment has been authorized. Products 003–019 therefore remain staging candidates rather than production claims.
+No upgrade/payment has been authorized. Products 003–020 therefore remain staging candidates rather than production claims.
 
 ## Branch isolation
 
