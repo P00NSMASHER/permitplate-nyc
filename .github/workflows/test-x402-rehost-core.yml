@@ -16,6 +16,8 @@ on:
       - 'scripts/test-vendor-intake-gate-core.mjs'
       - 'recovery/netlify-x402/**'
       - 'scripts/test-netlify-x402-package.mjs'
+      - 'scripts/verify-netlify-x402.mjs'
+      - 'scripts/deploy-netlify-x402.ps1'
       - '.github/workflows/test-x402-rehost-core.yml'
   workflow_dispatch:
 
@@ -50,6 +52,7 @@ jobs:
           node --check recovery/vendor-intake-gate-core.mjs
           node --check scripts/test-vendor-intake-gate-core.mjs
           node --check scripts/test-netlify-x402-package.mjs
+          node --check scripts/verify-netlify-x402.mjs
 
       - name: Validate target portfolio contract
         run: node scripts/test-x402-target-manifest.mjs
@@ -68,6 +71,27 @@ jobs:
 
       - name: Validate Netlify fallback package
         run: node scripts/test-netlify-x402-package.mjs
+
+      - name: Parse guarded Netlify deploy script
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            "scripts/deploy-netlify-x402.ps1",
+            [ref]$tokens,
+            [ref]$errors
+          ) > $null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }
+
+      - name: Bundle Netlify fallback functions
+        run: |
+          npx -y netlify-cli@latest functions:build \
+            --src recovery/netlify-x402/netlify/functions \
+            --functions /tmp/netlify-x402-functions
 
       - name: Publish success commit status
         if: success()
