@@ -1,0 +1,47 @@
+name: Capture Floot static rollback baseline
+
+on:
+  push:
+    paths:
+      - 'scripts/capture-floot-static-rollback.mjs'
+      - '.github/workflows/capture-floot-static-rollback.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Capture public static rollback bytes
+        env:
+          REPORT_PATH: verification/floot-static-rollback-public-latest.json
+        run: node scripts/capture-floot-static-rollback.mjs
+
+      - name: Commit rollback receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          RECEIPT='verification/floot-static-rollback-public-latest.json'
+          cp "$RECEIPT" /tmp/floot-static-rollback-public-latest.json
+
+          git fetch origin main
+          git reset --hard origin/main
+          cp /tmp/floot-static-rollback-public-latest.json "$RECEIPT"
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$RECEIPT"
+          if git diff --cached --quiet; then
+            echo 'Rollback receipt unchanged.'
+            exit 0
+          fi
+          git commit -m 'verification: refresh Floot static rollback baseline'
+          git push origin HEAD:main
