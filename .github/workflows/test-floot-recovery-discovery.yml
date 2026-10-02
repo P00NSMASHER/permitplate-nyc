@@ -4,7 +4,12 @@ on:
   push:
     paths:
       - 'docs/pa-entity-floot-recovery/**'
+      - 'verification/floot-static-rollback-public-latest.json'
       - 'scripts/test-floot-recovery-discovery.mjs'
+      - 'scripts/validate-floot-pre-rehost-snapshot.mjs'
+      - 'scripts/compare-floot-snapshot-to-public-baseline.mjs'
+      - 'scripts/build-floot-rollback-plan.mjs'
+      - 'scripts/test-floot-rollback-tooling.mjs'
       - '.github/workflows/test-floot-recovery-discovery.yml'
   workflow_dispatch:
 
@@ -20,4 +25,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: node scripts/test-floot-recovery-discovery.mjs
+
+      - name: Verify recovery discovery documents
+        run: node scripts/test-floot-recovery-discovery.mjs
+
+      - name: Syntax-check rollback helpers
+        run: |
+          node --check scripts/validate-floot-pre-rehost-snapshot.mjs
+          node --check scripts/compare-floot-snapshot-to-public-baseline.mjs
+          node --check scripts/build-floot-rollback-plan.mjs
+          node --check scripts/test-floot-rollback-tooling.mjs
+
+      - name: Verify deterministic rollback tooling
+        run: node scripts/test-floot-rollback-tooling.mjs
