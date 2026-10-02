@@ -94,6 +94,23 @@ For the AppDeploy seller endpoints:
 
 Do not manufacture settlement history. Do not self-pay or seller-fund probes.
 
+## Availability gate added after AppDeploy edge regression
+
+A zero-spend marketplace refresh on 2026-10-02 observed the AppDeploy vendor-gate API returning HTTP 402 with platform body `APP_TEMPORARILY_UNAVAILABLE` and **no** `PAYMENT-REQUIRED` header, even though AppDeploy's control plane still reported the deployment as ready.
+
+Therefore the consolidation rule is now stricter:
+
+1. **Before adding any AppDeploy resource to the Floot manifest, probe that exact paid URL from an independent cloud runner.**
+2. Require the expected unpaid x402 challenge: HTTP 402, decodable `PAYMENT-REQUIRED`, x402 v2, correct amount/network/asset/payTo.
+3. Do not advertise a route that is returning a platform availability/error envelope rather than the seller's x402 challenge.
+4. If AppDeploy remains unavailable at the Floot reset:
+   - preserve the two working Floot PA routes;
+   - prioritize implementing/rehosting the **vendor-intake gate** on Floot itself;
+   - then migrate the highest-value component routes in demand order rather than publishing dead external resources.
+5. External absolute URLs remain acceptable only after they independently pass the same zero-spend buyer-style check.
+
+The portfolio verifier at `scripts/verify-x402-portfolio.mjs` and receipt `verification/x402-portfolio-verification-latest.json` are the authority for this availability gate.
+
 ## First action after quota reset
 
 1. Call Floot `list_files` for project:
@@ -106,7 +123,7 @@ Do not manufacture settlement history. Do not self-pay or seller-fund probes.
    - `llms-full.txt`
    - `skill.txt`
 4. Preserve the two working PA routes exactly.
-5. Add the six AppDeploy resources above so the manifest advertises **8 paid resources total**.
+5. Probe all six AppDeploy resources independently. Add only resources that currently return their real x402 payment challenge. If all six are healthy, the manifest target is **8 paid resources total**; otherwise keep unavailable routes out and begin the Floot rehost path above.
 6. Update OpenAPI/LLM/skill discovery consistently.
 7. Typecheck/tests if the project has relevant specs.
 8. Publish once to the existing subdomain:
@@ -127,10 +144,10 @@ Acceptance:
 - HTTP 200
 - valid JSON
 - x402Version 2
-- **8 resources**
+- resource count matches the set of routes that passed the independent availability gate
 - both existing Floot PA routes still present
-- vendor-intake gate present at $0.020
-- SEC/Census/OFAC/RDAP/Treasury present at $0.005
+- vendor-intake gate present at $0.020 only if its live route is healthy or it has been rehosted on Floot
+- SEC/Census/OFAC/RDAP/Treasury present only when their advertised paid URLs pass the real x402 challenge check
 
 ### B. Other discovery files
 
