@@ -8,14 +8,16 @@ on:
       - 'factory/products/pa-vendor-identity-match/**'
       - 'factory/products/pa-business-address-match/**'
       - 'factory/products/pa-business-domain-match/**'
+      - 'factory/products/sec-filing-freshness/**'
       - 'factory/packages/sources/live-pa-identity.js'
+      - 'factory/packages/sources/sec-filings.js'
       - '.github/workflows/factory-product-003-live-smoke.yml'
   workflow_dispatch:
 
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 6
     steps:
       - uses: actions/checkout@v4
       - name: Product 003 live source smoke
@@ -24,3 +26,5 @@ jobs:
         run: node factory/products/pa-business-address-match/live-smoke.js
       - name: Product 005 live source smoke
         run: node factory/products/pa-business-domain-match/live-smoke.js
+      - name: Product 006 live SEC smoke
+        run: node factory/products/sec-filing-freshness/live-smoke.js
