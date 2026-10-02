@@ -1,0 +1,32 @@
+name: SEC transport diagnostic once
+
+on:
+  push:
+    branches:
+      - x402-product-factory-bootstrap
+    paths:
+      - '.github/workflows/tmp-sec-transport-diagnostic.yml'
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Probe SEC transport
+        shell: bash
+        run: |
+          set -u
+          probe() {
+            label="$1"; url="$2"; ua="$3"
+            code=$(curl -sS -L --max-time 20 -A "$ua" -H 'Accept: application/json' -o /tmp/body -w '%{http_code}' "$url" || true)
+            echo "=== $label ==="
+            echo "HTTP=$code"
+            head -c 800 /tmp/body || true
+            echo
+          }
+          FACTORY='x402-product-factory/0.1 https://github.com/P00NSMASHER/permitplate-nyc'
+          PROD='x402-sec-filings/1.0 https://sec-recent-filings-x402-f9qatj.v2.appdeploy.ai'
+          probe FACTORY_TICKERS 'https://www.sec.gov/files/company_tickers.json' "$FACTORY"
+          probe PROD_TICKERS 'https://www.sec.gov/files/company_tickers.json' "$PROD"
+          probe FACTORY_AAPL 'https://data.sec.gov/submissions/CIK0000320193.json' "$FACTORY"
+          probe PROD_AAPL 'https://data.sec.gov/submissions/CIK0000320193.json' "$PROD"
