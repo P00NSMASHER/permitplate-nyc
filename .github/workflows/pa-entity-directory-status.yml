@@ -33,6 +33,8 @@ jobs:
           VENDOR = APP + '/api/vendor-intake-gate'
           MAIN = FLOOT + '/_api/pa-business'
           CHEAP = FLOOT + '/_api/pa-entity-one'
+          PAYTO = '0x708f7b52b56eafd7fc1de65fc7752ed732914021'
+          USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'
 
           def fetch_json(url, timeout=25):
               req = urllib.request.Request(
@@ -210,6 +212,52 @@ jobs:
                       {'seller': 'pa-entity-x402.floot.app'},
                   )
               )
+          }
+
+          # Base USDC transfer history for the payout wallet. This is wallet-level
+          # evidence only; correlate amounts/times carefully and never assume a
+          # transfer belongs to one endpoint without resource-level evidence too.
+          onchain = fetch_json(
+              query_url(
+                  'https://base.blockscout.com/api',
+                  {
+                      'module': 'account',
+                      'action': 'tokentx',
+                      'address': PAYTO,
+                      'contractaddress': USDC,
+                      'page': 1,
+                      'offset': 50,
+                      'sort': 'desc',
+                  },
+              )
+          )
+          incoming = []
+          if onchain.get('ok'):
+              rows = onchain.get('data', {}).get('result') or []
+              for row in rows:
+                  if str(row.get('to', '')).lower() != PAYTO.lower():
+                      continue
+                  try:
+                      decimals = int(row.get('tokenDecimal') or 6)
+                      amount = int(row.get('value') or 0) / (10 ** decimals)
+                  except Exception:
+                      amount = None
+                  incoming.append({
+                      'hash': row.get('hash'),
+                      'from': row.get('from'),
+                      'to': row.get('to'),
+                      'amount_usdc': amount,
+                      'timeStamp': row.get('timeStamp'),
+                      'confirmations': row.get('confirmations'),
+                      'tokenSymbol': row.get('tokenSymbol'),
+                  })
+          snapshot['onchain_base_usdc'] = {
+              **{k: v for k, v in onchain.items() if k != 'data'},
+              'incoming': incoming,
+              'note': (
+                  'Wallet-level evidence only. Compare with resource-specific '
+                  'facilitator stats before attributing a settlement.'
+              ),
           }
 
           with open(
