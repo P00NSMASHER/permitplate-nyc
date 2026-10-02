@@ -11,6 +11,8 @@ on:
       - 'scripts/build-floot-pre-rehost-snapshot.mjs'
       - 'scripts/test-floot-pre-rehost-snapshot-builder.mjs'
       - 'scripts/validate-floot-pre-rehost-snapshot.mjs'
+      - 'scripts/build-floot-rollback-plan.mjs'
+      - 'scripts/test-floot-rollback-plan-builder.mjs'
       - '.github/workflows/verify-floot-deployment-lock.yml'
   workflow_dispatch:
 
@@ -34,3 +36,6 @@ jobs:
 
       - name: Test pre-rehost snapshot builder
         run: node scripts/test-floot-pre-rehost-snapshot-builder.mjs
+
+      - name: Test rollback plan generator
+        run: node scripts/test-floot-rollback-plan-builder.mjs
