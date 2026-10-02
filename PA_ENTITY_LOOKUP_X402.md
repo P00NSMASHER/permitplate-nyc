@@ -159,9 +159,32 @@ Independent checks on 2026-10-01:
 - Coinbase/CDP: both routes return `valid: true` with accepted simulation
 - Circle agent-readiness score against the hosted OpenAPI: **93/100, grade A, tier strong**
 - nohumans.directory buyer search: the $0.001 AppDeploy best-match route is currently the first result for `Pennsylvania business registry`; the Floot $0.005 route is second and the Floot $0.001 route is third
-- PayAI public stats: zero settlements, zero distinct buyers, $0 volume at the latest check
+- PayAI resource-specific stats now show **1 settlement in the last 24h** on the Floot $0.001 best-match route. Base Blockscout independently shows one matching **0.001 USDC** transfer to the payout wallet at 2026-10-02T06:44:33Z from `0x7e6b6556322c4e26c567a867964ac793f5ee2b1c`. The payer is currently classified `external_unattributed`; it is not counted as verified-customer revenue.
 
-The remaining Agent402 dispatch gate is independent settlement history (`settlement_required`), not crawl health. No self-funded settlement is being used to manufacture that history.
+Agent402 remains healthy/routable but its current Base router verdict is still `settlement_required`; one observed settlement has not cleared its settlement floor. No self-funded settlement is being used to manufacture that history.
+
+## Fresh zero-spend directory snapshot — 2026-10-02
+
+A GitHub-hosted read-only verification lane now captures current marketplace/index state in `verification/pa-entity-directory-status-latest.json` and separately classifies settlement provenance in `verification/x402-revenue-attribution-latest.json`.
+
+Current raw-route evidence:
+- 402 Index: Floot $0.005 enriched route ranks **#1** and $0.001 best match **#2** for `Pennsylvania business registry`; both are healthy and x402-payment-valid
+- nohumans.directory: Floot $0.005 is probe-verified with 109/114 passing probes and zero consecutive failures; Floot $0.001 is probe-verified with **75/75** passing probes
+- Agent402: Floot origin is healthy (`health=1`), routable, and still exposes 2 paid tools; vendor gate is not yet in the Floot manifest
+- Market402 public index/search: vendor gate is still not independently visible
+- 402 Index vendor-gate record previously registered at `0d49cbe9-4a47-42fa-9654-1c79090035e4` currently returns 404 and the gate is absent from buyer-style query results
+- nohumans vendor-intake discovery does not currently surface the composed vendor gate
+
+Settlement evidence:
+- PayAI resource-specific stats for `https://pa-entity-x402.floot.app/_api/pa-entity-one`: 1 settlement in 24h / 7d / 30d; buyer bucket `1-9`
+- matching on-chain transfer: **0.001 USDC**, tx `0x17985b16137ff8aef95641be06424a5fa4e9edacc6ade5aaf0a58d523ad1cd73`
+- payer address: `0x7e6b6556322c4e26c567a867964ac793f5ee2b1c`
+- payer classification: **external_unattributed**
+- observed gross settlement value: **$0.001**
+- verified-customer revenue counted: **$0**
+- reason: the payer is external to the seller wallet and not present in repository/test history, but available public evidence does not yet prove whether it is a genuine end-customer agent versus an independent verifier/probe
+
+The accounting rule is intentionally strict: unknown external payers, probes/verifiers, self-payments, tests, registrations, and marketplace checks do not count as customer revenue.
 
 ## External status — historical raw-endpoint evidence from 2026-10-01
 
@@ -227,13 +250,11 @@ Those are intentionally not being added. The service will not expose the user's 
 
 ### ForgeMesh
 
-ForgeMesh can independently purchase eligible sellers after its own scoring/probe conditions are met, but its contribution rules require an existing Base USDC transfer to the seller payout wallet as proof before submission.
+ForgeMesh's current contribution rules accept an existing Base mainnet USDC transfer to the seller's live `payTo` as proof, provided it is at least the nominated endpoint price, has at least 10 confirmations, is no older than 30 days, and has not already been used by another seller.
 
-A public Base Blockscout check of the payout wallet and Base USDC contract on 2026-10-01 found:
-- token-specific USDC transfer count: **0**
-- next page: none
+The new transaction `0x17985b16137ff8aef95641be06424a5fa4e9edacc6ade5aaf0a58d523ad1cd73` transfers exactly **0.001 USDC** to the live payout wallet and satisfies the objective amount/confirmation/age requirements for the $0.001 Floot best-match route. A candidate seller record is prepared at `verification/forgemesh-pa-entity-seller.json` and is being checked against ForgeMesh's current upstream validator.
 
-Therefore there is no pre-existing proof transaction to reuse. No self-transfer or seller-funded payment will be created under the $0-additional-spend rule. This lane becomes actionable only after the wallet receives a legitimate USDC transfer that satisfies ForgeMesh's proof rules.
+The no-cost submission path is a one-file GitHub fork/PR. The connected GitHub integration exposes PR creation but not repository forking, so submission transport remains blocked unless a compatible fork/write path becomes available. The alternative ForgeMesh submission endpoint costs $0.05 USDC and is not being used under the standing $0-spend rule.
 
 ### probe402
 
@@ -320,15 +341,19 @@ The seller now:
 
 ## Current commercial scoreboard
 
-As of 2026-10-01:
+As of 2026-10-02:
 
-- third-party settled calls: **0**
-- distinct third-party payers: **0**
-- PayAI-recorded revenue: **$0**
+- resource-specific x402 settlements observed: **1** on the Floot $0.001 best-match route
+- matching Base USDC received on-chain: **$0.001**
+- payer classification: **external_unattributed**
+- verified-customer settled calls counted as revenue: **0**
+- verified-customer revenue: **$0**
+- vendor-intake-gate settlements: **0**
+- vendor-intake-gate revenue: **$0**
 - nohumans paid verification: **not yet**
 - Market402 paid verification: **not yet**
 
-Technical verification, directory registration, probes, and self-tests are not counted as revenue.
+The durable attribution receipt is `verification/x402-revenue-attribution-latest.json`. Only `verified_customer` settlements count as third-party revenue. Unknown external addresses, independent probes/verifiers, self-payments, tests, registrations, and marketplace checks remain excluded.
 
 ## Payout
 
