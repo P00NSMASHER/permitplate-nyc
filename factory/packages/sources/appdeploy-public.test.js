@@ -55,3 +55,17 @@ test("ambiguous strong registry candidates fail closed", async () => {
   assert.equal(registry.strongMatch,false);
   assert.equal(registry.strongCandidateCount,2);
 });
+
+test("source aborts normalize to SOURCE_TIMEOUT",async()=>{
+  const aborted=new Error("aborted");
+  aborted.name="AbortError";
+  aborted.code=20;
+  const adapter=createPaRegistryAdapter({
+    fetchImpl:async()=>{throw aborted;},
+    timeoutMs:1
+  });
+  await assert.rejects(
+    ()=>adapter.lookup({company:"OpenAI OpCo"}),
+    error=>error?.code==="SOURCE_TIMEOUT"&&error?.message==="source_timeout"
+  );
+});
