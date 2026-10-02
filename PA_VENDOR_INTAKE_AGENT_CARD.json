@@ -1,0 +1,54 @@
+{
+  "name": "Pennsylvania Vendor Intake Gate x402",
+  "description": "Checks a prospective Pennsylvania vendor inside an agent workflow and returns proceed or human_review with auditable PA registry, Census address, OFAC candidate-screen, and RDAP evidence.",
+  "url": "https://pa-entity-lookup-x402-4fbm4s.v2.appdeploy.ai/",
+  "version": "1.0.0",
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false,
+    "stateTransitionHistory": false
+  },
+  "defaultInputModes": [
+    "application/json",
+    "text/plain"
+  ],
+  "defaultOutputModes": [
+    "application/json"
+  ],
+  "skills": [
+    {
+      "id": "pennsylvania-vendor-intake-gate",
+      "name": "Pennsylvania Vendor Intake Gate",
+      "description": "Given a prospective vendor name, U.S. address, and domain, run a bounded four-source intake check and return proceed or human_review with explicit evidence and review triggers.",
+      "tags": [
+        "vendor-intake",
+        "agent-decision",
+        "human-review",
+        "pennsylvania-business-registry",
+        "ofac-screening",
+        "census-geocoder",
+        "rdap"
+      ],
+      "examples": [
+        "Check whether this Pennsylvania vendor can continue through automated intake.",
+        "Pause vendor onboarding for human review if registry identity, address consistency, OFAC candidate screening, or domain registration triggers review."
+      ]
+    }
+  ],
+  "documentationUrl": "https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/skill.md",
+  "openapiUrl": "https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/openapi.json",
+  "x402": {
+    "version": 2,
+    "manifest": "https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/.well-known/x402",
+    "network": "eip155:8453",
+    "price": "0.020 USDC",
+    "endpoint": "https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-gate"
+  },
+  "limitations": [
+    "proceed is a workflow signal, not legal/compliance approval or sanctions clearance",
+    "OFAC evidence is candidate-name screening only and does not implement 50 Percent Rule ownership analysis",
+    "PA registry matching does not prove good standing or ownership",
+    "Census matching does not prove control of an address",
+    "RDAP registration does not prove domain ownership"
+  ]
+}
