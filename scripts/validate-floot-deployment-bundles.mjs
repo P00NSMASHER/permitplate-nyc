@@ -10,10 +10,15 @@ const readJson = async (path) =>
 const map = await readJson('docs/pa-entity-floot-recovery/deploy-map.json');
 const a = await readJson('recovery/floot-deployment-bundle-01.json');
 const b = await readJson('recovery/floot-deployment-bundle-02.json');
+const queue = await readJson('verification/floot-deployment-queue-latest.json');
 
 assert.equal(a.formatVersion, 1);
 assert.equal(b.formatVersion, 1);
 assert.equal(a.projectId, map.projectId);
+assert.equal(queue.projectId, map.projectId);
+assert.match(String(queue.sourceMapBlobSha ?? ''), /^[0-9a-f]{40}$/);
+assert.equal(a.deployMapBlobSha, queue.sourceMapBlobSha);
+assert.equal(b.deployMapBlobSha, queue.sourceMapBlobSha);
 assert.equal(b.projectId, map.projectId);
 assert.equal(a.productionOrigin, map.productionOrigin);
 assert.equal(b.productionOrigin, map.productionOrigin);
@@ -61,5 +66,6 @@ for (let i = 0; i < items.length; i += 1) {
 assert.equal(targets.size, 26);
 
 console.log('PASS Floot deployment bundles: 26/26 ordered writes');
+console.log('PASS deployment bundles pinned to immutable locked deploy-map blob');
 console.log('PASS embedded contents: 26/26 byte sizes and Git blob SHAs');
 console.log('PASS target uniqueness/path rules: 26/26');
