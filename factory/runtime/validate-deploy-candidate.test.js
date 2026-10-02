@@ -35,5 +35,6 @@ test("candidate is structurally ready with a declared SEC contact",()=>{
   assert.ok(result.releaseFiles.includes("release-manifest.json"));
   assert.ok(result.releaseFiles.includes("factory-runtime-bundle.js"));
   assert.ok(result.releaseFiles.includes("appdeploy-backend-index.ts"));
+  assert.ok(result.releaseFiles.includes("appdeploy-deploy-files.json"));
   assert.equal(result.generatedEntrypointRouteCount,result.appDeployRouteCount);
 });
