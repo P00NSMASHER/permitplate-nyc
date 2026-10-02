@@ -3,7 +3,7 @@
   "sourceCommit": "ceb21b651764ffaa0c893f4e725eccce0c10ba5f",
   "projectId": "b69a3ee6-eb01-430d-aa51-da2fc7beeac4",
   "productionOrigin": "https://pa-entity-x402.floot.app",
-  "status": "writing",
+  "status": "paused_quota_exhausted",
   "startedAt": "2026-10-02T18:02:42.694Z",
   "currentFlootVersion": 1790964968403,
   "writes": [
@@ -243,7 +243,7 @@
     }
   ],
   "validation": {
-    "rollbackSnapshot": "pending",
+    "rollbackSnapshot": "passed",
     "deploymentLock": "passed",
     "typecheck": "pending",
     "tests": "pending",
@@ -289,9 +289,9 @@
     "checkpointId": null,
     "description": null
   },
-  "lastUpdatedAt": "2026-10-02T18:16:20.865Z",
+  "lastUpdatedAt": "2026-10-02T22:02:41Z",
   "lastCompletedWriteOrder": 13,
-  "resumeRule": "Never restart from write 1 after interruption. Refresh Floot list_files, verify boundary content against the locked deployment bundle, confirm the rollback snapshot/plan still match the captured pre-write project version, then resume at the next unfinished ordered write.",
+  "resumeRule": "Never restart from write 1 after interruption. After the 2026-10-03T18:00:00Z reset, refresh Floot list_files, verify write 13 boundary content and write 14 pending state against the locked deployment bundle, confirm rollback snapshot/plan and immutable source lock, then resume at write 14.",
   "rollbackPlan": {
     "status": "passed",
     "projectVersion": 1790879167519,
@@ -306,10 +306,10 @@
     "status": "passed",
     "sourceBranch": "floot-recovery-lock-2026-10-02",
     "sourceCommit": "ceb21b651764ffaa0c893f4e725eccce0c10ba5f",
-    "checkedMain": "123087bce05c9ede2f72efba2814a6f55d055bb1",
+    "checkedMain": "ffaa9c64d83f26fef7f84e92f3d6b234b12c0381",
     "workflowRunId": 37037705191,
-    "result": "final pre-reset lock audit: 162 commits ahead of immutable lock; 0 locked source changes; 26/26 bundled writes intact",
-    "latestDirectCheckAt": "2026-10-02T17:45:00Z",
+    "result": "current main rechecked after partial deployment: 26/26 locked source blobs still match; resume remains pinned to immutable bundle",
+    "latestDirectCheckAt": "2026-10-02T22:02:41Z",
     "mainCommitsAheadOfLock": 152,
     "lockedSourcesChangedOnMain": 0
   },
@@ -359,7 +359,21 @@
   "nextAction": {
     "tool": "Floot list_files",
     "projectId": "b69a3ee6-eb01-430d-aa51-da2fc7beeac4",
-    "condition": "after 2026-10-02T18:00:00Z build-action reset",
-    "purpose": "capture fresh project version/tree before mandatory five-batch rollback snapshot; no write before snapshot+rollback plan+lock validation"
+    "condition": "after 2026-10-03T18:00:00Z build-action reset",
+    "purpose": "reconcile the staged boundary at write 13 and resume at write 14 only; pre-write snapshot and rollback plan are already complete"
+  },
+  "quotaPause": {
+    "observedAt": "2026-10-02T21:58:25Z",
+    "dailyLimit": 100,
+    "used": 100,
+    "resetAt": "2026-10-03T18:00:00Z",
+    "purchaseOrUpgradeAuthorized": false,
+    "note": "Do not restart completed writes. Resume only after a fresh post-reset boundary check."
+  },
+  "sandboxVerification": {
+    "workflowRunId": 37070300179,
+    "conclusion": "success",
+    "result": "external_access_restricted",
+    "note": "Public GitHub runner received the same 403 sandbox restriction on known-good PA routes, so staged endpoint health cannot be inferred from external sandbox access."
   }
 }
