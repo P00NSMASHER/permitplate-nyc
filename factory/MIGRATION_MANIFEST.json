@@ -26,26 +26,12 @@
     "009",
     "010"
   ],
-  "production_products": [
-    "001",
-    "002"
-  ],
-  "staging_products": [
-    "003",
-    "004",
-    "005",
-    "006",
-    "007",
-    "008",
-    "009"
-  ],
   "deployment_blocker": {
     "provider": "AppDeploy",
     "reason": "weekly Free tier credit limit",
     "reset_at": "2026-10-05T00:00:00Z",
     "spend_authorized": false
   },
-  "design_products": [
-    "010"
-  ]
+  "classification_source": "factory/product-registry.json",
+  "classification_rule": "Derive production/staging/design from each product's current registry status; do not duplicate status lists in this manifest."
 }
