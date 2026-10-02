@@ -85,6 +85,38 @@ export function paymentDocument() {
     accepts: [requirements()],
     extensions: {
       bazaar: {
+        schema: {
+          type: 'object',
+          properties: {
+            input: {
+              type: 'object',
+              properties: {
+                type: { const: 'http' },
+                method: { const: 'GET' },
+                queryParams: {
+                  type: 'object',
+                  properties: {
+                    security: { type: 'string', maxLength: 100 },
+                  },
+                  additionalProperties: false,
+                },
+              },
+              required: ['type', 'method', 'queryParams'],
+              additionalProperties: false,
+            },
+            output: {
+              type: 'object',
+              properties: {
+                type: { const: 'json' },
+                example: { type: 'object' },
+              },
+              required: ['type', 'example'],
+              additionalProperties: false,
+            },
+          },
+          required: ['input', 'output'],
+          additionalProperties: false,
+        },
         info: {
           input: {
             type: 'http',
