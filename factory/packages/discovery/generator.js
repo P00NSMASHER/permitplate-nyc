@@ -71,6 +71,25 @@ function buildOpenApi(base) {
   };
 }
 
+function buildProductIndex(base) {
+  const normalized = normalizeBase(base);
+  return {
+    schema_version: 1,
+    base_url: normalized,
+    products: managedProducts().map((product) => ({
+      number: product.number,
+      id: product.id,
+      method: product.method,
+      path: product.path,
+      price_usdc: product.price_usdc,
+      status: product.status,
+      decision_values: Array.isArray(product.decision_values)
+        ? product.decision_values
+        : [],
+    })),
+  };
+}
+
 function buildLlmsText(base) {
   const normalized = normalizeBase(base);
   const lines = [
@@ -139,6 +158,7 @@ module.exports = {
   managedProducts,
   buildCatalog,
   buildOpenApi,
+  buildProductIndex,
   buildLlmsText,
   validateCompiled,
 };
