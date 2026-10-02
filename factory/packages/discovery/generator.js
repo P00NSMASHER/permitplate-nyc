@@ -10,6 +10,7 @@ const MODULES = Object.freeze({
   "sec-company-identity-match": require("../../products/sec-company-identity-match/metadata"),
   "domain-registration-age": require("../../products/domain-registration-age/metadata"),
   "treasury-average-rate-threshold": require("../../products/treasury-average-rate-threshold/metadata"),
+  "treasury-average-rate-trend": require("../../products/treasury-average-rate-trend/metadata"),
   "treasury-average-rate-change": require("../../products/treasury-average-rate-change/metadata"),
   "ofac-name-review-gate": require("../../products/ofac-name-review-gate/metadata"),
   "pa-business-formation-age": require("../../products/pa-business-formation-age/metadata"),
