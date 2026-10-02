@@ -12,6 +12,7 @@ const MODULES = Object.freeze({
   "ofac-name-review-gate": require("../../products/ofac-name-review-gate/metadata"),
   "pa-business-formation-age": require("../../products/pa-business-formation-age/metadata"),
   "domain-expiration-horizon": require("../../products/domain-expiration-horizon/metadata"),
+  "domain-last-changed-recency": require("../../products/domain-last-changed-recency/metadata"),
 });
 
 function managedProducts() {
