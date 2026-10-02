@@ -114,14 +114,17 @@
     {
       "id": "ofac-name-review-gate",
       "number": "009",
-      "status": "design",
+      "status": "live-source-verified-staging",
       "method": "GET",
       "path": "/api/ofac-name-review-gate",
       "price_usdc": "0.003",
       "decision_values": [
         "candidate_found",
         "no_candidate"
-      ]
+      ],
+      "release_gate": "factory/scripts/validate-product-009.js",
+      "deployment_blocker": "AppDeploy weekly credit reset 2026-10-05T00:00:00Z",
+      "live_source_status": "current OFAC SDN/ALT CSV smoke verified candidate_found at score 99"
     },
     {
       "id": "pa-business-formation-age",
