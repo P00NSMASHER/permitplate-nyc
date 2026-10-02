@@ -70,5 +70,23 @@
     "paidRoutesTotal": 2,
     "canonicalManifestResourceCount": 2,
     "green": true
+  },
+  "liveUpstreamGate": {
+    "workflow": "Test Floot release live upstreams",
+    "runId": 37029193398,
+    "conclusion": "success",
+    "headSha": "896bbdbca67285731eea119e12c27ebceb50ea2d",
+    "zeroSpend": true,
+    "paymentSent": false,
+    "facilitatorNetworkCalls": 0,
+    "scope": [
+      "Treasury exact staged endpoint -> real Fiscal Data",
+      "RDAP exact staged endpoint -> real IANA/registry",
+      "Census exact staged endpoint -> real Census geocoder",
+      "SEC exact staged endpoint -> real EDGAR",
+      "OFAC exact staged endpoint -> real SDN/ALT files",
+      "Vendor gate exact staged endpoint -> real PA/Census/OFAC/RDAP"
+    ],
+    "note": "Deployment lock verification ensures locked deployment source files have not changed on main."
   }
 }
