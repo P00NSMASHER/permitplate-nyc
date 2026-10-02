@@ -4,7 +4,7 @@ _Last refreshed: 2026-10-02_
 
 ## Current availability incident — 2026-10-02
 
-As of **2026-10-02 13:04 UTC**, the AppDeploy shared API edge is returning HTTP 402 with `x-appdeploy-app-availability: temporarily-unavailable`, body code `APP_TEMPORARILY_UNAVAILABLE`, and no seller `PAYMENT-REQUIRED` header for the AppDeploy-hosted x402 services. Reapplying the current vendor-gate deployment did not clear the condition.
+As of **2026-10-02 13:04 UTC**, the AppDeploy shared API edge is returning HTTP 402 with `x-appdeploy-app-availability: temporarily-unavailable`, body code `APP_TEMPORARILY_UNAVAILABLE`, and no seller `PAYMENT-REQUIRED` header for the AppDeploy-hosted x402 services. AppDeploy Support confirmed the account's weekly allowance is exhausted, discovery paths are not exempt, and the allowance resets **2026-10-05 00:00 UTC**. No paid top-up/upgrade is authorized. Reapplying the current vendor-gate deployment did not clear the condition.
 
 This is being tracked in [incident #38](https://github.com/P00NSMASHER/permitplate-nyc/issues/38). The direct Floot rehost is tracked in [recovery #39](https://github.com/P00NSMASHER/permitplate-nyc/issues/39).
 
