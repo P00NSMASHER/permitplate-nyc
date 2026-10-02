@@ -94,6 +94,17 @@ function assertPaymentDocument(
     doc.extensions?.bazaar?.schema?.properties?.output?.properties?.type?.const,
     'json'
   )
+  const serviceName = doc.resource.serviceName
+  if (serviceName !== undefined) {
+    assert.match(serviceName, /^[\\x20-\\x7E]+$/)
+    assert.ok(serviceName.length >= 1 && serviceName.length <= 32)
+  }
+  const tags = doc.resource.tags ?? []
+  assert.ok(tags.length <= 5)
+  for (const tag of tags) {
+    assert.match(tag, /^[\\x20-\\x7E]+$/)
+    assert.ok(tag.length >= 1 && tag.length <= 32)
+  }
 }
 
 async function assertChallenge(
