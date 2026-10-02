@@ -6,6 +6,7 @@ on:
       - 'verification/pa-entity-directory-status-latest.json'
       - 'verification/x402-revenue-attribution-rules.json'
       - 'scripts/classify-x402-revenue.mjs'
+      - 'scripts/test-x402-revenue-attribution.mjs'
       - '.github/workflows/x402-revenue-attribution.yml'
   workflow_dispatch:
 
@@ -22,6 +23,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Test attribution safety
+        run: node scripts/test-x402-revenue-attribution.mjs
 
       - name: Classify settlement provenance
         run: node scripts/classify-x402-revenue.mjs
