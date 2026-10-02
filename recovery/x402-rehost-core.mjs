@@ -1,11 +1,17 @@
 const SOURCE_TIMEOUT_MS = 15000;
+const PA_SOURCE_TIMEOUT_MS = 20000;
+const PA_SOURCE_ATTEMPTS = 3;
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function fetchWithTimeout(url, init = {}, timeoutMs = SOURCE_TIMEOUT_MS) {
-  const attempts = 2;
+async function fetchWithTimeout(
+  url,
+  init = {},
+  timeoutMs = SOURCE_TIMEOUT_MS,
+  attempts = 2
+) {
   let lastError = null;
 
   for (let attempt = 0; attempt < attempts; attempt += 1) {
@@ -747,9 +753,12 @@ async function fetchEntityCandidates(query, mode, limit = 100) {
   url.searchParams.set('$where', "upper(business_name) like '" + pattern + "'");
   url.searchParams.set('$limit', String(limit));
 
-  const response = await fetchWithTimeout(url, {
-    headers: { 'user-agent': 'PA-Entity-x402/2.0' },
-  });
+  const response = await fetchWithTimeout(
+    url,
+    { headers: { 'user-agent': 'PA-Entity-x402/2.0' } },
+    PA_SOURCE_TIMEOUT_MS,
+    PA_SOURCE_ATTEMPTS
+  );
   if (!response.ok) throw new Error('PA Open Data returned ' + response.status);
   const rows = await response.json();
   return rows.map(mapEntity);
@@ -779,6 +788,28 @@ function dedupeAndRank(rows, query, limit) {
 async function searchPennsylvaniaBase(query, limit) {
   const starts = await fetchEntityCandidates(query, 'starts');
   if (starts.length >= limit) return dedupeAndRank(starts, query, limit);
+  const contains = await fetchEntityCandidates(query, 'contains');
+  return dedupeAndRank([...starts, ...contains], query, limit);
+}
+
+async function searchPennsylvaniaForGate(query, limit = 3) {
+  const starts = await fetchEntityCandidates(query, 'starts');
+  const rankedStarts = dedupeAndRank(starts, query, limit);
+
+  // Every automatic-continuation name match (score 0 or 1) is necessarily
+  // an exact/prefix match and therefore appears in the starts-with query.
+  // If one exists, a second contains query cannot reveal another score<=1
+  // candidate, so skipping it reduces latency without weakening ambiguity checks.
+  if (
+    rankedStarts.some(
+      (candidate) =>
+        candidate?.businessName != null &&
+        matchScore(candidate.businessName, query) <= 1
+    )
+  ) {
+    return rankedStarts;
+  }
+
   const contains = await fetchEntityCandidates(query, 'contains');
   return dedupeAndRank([...starts, ...contains], query, limit);
 }
@@ -813,9 +844,12 @@ async function enrichPrincipals(results) {
   url.searchParams.set('$limit', '1000');
 
   try {
-    const response = await fetchWithTimeout(url, {
-      headers: { 'user-agent': 'PA-Entity-x402/2.0' },
-    });
+    const response = await fetchWithTimeout(
+      url,
+      { headers: { 'user-agent': 'PA-Entity-x402/2.0' } },
+      PA_SOURCE_TIMEOUT_MS,
+      PA_SOURCE_ATTEMPTS
+    );
     if (!response.ok) return 'unavailable';
     const rows = await response.json();
     const byFiling = new Map();
@@ -946,7 +980,7 @@ export async function runVendorIntakeGate(rawInput) {
     throw new Error('invalid_address');
   }
 
-  const registryMatches = await searchPennsylvaniaBase(input.name, 3);
+  const registryMatches = await searchPennsylvaniaForGate(input.name, 3);
   const registryMatch = registryMatches[0] ?? null;
   const registryNameScore =
     registryMatch?.businessName != null
