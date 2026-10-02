@@ -68,6 +68,12 @@ for (const fixture of ['proceed', 'address_mismatch', 'domain_mismatch']) {
   );
 }
 
+expect(catalog.includes("type: 'http'"), 'resource records must declare type=http');
+expect(catalog.includes('x402Version: 2'), 'resource records must declare x402Version=2');
+expect(discovery.includes("openapi: ORIGIN + '/openapi.json'"), 'manifest openapi pointer missing');
+expect(discovery.includes("llms: ORIGIN + '/llms.txt'"), 'manifest llms pointer missing');
+expect(discovery.includes("skill: ORIGIN + '/skill.txt'"), 'manifest skill pointer missing');
+
 for (const path of [
   '/.well-known/x402',
   '/openapi.json',
