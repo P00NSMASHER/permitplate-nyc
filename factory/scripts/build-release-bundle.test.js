@@ -43,3 +43,10 @@ test("writer produces deterministic catalog, OpenAPI, and manifest files",()=>{
   const catalog=JSON.parse(fs.readFileSync(path.join(dir,"x402-catalog.json"),"utf8"));
   assert.equal(catalog.resources.length,b.catalog.resources.length);
 });
+
+test("design products are excluded from release bundle",()=>{
+  const b=buildReleaseBundle("https://candidate.example");
+  const ids=b.manifest.products.map(p=>p.id);
+  assert.ok(!ids.includes("ofac-name-review-gate"));
+  assert.ok(!ids.includes("pa-business-formation-age"));
+});
