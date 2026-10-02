@@ -3,6 +3,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { createAppDeployPublicAdapters } = require("../../packages/sources/appdeploy-public");
+const { createPaRegistryAdapter, createCensusAddressAdapter } = require("./live-pa-identity");
 
 function response(body, status=200) {
   return { ok: status >= 200 && status < 300, status, async json(){ return body; } };
@@ -67,5 +68,18 @@ test("source aborts normalize to SOURCE_TIMEOUT",async()=>{
   await assert.rejects(
     ()=>adapter.lookup({company:"OpenAI OpCo"}),
     error=>error?.code==="SOURCE_TIMEOUT"&&error?.message==="source_timeout"
+  );
+});
+
+test("incomplete Census contracts throw SOURCE_CONTRACT_INVALID",async()=>{
+  const adapter=createCensusAddressAdapter({
+    fetchImpl:async()=>response({result:{addressMatches:[{matchedAddress:null,coordinates:{x:-76.19,y:40.68}}]}})
+  });
+  await assert.rejects(
+    ()=>adapter.compare({
+      suppliedAddress:"100 Market St, Pottsville, PA 17901",
+      registryAddress:"100 Market St, Pottsville, PA 17901"
+    }),
+    error=>error?.code==="SOURCE_CONTRACT_INVALID"&&error?.message==="census_contract_incomplete"
   );
 });
