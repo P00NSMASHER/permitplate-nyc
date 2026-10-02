@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "products": [
+    {
+      "id": "pa-entity-lookup",
+      "number": "001",
+      "status": "reference-production",
+      "method": "GET",
+      "path": "/_api/pa-entity-one",
+      "price_usdc": "0.001"
+    },
+    {
+      "id": "pa-vendor-gate",
+      "number": "002",
+      "status": "design",
+      "method": "POST",
+      "path": "/api/pa-vendor-gate",
+      "price_usdc": "0.010",
+      "decision_values": [
+        "PROCEED",
+        "HUMAN_REVIEW"
+      ]
+    }
+  ]
+}
