@@ -26,6 +26,10 @@ jobs:
           node --check recovery/vendor-intake-core.mjs
           node --check scripts/test-vendor-intake-decision-core.mjs
           node --check scripts/test-x402-rehost-core.mjs
+          node --check scripts/validate-floot-target-manifest.mjs
+
+      - name: Validate exact Floot target manifest
+        run: node scripts/validate-floot-target-manifest.mjs
 
       - name: Run pure vendor-intake decision regressions
         run: node scripts/test-vendor-intake-decision-core.mjs
