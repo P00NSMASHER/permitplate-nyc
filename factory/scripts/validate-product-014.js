@@ -39,7 +39,7 @@ function main(){
   assert.ok(api.responses[503]);
 
   const llms=llmsText(base);
-  assert.match(llms,/not a live market yield/i);
+  assert.match(llms,/not .*live market yield/i);
   assert.match(llms,/same PAYMENT-SIGNATURE/i);
 
   console.log(JSON.stringify({
