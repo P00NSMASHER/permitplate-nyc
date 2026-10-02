@@ -1,68 +1,111 @@
-name: trace ag3ntsearch contribution status
-
+name: inspect independent paid-proof coverage
+# refresh-marker: onchain-first-sale-check-2026-10-02
 on:
   push:
     paths:
       - '.github/workflows/tmp-paid-proof-coverage.yml'
 
 jobs:
-  trace:
+  inspect:
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 6
     steps:
-      - name: Inspect ag3ntsearch public app and contribution status paths
+      - name: Check Assay and ResolveBots public coverage
         shell: bash
         run: |
           set -euo pipefail
-          BASE='https://ag3ntsearch.fullyagentnativeapps.com'
-          mkdir -p /tmp/ag3nt
-          curl -sS -L --max-time 25 "$BASE/" -o /tmp/ag3nt/index.html || true
-          echo '=== ROOT STATUS ==='
-          curl -sS -I -L --max-time 25 "$BASE/" | head -40 || true
+          urls=(
+            'https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-entity-one?q=OpenAI'
+            'https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/pa-business?q=OpenAI&limit=1'
+            'https://pa-entity-x402.floot.app/_api/pa-entity-one?q=OpenAI'
+            'https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1'
+          )
 
+          echo '=== ASSAY TIERS ==='
+          for u in "${urls[@]}"; do
+            enc=$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=""))' "$u")
+            echo "--- $u"
+            code=$(curl -sS --max-time 25 -H 'Accept: application/json' -o /tmp/body -w '%{http_code}' "https://assay.nominal-labs.com/tier/$enc")
+            echo "HTTP=$code"
+            head -c 4000 /tmp/body; echo
+          done
+
+          echo '=== RESOLVEBOTS TRUST FEED MATCHES ==='
+          curl -fsSL --max-time 30 'https://resolvebots.com/x402-trust-index/feed.json' -o /tmp/trust.json
           python3 - <<'PY'
-          import re,urllib.parse,subprocess,pathlib
-          base='https://ag3ntsearch.fullyagentnativeapps.com'
-          p=pathlib.Path('/tmp/ag3nt/index.html')
-          html=p.read_text(errors='ignore') if p.exists() else ''
-          urls=[]
-          for src in re.findall(r'<script[^>]+src=["\x27]([^"\x27]+)["\x27]',html,re.I):
-              u=urllib.parse.urljoin(base+'/',src)
-              if u not in urls: urls.append(u)
-          print('SCRIPT_COUNT',len(urls))
-          chunks=[]
-          for i,u in enumerate(urls[:80]):
-              out=pathlib.Path(f'/tmp/ag3nt/s{i}.js')
-              if subprocess.run(['curl','-fsSL','--max-time','20',u,'-o',str(out)]).returncode==0:
-                  s=out.read_text(errors='ignore'); chunks.append(s)
-          s='\n'.join(chunks)
-          low=s.lower()
-          for needle in ['received_unreviewed','contribution:','contribution','review intake','status_url','audit.json']:
-              print('===',needle,'===')
-              start=0; shown=0
-              while shown<12:
-                  i=low.find(needle.lower(),start)
-                  if i<0: break
-                  print(s[max(0,i-1200):min(len(s),i+2600)].replace('\n',' ')[:3800])
-                  print('---')
-                  start=i+len(needle); shown+=1
-          print('=== URL CANDIDATES ===')
-          vals=set()
-          for pat in [r'/[A-Za-z0-9._~!$&()*+,;=:@%/?-]{1,180}(?:contribut|review|audit|status)[A-Za-z0-9._~!$&()*+,;=:@%/?-]{0,180}',
-                      r'https?://[^"\x27\s<>]{1,260}']:
-              vals.update(m.group(0) for m in re.finditer(pat,s,re.I))
-          for v in sorted(vals):
-              if any(k in v.lower() for k in ['contribut','review','audit','status','ag3ntsearch']):
-                  print(v)
+          import json
+          d=json.load(open('/tmp/trust.json'))
+          needles=['pa-entity-x402.floot.app','pa-entity-lookup-x402-4fbm4s','api-v2.appdeploy.ai']
+          def walk(x,path='$'):
+              if isinstance(x,dict):
+                  s=json.dumps(x)
+                  if any(n.lower() in s.lower() for n in needles):
+                      print(json.dumps({'path':path,'value':x},indent=2)[:12000])
+                  for k,v in x.items(): walk(v,path+'.'+str(k))
+              elif isinstance(x,list):
+                  for i,v in enumerate(x): walk(v,f'{path}[{i}]')
+          walk(d)
           PY
 
-          echo '=== LIKELY RECEIPT PATHS ==='
-          for id in             '244eccd0-c9ce-43da-af59-a541dde5f632'             '90ea1a5d-f6db-4ee9-969e-47c072985e7a'
-          do
-            for path in               "/api/contributions/$id"               "/api/contribution/$id"               "/contributions/$id"               "/contribution/$id"               "/api/status/$id"
-            do
-              code=$(curl -sS --max-time 15 -o /tmp/body -w '%{http_code}' "$BASE$path" || true)
-              echo "$code $path"
-              if [ "$code" != "404" ] && [ "$code" != "000" ]; then head -c 3000 /tmp/body; echo; fi
-            done
+          echo '=== RESOLVEBOTS SAMPLE CATALOG MATCHES ==='
+          curl -fsSL --max-time 30 'https://resolvebots.com/x402-sample-outputs/catalog.json' -o /tmp/samples.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/samples.json'))
+          needles=['pa-entity-x402.floot.app','pa-entity-lookup-x402-4fbm4s','api-v2.appdeploy.ai']
+          rows=[]
+          def walk(x):
+              if isinstance(x,dict):
+                  s=json.dumps(x)
+                  if any(n.lower() in s.lower() for n in needles): rows.append(x)
+                  for v in x.values(): walk(v)
+              elif isinstance(x,list):
+                  for v in x: walk(v)
+          walk(d)
+          seen=set()
+          for r in rows:
+              key=json.dumps(r,sort_keys=True)
+              if key in seen: continue
+              seen.add(key); print(json.dumps(r,indent=2)[:12000])
+          print('MATCH_COUNT',len(seen))
+          PY
+          echo '=== BASE USDC INCOMING ==='
+          PAYTO='0x708f7b52b56eafd7fc1de65fc7752ed732914021'
+          USDC='0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'
+          curl -sS --max-time 25 --get 'https://base.blockscout.com/api' \
+            --data-urlencode 'module=account' \
+            --data-urlencode 'action=tokentx' \
+            --data-urlencode "address=$PAYTO" \
+            --data-urlencode "contractaddress=$USDC" \
+            --data-urlencode 'page=1' \
+            --data-urlencode 'offset=20' \
+            --data-urlencode 'sort=desc' > /tmp/usdc.json
+          python3 - <<'PY'
+          import json,datetime
+          d=json.load(open('/tmp/usdc.json'))
+          rows=d.get('result',[]) if isinstance(d,dict) else []
+          out=[]
+          for r in rows[:20]:
+              val=r.get('value')
+              dec=int(r.get('tokenDecimal') or 6)
+              try: amount=int(val)/(10**dec)
+              except: amount=None
+              out.append({
+                  'hash':r.get('hash'),
+                  'from':r.get('from'),
+                  'to':r.get('to'),
+                  'amount_usdc':amount,
+                  'timeStamp':r.get('timeStamp'),
+                  'tokenSymbol':r.get('tokenSymbol'),
+                  'confirmations':r.get('confirmations')
+              })
+          print(json.dumps(out,indent=2))
+          PY
+
+          echo '=== VET402 RESOLVE ==='
+          for u in "${urls[@]}"; do
+            enc=$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=""))' "$u")
+            echo "--- $u"
+            curl -sS --max-time 25 "https://vet402.com/api/v1/resolve?q=$enc" | head -c 4000
+            echo
           done
