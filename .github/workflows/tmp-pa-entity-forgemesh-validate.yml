@@ -1,0 +1,53 @@
+name: PA Entity ForgeMesh validation once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/tmp-pa-entity-forgemesh-validate.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validate candidate with ForgeMesh validator
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/forgemeshlabs/x402-verified.git /tmp/x402-verified
+          cd /tmp/x402-verified
+          cat > sellers/pa-entity-lookup-x402.json <<'JSON'
+          {
+            "name": "PA Entity Lookup x402",
+            "slug": "pa-entity-lookup-x402",
+            "homepage": "https://pa-entity-x402.floot.app",
+            "description": "Pennsylvania business-registry entity resolution with low-cost best-match and enriched company-record lookups.",
+            "protocols": ["x402"],
+            "endpoints": [
+              {
+                "url": "https://pa-entity-x402.floot.app/_api/pa-entity-one?q=OpenAI",
+                "method": "GET",
+                "price_usdc": "0.001"
+              },
+              {
+                "url": "https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1",
+                "method": "GET",
+                "price_usdc": "0.005"
+              }
+            ],
+            "nominated_endpoint": 0,
+            "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+            "networks": ["eip155:8453"],
+            "manifest": "https://pa-entity-x402.floot.app/.well-known/x402",
+            "llms_txt": "https://pa-entity-x402.floot.app/llms.txt",
+            "contact": "github:P00NSMASHER",
+            "proof": {
+              "tx_hash": "0x17985b16137ff8aef95641be06424a5fa4e9edacc6ade5aaf0a58d523ad1cd73",
+              "endpoint": 0,
+              "payer_kind": "customer"
+            },
+            "added_at": "2026-10-02"
+          }
+          JSON
+          npm ci --silent
+          node scripts/validate.js --slug pa-entity-lookup-x402
