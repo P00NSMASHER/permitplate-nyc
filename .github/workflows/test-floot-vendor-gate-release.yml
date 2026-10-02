@@ -1,0 +1,48 @@
+name: Test Floot vendor gate release
+
+on:
+  push:
+    paths:
+      - 'docs/pa-entity-floot-release/vendor-intake-gate_GET.ts'
+      - 'docs/pa-entity-floot-release/vendor-intake-gate_GET.schema.ts'
+      - 'recovery/vendor-intake-gate-core.mjs'
+      - 'recovery/x402-rehost-core.mjs'
+      - 'scripts/test-floot-vendor-gate-release.mts'
+      - 'scripts/test-vendor-intake-gate-core.mjs'
+      - '.github/workflows/test-floot-vendor-gate-release.yml'
+  pull_request:
+    paths:
+      - 'docs/pa-entity-floot-release/vendor-intake-gate_GET.ts'
+      - 'docs/pa-entity-floot-release/vendor-intake-gate_GET.schema.ts'
+      - 'recovery/vendor-intake-gate-core.mjs'
+      - 'recovery/x402-rehost-core.mjs'
+      - 'scripts/test-floot-vendor-gate-release.mts'
+      - 'scripts/test-vendor-intake-gate-core.mjs'
+      - '.github/workflows/test-floot-vendor-gate-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fixture:
+    name: Floot endpoint fixture
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Portable decision-core tests
+        run: node scripts/test-vendor-intake-gate-core.mjs
+
+      - name: Floot endpoint payment and decision contract
+        run: node --experimental-strip-types scripts/test-floot-vendor-gate-release.mts
+
+      - name: Rehost module syntax
+        run: |
+          node --check recovery/vendor-intake-gate-core.mjs
+          node --check recovery/x402-rehost-core.mjs
