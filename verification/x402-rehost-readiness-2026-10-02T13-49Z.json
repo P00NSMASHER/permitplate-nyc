@@ -1,0 +1,77 @@
+{
+  "checkedAt": "2026-10-02T13:49:24.990Z",
+  "zeroSpend": true,
+  "paymentSent": false,
+  "appDeployIncidentIssue": 38,
+  "flootRecoveryIssue": 39,
+  "recoveryReadiness": {
+    "targetManifest": {
+      "passed": 8,
+      "total": 8
+    },
+    "officialDataAndRehostCore": {
+      "passed": 9,
+      "total": 9,
+      "finalExit": 0
+    },
+    "authoritativeVendorGateCore": {
+      "passed": 8,
+      "total": 8
+    },
+    "liveVendorGateWithoutAppDeploy": {
+      "passed": 3,
+      "total": 3
+    }
+  },
+  "liveUpstreamEvidence": {
+    "census": "pass",
+    "rdap": "pass",
+    "ofac": "pass",
+    "sec": "pass",
+    "treasury": "pass",
+    "pennsylvaniaRegistry": "pass"
+  },
+  "liveVendorGateCases": {
+    "proceed": {
+      "status": "pass",
+      "decision": "proceed",
+      "reviewTriggers": []
+    },
+    "addressMismatch": {
+      "status": "pass",
+      "decision": "human_review",
+      "reviewTrigger": "registered_address_differs"
+    },
+    "domainMismatch": {
+      "status": "pass",
+      "decision": "human_review",
+      "reviewTrigger": "domain_name_not_aligned"
+    }
+  },
+  "flootManifestBaseline": {
+    "liveUrl": "https://pa-entity-x402.floot.app/.well-known/x402",
+    "liveResourceCount": 2,
+    "targetResourceCount": 8,
+    "present": [
+      "/_api/pa-entity-one",
+      "/_api/pa-business"
+    ],
+    "missing": [
+      "/_api/vendor-intake-gate",
+      "/_api/sec-filings",
+      "/_api/us-address-geocode",
+      "/_api/ofac-sdn-screen",
+      "/_api/domain-rdap",
+      "/_api/treasury-average-rates"
+    ],
+    "mismatched": [],
+    "unexpected": [],
+    "complete": false
+  },
+  "interpretation": [
+    "The replacement data and decision layers work independently of AppDeploy.",
+    "The existing Floot PA routes already match the target payment terms.",
+    "Post-reset work is now primarily Floot endpoint/payment/discovery adapter wiring for the six missing routes.",
+    "Do not mark Step 2 complete until the live Floot manifest reaches 8 healthy resources and Agent402 recognizes the expanded set."
+  ]
+}
