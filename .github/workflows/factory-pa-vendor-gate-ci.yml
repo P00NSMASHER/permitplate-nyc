@@ -258,3 +258,12 @@ jobs:
         run: node --test factory/products/pa-vendor-counterparty-review/metadata.test.js
       - name: Run Product 018 release gate
         run: node factory/scripts/validate-product-018.js
+
+      - name: Test Product 019 PA vendor maturity decision
+        run: node --test factory/products/pa-vendor-maturity-review/decision.test.js
+      - name: Test Product 019 PA vendor maturity service
+        run: node --test factory/products/pa-vendor-maturity-review/service.test.js
+      - name: Test Product 019 paid x402 handler
+        run: node --test factory/products/pa-vendor-maturity-review/paid-handler.test.js
+      - name: Test Product 019 discovery metadata
+        run: node --test factory/products/pa-vendor-maturity-review/metadata.test.js
