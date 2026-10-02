@@ -22,6 +22,67 @@ Returns up to 25 ranked Pennsylvania entity candidates.
 
 Both routes use x402 v2 on Base mainnet (eip155:8453), Base USDC, and require no API key or account. An unpaid request returns HTTP 402 with a PAYMENT-REQUIRED challenge.
 
+## Agent-loop vendor intake gate — 2026-10-02
+
+The AppDeploy production mirror now includes a composed vendor-intake check intended for an autonomous agent's working loop rather than a raw-data lookup.
+
+### $0.020 vendor-intake gate
+
+```text
+GET https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-gate?name=NAME&address=ADDRESS&domain=DOMAIN
+```
+
+Inputs:
+- prospective vendor name
+- U.S. vendor address
+- domain name
+
+Output:
+- `decision: "proceed" | "human_review"`
+- `agentAction: "continue_vendor_intake" | "pause_and_request_human_review"`
+- explicit `reviewTriggers`
+- structured evidence from Pennsylvania registry identity, Census address consistency, OFAC SDN candidate-name screening, and RDAP registration
+
+The existing $0.001 and $0.005 Pennsylvania lookup routes are unchanged.
+
+The gate is deliberately conservative. It never returns an automatic legal/compliance rejection. `proceed` only means the configured automated intake checks did not trigger review. It is not legal advice, sanctions clearance, fraud approval, credit approval, proof of good standing, or proof that a vendor owns an address or domain.
+
+Current automatic-review rules:
+- PA registry: no candidate or a weak best-name match -> human review
+- address: supplied address and registry address must both Census-geocode and fall within 0.25 miles -> otherwise human review
+- OFAC: any SDN name candidate at score 90 or above -> human review
+- RDAP: supplied domain must be confirmed registered -> otherwise human review
+
+OFAC remains a first-pass candidate-name screen only. A no-candidate result is not sanctions clearance, and the tool does not perform OFAC 50 Percent Rule ownership analysis.
+
+### Composition and payment behavior
+
+The vendor gate is one outer x402 purchase at $0.020 USDC on Base. It reuses the live PA, Census, OFAC, and RDAP service implementations and identifies their independently paid production endpoints in its evidence. It does not attempt nested seller-funded x402 purchases between the seller's own services, which would create unnecessary double settlement/self-payment. Each standalone component's existing x402 endpoint and price remain unchanged.
+
+Unpaid vendor-gate requests return a real HTTP 402 `PAYMENT-REQUIRED` challenge for 20,000 atomic Base USDC. Evidence collection happens before settlement; if a required evidence source fails, the outer payment is not settled.
+
+### Working evidence
+
+Independent public verification on 2026-10-02 confirmed:
+- deployment status: ready
+- AppDeploy frontend/backend errors: none
+- live fixed sample decision: `proceed`
+- live fixed sample agent action: `continue_vendor_intake`
+- live fixed sample review triggers: 0
+- evidence checked: PA Registry, Census, OFAC, RDAP
+- `/.well-known/x402` advertises `/api/vendor-intake-gate` at $0.020
+- OpenAPI exposes operationId `checkPennsylvaniaVendorIntakeGate`
+- an unpaid production call returns HTTP 402 at $0.020 USDC on Base
+
+Fixed live sample:
+```text
+GET https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-demo
+```
+
+The fixed demo exercises the same decision engine with a known sample and is not an arbitrary free-vendor-check bypass.
+
+No Agentic.ai resubmission was made as part of this release.
+
 ## Buyer task examples
 
 The $0.001 route is the lowest-friction choice when an agent needs one likely Pennsylvania entity rather than a candidate list. High-intent tasks include:
