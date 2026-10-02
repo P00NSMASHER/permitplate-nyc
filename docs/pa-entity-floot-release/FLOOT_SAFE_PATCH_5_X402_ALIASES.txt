@@ -461,6 +461,46 @@
 +        "version": "2"
 +      }
 +    }
++  ],
++  "resources": [
++    {
++      "resource": "https://pa-entity-x402.floot.app/_api/pa-business",
++      "type": "http",
++      "x402Version": 2,
++      "accepts": [
++        {
++          "scheme": "exact",
++          "network": "eip155:8453",
++          "amount": "5000",
++          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
++          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
++          "maxTimeoutSeconds": 60,
++          "extra": {
++            "name": "USD Coin",
++            "version": "2"
++          }
++        }
++      ]
++    },
++    {
++      "resource": "https://pa-entity-x402.floot.app/_api/pa-entity-one",
++      "type": "http",
++      "x402Version": 2,
++      "accepts": [
++        {
++          "scheme": "exact",
++          "network": "eip155:8453",
++          "amount": "1000",
++          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
++          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
++          "maxTimeoutSeconds": 60,
++          "extra": {
++            "name": "USD Coin",
++            "version": "2"
++          }
++        }
++      ]
++    }
 +  ]
 +}
 *** Add File: static/.well-known/x402-services.json
@@ -924,6 +964,46 @@
 +        "name": "USD Coin",
 +        "version": "2"
 +      }
++    }
++  ],
++  "resources": [
++    {
++      "resource": "https://pa-entity-x402.floot.app/_api/pa-business",
++      "type": "http",
++      "x402Version": 2,
++      "accepts": [
++        {
++          "scheme": "exact",
++          "network": "eip155:8453",
++          "amount": "5000",
++          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
++          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
++          "maxTimeoutSeconds": 60,
++          "extra": {
++            "name": "USD Coin",
++            "version": "2"
++          }
++        }
++      ]
++    },
++    {
++      "resource": "https://pa-entity-x402.floot.app/_api/pa-entity-one",
++      "type": "http",
++      "x402Version": 2,
++      "accepts": [
++        {
++          "scheme": "exact",
++          "network": "eip155:8453",
++          "amount": "1000",
++          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
++          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
++          "maxTimeoutSeconds": 60,
++          "extra": {
++            "name": "USD Coin",
++            "version": "2"
++          }
++        }
++      ]
 +    }
 +  ]
 +}
