@@ -129,6 +129,8 @@ jobs:
         run: node --test factory/products/domain-expiration-horizon/paid-handler.test.js
       - name: Test Product 011 discovery metadata
         run: node --test factory/products/domain-expiration-horizon/metadata.test.js
+      - name: Run Product 011 release gate
+        run: node factory/scripts/validate-product-011.js
 
       - name: Validate factory product registry
         run: node factory/scripts/validate-registry.js
