@@ -1,0 +1,253 @@
+{
+  "preparedAt": "2026-10-02",
+  "projectId": "b69a3ee6-eb01-430d-aa51-da2fc7beeac4",
+  "productionOrigin": "https://pa-entity-x402.floot.app",
+  "sourceMapBlobSha": "be374305376eacbfd7d843e3285b5ab0b9e0b8f7",
+  "preserveTargets": [
+    "endpoints/pa-business_GET.ts",
+    "endpoints/pa-business_GET.schema.ts",
+    "endpoints/pa-entity-one_GET.ts",
+    "endpoints/pa-entity-one_GET.schema.ts"
+  ],
+  "expectedPaidResourceCount": 8,
+  "preconditions": [
+    "Fresh Floot list_files after quota reset.",
+    "One batched read_files call verifies the four preserved PA files.",
+    "Newest GitHub Floot release/recovery discovery gates are green.",
+    "No AppDeploy runtime dependency is present in staged endpoint/discovery sources."
+  ],
+  "writes": [
+    {
+      "order": 1,
+      "source": "docs/pa-entity-floot-release/vendor-intake-gate_GET.ts",
+      "target": "endpoints/vendor-intake-gate_GET.ts",
+      "gitBlobSha": "f318feaaf197783c8460899d1d419026760496b5",
+      "size": 46016,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 2,
+      "source": "docs/pa-entity-floot-release/vendor-intake-gate_GET.schema.ts",
+      "target": "endpoints/vendor-intake-gate_GET.schema.ts",
+      "gitBlobSha": "f13ed84460f72035f36cd69199c6d4e679676744",
+      "size": 207,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 3,
+      "source": "docs/pa-entity-floot-release/vendor-intake-demo_GET.ts",
+      "target": "endpoints/vendor-intake-demo_GET.ts",
+      "gitBlobSha": "d9229747651bf66f2570f80bb038a17967318a19",
+      "size": 2355,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 4,
+      "source": "docs/pa-entity-floot-release/vendor-intake-demo_GET.schema.ts",
+      "target": "endpoints/vendor-intake-demo_GET.schema.ts",
+      "gitBlobSha": "5bfd5cac39b3e1be48575cba43a11f918df5b8f5",
+      "size": 188,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 5,
+      "source": "docs/pa-entity-floot-release/sec-filings_GET.ts",
+      "target": "endpoints/sec-filings_GET.ts",
+      "gitBlobSha": "de265acbc713348fcc321bed31d85349d660c97c",
+      "size": 14860,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 6,
+      "source": "docs/pa-entity-floot-release/sec-filings_GET.schema.ts",
+      "target": "endpoints/sec-filings_GET.schema.ts",
+      "gitBlobSha": "65632d4dce5759d9d1f9b62ee2b6011a3eb9e43f",
+      "size": 235,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 7,
+      "source": "docs/pa-entity-floot-release/us-address-geocode_GET.ts",
+      "target": "endpoints/us-address-geocode_GET.ts",
+      "gitBlobSha": "264f727ecc1a1eeb32eb8890a45c21a90ec4571b",
+      "size": 13368,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 8,
+      "source": "docs/pa-entity-floot-release/us-address-geocode_GET.schema.ts",
+      "target": "endpoints/us-address-geocode_GET.schema.ts",
+      "gitBlobSha": "29f0ec0067b1cad1a54f9b577c347dd6bcdfe410",
+      "size": 143,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 9,
+      "source": "docs/pa-entity-floot-release/ofac-sdn-screen_GET.ts",
+      "target": "endpoints/ofac-sdn-screen_GET.ts",
+      "gitBlobSha": "7a54e70bcace8bb8dcf8c5e13648edd81821e93c",
+      "size": 18478,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 10,
+      "source": "docs/pa-entity-floot-release/ofac-sdn-screen_GET.schema.ts",
+      "target": "endpoints/ofac-sdn-screen_GET.schema.ts",
+      "gitBlobSha": "391e9c763619ae9674c91cb8d55b403840bb0057",
+      "size": 207,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 11,
+      "source": "docs/pa-entity-floot-release/domain-rdap_GET.ts",
+      "target": "endpoints/domain-rdap_GET.ts",
+      "gitBlobSha": "3bf9001fe51dcc0a2b64e3881d361c7e946b3d84",
+      "size": 15139,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 12,
+      "source": "docs/pa-entity-floot-release/domain-rdap_GET.schema.ts",
+      "target": "endpoints/domain-rdap_GET.schema.ts",
+      "gitBlobSha": "72d31c48dbfa2475e8d8abd137d04d492974a4b0",
+      "size": 142,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 13,
+      "source": "docs/pa-entity-floot-release/treasury-average-rates_GET.ts",
+      "target": "endpoints/treasury-average-rates_GET.ts",
+      "gitBlobSha": "ba41708dd6524b0ab937f118cad6e204cccd9712",
+      "size": 12341,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 14,
+      "source": "docs/pa-entity-floot-release/treasury-average-rates_GET.schema.ts",
+      "target": "endpoints/treasury-average-rates_GET.schema.ts",
+      "gitBlobSha": "bcac0bcd7145c949829e40c152b97014007ce9cf",
+      "size": 144,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 15,
+      "source": "docs/pa-entity-floot-recovery/openapi.json",
+      "target": "static/openapi.json",
+      "gitBlobSha": "35bc5c1a3728c15fcae709d0028309c708ba032f",
+      "size": 37007,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 16,
+      "source": "docs/pa-entity-floot-recovery/llms.txt",
+      "target": "static/llms.txt",
+      "gitBlobSha": "374a4fc63d123f6bc38ec53112a1a32128a54b1b",
+      "size": 3035,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 17,
+      "source": "docs/pa-entity-floot-recovery/llms-full.txt",
+      "target": "static/llms-full.txt",
+      "gitBlobSha": "f97c4f2b5f7e070403eea8d7d6e04ef9e853c75f",
+      "size": 4636,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 18,
+      "source": "docs/pa-entity-floot-recovery/skill.txt",
+      "target": "static/skill.txt",
+      "gitBlobSha": "58bab03ae5077076d086313e206aa3e170dda93a",
+      "size": 2222,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 19,
+      "source": "docs/pa-entity-floot-recovery/x402",
+      "target": "static/.well-known/x402",
+      "gitBlobSha": "02ced38868891823008a6fc1e2f52f5a5bd1f201",
+      "size": 24383,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 20,
+      "source": "docs/pa-entity-floot-recovery/x402.json",
+      "target": "static/.well-known/x402.json",
+      "gitBlobSha": "02ced38868891823008a6fc1e2f52f5a5bd1f201",
+      "size": 24383,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 21,
+      "source": "docs/pa-entity-floot-recovery/x402-services.json",
+      "target": "static/.well-known/x402-services.json",
+      "gitBlobSha": "02ced38868891823008a6fc1e2f52f5a5bd1f201",
+      "size": 24383,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 22,
+      "source": "docs/pa-entity-floot-recovery/x402-service.json",
+      "target": "static/.well-known/x402-service.json",
+      "gitBlobSha": "65cf6da88c8431b9e1a52d5eab05ad4d4533fa9c",
+      "size": 1062,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 23,
+      "source": "docs/pa-entity-floot-recovery/x402-catalog.json",
+      "target": "static/.well-known/x402-catalog.json",
+      "gitBlobSha": "02ced38868891823008a6fc1e2f52f5a5bd1f201",
+      "size": 24383,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 24,
+      "source": "docs/pa-entity-floot-recovery/security.txt",
+      "target": "static/.well-known/security.txt",
+      "gitBlobSha": "8633f76b16af225715c72c01517294bacc8029f8",
+      "size": 259,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 25,
+      "source": "docs/pa-entity-floot-recovery/sitemap.xml",
+      "target": "static/sitemap.xml",
+      "gitBlobSha": "64b024d6149df67346de5c1fed697946bedd4843",
+      "size": 939,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    },
+    {
+      "order": 26,
+      "source": "docs/pa-entity-floot-recovery/robots.txt",
+      "target": "static/robots.txt",
+      "gitBlobSha": "04e2420a446067d88e32d971ed539f8046511638",
+      "size": 77,
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+    }
+  ],
+  "postWrite": [
+    "Run Floot typecheck.",
+    "Run Floot tests.",
+    "Abort before publish if either reports failures.",
+    "Publish once to existing pa-entity-x402 subdomain.",
+    "Check publish status.",
+    "Run buyer-style zero-spend verification against the public origin.",
+    "Require 8 healthy paid resources and 3/3 fixed vendor fixtures.",
+    "Re-register the Floot origin with Agent402.",
+    "Require Agent402 to recognize the expanded tool set before Step 2 completion."
+  ],
+  "actionBudget": {
+    "listFiles": 1,
+    "preservedReadBatch": 1,
+    "guideReadMax": 1,
+    "writes": 26,
+    "typecheck": 1,
+    "tests": 1,
+    "publish": 1,
+    "publishStatus": 1,
+    "totalWithoutGuide": 32,
+    "totalWithOneGuide": 33,
+    "dailyAllowance": 100
+  }
+}
