@@ -1,0 +1,66 @@
+{
+  "id": "pa-vendor-gate",
+  "version": "0.1.0",
+  "purpose": "Check whether available public evidence is sufficiently consistent for an agent to proceed with a prospective Pennsylvania vendor or require human review.",
+  "input": {
+    "required": [
+      "company"
+    ],
+    "properties": {
+      "company": {
+        "type": "string",
+        "minLength": 2
+      },
+      "domain": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "address": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "checks": [
+    "pa_registry_identity",
+    "ofac_screen",
+    "domain_rdap",
+    "address_consistency"
+  ],
+  "decision_policy": {
+    "HUMAN_REVIEW": [
+      "no confident Pennsylvania entity match",
+      "material identity conflict",
+      "potential sanctions match requiring review",
+      "insufficient or contradictory evidence"
+    ],
+    "PROCEED": [
+      "confident entity match",
+      "no review-triggering sanctions evidence",
+      "supplied domain/address evidence is consistent or absent"
+    ]
+  },
+  "output": {
+    "required": [
+      "decision",
+      "reason_codes",
+      "checks",
+      "evidence",
+      "checked_at"
+    ],
+    "decision": [
+      "PROCEED",
+      "HUMAN_REVIEW"
+    ]
+  },
+  "forbidden_claims": [
+    "safe",
+    "fraud-free",
+    "legally compliant",
+    "approved by government"
+  ]
+}
