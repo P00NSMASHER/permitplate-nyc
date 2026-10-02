@@ -11,7 +11,10 @@ on:
       - 'docs/pa-entity-floot-recovery/**'
       - 'recovery/floot-target-manifest.json'
       - 'recovery/x402-portfolio-target.json'
+      - 'recovery/floot-deployment-bundle-01.json'
+      - 'recovery/floot-deployment-bundle-02.json'
       - 'scripts/validate-floot-recovery-bundle.mjs'
+      - 'scripts/validate-floot-deployment-bundles.mjs'
       - 'scripts/test-floot-recovery-discovery.mjs'
       - 'scripts/verify-pa-entity-floot-patches.mjs'
       - 'scripts/test-floot-release-payment-invariants.mjs'
@@ -52,6 +55,9 @@ jobs:
 
       - name: Verify atomic Floot patches match tested release files
         run: node scripts/verify-pa-entity-floot-patches.mjs
+
+      - name: Validate bundled Floot deployment payloads
+        run: node scripts/validate-floot-deployment-bundles.mjs
 
       - name: Verify payment-safety invariants across all paid routes
         run: node scripts/test-floot-release-payment-invariants.mjs
