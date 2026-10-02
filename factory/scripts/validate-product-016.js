@@ -14,6 +14,7 @@ function main(){
   const p=registry.products.find(row=>row.id==="pa-entity-ofac-review");
   assert.ok(p,"Product 016 missing from registry");
   assert.equal(p.number,"016");
+  assert.equal(p.status,"live-source-verified-staging");
   assert.equal(p.method,"GET");
   assert.equal(p.path,RESOURCE_PATH);
   assert.equal(p.price_usdc,"0.005");
