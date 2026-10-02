@@ -88,5 +88,27 @@
       "Vendor gate exact staged endpoint -> real PA/Census/OFAC/RDAP"
     ],
     "note": "Deployment lock verification ensures locked deployment source files have not changed on main."
+  },
+  "liveReleaseUpstreamEvidence": {
+    "workflow": "Test Floot release live upstreams",
+    "runId": 37029193398,
+    "conclusion": "success",
+    "checkedAt": "2026-10-02T15:45:40Z",
+    "zeroSpend": true,
+    "paymentSent": false,
+    "facilitatorNetworkCalls": 0,
+    "mockedVerifyCalls": 6,
+    "mockedSettleCalls": 6,
+    "realUpstreamCalls": 16,
+    "passed": 6,
+    "total": 6,
+    "latencyMs": {
+      "treasury": 433,
+      "rdap": 78,
+      "census": 263,
+      "sec": 90,
+      "ofac": 2869,
+      "vendorGate": 8142
+    }
   }
 }
