@@ -1,100 +1,111 @@
-# Floot x402 rehost rollback procedure
+# Floot Recovery Rollback Procedure
 
-Prepared for project `b69a3ee6-eb01-430d-aa51-da2fc7beeac4`.
+## Why the rollback source must be captured from Floot
 
-## Goal
+Do **not** use `docs/pa-entity-floot-release/*` as an automatic rollback source.
 
-The existing two-route PA seller is healthy. The eight-route recovery must not make recovery from a bad publish depend on memory, mutable GitHub `main`, or undocumented Floot UI history.
+Some checked-in release fixtures already contain staged recovery/vendor-gate discovery state, while the currently published Floot seller still exposes only two paid resources. A rollback must restore the exact pre-migration Floot project contents, not an inferred historical package.
 
-Before the first recovery write, capture the current state of every deployment target that already exists.
+## Mandatory pre-write snapshot
 
-## Pre-write snapshot
+Immediately after the post-reset `list_files`, use **one** `read_files` call to capture these 16 current project files:
 
-A public static baseline is captured ahead of the reset at:
+### Four proven PA files
 
-`verification/floot-static-rollback-public-latest.json`
+- `endpoints/pa-business_GET.ts`
+- `endpoints/pa-business_GET.schema.ts`
+- `endpoints/pa-entity-one_GET.ts`
+- `endpoints/pa-entity-one_GET.schema.ts`
 
-It contains the exact response bodies and SHA-256 hashes for the 12 static discovery files that will be overwritten. **Do not assume public bytes equal Floot source bytes without checking.**
+### Twelve static files that the recovery overwrites
 
-After the post-reset `list_files` call:
+- `static/openapi.json`
+- `static/llms.txt`
+- `static/llms-full.txt`
+- `static/skill.txt`
+- `static/.well-known/x402`
+- `static/.well-known/x402.json`
+- `static/.well-known/x402-services.json`
+- `static/.well-known/x402-service.json`
+- `static/.well-known/x402-catalog.json`
+- `static/.well-known/security.txt`
+- `static/sitemap.xml`
+- `static/robots.txt`
 
-1. Record the current Floot project version.
-2. Compare the 26 deployment targets against the live file tree.
-3. Separate targets into:
-   - existing files that will be overwritten;
-   - new files that do not yet exist.
-4. Use batched `read_files` calls (maximum 20 paths each) to read every existing overwrite target with diagnostics off. The current expected set fits in one batch together with the four preserved PA files.
-5. For each of the 12 static targets, compare the Floot source content SHA-256 against `verification/floot-static-rollback-public-latest.json`. If a hash differs, trust the freshly read Floot source and record the mismatch; do not silently overwrite the rollback source with the public copy.
-6. Save a rollback receipt in GitHub under:
-   `verification/floot-pre-rehost-rollback-<projectVersion>.json`
+Persist those exact contents in one GitHub JSON artifact before the first Floot write:
 
-The receipt must contain:
+`verification/floot-pre-rehost-snapshot-<timestamp>.json`
 
-- project id
+The snapshot must include:
+
+- Floot project id
+- Floot project version returned by `list_files`
 - production origin
-- pre-write Floot version
-- timestamp
-- existing target path
-- exact UTF-8 content for each existing target
-- SHA-256 of each captured content
-- list of targets that were absent before recovery
+- capture time
+- all 16 paths
+- exact UTF-8 contents
+- whether each file existed
+- source length
+- a SHA-256 digest for each content string
 
-Do not include secrets. The recovery routes use public data and the target files should contain no secrets.
+Do not begin recovery writes until the snapshot commit succeeds.
 
-## Staging checkpoint
+## Normal failure before publish
 
-After all 26 writes pass Floot typecheck and tests, create one named Floot checkpoint:
+If any write, typecheck, or project test fails:
 
-**x402 eight-route rehost staged**
+1. **Do not publish.**
+2. The current published production app remains the previous known-good version.
+3. Fix the staged project defect while preserving the captured baseline.
+4. Do not spend actions restoring static files merely because the unpublished dev state is broken unless a later retry requires a clean project state.
 
-Description should include:
+## Failure after publish
 
-- pinned GitHub source commit
-- pre-write Floot version
-- 8 paid resources
-- 3 fixed reviewer fixtures
-- zero AppDeploy runtime dependencies
+If the new publish completes but public buyer checks fail:
 
-This checkpoint records the completed staged state; it is useful for auditing, but it is not a substitute for the pre-write rollback receipt.
+1. Stop marketplace/Agent402 updates.
+2. Use the snapshot as the exact source for all previously existing overwritten files.
+3. Delete only the new recovery endpoint/schema files that did not exist before migration:
+   - `endpoints/vendor-intake-gate_GET.ts`
+   - `endpoints/vendor-intake-gate_GET.schema.ts`
+   - `endpoints/vendor-intake-demo_GET.ts`
+   - `endpoints/vendor-intake-demo_GET.schema.ts`
+   - `endpoints/sec-filings_GET.ts`
+   - `endpoints/sec-filings_GET.schema.ts`
+   - `endpoints/us-address-geocode_GET.ts`
+   - `endpoints/us-address-geocode_GET.schema.ts`
+   - `endpoints/ofac-sdn-screen_GET.ts`
+   - `endpoints/ofac-sdn-screen_GET.schema.ts`
+   - `endpoints/domain-rdap_GET.ts`
+   - `endpoints/domain-rdap_GET.schema.ts`
+   - `endpoints/treasury-average-rates_GET.ts`
+   - `endpoints/treasury-average-rates_GET.schema.ts`
+4. Restore the 12 static files from the snapshot using serialized writes and current `expected_version`.
+5. Re-run typecheck/tests.
+6. Republish once.
+7. Re-run the current two-route production verifier.
+8. Do not resume recovery until the original two-route seller is confirmed healthy again.
 
-## Publish failure containment
+## Existing PA endpoints
 
-If `publish_app` itself fails:
+The four PA files are preserved during the planned migration and normally require no rollback write. Their captured copies exist only to detect unexpected mutation and as a last-resort restore source.
 
-- do not retry blindly;
-- inspect the publish result/logs;
-- leave the staged project intact while diagnosing;
-- the previously published production deployment remains the reference until a successful publish replaces it.
+## Floot history
 
-## Post-publish verification failure
+Floot records each write in project history, and `read_file` / `read_files` can walk older file versions using `older_than`. That history is a secondary recovery path.
 
-If publish succeeds but the public buyer checks fail:
+The GitHub pre-write snapshot is the primary rollback source because it is durable outside the Floot project and remains available after chat/session interruption.
 
-1. Classify the failure.
-2. If only one newly added route is defective and the two original PA routes remain healthy, do not self-fund a payment to debug it.
-3. If discovery advertises unusable routes, treat that as release-critical.
-4. Restore the pre-write contents for every overwritten existing target from the rollback receipt.
-5. Delete only recovery files that were absent in the pre-write snapshot.
-6. Use Floot `expected_version` on every restore mutation and serialize writes/deletes.
-7. Run typecheck/tests.
-8. Publish the restored baseline once.
-9. Verify:
-   - `/_api/pa-entity-one`
-   - `/_api/pa-business`
-   - `/.well-known/x402`
-   are back to the known two-route healthy state.
+## Rollback action budget
 
-Do not call recovery successful until the public verifier confirms the restored state.
+Worst-case post-publish rollback:
 
-## Production-success rule
+- delete 14 newly added endpoint/schema files
+- restore 12 static files
+- typecheck
+- tests
+- publish
+- publish-status check
+- public verification
 
-Do not discard the rollback receipt immediately after publish. Keep it as historical evidence until:
-
-- all 8 paid routes pass buyer-style zero-spend verification;
-- all 3 fixed vendor fixtures pass;
-- canonical discovery reports 8 resources;
-- Agent402 recognizes the expanded Floot origin.
-
-## Revenue rule
-
-Rollback checks, probes, directory refreshes, and operator activity are not buyer revenue.
+This is still within a fresh 100-action Floot daily window if needed, but rollback should be treated as exceptional. The pre-publish typecheck/tests and exact-head CI gates are intended to prevent reaching this path.
