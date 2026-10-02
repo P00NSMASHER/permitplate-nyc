@@ -79,3 +79,25 @@ test("health reports staged product count and unknown route is 404",async()=>{
   assert.equal(health.stagingProductCount,runtime.stagingProducts.length);
   assert.equal((await runtime.handle({path:"/missing"})).statusCode,404);
 });
+
+test("every staged route answers CORS payment-header preflight",async()=>{
+  let networkCalls=0;
+  const runtime=createFactoryRuntime({
+    publicApiBase:"https://candidate.example",
+    adapters:adapters(),
+    fetchImpl:async()=>{networkCalls++;throw new Error("unexpected network");}
+  });
+  for(const product of runtime.stagingProducts){
+    const response=await runtime.handle({
+      method:"OPTIONS",
+      path:product.path,
+      event:{headers:{}}
+    });
+    assert.equal(response.statusCode,204,product.id+" preflight status");
+    assert.match(response.headers["access-control-allow-methods"],/GET/);
+    assert.match(response.headers["access-control-allow-methods"],/OPTIONS/);
+    assert.match(response.headers["access-control-allow-headers"],/PAYMENT-SIGNATURE/);
+    assert.match(response.headers["access-control-allow-headers"],/X-PAYMENT/);
+  }
+  assert.equal(networkCalls,0);
+});
