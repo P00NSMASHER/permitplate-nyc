@@ -148,6 +148,10 @@ async function verifyService(service) {
     ok: false,
     status: null,
     latencyMs: null,
+    paymentRequiredPresent: false,
+    appdeployAvailability: null,
+    responseBodyCode: null,
+    responseBodyMessage: null,
     failures: [],
   };
 
@@ -170,6 +174,9 @@ async function verifyService(service) {
     }
 
     const paymentRequired = response.headers.get('payment-required');
+    result.paymentRequiredPresent = Boolean(paymentRequired);
+    result.appdeployAvailability =
+      response.headers.get('x-appdeploy-app-availability');
     let headerDoc = null;
     try {
       headerDoc = decodeBase64UrlJson(paymentRequired);
@@ -212,6 +219,13 @@ async function verifyService(service) {
       body = await response.json();
     } catch {
       result.failures.push('402 response body is not valid JSON');
+    }
+
+    if (body && typeof body === 'object') {
+      result.responseBodyCode =
+        typeof body.code === 'string' ? body.code : null;
+      result.responseBodyMessage =
+        typeof body.message === 'string' ? body.message : null;
     }
 
     if (body && headerDoc) {
