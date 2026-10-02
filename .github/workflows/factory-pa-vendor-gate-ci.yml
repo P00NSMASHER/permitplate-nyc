@@ -166,3 +166,5 @@ jobs:
         run: node --test factory/runtime/create-runtime.test.js
       - name: Test deployment prerequisite preflight
         run: node --test factory/runtime/deployment-preflight.test.js
+      - name: Test AppDeploy runtime bridge
+        run: node --test factory/runtime/appdeploy-bridge.test.js
