@@ -28,6 +28,9 @@ jobs:
       - name: Verify host-independent rehost core
         run: node scripts/test-x402-rehost-core.mjs
 
+      - name: Verify host-independent vendor gate decision core
+        run: node scripts/test-vendor-intake-gate-core.mjs
+
       - name: Verify unpaid x402 challenges, decision fixtures, and directory observations
         env:
           EXPECTED_FLOOT_RESOURCES: ${{ inputs.expected_floot_resources || '2' }}
