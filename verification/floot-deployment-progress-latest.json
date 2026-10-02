@@ -288,7 +288,7 @@
     "checkpointId": null,
     "description": null
   },
-  "lastUpdatedAt": "2026-10-02T17:53:34.545Z",
+  "lastUpdatedAt": "2026-10-02T17:55:00Z",
   "lastCompletedWriteOrder": 0,
   "resumeRule": "Never restart from write 1 after interruption. Refresh Floot list_files, verify boundary content against the locked deployment bundle, confirm the rollback snapshot/plan still match the captured pre-write project version, then resume at the next unfinished ordered write.",
   "rollbackPlan": {
@@ -338,5 +338,11 @@
       }
     ],
     "totalItems": 26
+  },
+  "nextAction": {
+    "tool": "Floot list_files",
+    "projectId": "b69a3ee6-eb01-430d-aa51-da2fc7beeac4",
+    "condition": "after 2026-10-02T18:00:00Z build-action reset",
+    "purpose": "capture fresh project version/tree before mandatory five-batch rollback snapshot; no write before snapshot+rollback plan+lock validation"
   }
 }
