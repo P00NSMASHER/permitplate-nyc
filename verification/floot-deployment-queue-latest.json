@@ -272,5 +272,17 @@
       "verification/floot-rehost-deploy-readiness-latest.json",
       "verification/netlify-x402-fallback-readiness-latest.json"
     ]
+  },
+  "publicBaselinePreflight": {
+    "workflow": "Preflight Floot public baseline",
+    "runId": 37028449394,
+    "conclusion": "success",
+    "checkedAt": "2026-10-02T15:39:03Z",
+    "staticFilesPassed": 12,
+    "staticFilesTotal": 12,
+    "paidRoutesPassed": 2,
+    "paidRoutesTotal": 2,
+    "canonicalManifestResourceCount": 2,
+    "green": true
   }
 }
