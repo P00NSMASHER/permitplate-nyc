@@ -150,3 +150,11 @@ jobs:
         run: node factory/scripts/build-release-bundle.js /tmp/x402-factory-bundle https://candidate.example
       - name: Run Product 009 release gate
         run: node factory/scripts/validate-product-009.js
+      - name: Test Product 012 last-changed decision
+        run: node --test factory/products/domain-last-changed-recency/decision.test.js
+      - name: Test Product 012 last-changed service
+        run: node --test factory/products/domain-last-changed-recency/service.test.js
+      - name: Test Product 012 paid x402 handler
+        run: node --test factory/products/domain-last-changed-recency/paid-handler.test.js
+      - name: Test Product 012 discovery metadata
+        run: node --test factory/products/domain-last-changed-recency/metadata.test.js
