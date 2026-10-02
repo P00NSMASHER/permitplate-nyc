@@ -5,6 +5,7 @@ const path=require("node:path");
 const registry=require("../product-registry.json");
 const {buildDeploymentBundle,sha256}=require("../packages/discovery/bundle");
 const {buildAppDeployRuntimeBundle}=require("./build-appdeploy-runtime-bundle");
+const {buildAppDeployEntrypoint}=require("./build-appdeploy-entrypoint");
 
 const ROOT=path.resolve(__dirname,"..");
 const DEFAULT_BASE="https://candidate.example";
@@ -27,6 +28,9 @@ function buildReleaseBundle(publicApiBase=DEFAULT_BASE){
   const runtimeBundle=buildAppDeployRuntimeBundle();
   const runtimeFileName="factory-runtime-bundle.js";
   const runtimeSha256=sha256(runtimeBundle.source);
+  const appDeployEntrypoint=buildAppDeployEntrypoint(base);
+  const appDeployEntrypointFileName="appdeploy-backend-index.ts";
+  const appDeployEntrypointSha256=sha256(appDeployEntrypoint.source);
   const catalog=parseJsonFile(deployment,"x402-catalog.json");
   const openapi=parseJsonFile(deployment,"openapi.json");
   const productIndex=parseJsonFile(deployment,"product-index.json");
@@ -66,6 +70,14 @@ function buildReleaseBundle(publicApiBase=DEFAULT_BASE){
       sha256:runtimeSha256,
       module_count:runtimeBundle.moduleCount,
       entries:runtimeBundle.entries
+    },
+    appdeploy_entrypoint:{
+      name:appDeployEntrypointFileName,
+      sha256:appDeployEntrypointSha256,
+      total_route_count:appDeployEntrypoint.totalRouteCount,
+      paid_route_count:appDeployEntrypoint.paidRouteCount,
+      options_route_count:appDeployEntrypoint.optionsRouteCount,
+      static_route_count:appDeployEntrypoint.staticRouteCount
     }
   };
 
@@ -77,9 +89,11 @@ function buildReleaseBundle(publicApiBase=DEFAULT_BASE){
     bundleManifest,
     manifest:releaseManifest,
     runtimeBundle,
+    appDeployEntrypoint,
     canonicalFiles:{
       ...deployment.files,
-      [runtimeFileName]:runtimeBundle.source
+      [runtimeFileName]:runtimeBundle.source,
+      [appDeployEntrypointFileName]:appDeployEntrypoint.source
     }
   };
 }
