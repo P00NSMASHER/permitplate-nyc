@@ -52,3 +52,14 @@ test("writer produces deterministic catalog, OpenAPI, and manifest files",()=>{
   assert.equal(catalog.resources.length,b.catalog.resources.length);
   assert.equal(manifest.product_count,managedProducts().length);
 });
+
+test("release manifest preserves per-product deployment prerequisites",()=>{
+  const b=buildReleaseBundle("https://candidate.example");
+  const sec=b.manifest.products.find(p=>p.id==="sec-filing-freshness");
+  assert.ok(sec);
+  assert.deepEqual(sec.required_env,["SEC_USER_AGENT"]);
+  assert.ok(sec.deployment_requirements.some(text=>/contact email/i.test(text)));
+  for(const p of b.manifest.products.filter(p=>p.id!=="sec-filing-freshness")){
+    assert.ok(Array.isArray(p.required_env));
+  }
+});
