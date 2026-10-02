@@ -6,6 +6,8 @@ on:
       - 'recovery/floot-target-manifest.json'
       - 'scripts/generate-floot-recovery-discovery.mjs'
       - 'scripts/test-floot-recovery-discovery-generator.mjs'
+      - 'recovery/floot-reset-deploy-plan.json'
+      - 'scripts/test-floot-reset-deploy-plan.mjs'
       - '.github/workflows/test-floot-recovery-discovery-generator.yml'
   pull_request:
     paths:
@@ -29,3 +31,5 @@ jobs:
           node-version: '22'
       - name: Generate and verify 8-resource discovery bundle
         run: node scripts/test-floot-recovery-discovery-generator.mjs
+      - name: Verify reset deployment plan
+        run: node scripts/test-floot-reset-deploy-plan.mjs
