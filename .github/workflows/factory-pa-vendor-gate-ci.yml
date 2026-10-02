@@ -100,6 +100,8 @@ jobs:
 
       - name: Validate factory product registry
         run: node factory/scripts/validate-registry.js
+      - name: Validate migration manifest classification
+        run: node factory/scripts/validate-migration-manifest.js
       - name: Test compiled discovery surfaces
         run: node --test factory/packages/discovery/generator.test.js
       - name: Validate compiled discovery surfaces
