@@ -104,14 +104,16 @@ Expected actions after the free-plan reset:
 
 - 1 `list_files`
 - 1 batched `read_files` for the four preserved PA endpoint/schema files
+- 1–2 batched `read_files` calls to capture all existing overwrite targets for rollback
 - 1 guide read if required
 - 26 sequential file writes
 - 1 typecheck
 - 1 project test run
+- 1 named checkpoint after the staged release is green
 - 1 publish
 - 1 publish-status check
 
-Expected total: **32 Floot actions without a guide, 33 with one guide**, comfortably below the 100-action daily allowance.
+Expected total: **34–35 Floot actions without a guide, 35–36 with one guide**, comfortably below the 100-action daily allowance.
 
 Keep writes serialized and carry the returned project version forward when the write tool exposes it. Do not make concurrent writes against one expected version.
 
@@ -123,16 +125,19 @@ Keep writes serialized and carry the returned project version forward when the w
    - existing endpoint/static paths
    - published metadata
 3. Use one batched `read_files` call for the four preserved PA files and compare them against the tested baseline; do not rewrite them.
-4. Re-read `verification/floot-deployment-queue-latest.json` and `deploy-map.json`.
-5. Run `scripts/verify-floot-deployment-lock.mjs`; abort before any write if the pinned branch moved, any of the 26 source blob hashes/sizes drifted, or current `main` modified a locked source.
-6. For each queue entry in order:
+4. Follow `docs/pa-entity-floot-recovery/ROLLBACK.md`: identify every deployment target already present and capture its exact current content before mutation.
+5. Re-read `verification/floot-deployment-queue-latest.json` and `deploy-map.json`.
+6. Run `scripts/verify-floot-deployment-lock.mjs`; abort before any write if the pinned branch moved, any of the 26 source blob hashes/sizes drifted, or current `main` modified a locked source.
+7. For each queue entry in order:
    - fetch exact GitHub source bytes from pinned commit `ceb21b651764ffaa0c893f4e725eccce0c10ba5f` at the recorded source path
    - write complete content to the mapped Floot target path
    - use current Floot project version as `expected_version` when supported
    - carry forward the returned version
-7. Run Floot typecheck.
-8. Run Floot tests.
-9. Do not publish if either fails.
+8. Run Floot typecheck.
+9. Run Floot tests.
+10. Do not publish if either fails.
+11. Create one checkpoint titled `x402 eight-route rehost staged` with the pinned source commit and pre-write Floot version in the description.
+12. Publish once.
 
 ## Interruption-safe resume protocol
 
