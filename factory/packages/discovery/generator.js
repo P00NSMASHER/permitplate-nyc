@@ -11,6 +11,7 @@ const MODULES = Object.freeze({
   "domain-registration-age": require("../../products/domain-registration-age/metadata"),
   "treasury-average-rate-threshold": require("../../products/treasury-average-rate-threshold/metadata"),
   "treasury-average-rate-trend": require("../../products/treasury-average-rate-trend/metadata"),
+  "treasury-average-rate-spread": require("../../products/treasury-average-rate-spread/metadata"),
   "ofac-name-review-gate": require("../../products/ofac-name-review-gate/metadata"),
   "pa-business-formation-age": require("../../products/pa-business-formation-age/metadata"),
   "domain-expiration-horizon": require("../../products/domain-expiration-horizon/metadata"),
