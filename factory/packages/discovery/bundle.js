@@ -5,6 +5,7 @@ const {
   buildCatalog,
   buildOpenApi,
   buildLlmsText,
+  buildProductIndex,
   managedProducts,
 }=require("./generator");
 
@@ -30,10 +31,14 @@ function buildDeploymentBundle(base){
     required_env:Array.isArray(p.required_env)?p.required_env:[],
     deployment_requirements:Array.isArray(p.deployment_requirements)?p.deployment_requirements:[]
   }));
+  const publicIndex=buildProductIndex(base);
   const productIndex=stableJson({
-    schema_version:1,
-    base_url:String(base).replace(/\/$/,""),
-    products
+    ...publicIndex,
+    products:products.map((product)=>({
+      ...publicIndex.products.find((row)=>row.id===product.id),
+      required_env:product.required_env,
+      deployment_requirements:product.deployment_requirements
+    }))
   });
 
   const files={
