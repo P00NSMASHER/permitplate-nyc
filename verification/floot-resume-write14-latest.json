@@ -1,0 +1,251 @@
+{
+  "observedAt": "2026-10-02T22:02:41Z",
+  "projectId": "b69a3ee6-eb01-430d-aa51-da2fc7beeac4",
+  "productionOrigin": "https://pa-entity-x402.floot.app",
+  "state": "paused_quota_exhausted_after_write_13",
+  "quota": {
+    "dailyLimit": 100,
+    "currentWindowUsed": 100,
+    "resetAt": "2026-10-03T18:00:00Z",
+    "purchaseOrUpgradeAuthorized": false
+  },
+  "staging": {
+    "preWriteProjectVersion": 1790879167519,
+    "currentRecordedFlootVersion": 1790964968403,
+    "completedWriteOrders": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13
+    ],
+    "lastCompletedWriteOrder": 13,
+    "nextWriteOrder": 14,
+    "nextWrite": {
+      "order": 14,
+      "source": "docs/pa-entity-floot-release/treasury-average-rates_GET.schema.ts",
+      "target": "endpoints/treasury-average-rates_GET.schema.ts",
+      "expectedBlobSha": "bcac0bcd7145c949829e40c152b97014007ce9cf",
+      "expectedSize": 144
+    },
+    "pendingWrites": [
+      {
+        "order": 14,
+        "source": "docs/pa-entity-floot-release/treasury-average-rates_GET.schema.ts",
+        "target": "endpoints/treasury-average-rates_GET.schema.ts",
+        "expectedBlobSha": "bcac0bcd7145c949829e40c152b97014007ce9cf",
+        "expectedSize": 144
+      },
+      {
+        "order": 15,
+        "source": "docs/pa-entity-floot-recovery/openapi.json",
+        "target": "static/openapi.json",
+        "expectedBlobSha": "35bc5c1a3728c15fcae709d0028309c708ba032f",
+        "expectedSize": 37007
+      },
+      {
+        "order": 16,
+        "source": "docs/pa-entity-floot-recovery/llms.txt",
+        "target": "static/llms.txt",
+        "expectedBlobSha": "374a4fc63d123f6bc38ec53112a1a32128a54b1b",
+        "expectedSize": 3035
+      },
+      {
+        "order": 17,
+        "source": "docs/pa-entity-floot-recovery/llms-full.txt",
+        "target": "static/llms-full.txt",
+        "expectedBlobSha": "f97c4f2b5f7e070403eea8d7d6e04ef9e853c75f",
+        "expectedSize": 4636
+      },
+      {
+        "order": 18,
+        "source": "docs/pa-entity-floot-recovery/skill.txt",
+        "target": "static/skill.txt",
+        "expectedBlobSha": "58bab03ae5077076d086313e206aa3e170dda93a",
+        "expectedSize": 2222
+      },
+      {
+        "order": 19,
+        "source": "docs/pa-entity-floot-recovery/x402",
+        "target": "static/.well-known/x402",
+        "expectedBlobSha": "02ced38868891823008a6fc1e2f52f5a5bd1f201",
+        "expectedSize": 24383
+      },
+      {
+        "order": 20,
+        "source": "docs/pa-entity-floot-recovery/x402.json",
+        "target": "static/.well-known/x402.json",
+        "expectedBlobSha": "02ced38868891823008a6fc1e2f52f5a5bd1f201",
+        "expectedSize": 24383
+      },
+      {
+        "order": 21,
+        "source": "docs/pa-entity-floot-recovery/x402-services.json",
+        "target": "static/.well-known/x402-services.json",
+        "expectedBlobSha": "02ced38868891823008a6fc1e2f52f5a5bd1f201",
+        "expectedSize": 24383
+      },
+      {
+        "order": 22,
+        "source": "docs/pa-entity-floot-recovery/x402-service.json",
+        "target": "static/.well-known/x402-service.json",
+        "expectedBlobSha": "65cf6da88c8431b9e1a52d5eab05ad4d4533fa9c",
+        "expectedSize": 1062
+      },
+      {
+        "order": 23,
+        "source": "docs/pa-entity-floot-recovery/x402-catalog.json",
+        "target": "static/.well-known/x402-catalog.json",
+        "expectedBlobSha": "02ced38868891823008a6fc1e2f52f5a5bd1f201",
+        "expectedSize": 24383
+      },
+      {
+        "order": 24,
+        "source": "docs/pa-entity-floot-recovery/security.txt",
+        "target": "static/.well-known/security.txt",
+        "expectedBlobSha": "8633f76b16af225715c72c01517294bacc8029f8",
+        "expectedSize": 259
+      },
+      {
+        "order": 25,
+        "source": "docs/pa-entity-floot-recovery/sitemap.xml",
+        "target": "static/sitemap.xml",
+        "expectedBlobSha": "64b024d6149df67346de5c1fed697946bedd4843",
+        "expectedSize": 939
+      },
+      {
+        "order": 26,
+        "source": "docs/pa-entity-floot-recovery/robots.txt",
+        "target": "static/robots.txt",
+        "expectedBlobSha": "04e2420a446067d88e32d971ed539f8046511638",
+        "expectedSize": 77
+      }
+    ],
+    "typecheck": "pending",
+    "tests": "pending",
+    "checkpoint": "pending",
+    "publish": "pending"
+  },
+  "rollback": {
+    "snapshot": {
+      "status": "passed",
+      "projectVersion": 1790879167519,
+      "artifactPath": "verification/floot-pre-rehost-rollback-1790879167519.json",
+      "githubCommit": "c8de712ca87dfcc8c72429b9599744ef8cc8ba49",
+      "capturedFileCount": 16,
+      "preexistingRecoveryTargets": 12,
+      "absentRecoveryTargets": 14,
+      "publicBaselineComparison": "12/12 exact",
+      "validator": "passed",
+      "capturePlan": "recovery/floot-snapshot-capture-plan.json",
+      "capturePlanStatus": "validated",
+      "requiredNormalBatches": 5,
+      "mandatoryFileCount": 16,
+      "maximumReadBatches": 19,
+      "snapshotBuilderStatus": "synthetic-round-trip-pass",
+      "publicBaselineComparatorStatus": "12-of-12 synthetic exact-match-pass",
+      "publicBaselinePreflight": {
+        "checkedAt": "2026-10-02T17:53:34.545Z",
+        "staticPassed": 12,
+        "staticTotal": 12,
+        "paidRoutesPassed": 2,
+        "paidRoutesTotal": 2,
+        "manifestResourceCount": 2,
+        "green": true
+      },
+      "sha256": "39820c1945fb3a411965bbf7ae2999958d51f0165beba216f2df2b951d748f28"
+    },
+    "plan": {
+      "status": "passed",
+      "projectVersion": 1790879167519,
+      "artifactPath": "verification/floot-rollback-plan-1790879167519.json",
+      "githubCommit": "c1bfbcbd46bf7504894f81d05da9e295e7345c74",
+      "restoreWrites": 12,
+      "deletes": 14,
+      "validator": "passed",
+      "sha256": "c9de973396ad089507997a287c91cce3d4102b8aefce576cd2a8a2e02e925796"
+    }
+  },
+  "sourceIntegrity": {
+    "sourceBranch": "floot-recovery-lock-2026-10-02",
+    "sourceCommit": "ceb21b651764ffaa0c893f4e725eccce0c10ba5f",
+    "currentMain": "ffaa9c64d83f26fef7f84e92f3d6b234b12c0381",
+    "lockedWrites": 26,
+    "currentMainBlobMatches": 26,
+    "currentMainBlobMismatches": 0,
+    "immutableBundleTransport": {
+      "status": "validated",
+      "fetchPlan": "verification/floot-bundle-fetch-plan-latest.json",
+      "deployMapBlobSha": "be374305376eacbfd7d843e3285b5ab0b9e0b8f7",
+      "bundles": [
+        {
+          "range": {
+            "from": 1,
+            "to": 13
+          },
+          "gitBlobSha": "8b040e229e25782336442b72591172645236b896",
+          "pinnedRawCommit": "f50584ac3f52562a5864577eda43c6308b01e748",
+          "itemCount": 13,
+          "pinnedTextEqualsBlobVerifiedBundle": true
+        },
+        {
+          "range": {
+            "from": 14,
+            "to": 26
+          },
+          "gitBlobSha": "47a073817132dec73442b76d7fcf7eb34b4467c1",
+          "pinnedRawCommit": "34a69f21a865f174196af3358b9e4d2411decc35",
+          "itemCount": 13,
+          "pinnedTextEqualsBlobVerifiedBundle": true
+        }
+      ],
+      "totalItems": 26,
+      "localContingency": {
+        "device": "PAAM-L044",
+        "directory": "%TEMP%\\floot-locked-bundles",
+        "bundle01": {
+          "file": "bundle-01.json",
+          "bytes": 131660,
+          "sha256": "f64e7bd70007e15335470cf8e12e4105df66f9ff0f6317237ee852088a0c4bcd"
+        },
+        "bundle02": {
+          "file": "bundle-02.json",
+          "bytes": 164261,
+          "sha256": "46f0db975e9bb525878a2b601f824ab0d570a44cfe7a4a306d0c8703bd372880"
+        },
+        "note": "Contingency only; immutable Git blob/commit sources remain canonical."
+      }
+    }
+  },
+  "sandboxVerification": {
+    "githubRunId": 37070300179,
+    "conclusion": "success",
+    "result": "external_access_restricted",
+    "note": "Public GitHub runners receive 403 from the Floot sandbox API even for the two known-good PA routes. This is not treated as an endpoint regression."
+  },
+  "resumeProtocol": [
+    "After the 2026-10-03T18:00:00Z reset, call Floot list_files once and record the fresh project version/tree.",
+    "If the fresh project version differs from the recorded boundary, reconcile before writing.",
+    "Read the boundary pair in one batch: endpoints/treasury-average-rates_GET.ts and endpoints/treasury-average-rates_GET.schema.ts.",
+    "Require treasury-average-rates_GET.ts to match locked write 13; write 14 remains the next unfinished operation.",
+    "Confirm rollback snapshot and rollback plan remain the artifacts for pre-write version 1790879167519.",
+    "Re-run the immutable deployment lock check against the pinned 26 source blobs.",
+    "Resume at write 14 only; never restart from write 1.",
+    "Carry Floot expected_version forward after every write.",
+    "After write 26: typecheck, tests, create checkpoint 'x402 eight-route rehost staged', publish once, public zero-spend verification, then Agent402 acceptance."
+  ],
+  "productionSafety": {
+    "publishedChangeRecorded": false,
+    "currentProductionExpectedState": "existing two-route seller remains live because publish is still pending",
+    "marketplaceMutationsAllowed": false,
+    "agent402ReregistrationAllowed": false
+  }
+}
