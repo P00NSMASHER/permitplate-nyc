@@ -1,0 +1,45 @@
+{
+  "id": "treasury-average-rate-change",
+  "version": "0.1.0",
+  "purpose": "Compare the two most recent official monthly weighted-average interest rates for one U.S. Treasury security category and classify the month-over-month change.",
+  "proposed_price_usdc": "0.003",
+  "input": {
+    "required": [
+      "security"
+    ],
+    "properties": {
+      "security": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 100
+      },
+      "toleranceBps": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1000,
+        "default": 2
+      }
+    }
+  },
+  "evidence": [
+    "U.S. Treasury Fiscal Data — Average Interest Rates on U.S. Treasury Securities"
+  ],
+  "decisions": [
+    "increased",
+    "decreased",
+    "within_tolerance",
+    "human_review"
+  ],
+  "policy": {
+    "history_points": 2,
+    "delta_bps_formula": "(latest averageInterestRatePercent - previous averageInterestRatePercent) * 100",
+    "within_tolerance": "absolute deltaBps <= toleranceBps",
+    "automatic_reject": false
+  },
+  "claim_boundaries": [
+    "the source values are monthly weighted-average rates on outstanding Treasury securities",
+    "the result is not a live market yield",
+    "the result is not a forecast or investment recommendation",
+    "a two-point change classification is not a long-term trend determination"
+  ]
+}
