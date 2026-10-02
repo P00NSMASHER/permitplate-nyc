@@ -15,7 +15,7 @@ const snapshot = JSON.parse(await readFile(snapshotPath, 'utf8'));
 
 const PROJECT_ID = 'b69a3ee6-eb01-430d-aa51-da2fc7beeac4';
 const ORIGIN = 'https://pa-entity-x402.floot.app';
-const expectedPaths = [
+const mandatoryPaths = [
   'endpoints/pa-business_GET.ts',
   'endpoints/pa-business_GET.schema.ts',
   'endpoints/pa-entity-one_GET.ts',
@@ -34,6 +34,14 @@ const expectedPaths = [
   'static/robots.txt',
 ];
 
+const deployMap = JSON.parse(
+  await readFile(
+    new URL('../docs/pa-entity-floot-recovery/deploy-map.json', import.meta.url),
+    'utf8'
+  )
+);
+const deployTargets = deployMap.writes.map((entry) => entry.target);
+
 assert.equal(snapshot.projectId, PROJECT_ID, 'wrong Floot project id');
 assert.equal(snapshot.productionOrigin, ORIGIN, 'wrong production origin');
 assert.ok(
@@ -46,12 +54,47 @@ assert.match(
   'capturedAt must be ISO-like'
 );
 assert.ok(Array.isArray(snapshot.files), 'files must be an array');
-assert.equal(snapshot.files.length, expectedPaths.length, 'snapshot must contain 16 files');
+assert.ok(
+  Array.isArray(snapshot.preexistingRecoveryTargets),
+  'preexistingRecoveryTargets must be an array'
+);
+assert.ok(
+  Array.isArray(snapshot.absentRecoveryTargets),
+  'absentRecoveryTargets must be an array'
+);
+
+const preexisting = new Set(snapshot.preexistingRecoveryTargets);
+const absent = new Set(snapshot.absentRecoveryTargets);
+assert.equal(
+  preexisting.size,
+  snapshot.preexistingRecoveryTargets.length,
+  'preexistingRecoveryTargets must be unique'
+);
+assert.equal(
+  absent.size,
+  snapshot.absentRecoveryTargets.length,
+  'absentRecoveryTargets must be unique'
+);
+
+for (const target of deployTargets) {
+  const inExisting = preexisting.has(target);
+  const inAbsent = absent.has(target);
+  assert.notEqual(
+    inExisting,
+    inAbsent,
+    target + ': deployment target must be classified exactly once as preexisting or absent'
+  );
+}
+assert.equal(
+  preexisting.size + absent.size,
+  deployTargets.length,
+  'deployment target classification must cover all 26 writes'
+);
 
 const byPath = new Map(snapshot.files.map((entry) => [entry.path, entry]));
-assert.equal(byPath.size, expectedPaths.length, 'snapshot paths must be unique');
+assert.equal(byPath.size, snapshot.files.length, 'snapshot paths must be unique');
 
-for (const path of expectedPaths) {
+for (const path of mandatoryPaths) {
   const entry = byPath.get(path);
   assert(entry, 'missing snapshot path ' + path);
   assert.equal(typeof entry.exists, 'boolean', path + ': exists must be boolean');
@@ -69,9 +112,22 @@ for (const path of expectedPaths) {
   }
 }
 
-const extras = [...byPath.keys()].filter((path) => !expectedPaths.includes(path));
+for (const target of preexisting) {
+  const entry = byPath.get(target);
+  assert(entry?.exists === true, target + ': preexisting deployment target must have captured content');
+}
+
+for (const target of absent) {
+  const entry = byPath.get(target);
+  if (entry) {
+    assert.equal(entry.exists, false, target + ': absent deployment target cannot have content');
+  }
+}
+
+const allowedPaths = new Set([...mandatoryPaths, ...preexisting, ...absent]);
+const extras = [...byPath.keys()].filter((path) => !allowedPaths.has(path));
 assert.deepEqual(extras, [], 'snapshot contains unexpected paths');
 
 console.log(
-  'PASS Floot pre-rehost snapshot: 16/16 expected paths, content lengths and SHA-256 digests verified'
+  'PASS Floot pre-rehost snapshot: mandatory baseline + all 26 deployment targets classified and rollback-safe'
 );
