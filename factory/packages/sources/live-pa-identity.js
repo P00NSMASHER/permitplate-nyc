@@ -138,7 +138,20 @@ function dedupeAndRank(rows, query, limit) {
     .slice(0, limit);
 }
 
-function createPaRegistryAdapter({ fetchImpl = fetch, timeoutMs = SOURCE_TIMEOUT_MS } = {}) {
+function isRetryablePaSourceError(error) {
+  if (error?.code === "SOURCE_TIMEOUT") return true;
+  if (error?.code !== "SOURCE_HTTP_ERROR") return false;
+  const match = String(error?.message || "").match(/source_http_(\d+)/);
+  const status = match ? Number(match[1]) : null;
+  return status === 429 || (Number.isInteger(status) && status >= 500);
+}
+
+function createPaRegistryAdapter({
+  fetchImpl = fetch,
+  timeoutMs = SOURCE_TIMEOUT_MS,
+  sleepImpl = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+  retryDelayMs = 150,
+} = {}) {
   async function candidates(query, mode) {
     const escaped = query.toUpperCase().replaceAll("'", "''");
     const pattern = mode === "starts" ? escaped + "%" : "%" + escaped + "%";
@@ -146,12 +159,21 @@ function createPaRegistryAdapter({ fetchImpl = fetch, timeoutMs = SOURCE_TIMEOUT
     url.searchParams.set("$select", "distinct " + entityProjection());
     url.searchParams.set("$where", "upper(business_name) like '" + pattern + "'");
     url.searchParams.set("$limit", "100");
-    const rows = await fetchJson(
-      fetchImpl,
-      url.toString(),
-      { headers: { "user-agent": "x402-product-factory/0.1" } },
-      timeoutMs
-    );
+    let rows;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        rows = await fetchJson(
+          fetchImpl,
+          url.toString(),
+          { headers: { "user-agent": "x402-product-factory/0.1" } },
+          timeoutMs
+        );
+        break;
+      } catch (error) {
+        if (attempt === 1 || !isRetryablePaSourceError(error)) throw error;
+        if (retryDelayMs > 0) await sleepImpl(retryDelayMs);
+      }
+    }
     if (!Array.isArray(rows)) {
       const error = new Error("pa_registry_invalid_json");
       error.code = "SOURCE_CONTRACT_INVALID";
@@ -534,6 +556,7 @@ module.exports = {
   matchScore,
   addressIdentity,
   distanceMiles,
+  isRetryablePaSourceError,
   createPaRegistryAdapter,
   createCensusAddressAdapter,
   createRdapAdapter,
