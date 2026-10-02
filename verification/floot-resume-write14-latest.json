@@ -247,5 +247,26 @@
     "currentProductionExpectedState": "existing two-route seller remains live because publish is still pending",
     "marketplaceMutationsAllowed": false,
     "agent402ReregistrationAllowed": false
+  },
+  "resumeBudget": {
+    "meteredActions": {
+      "listFiles": 1,
+      "boundaryReadFiles": 1,
+      "remainingWrites": 13,
+      "typecheck": 1,
+      "tests": 1,
+      "checkpoint": 1,
+      "publish": 1,
+      "total": 19
+    },
+    "unmeteredActions": [
+      "get_publish_status",
+      "get_job_status",
+      "list_projects",
+      "get_preview_url"
+    ],
+    "dailyAllowance": 100,
+    "expectedHeadroom": 81,
+    "rule": "Do not repeat the original five-batch pre-write snapshot. The authoritative pre-write snapshot was already captured before write 1 and must remain the rollback source."
   }
 }
