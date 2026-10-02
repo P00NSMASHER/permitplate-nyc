@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: read
+  statuses: write
 
 jobs:
   smoke:
@@ -64,3 +65,23 @@ jobs:
 
       - name: Test vendor-intake decision integration
         run: node scripts/test-vendor-intake-gate-core.mjs
+
+      - name: Publish success commit status
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=success \
+            -f context='x402/rehost-smoke' \
+            -f description='Portable x402 recovery stack passed'
+
+      - name: Publish failure commit status
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=failure \
+            -f context='x402/rehost-smoke' \
+            -f description='Portable x402 recovery stack failed'
