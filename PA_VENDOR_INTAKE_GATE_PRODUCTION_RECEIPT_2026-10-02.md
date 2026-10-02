@@ -75,3 +75,66 @@ Nested seller-funded x402 purchases were intentionally not introduced between th
 ## Submission status
 
 Agentic.ai was **not** resubmitted during this work. The product was first implemented and live-verified so a later resubmission can point to working agent-loop evidence rather than another raw data API.
+
+
+---
+
+## Addendum — subsequent hardening and attribution evidence on 2026-10-02
+
+The sections above record the original production release at snapshot `1790919343993`. The gate was subsequently hardened without changing its $0.020 price or outer x402 payment model.
+
+### Hardening added after initial release
+
+Later production changes added fail-closed checks for:
+
+- ambiguous PA registry matches
+- incomplete PA registry core identity evidence
+- Census response provenance/completeness
+- primary street-number + ZIP equality in addition to the 0.25-mile coordinate rule
+- OFAC response completeness before a zero-candidate result can support continuation
+- RDAP response completeness
+- registered-domain/vendor-name alignment
+
+The machine contract was expanded to OpenAPI **2.2.0** with typed review triggers and structured evidence-completeness fields.
+
+Latest successful machine-schema deployment snapshot in this sequence: `1790932107657`.
+
+### Bounded regression fixtures
+
+```text
+GET https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-demo?case=proceed
+GET https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-demo?case=address_mismatch
+GET https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-demo?case=domain_mismatch
+```
+
+Expected negative cases:
+- address mismatch -> `human_review` + `registered_address_differs`
+- unrelated registered domain -> `human_review` + `domain_name_not_aligned`
+
+Reviewer evidence:
+https://github.com/P00NSMASHER/permitplate-nyc/blob/main/docs/vendor-intake-gate-evidence.md
+
+### Settlement / revenue separation
+
+A separate resource-specific settlement was observed on the Floot **$0.001 PA best-match raw route**, not on the $0.020 vendor gate:
+
+- PayAI reports 1 settlement on `https://pa-entity-x402.floot.app/_api/pa-entity-one`
+- matching Base transfer: 0.001 USDC
+- tx: `0x17985b16137ff8aef95641be06424a5fa4e9edacc6ade5aaf0a58d523ad1cd73`
+- payer: `0x7e6b6556322c4e26c567a867964ac793f5ee2b1c`
+- internal attribution: `external_unattributed`
+- verified-customer revenue counted: $0
+
+The payer is external to the seller wallet and absent from repository/test history, but current public evidence does not distinguish an end-customer agent from an independent verifier/probe. Under the strict accounting rule, it remains excluded from customer revenue until provenance is resolved.
+
+The vendor-intake gate itself remains at 0 settlements / $0 revenue.
+
+Durable attribution receipt:
+`verification/x402-revenue-attribution-latest.json`
+
+### Distribution
+
+- Agent402 remains healthy/routable for the two current PA raw routes but still reports `settlement_required`.
+- ForgeMesh upstream validation of the prepared PA raw seller record passed **95/100** and independently verified the 0.001 USDC proof transaction.
+- Zero-cost ForgeMesh submission transport is blocked because the connected GitHub toolset cannot fork the ForgeMesh repository; the $0.05 paid submission endpoint is intentionally not used.
+- Agentic.ai resubmission remains unsent until the vendor gate is independently visible through the working Floot bare-origin path.
