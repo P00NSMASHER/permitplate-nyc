@@ -55,6 +55,13 @@ async function fetchResponse(fetchImpl, url, init = {}, timeoutMs = SOURCE_TIMEO
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     return await fetchImpl(url, { ...init, signal: controller.signal });
+  } catch (error) {
+    if (error?.name === "AbortError" || error?.code === 20) {
+      const timeout = new Error("source_timeout");
+      timeout.code = "SOURCE_TIMEOUT";
+      throw timeout;
+    }
+    throw error;
   } finally {
     clearTimeout(timer);
   }
