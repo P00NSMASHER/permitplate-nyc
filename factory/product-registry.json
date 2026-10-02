@@ -21,6 +21,18 @@
         "proceed",
         "human_review"
       ]
+    },
+    {
+      "id": "pa-vendor-identity-match",
+      "number": "003",
+      "status": "design-tested",
+      "method": "GET",
+      "path": "/api/pa-vendor-identity-match",
+      "price_usdc": "0.005",
+      "decision_values": [
+        "consistent",
+        "human_review"
+      ]
     }
   ]
 }
