@@ -1,0 +1,25 @@
+name: Validate partial Floot deployment progress
+
+on:
+  push:
+    paths:
+      - 'verification/floot-deployment-progress-latest.json'
+      - 'verification/floot-resume-write14-latest.json'
+      - 'docs/pa-entity-floot-recovery/deploy-map.json'
+      - 'scripts/validate-floot-partial-deployment-progress.mjs'
+      - '.github/workflows/validate-floot-partial-deployment-progress.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node scripts/validate-floot-partial-deployment-progress.mjs
