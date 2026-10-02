@@ -36,9 +36,11 @@ Instead of returning only records, it:
 
 The gate is fail-closed: incomplete, ambiguous, or inconsistent evidence results in `human_review`, not silent automatic continuation.
 
-## Paid endpoint
+## Paid endpoint after Floot recovery
 
-`GET https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-gate?name=NAME&address=ADDRESS&domain=DOMAIN`
+**Do not send this draft until this target is live and independently verified.**
+
+`GET https://pa-entity-x402.floot.app/_api/vendor-intake-gate?name=NAME&address=ADDRESS&domain=DOMAIN`
 
 Price: **$0.020 USDC per successful paid call on Base via x402 v2**
 
@@ -67,7 +69,7 @@ These fixtures run the same decision engine but accept only fixed sample cases; 
 
 ### Expected proceed
 
-`GET https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-demo?case=proceed`
+`GET https://pa-entity-x402.floot.app/_api/vendor-intake-demo?case=proceed`
 
 Expected:
 
@@ -77,7 +79,7 @@ Expected:
 
 ### Expected address review
 
-`GET https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-demo?case=address_mismatch`
+`GET https://pa-entity-x402.floot.app/_api/vendor-intake-demo?case=address_mismatch`
 
 Expected:
 
@@ -86,7 +88,7 @@ Expected:
 
 ### Expected domain review
 
-`GET https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-demo?case=domain_mismatch`
+`GET https://pa-entity-x402.floot.app/_api/vendor-intake-demo?case=domain_mismatch`
 
 Expected:
 
@@ -143,16 +145,18 @@ Unpaid calls return HTTP 402 with `PAYMENT-REQUIRED`.
 
 Payment is verified before the paid workflow. If a required evidence source fails before a usable result is produced, the service returns an upstream error and does not settle the payment. Settlement occurs only after a successful decision result is produced.
 
-## Machine discovery
+## Machine discovery after Floot recovery
+
+**Target URLs; verify publicly before sending this draft.**
 
 - x402 manifest:
-  `https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/.well-known/x402`
+  `https://pa-entity-x402.floot.app/.well-known/x402`
 - OpenAPI:
-  `https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/openapi.json`
+  `https://pa-entity-x402.floot.app/openapi.json`
 - llms-full:
-  `https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/llms-full.txt`
+  `https://pa-entity-x402.floot.app/llms-full.txt`
 - skill:
-  `https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/skill.md`
+  `https://pa-entity-x402.floot.app/skill.txt`
 - reviewer evidence:
   `https://github.com/P00NSMASHER/permitplate-nyc/blob/main/docs/vendor-intake-gate-evidence.md`
 
@@ -179,7 +183,7 @@ This evidence should be refreshed immediately before submission.
 
 ## Commercial truthfulness
 
-At draft time:
+At draft time, and until the Floot rehost is publicly verified:
 
 - attributable third-party buyers: **0**
 - confirmed third-party revenue: **$0**
