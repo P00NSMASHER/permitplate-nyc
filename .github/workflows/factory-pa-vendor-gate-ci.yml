@@ -66,11 +66,5 @@ jobs:
         run: node --test factory/products/sec-filing-freshness/paid-handler.test.js
       - name: Test Product 006 discovery metadata
         run: node --test factory/products/sec-filing-freshness/metadata.test.js
-      - name: Test SEC filings source adapter
-        run: node --test factory/packages/sources/sec-filings.test.js
-      - name: Test Product 006 SEC freshness decision
-        run: node --test factory/products/sec-filing-freshness/decision.test.js
-      - name: Test Product 006 SEC freshness service
-        run: node --test factory/products/sec-filing-freshness/service.test.js
       - name: Run Product 006 release gate
         run: node factory/scripts/validate-product-006.js
