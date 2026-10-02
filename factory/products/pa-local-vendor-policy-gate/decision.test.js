@@ -1,18 +1,12 @@
 "use strict";
 const test=require("node:test"),assert=require("node:assert/strict");
 const {assessLocalVendorPolicy}=require("./decision");
-const evidence={available:true,strongMatch:true,ambiguous:false,entity:{registrationType:"Foreign Limited Liability Company",county:"Dauphin",creationDate:"2025-01-01"}};
-const policy={allowedKinds:["llc"],allowedCounties:["dauphin"],minAgeDays:30};
-test("all caller policy rules passing returns proceed",()=>{
-  const r=assessLocalVendorPolicy(evidence,policy,"2026-10-02T00:00:00.000Z");
-  assert.equal(r.decision,"proceed");assert.deepEqual(r.reasonCodes,[]);
-});
-test("type, county, and age failures accumulate",()=>{
-  const r=assessLocalVendorPolicy({...evidence,entity:{registrationType:"Domestic Business Corporation",county:"Schuylkill",creationDate:"2026-09-20"}},policy,"2026-10-02T00:00:00.000Z");
-  assert.equal(r.decision,"human_review");
-  assert.ok(r.reasonCodes.includes("ENTITY_TYPE_NOT_ALLOWED"));
-  assert.ok(r.reasonCodes.includes("REGISTERED_COUNTY_NOT_ALLOWED"));
-  assert.ok(r.reasonCodes.includes("FORMATION_AGE_BELOW_THRESHOLD"));
-});
-test("no entity returns company_not_found",()=>assert.equal(assessLocalVendorPolicy({available:true,strongMatch:false,entity:null},policy).decision,"company_not_found"));
-test("ambiguous identity requires review",()=>assert.equal(assessLocalVendorPolicy({...evidence,strongMatch:false,ambiguous:true},policy).decision,"human_review"));
+const E={available:true,strongMatch:true,ambiguous:false,entity:{businessName:"Example LLC",registrationType:"Domestic Limited Liability Company",county:"Schuylkill",creationDate:"2020-01-01"}};
+const opts={allowedKinds:["llc"],allowedCounties:["Schuylkill"],minAgeDays:365,now:"2026-10-02T00:00:00.000Z"};
+
+test("all policy rules passing returns proceed",()=>{const r=assessLocalVendorPolicy(E,opts);assert.equal(r.decision,"proceed");assert.deepEqual(r.reasonCodes,[]);assert.equal(r.checks.entityType.status,"pass");assert.equal(r.checks.county.status,"pass");assert.equal(r.checks.formationAge.status,"pass");});
+test("type mismatch yields human_review without automatic reject",()=>{const r=assessLocalVendorPolicy(E,{...opts,allowedKinds:["corporation"]});assert.equal(r.decision,"human_review");assert.ok(r.reasonCodes.includes("ENTITY_TYPE_NOT_ALLOWED"));assert.equal(r.policy.automaticReject,false);});
+test("county mismatch yields human_review",()=>{const r=assessLocalVendorPolicy(E,{...opts,allowedCounties:["Dauphin"]});assert.ok(r.reasonCodes.includes("REGISTERED_COUNTY_NOT_ALLOWED"));});
+test("age below threshold yields human_review",()=>{const r=assessLocalVendorPolicy(E,{...opts,minAgeDays:36500});assert.ok(r.reasonCodes.includes("FORMATION_AGE_BELOW_THRESHOLD"));});
+test("multiple failed policies return all deterministic reasons",()=>{const r=assessLocalVendorPolicy(E,{...opts,allowedKinds:["corporation"],allowedCounties:["Dauphin"],minAgeDays:36500});assert.deepEqual(r.reasonCodes,["ENTITY_TYPE_NOT_ALLOWED","REGISTERED_COUNTY_NOT_ALLOWED","FORMATION_AGE_BELOW_THRESHOLD"]);});
+test("missing entity returns company_not_found",()=>{const r=assessLocalVendorPolicy({...E,entity:null},opts);assert.equal(r.decision,"company_not_found");});
