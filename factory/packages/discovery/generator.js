@@ -7,6 +7,7 @@ const MODULES = Object.freeze({
   "pa-business-address-match": require("../../products/pa-business-address-match/metadata"),
   "pa-business-domain-match": require("../../products/pa-business-domain-match/metadata"),
   "sec-filing-freshness": require("../../products/sec-filing-freshness/metadata"),
+  "sec-company-identity-match": require("../../products/sec-company-identity-match/metadata"),
   "domain-registration-age": require("../../products/domain-registration-age/metadata"),
   "treasury-average-rate-threshold": require("../../products/treasury-average-rate-threshold/metadata"),
   "ofac-name-review-gate": require("../../products/ofac-name-review-gate/metadata"),
