@@ -1,0 +1,5 @@
+Contact: https://github.com/P00NSMASHER/permitplate-nyc/security
+Canonical: https://pa-entity-x402.floot.app/.well-known/security.txt
+Policy: https://github.com/P00NSMASHER/permitplate-nyc/security/policy
+Preferred-Languages: en
+Expires: 2027-09-30T00:00:00Z
