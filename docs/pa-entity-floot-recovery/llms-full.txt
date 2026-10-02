@@ -1,0 +1,104 @@
+# Agent Data Tools x402 — Full Agent Reference
+
+Canonical origin: https://pa-entity-x402.floot.app
+Protocol: x402 v2
+Network: Base mainnet (eip155:8453)
+Asset: Base USDC
+Payment recipient: 0x708f7b52b56eafd7fc1de65fc7752ed732914021
+
+## Portfolio
+
+### Pennsylvania best match — $0.001
+GET /_api/pa-entity-one?q=NAME
+Returns one highest-ranked Pennsylvania legal-entity record.
+
+### Pennsylvania enriched search — $0.005
+GET /_api/pa-business?q=NAME&limit=N
+Returns up to 25 ranked Pennsylvania registry candidates with source-published principal/officer enrichment.
+
+### Pennsylvania vendor-intake decision gate — $0.020
+GET /_api/vendor-intake-gate?name=NAME&address=ADDRESS&domain=DOMAIN
+Returns proceed or human_review with explicit review triggers and evidence from PA registry identity, Census address consistency, OFAC candidate-name screening, and authoritative RDAP domain data.
+
+### SEC Recent Filings — $0.005
+GET /_api/sec-filings?ticker=TICKER&form=FORM&limit=N
+Or supply cik instead of ticker. Returns authoritative recent EDGAR filing identifiers, dates, accession numbers, and direct filing URLs.
+
+### U.S. Census Address Geocoder — $0.005
+GET /_api/us-address-geocode?address=ADDRESS
+Returns standardized Census address match, coordinates, and available geography identifiers.
+
+### OFAC SDN Name Screen — $0.005
+GET /_api/ofac-sdn-screen?name=NAME&limit=N&minScore=SCORE
+Returns ranked review candidates from current SDN primary names and aliases. A no-candidate result is not sanctions clearance and the service does not perform OFAC 50 Percent Rule ownership analysis.
+
+### Domain RDAP Lookup — $0.005
+GET /_api/domain-rdap?domain=DOMAIN
+Uses IANA RDAP bootstrap to locate the authoritative registry and returns current public registration metadata.
+
+### Treasury Average Interest Rates — $0.005
+GET /_api/treasury-average-rates?security=FILTER
+Returns the latest monthly average interest rates on outstanding U.S. Treasury securities from Fiscal Data. These are not live market yields.
+
+## Payment contract
+
+All paid routes use x402 v2 on Base USDC.
+
+Unpaid:
+- challenge is returned before arbitrary source work
+- PAYMENT-REQUIRED advertises exact amount/network/asset/payTo
+
+Paid attempt:
+1. decode payment authorization
+2. validate request input
+3. verify authorization
+4. fetch authoritative source data / produce decision
+5. settle only after a usable result exists
+
+Authoritative-source failure:
+- no settlement
+- upstream error returned
+
+Verifier or settlement uncertainty:
+- retrySamePayment semantics
+- no fresh payment challenge for settlement_pending / duplicate / indeterminate states
+- retry the same PAYMENT-SIGNATURE
+
+Success:
+- PAYMENT-RESPONSE
+- x402-settled:true
+- paid:true
+
+## Vendor-gate fail-closed rules
+
+Automatic continuation requires exactly one strong PA legal-entity match with complete core identity evidence.
+
+Submitted and registry Census responses must satisfy their evidence contract. The normalized primary street number and ZIP must match and coordinate distance must remain within the configured threshold.
+
+OFAC evidence must satisfy the configured query/threshold/count/source contract. Any candidate at or above the review threshold triggers human review.
+
+RDAP evidence must match the requested domain, include a boolean registration result, identify an authoritative RDAP endpoint and source, confirm registration, and plausibly align the hostname with the vendor name.
+
+Proceed is only a workflow signal. It is not legal/compliance approval, sanctions clearance, fraud or credit approval, proof of good standing, or proof of address/domain ownership.
+
+## Authoritative public sources
+
+- Pennsylvania Department of State public business data via data.pa.gov
+- U.S. Census Bureau Geocoding Services
+- U.S. Treasury OFAC Sanctions List Service
+- IANA RDAP bootstrap and authoritative registry RDAP servers
+- U.S. Securities and Exchange Commission EDGAR
+- U.S. Treasury Fiscal Data
+
+## Machine discovery
+
+OpenAPI: https://pa-entity-x402.floot.app/openapi.json
+llms.txt: https://pa-entity-x402.floot.app/llms.txt
+llms-full.txt: https://pa-entity-x402.floot.app/llms-full.txt
+skill.txt: https://pa-entity-x402.floot.app/skill.txt
+canonical x402: https://pa-entity-x402.floot.app/.well-known/x402
+JSON alias: https://pa-entity-x402.floot.app/.well-known/x402.json
+services alias: https://pa-entity-x402.floot.app/.well-known/x402-services.json
+service metadata: https://pa-entity-x402.floot.app/.well-known/x402-service.json
+catalog: https://pa-entity-x402.floot.app/.well-known/x402-catalog.json
+security: https://pa-entity-x402.floot.app/.well-known/security.txt
