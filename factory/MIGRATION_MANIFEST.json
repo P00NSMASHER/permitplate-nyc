@@ -31,7 +31,8 @@
     "014",
     "015",
     "016",
-    "017"
+    "017",
+    "018"
   ],
   "deployment_blocker": {
     "provider": "AppDeploy",
