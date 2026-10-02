@@ -1,0 +1,19 @@
+name: Factory PA Vendor Gate CI
+
+on:
+  push:
+    branches:
+      - x402-product-factory-bootstrap
+    paths:
+      - 'factory/products/pa-vendor-gate/**'
+      - '.github/workflows/factory-pa-vendor-gate-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run deterministic vendor-gate tests
+        run: node --test factory/products/pa-vendor-gate/decision.test.js
