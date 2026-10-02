@@ -313,7 +313,9 @@ function createCensusAddressAdapter({
         !censusPayloadComplete(supplied, suppliedAddress) ||
         !censusPayloadComplete(registered, registryAddress)
       ) {
-        return { available: false, detail: "census_contract_incomplete" };
+        const error = new Error("census_contract_incomplete");
+        error.code = "SOURCE_CONTRACT_INVALID";
+        throw error;
       }
       const suppliedId = addressIdentity(supplied.matchedAddress);
       const registryId = addressIdentity(registered.matchedAddress);
