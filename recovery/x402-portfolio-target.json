@@ -1,0 +1,161 @@
+{
+  "version": 1,
+  "preparedAt": "2026-10-02",
+  "origin": "https://pa-entity-x402.floot.app",
+  "network": "eip155:8453",
+  "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+  "facilitator": "https://facilitator.payai.network",
+  "resources": [
+    {
+      "id": "pa-best-match",
+      "name": "Pennsylvania Business Registry Best Match",
+      "path": "/_api/pa-entity-one",
+      "method": "GET",
+      "price": "$0.001",
+      "amount": "1000",
+      "operationId": "pennsylvaniaBusinessRegistryBestMatch",
+      "tags": [
+        "pennsylvania",
+        "business-registry",
+        "entity-resolution",
+        "company-identity"
+      ],
+      "sampleQuery": "?q=OpenAI"
+    },
+    {
+      "id": "pa-enriched-search",
+      "name": "Pennsylvania Business Registry Enriched Search",
+      "path": "/_api/pa-business",
+      "method": "GET",
+      "price": "$0.005",
+      "amount": "5000",
+      "operationId": "pennsylvaniaBusinessRegistrySearch",
+      "tags": [
+        "pennsylvania",
+        "business-registry",
+        "company-data",
+        "due-diligence"
+      ],
+      "sampleQuery": "?q=OpenAI&limit=3"
+    },
+    {
+      "id": "vendor-intake-gate",
+      "name": "Pennsylvania Vendor Intake Decision Gate",
+      "path": "/_api/vendor-intake-gate",
+      "method": "GET",
+      "price": "$0.020",
+      "amount": "20000",
+      "operationId": "checkPennsylvaniaVendorIntakeGate",
+      "tags": [
+        "vendor-intake",
+        "agent-decision",
+        "human-review",
+        "ofac",
+        "census",
+        "rdap"
+      ],
+      "sampleQuery": "?name=OpenAI%20OpCo&address=600%20North%20Second%20Street%2C%20Suite%20401%2C%20Harrisburg%2C%20PA%2017101&domain=openai.com"
+    },
+    {
+      "id": "sec-recent-filings",
+      "name": "SEC Recent Filings",
+      "path": "/_api/sec-filings",
+      "method": "GET",
+      "price": "$0.005",
+      "amount": "5000",
+      "operationId": "getRecentSecFilings",
+      "tags": [
+        "sec",
+        "edgar",
+        "filings",
+        "company-data"
+      ],
+      "sampleQuery": "?ticker=AAPL&form=10-K&limit=3"
+    },
+    {
+      "id": "census-geocoder",
+      "name": "US Census Address Geocoder",
+      "path": "/_api/us-address-geocode",
+      "method": "GET",
+      "price": "$0.005",
+      "amount": "5000",
+      "operationId": "geocodeUsAddress",
+      "tags": [
+        "geocoding",
+        "address",
+        "census",
+        "reference-data"
+      ],
+      "sampleQuery": "?address=4600%20Silver%20Hill%20Rd%2C%20Washington%2C%20DC%2020233"
+    },
+    {
+      "id": "ofac-sdn-screen",
+      "name": "OFAC SDN Name Screen",
+      "path": "/_api/ofac-sdn-screen",
+      "method": "GET",
+      "price": "$0.005",
+      "amount": "5000",
+      "operationId": "screenOfacSdnName",
+      "tags": [
+        "ofac",
+        "sanctions",
+        "sdn",
+        "name-screening"
+      ],
+      "sampleQuery": "?name=VLADIMIR%20PUTIN&limit=3&minScore=85"
+    },
+    {
+      "id": "domain-rdap",
+      "name": "Domain RDAP Lookup",
+      "path": "/_api/domain-rdap",
+      "method": "GET",
+      "price": "$0.005",
+      "amount": "5000",
+      "operationId": "lookupDomainRdap",
+      "tags": [
+        "domain",
+        "rdap",
+        "registration",
+        "dns"
+      ],
+      "sampleQuery": "?domain=example.com"
+    },
+    {
+      "id": "treasury-average-rates",
+      "name": "Treasury Average Interest Rates",
+      "path": "/_api/treasury-average-rates",
+      "method": "GET",
+      "price": "$0.005",
+      "amount": "5000",
+      "operationId": "getTreasuryAverageInterestRates",
+      "tags": [
+        "treasury",
+        "interest-rates",
+        "macro",
+        "fiscal-data"
+      ],
+      "sampleQuery": "?security=Total%20Marketable"
+    }
+  ],
+  "fixedFixtures": [
+    {
+      "id": "vendor-proceed",
+      "path": "/_api/vendor-intake-demo?case=proceed",
+      "expectedDecision": "proceed",
+      "expectedTrigger": null
+    },
+    {
+      "id": "vendor-address-review",
+      "path": "/_api/vendor-intake-demo?case=address_mismatch",
+      "expectedDecision": "human_review",
+      "expectedTrigger": "registered_address_differs"
+    },
+    {
+      "id": "vendor-domain-review",
+      "path": "/_api/vendor-intake-demo?case=domain_mismatch",
+      "expectedDecision": "human_review",
+      "expectedTrigger": "domain_name_not_aligned"
+    }
+  ]
+}
