@@ -111,7 +111,7 @@ Expected actions after the free-plan reset:
 - 1 `list_files`
 - 5 normal bounded `read_files` snapshot batches (per `ROLLBACK.md`)
 - up to 14 additional single/bounded reads only in the pathological case that every normally-new recovery endpoint/schema file already exists
-- 1 guide read if required
+- 1 multi-guide read: `get_guides` for `floot-overview` + `publishing` with the project id
 - 26 sequential file writes
 - 1 typecheck
 - 1 project test run
@@ -126,7 +126,8 @@ Keep writes serialized and carry the returned project version forward when the w
 ## Write procedure
 
 1. Fresh `list_files`.
-2. Record:
+2. In one Floot action, read both `floot-overview` and `publishing` guides with the project id before the first code change.
+3. Record:
    - current project version
    - existing endpoint/static paths
    - published metadata
