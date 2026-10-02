@@ -1,60 +1,68 @@
 "use strict";
 const {normalizeRegistrationKind}=require("../pa-entity-type-policy/decision");
-const {normalizeCounty}=require("../pa-registered-county-policy/decision");
-const {DAY_MS,validDate}=require("../pa-business-formation-age/decision");
+const {normalizeCountyName}=require("../pa-registered-county-policy/decision");
+const {validDate,DAY_MS}=require("../pa-business-formation-age/decision");
 
-function assessLocalVendorPolicy(evidence,policy,checkedAt=new Date().toISOString()){
+function assessLocalVendorPolicy(evidence,{allowedKinds,allowedCounties,minAgeDays,now=new Date().toISOString()}){
   const entity=evidence?.entity??null;
-  const allowedKinds=new Set(policy?.allowedKinds||[]);
-  const allowedCounties=new Set((policy?.allowedCounties||[]).map(normalizeCounty).filter(Boolean));
-  const minAgeDays=policy?.minAgeDays??365;
+  const checkedAt=now;
+  const reasons=[];
+  const checks={
+    entityType:{status:"review",registrationKind:null},
+    county:{status:"review",registeredCounty:null},
+    formationAge:{status:"review",ageDays:null}
+  };
 
   if(evidence?.available!==true){
-    return {decision:"human_review",agentAction:"pause_and_request_human_review",reasonCodes:["PA_REGISTRY_UNAVAILABLE"],matchedEntity:entity,checkedAt};
+    return {decision:"human_review",reasonCodes:["PA_REGISTRY_UNAVAILABLE"],checks,matchedEntity:entity,checkedAt};
   }
   if(!entity){
-    return {decision:"company_not_found",agentAction:"pause_and_request_human_review",reasonCodes:["PA_ENTITY_NOT_FOUND"],matchedEntity:null,checkedAt};
+    return {decision:"company_not_found",reasonCodes:["PA_ENTITY_NOT_FOUND"],checks,matchedEntity:null,checkedAt};
   }
   if(evidence.ambiguous===true||evidence.strongMatch!==true){
-    return {decision:"human_review",agentAction:"pause_and_request_human_review",reasonCodes:["PA_REGISTRY_MATCH_UNCERTAIN"],matchedEntity:entity,checkedAt};
+    return {decision:"human_review",reasonCodes:["PA_REGISTRY_MATCH_UNCERTAIN"],checks,matchedEntity:entity,checkedAt};
   }
 
-  const kind=normalizeRegistrationKind(entity.registrationType);
-  const county=normalizeCounty(entity.county);
-  const created=validDate(entity.creationDate);
-  const nowMs=Date.parse(checkedAt);
-  const reasonCodes=[];
-
-  if(!kind) reasonCodes.push("REGISTRATION_TYPE_UNRECOGNIZED");
-  else if(!allowedKinds.has(kind)) reasonCodes.push("ENTITY_TYPE_NOT_ALLOWED");
-
-  if(!county) reasonCodes.push("REGISTERED_COUNTY_MISSING");
-  else if(!allowedCounties.has(county)) reasonCodes.push("REGISTERED_COUNTY_NOT_ALLOWED");
-
-  let ageDays=null;
-  if(created==null||!Number.isFinite(nowMs)||created>nowMs){
-    reasonCodes.push("FORMATION_DATE_UNAVAILABLE");
+  const registrationKind=normalizeRegistrationKind(entity.registrationType);
+  checks.entityType.registrationKind=registrationKind;
+  if(!registrationKind){
+    checks.entityType.status="review";checks.entityType.reason="REGISTRATION_TYPE_UNRECOGNIZED";reasons.push("REGISTRATION_TYPE_UNRECOGNIZED");
+  }else if(allowedKinds.includes(registrationKind)){
+    checks.entityType.status="pass";checks.entityType.reason="ENTITY_TYPE_ALLOWED";
   }else{
-    ageDays=Math.floor((nowMs-created)/DAY_MS);
-    if(ageDays<minAgeDays) reasonCodes.push("FORMATION_AGE_BELOW_THRESHOLD");
+    checks.entityType.status="review";checks.entityType.reason="ENTITY_TYPE_NOT_ALLOWED";reasons.push("ENTITY_TYPE_NOT_ALLOWED");
   }
 
-  const proceed=reasonCodes.length===0;
+  const registeredCounty=normalizeCountyName(entity.county);
+  checks.county.registeredCounty=registeredCounty;
+  if(!registeredCounty){
+    checks.county.status="review";checks.county.reason="REGISTERED_COUNTY_UNAVAILABLE";reasons.push("REGISTERED_COUNTY_UNAVAILABLE");
+  }else if(allowedCounties.includes(registeredCounty)){
+    checks.county.status="pass";checks.county.reason="REGISTERED_COUNTY_ALLOWED";
+  }else{
+    checks.county.status="review";checks.county.reason="REGISTERED_COUNTY_NOT_ALLOWED";reasons.push("REGISTERED_COUNTY_NOT_ALLOWED");
+  }
+
+  const created=validDate(entity.creationDate);
+  const nowTime=Date.parse(now);
+  if(created==null||!Number.isFinite(nowTime)||created>nowTime){
+    checks.formationAge.status="review";checks.formationAge.reason="FORMATION_DATE_UNAVAILABLE";reasons.push("FORMATION_DATE_UNAVAILABLE");
+  }else{
+    const ageDays=Math.floor((nowTime-created)/DAY_MS);
+    checks.formationAge.ageDays=ageDays;
+    if(ageDays>=minAgeDays){
+      checks.formationAge.status="pass";checks.formationAge.reason="FORMATION_AGE_AT_OR_ABOVE_THRESHOLD";
+    }else{
+      checks.formationAge.status="review";checks.formationAge.reason="FORMATION_AGE_BELOW_THRESHOLD";reasons.push("FORMATION_AGE_BELOW_THRESHOLD");
+    }
+  }
+
   return {
-    decision:proceed?"proceed":"human_review",
-    agentAction:proceed?"continue_vendor_intake":"pause_and_request_human_review",
-    reasonCodes,
+    decision:reasons.length===0?"proceed":"human_review",
+    reasonCodes:reasons,
+    checks,
     matchedEntity:entity,
-    registrationKind:kind,
-    registeredCounty:entity.county??null,
-    normalizedCounty:county,
-    creationDate:entity.creationDate??null,
-    ageDays,
-    policy:{
-      allowedKinds:[...allowedKinds],
-      allowedCounties:[...allowedCounties],
-      minAgeDays
-    },
+    policy:{allowedKinds:[...allowedKinds],allowedCounties:[...allowedCounties],minAgeDays,automaticReject:false},
     checkedAt
   };
 }
