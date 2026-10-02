@@ -22,7 +22,9 @@
     "005",
     "006",
     "007",
-    "008"
+    "008",
+    "009",
+    "009"
   ],
   "production_products": [
     "001",
@@ -41,5 +43,9 @@
     "reason": "weekly Free tier credit limit",
     "reset_at": "2026-10-05T00:00:00Z",
     "spend_authorized": false
-  }
+  },
+  "design_products": [
+    "009",
+    "009"
+  ]
 }
