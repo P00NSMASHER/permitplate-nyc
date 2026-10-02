@@ -6,6 +6,7 @@ on:
       - x402-product-factory-bootstrap
     paths:
       - 'factory/product-registry.json'
+      - 'factory/MIGRATION_MANIFEST.json'
       - 'factory/products/**'
       - 'factory/packages/**'
       - 'factory/scripts/**'
