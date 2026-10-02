@@ -202,7 +202,7 @@ for (const service of target.resources.filter((item) =>
   changedServiceIds.has(item.id)
 )) {
   const resourceUrl = ORIGIN + service.path + (service.sampleQuery ?? '');
-  const declaredPrice = Number(service.price.replace('
+  const declaredPrice = Number(service.price.replace('$', ''));
 
   const marketSubmit = await jsonFetch('https://market402.com/submit', {
     method: 'POST',
@@ -290,97 +290,6 @@ receipt.mutationScope = {
   rationale:
     'The two PA Floot routes are already live/listed; only the six rehosted URLs need marketplace mutation, conserving 402 Index registration quota.',
 };
-receipt.accountingNote =
-  'Marketplace submissions, self-tests, registrations, unpaid probes, and directory visibility are not buyer revenue.';
-
-const json = JSON.stringify(receipt, null, 2);
-console.log(json);
-const reportPath = process.env.REPORT_PATH?.trim();
-if (reportPath) await writeFile(reportPath, json + '\n', 'utf8');
-
-if (!receipt.ok) process.exitCode = 1;
-, ''));
-
-  const marketSubmit = await jsonFetch('https://market402.com/submit', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      resource: resourceUrl,
-      declared_price_usd: declaredPrice,
-    }),
-  });
-
-  const marketSelftest = await jsonFetch('https://market402.com/selftest', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ url: resourceUrl }),
-  });
-
-  receipt.market402.push({
-    id: service.id,
-    resource: resourceUrl,
-    submitStatus: marketSubmit.status,
-    submit: marketSubmit.body,
-    selftestStatus: marketSelftest.status,
-    selftest: marketSelftest.body,
-  });
-
-  const indexRegister = await jsonFetch('https://402index.io/api/v1/register', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      url: resourceUrl,
-      name: names[service.id],
-      protocol: 'x402',
-      http_method: 'GET',
-      description: descriptions[service.id],
-      price_usd: declaredPrice,
-      payment_asset: 'USDC',
-      payment_network: 'Base',
-      category: categories[service.id],
-      provider: 'P00NSMASHER',
-    }),
-  });
-
-  receipt.index402.push({
-    id: service.id,
-    resource: resourceUrl,
-    registerStatus: indexRegister.status,
-    register: indexRegister.body,
-  });
-}
-
-const query = encodeURIComponent('Pennsylvania Vendor Intake');
-receipt.nohumans = {
-  mode: 'read_only',
-  note:
-    'No listing mutation is attempted because the free listing allowance may already be exhausted and additional listings can require USDC.',
-  vendorSearch: await jsonFetch(
-    'https://nohumans.directory/v1/discover?q=' + query
-  ),
-};
-
-const marketFailures = receipt.market402.filter((entry) => {
-  const self = entry.selftest;
-  const summary = self?.summary ?? self?.instant_check?.summary ?? null;
-  return (
-    entry.submitStatus >= 400 ||
-    entry.selftestStatus >= 400 ||
-    (summary && summary.verdict && summary.verdict !== 'spec_compliant')
-  );
-});
-const indexFailures = receipt.index402.filter(
-  (entry) => entry.registerStatus >= 400 && entry.registerStatus !== 409
-);
-
-for (const entry of marketFailures) {
-  receipt.failures.push('Market402 repair issue for ' + entry.id);
-}
-for (const entry of indexFailures) {
-  receipt.failures.push('402 Index repair issue for ' + entry.id);
-}
-
-receipt.ok = receipt.failures.length === 0;
 receipt.accountingNote =
   'Marketplace submissions, self-tests, registrations, unpaid probes, and directory visibility are not buyer revenue.';
 
