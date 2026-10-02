@@ -84,6 +84,16 @@ function assertPaymentDocument(
     doc.accepts[0].payTo.toLowerCase(),
     '0x708f7b52b56eafd7fc1de65fc7752ed732914021'
   )
+  assert.equal(doc.extensions?.bazaar?.info?.input?.method, 'GET')
+  assert.equal(doc.extensions?.bazaar?.schema?.type, 'object')
+  assert.equal(
+    doc.extensions?.bazaar?.schema?.properties?.input?.properties?.method?.const,
+    'GET'
+  )
+  assert.equal(
+    doc.extensions?.bazaar?.schema?.properties?.output?.properties?.type?.const,
+    'json'
+  )
 }
 
 async function assertChallenge(
