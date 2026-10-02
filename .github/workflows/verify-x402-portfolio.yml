@@ -8,6 +8,9 @@ on:
         description: Expected resource count in pa-entity-x402.floot.app/.well-known/x402
         required: true
         default: '2'
+  push:
+    paths:
+      - '.github/workflows/verify-x402-portfolio.yml'
 
 permissions:
   contents: read
@@ -25,6 +28,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Verify host-independent rehost core
+        run: node scripts/test-x402-rehost-core.mjs
 
       - name: Verify unpaid x402 challenges, decision fixtures, and directory observations
         env:
