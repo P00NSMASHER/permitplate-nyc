@@ -10,6 +10,8 @@
  * Requires Node.js 18+ for global fetch.
  */
 
+import { writeFile } from 'node:fs/promises';
+
 const NETWORK = 'eip155:8453';
 const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'.toLowerCase();
 const PAY_TO = '0x708f7b52b56eafd7fc1de65fc7752ed732914021'.toLowerCase();
@@ -465,8 +467,15 @@ async function main() {
     discovery: discoveryResults,
   };
 
+  const reportJson = JSON.stringify(report, null, 2);
   console.log('\nREPORT_JSON');
-  console.log(JSON.stringify(report, null, 2));
+  console.log(reportJson);
+
+  const reportPath = process.env.REPORT_PATH?.trim();
+  if (reportPath) {
+    await writeFile(reportPath, reportJson + '\n', 'utf8');
+    console.log(`\nreportPath=${reportPath}`);
+  }
 
   if (
     passedServices !== serviceResults.length ||
