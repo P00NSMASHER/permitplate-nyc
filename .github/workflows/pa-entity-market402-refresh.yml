@@ -1,108 +1,276 @@
-name: PA Entity Market402 refresh
-# refresh-marker: 2026-10-02T12:25Z appdeploy-scope-diagnostic
+name: PA Entity marketplace repair
+
 on:
   push:
     paths:
       - '.github/workflows/pa-entity-market402-refresh.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
-  refresh:
+  repair:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 8
     steps:
-      - name: Submit both live routes and read operator state
+      - uses: actions/checkout@v4
+
+      - name: Refresh zero-spend vendor-gate listings
         shell: bash
         run: |
           set -euo pipefail
-          ORIGIN='https://pa-entity-x402.floot.app'
-          ENRICHED="$ORIGIN/_api/pa-business?q=OpenAI&limit=1"
-          CHEAP="$ORIGIN/_api/pa-entity-one?q=OpenAI"
-          GATE='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-gate?name=OpenAI%20OpCo&address=600%20North%20Second%20Street%2C%20Suite%20401%2C%20Harrisburg%2C%20PA%2017101&domain=openai.com'
-
-          submit () {
-            label="$1"
-            target="$2"
-            echo "=== SUBMIT $label ==="
-            curl -sS -i -X POST 'https://market402.com/submit'               -H 'content-type: application/json'               --data "$(jq -nc --arg resource "$target" '{resource:$resource}')"               | head -c 12000
-            echo
-          }
-
-          selftest () {
-            label="$1"
-            target="$2"
-            echo "=== SELFTEST $label ==="
-            curl -sS -X POST 'https://market402.com/selftest'               -H 'content-type: application/json'               --data "$(jq -nc --arg url "$target" '{url:$url}')"               | jq .
-            echo
-          }
-
-          submit enriched "$ENRICHED"
-          submit cheap "$CHEAP"
-          echo '=== SUBMIT vendor-gate ($0.020 declared) ==='
-          curl -sS -i -X POST 'https://market402.com/submit' \
-            -H 'content-type: application/json' \
-            --data "$(jq -nc --arg resource "$GATE" '{resource:$resource,declared_price_usd:0.02}')" \
-            | head -c 16000
-          echo
-
-          selftest enriched "$ENRICHED"
-          selftest cheap "$CHEAP"
-          selftest vendor-gate "$GATE"
-
-          echo '=== 402 INDEX vendor-gate executable URL refresh ==='
-          curl -sS -i -X POST 'https://402index.io/api/v1/register' \
-            -H 'content-type: application/json' \
-            --data "$(jq -nc \
-              --arg url "$GATE" \
-              --arg name 'Pennsylvania Vendor Intake Decision Gate' \
-              --arg description 'Fail-closed agent-loop vendor intake decision for Pennsylvania vendors using PA registry identity, Census address consistency, OFAC candidate-name screening, and authoritative RDAP domain evidence. Returns proceed or human_review with typed evidence and explicit review triggers.' \
-              '{url:$url,name:$name,protocol:"x402",http_method:"GET",description:$description,price_usd:0.02,payment_asset:"USDC",payment_network:"Base",category:"business/vendor-verification",provider:"P00NSMASHER"}')" \
-            | head -c 20000
-          echo
-
-          echo '=== RAW vendor-gate unpaid response ==='
-          curl -sS -D /tmp/gate-headers.txt -o /tmp/gate-body.txt "$GATE" || true
-          cat /tmp/gate-headers.txt
-          echo '--- body ---'
-          cat /tmp/gate-body.txt
-          echo
-          echo '--- decoded PAYMENT-REQUIRED ---'
+          mkdir -p verification
           python3 - <<'PY'
-          import base64,json
-          headers=open('/tmp/gate-headers.txt',errors='replace').read().splitlines()
-          value=None
-          for line in headers:
-              if line.lower().startswith('payment-required:'):
-                  value=line.split(':',1)[1].strip()
-                  break
-          if not value:
-              print('PAYMENT_REQUIRED_MISSING')
-          else:
-              value += '=' * (-len(value) % 4)
+          import base64
+          import json
+          import time
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+          from datetime import datetime, timezone
+
+          GATE = (
+              'https://api-v2.appdeploy.ai/app/'
+              'pa-entity-lookup-x402-4fbm4s/api/vendor-intake-gate'
+              '?name=OpenAI%20OpCo'
+              '&address=600%20North%20Second%20Street%2C%20Suite%20401%2C%20Harrisburg%2C%20PA%2017101'
+              '&domain=openai.com'
+          )
+
+          def request(url, method='GET', payload=None, timeout=30):
+              body = None
+              headers = {
+                  'accept': 'application/json',
+                  'user-agent': 'permitplate-x402-marketplace-repair/1.0',
+              }
+              if payload is not None:
+                  body = json.dumps(payload).encode()
+                  headers['content-type'] = 'application/json'
+              req = urllib.request.Request(
+                  url, data=body, headers=headers, method=method
+              )
               try:
-                  print(json.dumps(json.loads(base64.b64decode(value).decode()),indent=2,sort_keys=True))
+                  with urllib.request.urlopen(req, timeout=timeout) as res:
+                      raw = res.read().decode('utf-8', errors='replace')
+                      try:
+                          parsed = json.loads(raw)
+                      except Exception:
+                          parsed = raw
+                      return {
+                          'ok': True,
+                          'status': res.status,
+                          'url': url,
+                          'headers': dict(res.headers.items()),
+                          'data': parsed,
+                      }
+              except urllib.error.HTTPError as exc:
+                  raw = exc.read().decode('utf-8', errors='replace')
+                  try:
+                      parsed = json.loads(raw)
+                  except Exception:
+                      parsed = raw
+                  return {
+                      'ok': False,
+                      'status': exc.code,
+                      'url': url,
+                      'headers': dict(exc.headers.items()),
+                      'data': parsed,
+                      'error': str(exc),
+                  }
               except Exception as exc:
-                  print('PAYMENT_REQUIRED_DECODE_ERROR',repr(exc))
+                  return {
+                      'ok': False,
+                      'status': None,
+                      'url': url,
+                      'data': None,
+                      'error': repr(exc),
+                  }
+
+          checked_at = datetime.now(timezone.utc).isoformat()
+
+          # Re-submit the composed decision tool. These calls do not attach a
+          # wallet/payment; they are directory registration/spec-test actions.
+          market_submit = request(
+              'https://market402.com/submit',
+              'POST',
+              {'resource': GATE, 'declared_price_usd': 0.02},
+          )
+          market_selftest = request(
+              'https://market402.com/selftest',
+              'POST',
+              {'url': GATE},
+          )
+
+          index_register = request(
+              'https://402index.io/api/v1/register',
+              'POST',
+              {
+                  'url': GATE,
+                  'name': 'Pennsylvania Vendor Intake Decision Gate',
+                  'protocol': 'x402',
+                  'http_method': 'GET',
+                  'description': (
+                      'Fail-closed agent-loop vendor intake decision for '
+                      'Pennsylvania vendors using PA registry identity, Census '
+                      'address consistency, OFAC candidate-name screening, and '
+                      'authoritative RDAP domain evidence. Returns proceed or '
+                      'human_review with typed evidence and explicit review triggers.'
+                  ),
+                  'price_usd': 0.02,
+                  'payment_asset': 'USDC',
+                  'payment_network': 'Base',
+                  'category': 'business/vendor-verification',
+                  'provider': 'P00NSMASHER',
+              },
+          )
+
+          # Give the directory a brief chance to expose the registration, then
+          # read public buyer-facing indexes. Absence here is informative but
+          # does not make the product unhealthy.
+          time.sleep(3)
+
+          q = urllib.parse.quote('Pennsylvania Vendor Intake')
+          market_search = request('https://market402.com/search.json?q=' + q)
+          market_index = request('https://market402.com/index.json')
+          index_search = request(
+              'https://402index.io/api/v1/services?'
+              + urllib.parse.urlencode({
+                  'q': 'Pennsylvania Vendor Intake',
+                  'protocol': 'x402',
+                  'limit': 50,
+              })
+          )
+
+          # Capture the live unpaid x402 challenge without paying.
+          gate_probe = request(GATE)
+          payment_required = None
+          header_value = None
+          for key, value in (gate_probe.get('headers') or {}).items():
+              if key.lower() == 'payment-required':
+                  header_value = value
+                  break
+          if header_value:
+              try:
+                  normalized = header_value + '=' * (-len(header_value) % 4)
+                  payment_required = json.loads(
+                      base64.b64decode(normalized).decode('utf-8')
+                  )
+              except Exception as exc:
+                  payment_required = {'decode_error': repr(exc)}
+
+          def find_matches(value, needles, path=''):
+              hits = []
+              if isinstance(value, dict):
+                  blob = json.dumps(value, sort_keys=True).lower()
+                  if any(n.lower() in blob for n in needles):
+                      hits.append({'path': path or '/', 'record': value})
+                  for key, child in value.items():
+                      hits.extend(
+                          find_matches(child, needles, path + '/' + str(key))
+                      )
+              elif isinstance(value, list):
+                  for i, child in enumerate(value):
+                      hits.extend(
+                          find_matches(child, needles, path + '/' + str(i))
+                      )
+              return hits
+
+          needles = [
+              'vendor-intake-gate',
+              'Pennsylvania Vendor Intake Decision Gate',
+              'pa-entity-lookup-x402-4fbm4s',
+          ]
+
+          receipt = {
+              'checked_at': checked_at,
+              'mode': 'zero_spend_directory_repair',
+              'target': GATE,
+              'market402': {
+                  'submit': market_submit,
+                  'selftest': market_selftest,
+                  'search': {
+                      **{k: v for k, v in market_search.items() if k != 'data'},
+                      'matches': find_matches(
+                          market_search.get('data'), needles
+                      )[:50]
+                      if market_search.get('data') is not None
+                      else [],
+                  },
+                  'index': {
+                      **{k: v for k, v in market_index.items() if k != 'data'},
+                      'matches': find_matches(
+                          market_index.get('data'), needles
+                      )[:50]
+                      if market_index.get('data') is not None
+                      else [],
+                  },
+              },
+              '402index': {
+                  'register': index_register,
+                  'search': {
+                      **{k: v for k, v in index_search.items() if k != 'data'},
+                      'matches': find_matches(
+                          index_search.get('data'), needles
+                      )[:50]
+                      if index_search.get('data') is not None
+                      else [],
+                  },
+              },
+              'live_unpaid_challenge': {
+                  'http_status': gate_probe.get('status'),
+                  'body': gate_probe.get('data'),
+                  'payment_required': payment_required,
+              },
+              'accounting_note': (
+                  'Directory submissions, self-tests, unpaid probes, and '
+                  'registrations are not revenue and must never be counted as buyers.'
+              ),
+          }
+
+          with open(
+              'verification/vendor-gate-marketplace-repair-latest.json',
+              'w',
+              encoding='utf-8',
+          ) as handle:
+              json.dump(receipt, handle, indent=2, sort_keys=True)
+              handle.write('\n')
+
+          print(json.dumps({
+              'checked_at': checked_at,
+              'market_submit_status': market_submit.get('status'),
+              'market_selftest_status': market_selftest.get('status'),
+              'market_search_matches': len(
+                  receipt['market402']['search']['matches']
+              ),
+              'market_index_matches': len(
+                  receipt['market402']['index']['matches']
+              ),
+              'index_register_status': index_register.get('status'),
+              'index_search_matches': len(
+                  receipt['402index']['search']['matches']
+              ),
+              'gate_http_status': gate_probe.get('status'),
+          }, indent=2, sort_keys=True))
           PY
 
-          echo '=== APPDEPLOY SCOPE DIAGNOSTIC ==='
-          check_appdeploy () {
-            label="$1"
-            target="$2"
-            echo "--- $label ---"
-            curl -sS -D /tmp/diag-h.txt -o /tmp/diag-b.txt "$target" || true
-            grep -Ei '^(HTTP/|x-appdeploy-app-availability:|payment-required:|x402-price:|content-type:)' /tmp/diag-h.txt || true
-            head -c 500 /tmp/diag-b.txt
-            echo
-          }
-          check_appdeploy sec 'https://api-v2.appdeploy.ai/app/sec-recent-filings-x402-f9qatj/api/sec-filings?ticker=AAPL&form=10-K&limit=1'
-          check_appdeploy census 'https://api-v2.appdeploy.ai/app/us-census-address-geocoder-x402-23mj4x/api/us-address-geocode?address=4600%20Silver%20Hill%20Rd%2C%20Washington%2C%20DC%2020233'
-          check_appdeploy ofac 'https://api-v2.appdeploy.ai/app/ofac-sdn-name-screen-x402-m9ko96/api/ofac-sdn-screen?name=VLADIMIR%20PUTIN&limit=1&minScore=90'
-          check_appdeploy rdap 'https://api-v2.appdeploy.ai/app/domain-rdap-lookup-x402-spdfnq/api/domain-rdap?domain=example.com'
-          check_appdeploy treasury 'https://api-v2.appdeploy.ai/app/treasury-average-interest-rates-x402-xeqftl/api/treasury-average-rates'
+      - name: Commit marketplace repair receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          RECEIPT='verification/vendor-gate-marketplace-repair-latest.json'
+          cp "$RECEIPT" /tmp/vendor-gate-marketplace-repair-latest.json
 
-          echo '=== OPERATOR JSON ==='
-          curl -sS -i 'https://market402.com/op/pa-entity-x402.floot.app.json' | head -c 20000
-          echo
+          git fetch origin main
+          git reset --hard origin/main
+          cp /tmp/vendor-gate-marketplace-repair-latest.json "$RECEIPT"
 
-          echo '=== OPERATOR DIRECTORY SEARCH ==='
-          curl -sS 'https://market402.com/operators.json' |             jq '[.. | objects | select((.operator? // .host? // .domain? // "") | tostring | contains("pa-entity-x402.floot.app"))]' | head -c 20000
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$RECEIPT"
+          if git diff --cached --quiet; then
+            echo 'Marketplace repair receipt unchanged.'
+            exit 0
+          fi
+          git commit -m 'chore: refresh vendor-gate marketplace repair receipt'
+          git push origin HEAD:main
