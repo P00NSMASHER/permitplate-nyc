@@ -648,3 +648,665 @@ export async function latestTreasuryRates(security = '') {
     frequency: 'monthly',
   };
 }
+
+
+// Pennsylvania registry + composed vendor-intake gate
+const PA_SOURCE = 'https://data.pa.gov/resource/xvd7-5r2c.json';
+const PA_SOURCE_LABEL = 'Pennsylvania Department of State via data.pa.gov';
+const MAX_QUERY_LENGTH = 120;
+const OFAC_REVIEW_THRESHOLD = 90;
+const VENDOR_GATE_ADDRESS_MAX_MILES = 0.25;
+
+function canonicalBusinessName(value) {
+  let text = String(value ?? '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const suffix =
+    /\s+(?:L\s+L\s+C|LLC|INCORPORATED|INC|CORPORATION|CORP|COMPANY|CO|LIMITED|LTD|L\s+P|LP|L\s+L\s+P|LLP|P\s+C|PC)$/;
+  let previous = '';
+  while (text !== previous) {
+    previous = text;
+    text = text.replace(suffix, '').trim();
+  }
+  return text;
+}
+
+function matchScore(name, query) {
+  const candidate = canonicalBusinessName(name);
+  const wanted = canonicalBusinessName(query);
+  if (candidate === wanted) return 0;
+  if (candidate.startsWith(wanted + ' ')) return 1;
+  if ((' ' + candidate + ' ').includes(' ' + wanted + ' ')) return 2;
+  if (candidate.replaceAll(' ', '').includes(wanted.replaceAll(' ', ''))) return 3;
+  return 4;
+}
+
+function normalizeSearchTerm(raw) {
+  const trimmed = String(raw ?? '').trim();
+  if (trimmed.length > MAX_QUERY_LENGTH) throw new Error('query_too_long');
+  const cleaned = trimmed
+    .replace(/[%_]/g, ' ')
+    .replace(/[\u0000-\u001F\u007F]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const significant = [...cleaned].filter((ch) => /[\p{L}\p{N}]/u.test(ch));
+  if (significant.length < 2) throw new Error('query_too_short');
+  return cleaned;
+}
+
+function entityProjection() {
+  return [
+    'business_name',
+    'filing_number',
+    'address_line1',
+    'address_line2',
+    'city',
+    'state',
+    'zip',
+    'typeofbusinessregistration',
+    'creationdate',
+    'shortcountyname',
+    'county_code',
+  ].join(',');
+}
+
+function normalizeCreationDate(value) {
+  if (value == null) return null;
+  const rawDate = String(value);
+  if (rawDate.startsWith('1753-01-01')) return null;
+  return rawDate.slice(0, 10);
+}
+
+function mapEntity(row) {
+  return {
+    businessName: row?.business_name == null ? null : String(row.business_name),
+    filingNumber: row?.filing_number == null ? null : String(row.filing_number),
+    registrationType:
+      row?.typeofbusinessregistration == null
+        ? null
+        : String(row.typeofbusinessregistration),
+    creationDate: normalizeCreationDate(row?.creationdate),
+    address1: row?.address_line1 == null ? null : String(row.address_line1),
+    address2: row?.address_line2 == null ? null : String(row.address_line2),
+    city: row?.city == null ? null : String(row.city),
+    state: row?.state == null ? null : String(row.state),
+    zip: row?.zip == null ? null : String(row.zip),
+    county: row?.shortcountyname == null ? null : String(row.shortcountyname),
+    countyCode: row?.county_code == null ? null : String(row.county_code),
+    principals: [],
+  };
+}
+
+async function fetchEntityCandidates(query, mode, limit = 100) {
+  const escaped = query.toUpperCase().replaceAll("'", "''");
+  const pattern = mode === 'starts' ? escaped + '%' : '%' + escaped + '%';
+  const url = new URL(PA_SOURCE);
+  url.searchParams.set('$select', 'distinct ' + entityProjection());
+  url.searchParams.set('$where', "upper(business_name) like '" + pattern + "'");
+  url.searchParams.set('$limit', String(limit));
+
+  const response = await fetchWithTimeout(url, {
+    headers: { 'user-agent': 'PA-Entity-x402/2.0' },
+  });
+  if (!response.ok) throw new Error('PA Open Data returned ' + response.status);
+  const rows = await response.json();
+  return rows.map(mapEntity);
+}
+
+function dedupeAndRank(rows, query, limit) {
+  const unique = new Map();
+  for (const row of rows) {
+    const key =
+      row.filingNumber ??
+      (row.businessName ?? '') + '|' + (row.address1 ?? '') + '|' + (row.city ?? '');
+    if (!unique.has(key)) unique.set(key, row);
+  }
+
+  return [...unique.values()]
+    .sort((a, b) => {
+      const aName = a.businessName ?? '';
+      const bName = b.businessName ?? '';
+      const score = matchScore(aName, query) - matchScore(bName, query);
+      if (score !== 0) return score;
+      if (aName.length !== bName.length) return aName.length - bName.length;
+      return aName.localeCompare(bName);
+    })
+    .slice(0, limit);
+}
+
+async function searchPennsylvaniaBase(query, limit) {
+  const starts = await fetchEntityCandidates(query, 'starts');
+  if (starts.length >= limit) return dedupeAndRank(starts, query, limit);
+  const contains = await fetchEntityCandidates(query, 'contains');
+  return dedupeAndRank([...starts, ...contains], query, limit);
+}
+
+function principalKey(principal) {
+  return [
+    principal?.role,
+    principal?.firstName,
+    principal?.middleName,
+    principal?.lastName,
+  ]
+    .map((value) => value ?? '')
+    .join('|')
+    .toUpperCase();
+}
+
+async function enrichPrincipals(results) {
+  const filingNumbers = results
+    .map((item) => item.filingNumber)
+    .filter(Boolean);
+  if (filingNumbers.length === 0) return 'complete';
+
+  const where = filingNumbers
+    .map((value) => "'" + String(value).replaceAll("'", "''") + "'")
+    .join(',');
+  const url = new URL(PA_SOURCE);
+  url.searchParams.set(
+    '$select',
+    'filing_number,party_type,first_name,middle_name,last_name'
+  );
+  url.searchParams.set('$where', 'filing_number in(' + where + ')');
+  url.searchParams.set('$limit', '1000');
+
+  try {
+    const response = await fetchWithTimeout(url, {
+      headers: { 'user-agent': 'PA-Entity-x402/2.0' },
+    });
+    if (!response.ok) return 'unavailable';
+    const rows = await response.json();
+    const byFiling = new Map();
+
+    for (const row of rows) {
+      if (row?.filing_number == null) continue;
+      const filing = String(row.filing_number);
+      const principal = {
+        role: row?.party_type == null ? null : String(row.party_type),
+        firstName: row?.first_name == null ? null : String(row.first_name),
+        middleName: row?.middle_name == null ? null : String(row.middle_name),
+        lastName: row?.last_name == null ? null : String(row.last_name),
+      };
+      const list = byFiling.get(filing) ?? [];
+      const key = principalKey(principal);
+      if (!list.some((item) => principalKey(item) === key)) list.push(principal);
+      byFiling.set(filing, list);
+    }
+
+    for (const result of results) {
+      result.principals =
+        result.filingNumber == null ? [] : byFiling.get(result.filingNumber) ?? [];
+    }
+    return 'complete';
+  } catch {
+    return 'unavailable';
+  }
+}
+
+export async function searchPennsylvaniaEntities(rawQuery, limit = 3) {
+  const query = normalizeSearchTerm(rawQuery);
+  const boundedLimit = Math.max(1, Math.min(Number(limit) || 3, 25));
+  const results = await searchPennsylvaniaBase(query, boundedLimit);
+  const principals = await enrichPrincipals(results);
+  return {
+    query,
+    count: results.length,
+    results,
+    enrichment: { principals },
+    source: PA_SOURCE_LABEL,
+  };
+}
+
+function registryAddress(entity) {
+  const parts = [
+    entity?.address1,
+    entity?.address2,
+    entity?.city,
+    entity?.state,
+    entity?.zip,
+  ].filter((value) => Boolean(value && String(value).trim()));
+  return parts.length ? parts.join(', ') : null;
+}
+
+function censusCoordinates(payload) {
+  const coordinates = payload?.coordinates;
+  if (!coordinates || typeof coordinates !== 'object') return null;
+  const latitude = numeric(coordinates.latitude);
+  const longitude = numeric(coordinates.longitude);
+  return latitude == null || longitude == null
+    ? null
+    : { latitude, longitude };
+}
+
+function censusAddressIdentity(value) {
+  if (typeof value !== 'string') return { streetNumber: null, zip: null };
+  const text = value.toUpperCase().trim();
+  const streetNumber = text.match(/^\s*(\d+[A-Z-]?)/)?.[1] ?? null;
+  const zip = text.match(/\b(\d{5})(?:-\d{4})?\s*$/)?.[1] ?? null;
+  return { streetNumber, zip };
+}
+
+function distanceMiles(a, b) {
+  const radians = (degrees) => (degrees * Math.PI) / 180;
+  const earthRadiusMiles = 3958.7613;
+  const dLat = radians(b.latitude - a.latitude);
+  const dLon = radians(b.longitude - a.longitude);
+  const lat1 = radians(a.latitude);
+  const lat2 = radians(b.latitude);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  return 2 * earthRadiusMiles * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+function domainNameAligned(domain, vendorName) {
+  const vendorCanonical = canonicalBusinessName(vendorName);
+  const vendorCompact = vendorCanonical.replace(/[^A-Z0-9]/g, '').toLowerCase();
+  const vendorTokens = vendorCanonical
+    .toLowerCase()
+    .split(' ')
+    .map((token) => token.replace(/[^a-z0-9]/g, ''))
+    .filter((token) => token.length >= 3);
+  const ignored = new Set(['www', 'api', 'app', 'portal', 'secure', 'vendor', 'vendors']);
+  const hostTokens = domain
+    .toLowerCase()
+    .split('.')
+    .slice(0, -1)
+    .map((label) => label.replace(/[^a-z0-9]/g, ''))
+    .filter((label) => label.length >= 3 && !ignored.has(label));
+
+  return hostTokens.some((host) => {
+    if (host === vendorCompact) return true;
+    if (
+      host.length >= 4 &&
+      vendorCompact.length >= 4 &&
+      (host.includes(vendorCompact) || vendorCompact.includes(host))
+    ) {
+      return true;
+    }
+    return vendorTokens.some(
+      (token) =>
+        host === token ||
+        (host.length >= 4 &&
+          token.length >= 4 &&
+          (host.includes(token) || token.includes(host)))
+    );
+  });
+}
+
+export async function runVendorIntakeGate(rawInput) {
+  const input = {
+    name: normalizeSearchTerm(rawInput?.name ?? ''),
+    address: String(rawInput?.address ?? '').trim().replace(/\s+/g, ' '),
+    domain: normalizeDomain(rawInput?.domain ?? ''),
+  };
+  if (input.address.length < 6 || input.address.length > 240) {
+    throw new Error('invalid_address');
+  }
+
+  const registryEnvelope = await searchPennsylvaniaEntities(input.name, 3);
+  const registryMatches = registryEnvelope.results;
+  const registryMatch = registryMatches[0] ?? null;
+  const registryNameScore =
+    registryMatch?.businessName != null
+      ? matchScore(registryMatch.businessName, input.name)
+      : null;
+  const registryStrongCandidates = registryMatches.filter((candidate) =>
+    candidate?.businessName != null
+      ? matchScore(candidate.businessName, input.name) <= 1
+      : false
+  );
+  const registryStrongCandidateCount = registryStrongCandidates.length;
+  const registryAmbiguous = registryStrongCandidateCount > 1;
+  const registryStrong =
+    registryNameScore != null && registryNameScore <= 1 && !registryAmbiguous;
+  const registeredAddress = registryMatch ? registryAddress(registryMatch) : null;
+  const registryEvidenceComplete =
+    registryMatch != null &&
+    typeof registryMatch.businessName === 'string' &&
+    registryMatch.businessName.trim().length > 0 &&
+    typeof registryMatch.filingNumber === 'string' &&
+    registryMatch.filingNumber.trim().length > 0 &&
+    typeof registryMatch.registrationType === 'string' &&
+    registryMatch.registrationType.trim().length > 0 &&
+    registeredAddress != null;
+
+  const [submittedCensus, registryCensus, ofac, rdap] = await Promise.all([
+    geocodeAddress(input.address),
+    registeredAddress ? geocodeAddress(registeredAddress) : Promise.resolve(null),
+    screenOfacName(input.name, { limit: 3, minScore: OFAC_REVIEW_THRESHOLD }),
+    lookupDomain(input.domain),
+  ]);
+
+  const submittedCoordinates = censusCoordinates(submittedCensus);
+  const registryCoordinates = censusCoordinates(registryCensus);
+  const normalizeAddressInput = (value) =>
+    String(value).trim().replace(/\s+/g, ' ').toUpperCase();
+  const submittedInputAligned =
+    typeof submittedCensus.input === 'string' &&
+    normalizeAddressInput(submittedCensus.input) === normalizeAddressInput(input.address);
+  const registryInputAligned =
+    !registeredAddress ||
+    (typeof registryCensus?.input === 'string' &&
+      normalizeAddressInput(registryCensus.input) ===
+        normalizeAddressInput(registeredAddress));
+  const submittedSourceComplete =
+    typeof submittedCensus.source === 'string' &&
+    /Census Bureau/i.test(submittedCensus.source);
+  const registrySourceComplete =
+    !registeredAddress ||
+    (typeof registryCensus?.source === 'string' &&
+      /Census Bureau/i.test(registryCensus.source));
+  const submittedMatchKnown = typeof submittedCensus.matched === 'boolean';
+  const registryMatchKnown =
+    !registeredAddress || typeof registryCensus?.matched === 'boolean';
+  const submittedMatchedAddressComplete =
+    submittedCensus.matched !== true ||
+    (typeof submittedCensus.matchedAddress === 'string' &&
+      submittedCensus.matchedAddress.trim().length > 0 &&
+      submittedCoordinates != null);
+  const registryMatchedAddressComplete =
+    !registeredAddress ||
+    registryCensus?.matched !== true ||
+    (typeof registryCensus?.matchedAddress === 'string' &&
+      registryCensus.matchedAddress.trim().length > 0 &&
+      registryCoordinates != null);
+  const submittedCensusComplete =
+    submittedInputAligned &&
+    submittedSourceComplete &&
+    submittedMatchKnown &&
+    submittedMatchedAddressComplete;
+  const registryCensusComplete =
+    registryInputAligned &&
+    registrySourceComplete &&
+    registryMatchKnown &&
+    registryMatchedAddressComplete;
+  const addressDistanceMiles =
+    submittedCoordinates && registryCoordinates
+      ? Number(distanceMiles(submittedCoordinates, registryCoordinates).toFixed(3))
+      : null;
+  const submittedMatched = submittedCensus.matched === true;
+  const registryAddressMatched = registryCensus?.matched === true;
+  const submittedAddressIdentity = censusAddressIdentity(submittedCensus.matchedAddress);
+  const registryAddressIdentity = censusAddressIdentity(registryCensus?.matchedAddress);
+  const sameStreetNumber =
+    submittedAddressIdentity.streetNumber != null &&
+    submittedAddressIdentity.streetNumber === registryAddressIdentity.streetNumber;
+  const sameZip =
+    submittedAddressIdentity.zip != null &&
+    submittedAddressIdentity.zip === registryAddressIdentity.zip;
+  const addressConsistent =
+    submittedMatched &&
+    registryAddressMatched &&
+    sameStreetNumber &&
+    sameZip &&
+    addressDistanceMiles != null &&
+    addressDistanceMiles <= VENDOR_GATE_ADDRESS_MAX_MILES;
+
+  const ofacCandidates = Array.isArray(ofac?.candidates)
+    ? ofac.candidates.slice(0, 3)
+    : null;
+  const ofacReturnedCount = numeric(ofac?.count);
+  const ofacTotalCount = numeric(ofac?.totalCandidatesAboveThreshold);
+  const ofacThreshold = numeric(ofac?.minScore);
+  const ofacQueryAligned =
+    typeof ofac?.query === 'string' &&
+    canonicalBusinessName(ofac.query) === canonicalBusinessName(input.name);
+  const ofacEvidenceComplete =
+    ofacQueryAligned &&
+    ofacThreshold === OFAC_REVIEW_THRESHOLD &&
+    ofacReturnedCount != null &&
+    ofacReturnedCount >= 0 &&
+    ofacTotalCount != null &&
+    ofacTotalCount >= ofacReturnedCount &&
+    ofacCandidates != null &&
+    ofacCandidates.length === ofacReturnedCount &&
+    typeof ofac?.source === 'string' &&
+    ofac.source.trim().length > 0 &&
+    ofac.reviewRequired === true;
+  const ofacCandidateCount = ofacEvidenceComplete ? ofacTotalCount : null;
+
+  const rdapReturnedDomain =
+    typeof rdap?.domain === 'string'
+      ? rdap.domain.trim().toLowerCase().replace(/\.$/, '')
+      : null;
+  const rdapDomainAligned = rdapReturnedDomain === input.domain;
+  const rdapRegistrationKnown = typeof rdap?.registered === 'boolean';
+  const rdapAuthoritativeRdap =
+    typeof rdap?.authoritativeRdap === 'string' &&
+    /^https?:\/\//i.test(rdap.authoritativeRdap)
+      ? rdap.authoritativeRdap
+      : null;
+  const rdapSourceComplete =
+    typeof rdap?.source === 'string' && rdap.source.trim().length > 0;
+  const rdapEvidenceComplete =
+    rdapDomainAligned &&
+    rdapRegistrationKnown &&
+    rdapAuthoritativeRdap != null &&
+    rdapSourceComplete;
+  const domainRegistered = rdapEvidenceComplete && rdap.registered === true;
+  const domainNameMatchesVendor =
+    domainRegistered && domainNameAligned(input.domain, input.name);
+
+  const reviewTriggers = [];
+  if (!registryMatch) {
+    reviewTriggers.push({
+      code: 'pa_registry_match_not_found',
+      detail: 'No Pennsylvania registry candidate was found for the supplied vendor name.',
+    });
+  } else if (registryAmbiguous) {
+    reviewTriggers.push({
+      code: 'pa_registry_name_ambiguous',
+      detail:
+        'Multiple Pennsylvania registry records are strong matches for the supplied vendor name, so a human should select the intended legal entity before continuing.',
+    });
+  } else if (!registryStrong) {
+    reviewTriggers.push({
+      code: 'pa_registry_name_needs_review',
+      detail:
+        'The best Pennsylvania registry name match was not strong enough for automatic continuation.',
+    });
+  } else if (!registryEvidenceComplete) {
+    reviewTriggers.push({
+      code: 'pa_registry_evidence_incomplete',
+      detail:
+        'The selected Pennsylvania registry record is missing one or more core identity fields required for automatic continuation: business name, filing number, registration type, and usable registered address.',
+    });
+  }
+
+  if (!submittedCensusComplete) {
+    reviewTriggers.push({
+      code: 'census_provided_evidence_incomplete',
+      detail:
+        'The Census response for the supplied vendor address did not satisfy the expected evidence contract, so the workflow cannot safely interpret its address match.',
+    });
+  } else if (!submittedMatched) {
+    reviewTriggers.push({
+      code: 'provided_address_not_geocoded',
+      detail: 'The supplied vendor address did not produce a Census match.',
+    });
+  } else if (registryMatch && !registeredAddress) {
+    reviewTriggers.push({
+      code: 'registry_address_missing',
+      detail: 'The matched Pennsylvania registry record did not provide a usable registered address.',
+    });
+  } else if (registeredAddress && !registryCensusComplete) {
+    reviewTriggers.push({
+      code: 'census_registry_evidence_incomplete',
+      detail:
+        'The Census response for the Pennsylvania registry address did not satisfy the expected evidence contract, so the workflow cannot safely compare the addresses.',
+    });
+  } else if (registeredAddress && !registryAddressMatched) {
+    reviewTriggers.push({
+      code: 'registry_address_not_geocoded',
+      detail: 'The Pennsylvania registry address did not produce a Census match.',
+    });
+  } else if (
+    registeredAddress &&
+    submittedMatched &&
+    registryAddressMatched &&
+    !addressConsistent
+  ) {
+    reviewTriggers.push({
+      code: 'registered_address_differs',
+      detail:
+        'The supplied vendor address does not closely align with the Pennsylvania registry address: Census-normalized street number and ZIP must match and coordinates must fall within the configured distance rule.',
+    });
+  }
+
+  if (!ofacEvidenceComplete) {
+    reviewTriggers.push({
+      code: 'ofac_evidence_incomplete',
+      detail:
+        'The OFAC SDN name-screen response did not satisfy the expected evidence contract, so the workflow cannot safely interpret it as a no-candidate result.',
+    });
+  } else if (ofacCandidateCount != null && ofacCandidateCount > 0) {
+    reviewTriggers.push({
+      code: 'ofac_name_candidate_present',
+      detail:
+        'The OFAC SDN name screen returned at least one candidate at or above the configured review threshold; a human should inspect the candidate details before continuing.',
+    });
+  }
+
+  if (!rdapEvidenceComplete) {
+    reviewTriggers.push({
+      code: 'rdap_evidence_incomplete',
+      detail:
+        'The RDAP response did not satisfy the expected evidence contract for the requested domain, so the workflow cannot safely interpret its registration result.',
+    });
+  } else if (!domainRegistered) {
+    reviewTriggers.push({
+      code: 'domain_registration_not_confirmed',
+      detail:
+        'Authoritative RDAP confirmed that the supplied domain is not currently registered.',
+    });
+  } else if (!domainNameMatchesVendor) {
+    reviewTriggers.push({
+      code: 'domain_name_not_aligned',
+      detail:
+        'The supplied domain is registered, but its hostname does not plausibly align with the submitted vendor name; a human should confirm the relationship before continuing.',
+    });
+  }
+
+  const decision = reviewTriggers.length === 0 ? 'proceed' : 'human_review';
+  return {
+    decision,
+    agentAction:
+      decision === 'proceed'
+        ? 'continue_vendor_intake'
+        : 'pause_and_request_human_review',
+    reviewTriggers,
+    checkedAt: new Date().toISOString(),
+    input,
+    policy: {
+      registryNameMatch:
+        'exactly one canonical exact or strong-prefix legal-entity candidate is required for automatic continuation',
+      registryEvidenceContract:
+        'business name, filing number, registration type, and usable registered address are required for automatic continuation',
+      censusEvidenceContract:
+        'expected input echo, boolean matched result, Census source, and matched=true requires a normalized address plus numeric coordinates',
+      addressMatch:
+        'Census-normalized primary street number and ZIP must match, plus coordinate distance threshold',
+      addressMaxDistanceMiles: VENDOR_GATE_ADDRESS_MAX_MILES,
+      ofacReviewThreshold: OFAC_REVIEW_THRESHOLD,
+      domainMustBeRegistered: true,
+      domainEvidenceContract:
+        'requested domain, boolean registration result, authoritative RDAP endpoint, and source must all be present',
+      domainNameAlignment:
+        'registered domain hostname labels must plausibly align with the submitted vendor name',
+    },
+    evidence: {
+      registry: {
+        service: 'PA Entity Lookup x402',
+        found: Boolean(registryMatch),
+        complete: registryEvidenceComplete,
+        candidateCount: registryMatches.length,
+        strongCandidateCount: registryStrongCandidateCount,
+        ambiguous: registryAmbiguous,
+        strongNameMatch: registryStrong,
+        matchScore: registryNameScore,
+        match: registryMatch,
+        source: PA_SOURCE_LABEL,
+      },
+      address: {
+        service: 'US Census Address Geocoder x402',
+        providedEvidenceComplete: submittedCensusComplete,
+        providedInputAligned: submittedInputAligned,
+        providedMatched: submittedMatched,
+        providedMatchedAddress: submittedCensus.matchedAddress ?? null,
+        registryAddress: registeredAddress,
+        registryEvidenceComplete: registryCensusComplete,
+        registryInputAligned,
+        registryMatched: registryAddressMatched,
+        registryMatchedAddress: registryCensus?.matchedAddress ?? null,
+        submittedStreetNumber: submittedAddressIdentity.streetNumber,
+        registryStreetNumber: registryAddressIdentity.streetNumber,
+        sameStreetNumber,
+        submittedZip: submittedAddressIdentity.zip,
+        registryZip: registryAddressIdentity.zip,
+        sameZip,
+        distanceMiles: addressDistanceMiles,
+        consistent: addressConsistent,
+      },
+      ofac: {
+        service: 'OFAC SDN Name Screen x402',
+        complete: ofacEvidenceComplete,
+        queryAligned: ofacQueryAligned,
+        reviewThreshold: OFAC_REVIEW_THRESHOLD,
+        reportedThreshold: ofacThreshold,
+        returnedCount: ofacReturnedCount,
+        candidateCount: ofacCandidateCount,
+        candidates: ofacCandidates ?? [],
+        source: ofac?.source ?? null,
+      },
+      domain: {
+        service: 'Domain RDAP Lookup x402',
+        complete: rdapEvidenceComplete,
+        requestedDomain: input.domain,
+        returnedDomain: rdapReturnedDomain,
+        domainAligned: rdapDomainAligned,
+        registrationKnown: rdapRegistrationKnown,
+        registered: domainRegistered,
+        nameAligned: domainNameMatchesVendor,
+        authoritativeRdap: rdapAuthoritativeRdap,
+        registrar: rdap?.registrar ?? null,
+        events: rdap?.events ?? null,
+        source: rdap?.source ?? null,
+      },
+    },
+    limitations: [
+      'A proceed result only means the configured automated intake checks did not trigger review; it is not legal, compliance, sanctions, fraud, or credit approval.',
+      'OFAC evidence is candidate-name screening only. A no-candidate result is not sanctions clearance and does not perform 50 Percent Rule ownership analysis.',
+      'A Pennsylvania registry match does not prove current good standing, ownership, or authority to contract.',
+      'A Census address match does not prove physical presence or control of the location.',
+      'RDAP registration and vendor-name alignment do not prove that the vendor owns or controls the domain; name alignment is a conservative heuristic and brand domains may require human review.',
+    ],
+  };
+}
+
+export async function runVendorGateFixture(sampleCase = 'proceed') {
+  if (!['proceed', 'address_mismatch', 'domain_mismatch'].includes(sampleCase)) {
+    throw new Error('unknown_fixture');
+  }
+  const input =
+    sampleCase === 'address_mismatch'
+      ? {
+          name: 'OpenAI OpCo',
+          address: '4600 Silver Hill Rd, Washington, DC 20233',
+          domain: 'openai.com',
+        }
+      : sampleCase === 'domain_mismatch'
+        ? {
+            name: 'OpenAI OpCo',
+            address: '600 North Second Street, Suite 401, Harrisburg, PA 17101',
+            domain: 'example.com',
+          }
+        : {
+            name: 'OpenAI OpCo',
+            address: '600 North Second Street, Suite 401, Harrisburg, PA 17101',
+            domain: 'openai.com',
+          };
+  return runVendorIntakeGate(input);
+}
