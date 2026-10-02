@@ -8,9 +8,6 @@ on:
         description: Expected resource count in pa-entity-x402.floot.app/.well-known/x402
         required: true
         default: '2'
-  push:
-    paths:
-      - '.github/workflows/verify-x402-portfolio.yml'
 
 permissions:
   contents: read
