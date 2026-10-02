@@ -279,7 +279,7 @@
     "checkpointId": null,
     "description": null
   },
-  "lastUpdatedAt": "2026-10-02T17:51:00Z",
+  "lastUpdatedAt": "2026-10-02T17:52:00Z",
   "lastCompletedWriteOrder": 0,
   "resumeRule": "Never restart from write 1 after interruption. Refresh Floot list_files, verify boundary content against the locked deployment bundle, confirm the rollback snapshot/plan still match the captured pre-write project version, then resume at the next unfinished ordered write.",
   "rollbackPlan": {
@@ -295,9 +295,9 @@
     "status": "passed",
     "sourceBranch": "floot-recovery-lock-2026-10-02",
     "sourceCommit": "ceb21b651764ffaa0c893f4e725eccce0c10ba5f",
-    "checkedMain": "ae6b13d37be726f2525148fe560b8367f9bfc733",
+    "checkedMain": "123087bce05c9ede2f72efba2814a6f55d055bb1",
     "workflowRunId": 37037705191,
-    "result": "immutable lock passed; 26/26 bundled writes pinned; locked source files changed on main = 0",
+    "result": "final pre-reset lock audit: 162 commits ahead of immutable lock; 0 locked source changes; 26/26 bundled writes intact",
     "latestDirectCheckAt": "2026-10-02T17:45:00Z",
     "mainCommitsAheadOfLock": 152,
     "lockedSourcesChangedOnMain": 0
