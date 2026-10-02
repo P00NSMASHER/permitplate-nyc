@@ -68,3 +68,13 @@ jobs:
         run: node --test factory/products/sec-filing-freshness/metadata.test.js
       - name: Run Product 006 release gate
         run: node factory/scripts/validate-product-006.js
+      - name: Test Treasury Fiscal Data adapter
+        run: node --test factory/packages/sources/treasury-average-rates.test.js
+      - name: Test Product 007 threshold decision
+        run: node --test factory/products/treasury-average-rate-threshold/decision.test.js
+      - name: Test Product 007 service composition
+        run: node --test factory/products/treasury-average-rate-threshold/service.test.js
+      - name: Test Product 007 paid x402 handler
+        run: node --test factory/products/treasury-average-rate-threshold/paid-handler.test.js
+      - name: Test Product 007 discovery metadata
+        run: node --test factory/products/treasury-average-rate-threshold/metadata.test.js
