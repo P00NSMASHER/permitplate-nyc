@@ -2,6 +2,11 @@ name: Verify x402 portfolio
 
 on:
   workflow_dispatch:
+    inputs:
+      expected_floot_resources:
+        description: Expected resource count in pa-entity-x402.floot.app/.well-known/x402
+        required: true
+        default: '2'
 
 permissions:
   contents: read
@@ -20,5 +25,16 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Verify unpaid x402 challenges
+      - name: Verify unpaid x402 challenges and fixed decision fixtures
+        env:
+          EXPECTED_FLOOT_RESOURCES: ${{ inputs.expected_floot_resources }}
+          REPORT_PATH: x402-verification-report.json
         run: node scripts/verify-x402-portfolio.mjs
+
+      - name: Upload verification report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: x402-verification-report
+          path: x402-verification-report.json
+          if-no-files-found: warn
