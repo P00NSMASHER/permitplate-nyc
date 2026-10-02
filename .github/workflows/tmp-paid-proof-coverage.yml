@@ -1,5 +1,5 @@
 name: inspect independent paid-proof coverage
-# refresh-marker: paid-proof-coverage-2026-10-02
+# refresh-marker: onchain-first-sale-check-2026-10-02
 on:
   push:
     paths:
@@ -68,6 +68,38 @@ jobs:
               if key in seen: continue
               seen.add(key); print(json.dumps(r,indent=2)[:12000])
           print('MATCH_COUNT',len(seen))
+          PY
+          echo '=== BASE USDC INCOMING ==='
+          PAYTO='0x708f7b52b56eafd7fc1de65fc7752ed732914021'
+          USDC='0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'
+          curl -sS --max-time 25 --get 'https://base.blockscout.com/api' \
+            --data-urlencode 'module=account' \
+            --data-urlencode 'action=tokentx' \
+            --data-urlencode "address=$PAYTO" \
+            --data-urlencode "contractaddress=$USDC" \
+            --data-urlencode 'page=1' \
+            --data-urlencode 'offset=20' \
+            --data-urlencode 'sort=desc' > /tmp/usdc.json
+          python3 - <<'PY'
+          import json,datetime
+          d=json.load(open('/tmp/usdc.json'))
+          rows=d.get('result',[]) if isinstance(d,dict) else []
+          out=[]
+          for r in rows[:20]:
+              val=r.get('value')
+              dec=int(r.get('tokenDecimal') or 6)
+              try: amount=int(val)/(10**dec)
+              except: amount=None
+              out.append({
+                  'hash':r.get('hash'),
+                  'from':r.get('from'),
+                  'to':r.get('to'),
+                  'amount_usdc':amount,
+                  'timeStamp':r.get('timeStamp'),
+                  'tokenSymbol':r.get('tokenSymbol'),
+                  'confirmations':r.get('confirmations')
+              })
+          print(json.dumps(out,indent=2))
           PY
 
           echo '=== VET402 RESOLVE ==='
