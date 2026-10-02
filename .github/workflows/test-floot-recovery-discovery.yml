@@ -13,6 +13,7 @@ on:
       - 'scripts/test-floot-pre-rehost-snapshot-builder.mjs'
       - 'scripts/validate-floot-pre-rehost-snapshot.mjs'
       - 'scripts/compare-floot-snapshot-to-public-baseline.mjs'
+      - 'scripts/test-floot-snapshot-public-baseline-compare.mjs'
       - 'scripts/build-floot-rollback-plan.mjs'
       - 'scripts/test-floot-rollback-tooling.mjs'
       - '.github/workflows/test-floot-recovery-discovery.yml'
@@ -40,6 +41,7 @@ jobs:
           node --check scripts/test-floot-pre-rehost-snapshot-builder.mjs
           node --check scripts/validate-floot-pre-rehost-snapshot.mjs
           node --check scripts/compare-floot-snapshot-to-public-baseline.mjs
+          node --check scripts/test-floot-snapshot-public-baseline-compare.mjs
           node --check scripts/build-floot-rollback-plan.mjs
           node --check scripts/test-floot-rollback-tooling.mjs
           node --check scripts/validate-floot-snapshot-capture-plan.mjs
@@ -49,6 +51,9 @@ jobs:
 
       - name: Verify snapshot builder round trip
         run: node scripts/test-floot-pre-rehost-snapshot-builder.mjs
+
+      - name: Verify snapshot/public rollback cross-check behavior
+        run: node scripts/test-floot-snapshot-public-baseline-compare.mjs
 
       - name: Verify deterministic rollback tooling
         run: node scripts/test-floot-rollback-tooling.mjs
