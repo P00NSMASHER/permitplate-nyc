@@ -1,47 +1,14 @@
 "use strict";
 
+const fs=require("node:fs");
+const path=require("node:path");
 const {managedProducts,buildCatalog,buildOpenApi,buildProductIndex,buildLlmsText}=require("../packages/discovery/generator");
 const {createPaRegistryAdapter,createCensusAddressAdapter,createRdapAdapter}=require("../packages/sources/live-pa-identity");
 const {createSecFilingsAdapter}=require("../packages/sources/sec-filings");
 const {createTreasuryAverageRatesAdapter}=require("../packages/sources/treasury-average-rates");
 const {createOfacNameAdapter}=require("../packages/sources/ofac-name-screen");
 
-const {createVendorIdentityService}=require("../products/pa-vendor-identity-match/service");
-const {createPaidVendorIdentityHandler}=require("../products/pa-vendor-identity-match/paid-handler");
-const {createBusinessAddressService}=require("../products/pa-business-address-match/service");
-const {createPaidBusinessAddressHandler}=require("../products/pa-business-address-match/paid-handler");
-const {createBusinessDomainService}=require("../products/pa-business-domain-match/service");
-const {createPaidBusinessDomainHandler}=require("../products/pa-business-domain-match/paid-handler");
-const {createSecFilingFreshnessService}=require("../products/sec-filing-freshness/service");
-const {createPaidSecFilingFreshnessHandler}=require("../products/sec-filing-freshness/paid-handler");
-const {createSecCompanyIdentityService}=require("../products/sec-company-identity-match/service");
-const {createPaidSecCompanyIdentityHandler}=require("../products/sec-company-identity-match/paid-handler");
-const {createDomainAgeService}=require("../products/domain-registration-age/service");
-const {createPaidDomainAgeHandler}=require("../products/domain-registration-age/paid-handler");
-const {createTreasuryRateThresholdService}=require("../products/treasury-average-rate-threshold/service");
-const {createPaidTreasuryThresholdHandler}=require("../products/treasury-average-rate-threshold/paid-handler");
-const {createTreasuryRateTrendService}=require("../products/treasury-average-rate-trend/service");
-const {createPaidTreasuryTrendHandler}=require("../products/treasury-average-rate-trend/paid-handler");
-const {createTreasuryRateSpreadService}=require("../products/treasury-average-rate-spread/service");
-const {createPaidTreasuryRateSpreadHandler}=require("../products/treasury-average-rate-spread/paid-handler");
-const {createOfacReviewService}=require("../products/ofac-name-review-gate/service");
-const {createPaidOfacReviewHandler}=require("../products/ofac-name-review-gate/paid-handler");
-const {createPaEntityOfacReviewService}=require("../products/pa-entity-ofac-review/service");
-const {createPaidPaEntityOfacHandler}=require("../products/pa-entity-ofac-review/paid-handler");
-const {createFormationAgeService}=require("../products/pa-business-formation-age/service");
-const {createPaidFormationAgeHandler}=require("../products/pa-business-formation-age/paid-handler");
-const {createDomainExpirationService}=require("../products/domain-expiration-horizon/service");
-const {createPaidDomainExpirationHandler}=require("../products/domain-expiration-horizon/paid-handler");
-const {createDomainLastChangedService}=require("../products/domain-last-changed-recency/service");
-const {createPaidDomainLastChangedHandler}=require("../products/domain-last-changed-recency/paid-handler");
-const {createPaVendorNewDomainService}=require("../products/pa-vendor-new-domain-review/service");
-const {createPaidPaVendorNewDomainHandler}=require("../products/pa-vendor-new-domain-review/paid-handler");
-const {createCounterpartyReviewService}=require("../products/pa-vendor-counterparty-review/service");
-const {createPaidCounterpartyReviewHandler}=require("../products/pa-vendor-counterparty-review/paid-handler");
-const {createVendorMaturityService}=require("../products/pa-vendor-maturity-review/service");
-const {createPaidVendorMaturityHandler}=require("../products/pa-vendor-maturity-review/paid-handler");
-const {createVendorDomainContinuityService}=require("../products/pa-vendor-domain-continuity-review/service");
-const {createPaidVendorDomainContinuityHandler}=require("../products/pa-vendor-domain-continuity-review/paid-handler");
+const PRODUCTS_ROOT=path.resolve(__dirname,"..","products");
 
 const PREFLIGHT_HEADERS=Object.freeze({
   "access-control-allow-origin":"*",
@@ -88,6 +55,41 @@ function defaultAdapters({fetchImpl=fetch,secUserAgent}={}){
   };
 }
 
+function chooseFactory(moduleExports,{kind,productId}){
+  const entries=Object.entries(moduleExports).filter(([,value])=>typeof value==="function");
+  const matches=entries.filter(([name])=>
+    kind==="service"
+      ? /^create.*Service$/.test(name)
+      : /^createPaid.*Handler$/.test(name)
+  );
+  if(matches.length!==1){
+    throw new Error(
+      productId+" runtime "+kind+" factory discovery expected exactly one match, found "+matches.map(([name])=>name).join(",")
+    );
+  }
+  return matches[0][1];
+}
+
+function discoverRuntimeWiring(products=managedProducts()){
+  const wiring={};
+  for(const product of products){
+    const dir=path.join(PRODUCTS_ROOT,product.id);
+    const serviceFile=path.join(dir,"service.js");
+    const handlerFile=path.join(dir,"paid-handler.js");
+    if(!fs.existsSync(serviceFile)) throw new Error(product.id+" runtime service.js missing");
+    if(!fs.existsSync(handlerFile)) throw new Error(product.id+" runtime paid-handler.js missing");
+    const serviceModule=require(serviceFile);
+    const handlerModule=require(handlerFile);
+    wiring[product.id]={
+      createService:chooseFactory(serviceModule,{kind:"service",productId:product.id}),
+      createPaidHandler:chooseFactory(handlerModule,{kind:"handler",productId:product.id}),
+      serviceFile,
+      handlerFile
+    };
+  }
+  return wiring;
+}
+
 function createFactoryRuntime({
   publicApiBase,
   fetchImpl=fetch,
@@ -100,64 +102,36 @@ function createFactoryRuntime({
   }
   const base=publicApiBase.replace(/\/$/,"");
   const a=adapters||defaultAdapters({fetchImpl,secUserAgent});
-
-  const services={
-    "pa-vendor-identity-match":createVendorIdentityService({registry:a.registry,address:a.address,rdap:a.rdap,now}),
-    "pa-business-address-match":createBusinessAddressService({registry:a.registry,address:a.address,now}),
-    "pa-business-domain-match":createBusinessDomainService({registry:a.registry,rdap:a.rdap,now}),
-    "sec-filing-freshness":createSecFilingFreshnessService({sec:a.sec,now}),
-    "sec-company-identity-match":createSecCompanyIdentityService({sec:a.sec,now}),
-    "domain-registration-age":createDomainAgeService({rdap:a.rdap,now}),
-    "treasury-average-rate-threshold":createTreasuryRateThresholdService({treasury:a.treasury,now}),
-    "treasury-average-rate-trend":createTreasuryRateTrendService({treasury:a.treasury,now}),
-    "treasury-average-rate-spread":createTreasuryRateSpreadService({treasury:a.treasury,now}),
-    "ofac-name-review-gate":createOfacReviewService({ofac:a.ofac,now}),
-    "pa-entity-ofac-review":createPaEntityOfacReviewService({registry:a.registry,ofac:a.ofac,now}),
-    "pa-business-formation-age":createFormationAgeService({registry:a.registry,now}),
-    "domain-expiration-horizon":createDomainExpirationService({rdap:a.rdap,now}),
-    "domain-last-changed-recency":createDomainLastChangedService({rdap:a.rdap,now}),
-    "pa-vendor-new-domain-review":createPaVendorNewDomainService({registry:a.registry,rdap:a.rdap,now}),
-    "pa-vendor-counterparty-review":createCounterpartyReviewService({registry:a.registry,ofac:a.ofac,rdap:a.rdap,now}),
-    "pa-vendor-maturity-review":createVendorMaturityService({registry:a.registry,rdap:a.rdap,now}),
-    "pa-vendor-domain-continuity-review":createVendorDomainContinuityService({registry:a.registry,rdap:a.rdap,now})
-  };
-
-  const handlerFactories={
-    "pa-vendor-identity-match":createPaidVendorIdentityHandler,
-    "pa-business-address-match":createPaidBusinessAddressHandler,
-    "pa-business-domain-match":createPaidBusinessDomainHandler,
-    "sec-filing-freshness":createPaidSecFilingFreshnessHandler,
-    "sec-company-identity-match":createPaidSecCompanyIdentityHandler,
-    "domain-registration-age":createPaidDomainAgeHandler,
-    "treasury-average-rate-threshold":createPaidTreasuryThresholdHandler,
-    "treasury-average-rate-trend":createPaidTreasuryTrendHandler,
-    "treasury-average-rate-spread":createPaidTreasuryRateSpreadHandler,
-    "ofac-name-review-gate":createPaidOfacReviewHandler,
-    "pa-entity-ofac-review":createPaidPaEntityOfacHandler,
-    "pa-business-formation-age":createPaidFormationAgeHandler,
-    "domain-expiration-horizon":createPaidDomainExpirationHandler,
-    "domain-last-changed-recency":createPaidDomainLastChangedHandler,
-    "pa-vendor-new-domain-review":createPaidPaVendorNewDomainHandler,
-    "pa-vendor-counterparty-review":createPaidCounterpartyReviewHandler,
-    "pa-vendor-maturity-review":createPaidVendorMaturityHandler,
-    "pa-vendor-domain-continuity-review":createPaidVendorDomainContinuityHandler
-  };
-
+  const products=managedProducts();
+  const wiring=discoverRuntimeWiring(products);
+  const services={};
   const routes=new Map();
-  for(const product of managedProducts()){
-    const service=services[product.id];
-    const factory=handlerFactories[product.id];
-    if(!service||!factory)throw new Error("runtime wiring missing for "+product.id);
-    routes.set(product.method+" "+product.path,factory({
-      service,
-      publicApiBase:base,
-      fetchImpl
-    }));
+
+  for(const product of products){
+    const item=wiring[product.id];
+    const service=item.createService({
+      registry:a.registry,
+      address:a.address,
+      rdap:a.rdap,
+      sec:a.sec,
+      treasury:a.treasury,
+      ofac:a.ofac,
+      now
+    });
+    services[product.id]=service;
+    routes.set(
+      product.method+" "+product.path,
+      item.createPaidHandler({
+        service,
+        publicApiBase:base,
+        fetchImpl
+      })
+    );
   }
 
   async function handle({method="GET",path="/",query={},event={}}={}){
     const verb=String(method).toUpperCase();
-    if(verb==="OPTIONS"&&managedProducts().some(product=>product.path===path)){
+    if(verb==="OPTIONS"&&products.some(product=>product.path===path)){
       return {
         statusCode:204,
         headers:{...PREFLIGHT_HEADERS},
@@ -168,8 +142,8 @@ function createFactoryRuntime({
       return json(200,{
         ok:true,
         service:"x402-product-factory",
-        stagingProductCount:managedProducts().length,
-        stagingProducts:managedProducts().map(p=>p.id)
+        stagingProductCount:products.length,
+        stagingProducts:products.map(p=>p.id)
       });
     }
     if(verb==="GET"&&(path==="/.well-known/x402"||path==="/.well-known/x402.json"||path==="/.well-known/x402-catalog.json")){
@@ -192,11 +166,19 @@ function createFactoryRuntime({
   return {
     base,
     adapters:a,
+    wiring,
     services,
     routes,
     handle,
-    stagingProducts:managedProducts()
+    stagingProducts:products
   };
 }
 
-module.exports={PREFLIGHT_HEADERS,defaultAdapters,createFactoryRuntime};
+module.exports={
+  PRODUCTS_ROOT,
+  PREFLIGHT_HEADERS,
+  defaultAdapters,
+  chooseFactory,
+  discoverRuntimeWiring,
+  createFactoryRuntime
+};
