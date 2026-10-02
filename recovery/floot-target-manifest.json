@@ -1,0 +1,391 @@
+{
+  "x402Version": 2,
+  "name": "Agent Data Tools x402",
+  "description": "Eight same-origin pay-per-call tools for Pennsylvania entity lookup, vendor intake decisions, SEC filings, Census geocoding, OFAC candidate screening, RDAP registration data, and Treasury rates.",
+  "resources": [
+    {
+      "resource": "https://pa-entity-x402.floot.app/_api/pa-entity-one",
+      "method": "GET",
+      "description": "Resolve one best Pennsylvania business-registry match by company name.",
+      "price": "$0.001",
+      "tags": [
+        "pennsylvania",
+        "business-registry",
+        "entity-resolution",
+        "best-match"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "q": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "q"
+        ]
+      },
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "1000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ]
+    },
+    {
+      "resource": "https://pa-entity-x402.floot.app/_api/pa-business",
+      "method": "GET",
+      "description": "Search Pennsylvania business-registration records and return multiple ranked candidates.",
+      "price": "$0.005",
+      "tags": [
+        "pennsylvania",
+        "business-registry",
+        "company-identity"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "q": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 25,
+            "default": 10
+          }
+        },
+        "required": [
+          "q"
+        ]
+      },
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "5000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ]
+    },
+    {
+      "resource": "https://pa-entity-x402.floot.app/_api/vendor-intake-gate",
+      "method": "GET",
+      "description": "Return proceed or human_review for a prospective Pennsylvania vendor using PA registry, Census, OFAC, and RDAP evidence.",
+      "price": "$0.020",
+      "tags": [
+        "vendor-intake",
+        "agent-decision",
+        "human-review",
+        "ofac",
+        "census",
+        "rdap"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "address": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 240
+          },
+          "domain": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 253
+          }
+        },
+        "required": [
+          "name",
+          "address",
+          "domain"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "proceed",
+              "human_review"
+            ]
+          },
+          "agentAction": {
+            "type": "string",
+            "enum": [
+              "continue_vendor_intake",
+              "pause_and_request_human_review"
+            ]
+          },
+          "reviewTriggers": {
+            "type": "array"
+          },
+          "evidence": {
+            "type": "object"
+          },
+          "limitations": {
+            "type": "array"
+          }
+        },
+        "required": [
+          "decision",
+          "agentAction",
+          "reviewTriggers",
+          "evidence",
+          "limitations"
+        ]
+      },
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ]
+    },
+    {
+      "resource": "https://pa-entity-x402.floot.app/_api/sec-filings",
+      "method": "GET",
+      "description": "Get recent SEC EDGAR filings by ticker or CIK, optionally filtered by form.",
+      "price": "$0.005",
+      "tags": [
+        "sec",
+        "edgar",
+        "filings",
+        "company-data"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "maxLength": 12
+          },
+          "cik": {
+            "type": "string",
+            "maxLength": 10
+          },
+          "form": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 25,
+            "default": 10
+          }
+        }
+      },
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "5000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ]
+    },
+    {
+      "resource": "https://pa-entity-x402.floot.app/_api/us-address-geocode",
+      "method": "GET",
+      "description": "Geocode one U.S. address with official Census normalized address, coordinates, and geography identifiers.",
+      "price": "$0.005",
+      "tags": [
+        "census",
+        "geocoding",
+        "address",
+        "reference-data"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 240
+          }
+        },
+        "required": [
+          "address"
+        ]
+      },
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "5000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ]
+    },
+    {
+      "resource": "https://pa-entity-x402.floot.app/_api/ofac-sdn-screen",
+      "method": "GET",
+      "description": "Screen one name against current OFAC SDN primary names and aliases and return ranked review candidates.",
+      "price": "$0.005",
+      "tags": [
+        "ofac",
+        "sanctions",
+        "sdn",
+        "name-screening"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 160
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10,
+            "default": 5
+          },
+          "minScore": {
+            "type": "integer",
+            "minimum": 70,
+            "maximum": 100,
+            "default": 85
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "5000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ]
+    },
+    {
+      "resource": "https://pa-entity-x402.floot.app/_api/domain-rdap",
+      "method": "GET",
+      "description": "Retrieve authoritative domain-registration metadata through IANA RDAP bootstrap and the TLD registry.",
+      "price": "$0.005",
+      "tags": [
+        "domain",
+        "rdap",
+        "registration",
+        "dns"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 253
+          }
+        },
+        "required": [
+          "domain"
+        ]
+      },
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "5000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ]
+    },
+    {
+      "resource": "https://pa-entity-x402.floot.app/_api/treasury-average-rates",
+      "method": "GET",
+      "description": "Return latest monthly average interest rates on outstanding U.S. Treasury securities.",
+      "price": "$0.005",
+      "tags": [
+        "treasury",
+        "interest-rates",
+        "macro",
+        "fiscal-data"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "security": {
+            "type": "string",
+            "maxLength": 100
+          }
+        }
+      },
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "5000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ]
+    }
+  ]
+}
