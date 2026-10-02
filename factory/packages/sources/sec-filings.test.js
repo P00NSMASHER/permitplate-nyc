@@ -143,3 +143,44 @@ test("dotted ticker alias resolves against SEC hyphen form", async () => {
   assert.equal(result.found, true);
   assert.equal(result.company.cik, "0001067983");
 });
+
+test("missing required SEC recent-filings arrays fails closed", async () => {
+  const adapter = createSecFilingsAdapter({
+    fetchImpl: async () => response({
+      name: "Apple Inc.",
+      filings: {
+        recent: {
+          form: ["8-K"],
+          accessionNumber: ["1"],
+          primaryDocument: ["a.htm"]
+        }
+      }
+    }),
+  });
+  await assert.rejects(
+    () => adapter.lookup({ cik: "320193" }),
+    (error) => error.code === "SOURCE_CONTRACT_INVALID"
+  );
+});
+
+test("misaligned SEC recent-filings arrays fail closed", async () => {
+  const adapter = createSecFilingsAdapter({
+    fetchImpl: async () => response({
+      name: "Apple Inc.",
+      filings: {
+        recent: {
+          form: ["8-K", "10-Q"],
+          filingDate: ["2026-10-01"],
+          accessionNumber: ["1", "2"],
+          primaryDocument: ["a.htm", "b.htm"]
+        }
+      }
+    }),
+  });
+  await assert.rejects(
+    () => adapter.lookup({ cik: "320193" }),
+    (error) =>
+      error.code === "SOURCE_CONTRACT_INVALID" &&
+      /misaligned/.test(error.message)
+  );
+});
