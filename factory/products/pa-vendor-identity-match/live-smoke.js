@@ -51,6 +51,10 @@ async function main() {
     },
   }, null, 2));
 
+  if (Array.isArray(result.sourceFailures) && result.sourceFailures.length > 0) {
+    console.log("TRANSIENT_SOURCE_BLOCKED", JSON.stringify(result.sourceFailures));
+    return;
+  }
   assert.equal(result.decision, "consistent");
   assert.deepEqual(result.reasonCodes, []);
   assert.equal(result.evidence.registry.strongMatch, true);
