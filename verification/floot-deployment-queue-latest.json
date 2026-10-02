@@ -18,7 +18,8 @@
     "Compare the 12 captured static-source hashes against verification/floot-static-rollback-public-latest.json; freshly read Floot source remains rollback authority on any mismatch.",
     "Newest GitHub Floot release/recovery discovery gates are green.",
     "scripts/verify-floot-deployment-lock.mjs passes against the pinned source branch/commit.",
-    "No AppDeploy runtime dependency is present in staged endpoint/discovery sources."
+    "No AppDeploy runtime dependency is present in staged endpoint/discovery sources.",
+    "The exact staged Floot endpoint files pass the live-upstream integration gate against real official sources with PayAI locally mocked and zero payment network calls."
   ],
   "writes": [
     {
@@ -336,5 +337,27 @@
       "public static rollback receipt",
       "pre-rehost snapshot builder round trip"
     ]
+  },
+  "liveReleaseUpstreamEvidence": {
+    "workflow": "Test Floot release live upstreams",
+    "runId": 37029193398,
+    "conclusion": "success",
+    "checkedAt": "2026-10-02T15:45:40Z",
+    "zeroSpend": true,
+    "paymentSent": false,
+    "facilitatorNetworkCalls": 0,
+    "mockedVerifyCalls": 6,
+    "mockedSettleCalls": 6,
+    "realUpstreamCalls": 16,
+    "passed": 6,
+    "total": 6,
+    "latencyMs": {
+      "treasury": 433,
+      "rdap": 78,
+      "census": 263,
+      "sec": 90,
+      "ofac": 2869,
+      "vendorGate": 8142
+    }
   }
 }
