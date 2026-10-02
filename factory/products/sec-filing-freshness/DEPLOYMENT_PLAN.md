@@ -1,6 +1,6 @@
 # Product 006 deployment plan — SEC Filing Freshness Check x402
 
-Status: deterministic/source-contract-verified staging. Fresh live SEC smoke from GitHub Actions is blocked by SEC/Akamai policy, not by application logic.
+Status: **live-source-verified staging**. Production deployment is deferred only because AppDeploy remains account-limit paused.
 
 ## Contract
 
@@ -8,7 +8,7 @@ Status: deterministic/source-contract-verified staging. Fresh live SEC smoke fro
 - Price: `$0.005 USDC`
 - Atomic amount: `5000`
 - Network: `eip155:8453`
-- Inputs: exactly one of `ticker` or `cik`; optional `form`; optional `maxAgeDays` 1–365 (default 30)
+- Inputs: exactly one of `ticker` or digit-only `cik`; optional exact `form`; optional `maxAgeDays` 1–365 (default 30)
 - Decisions: `recent_filing`, `no_recent_filing`, `company_not_found`
 
 ## Authoritative sources
@@ -17,17 +17,29 @@ Status: deterministic/source-contract-verified staging. Fresh live SEC smoke fro
 - submissions: `https://data.sec.gov/submissions/CIK##########.json`
 - filing URLs: SEC EDGAR Archives
 
-The adapter mirrors the already deployed SEC Recent Filings product’s source logic: ticker→CIK resolution, recent filing metadata extraction, exact form filtering, accession-number URL construction, and no semantic interpretation of filing contents.
+The adapter uses the declared client identity already proven by the existing SEC Recent Filings product:
+
+`x402-sec-filings/1.0 https://sec-recent-filings-x402-f9qatj.v2.appdeploy.ai`
+
+A generic factory/GitHub User-Agent was rejected by SEC/Akamai; the declared production-style identity returned HTTP 200 for both the ticker map and AAPL submissions.
 
 ## Freshness rule
 
-`recent_filing` means at least one matching filing has `filingDate` on or after:
+Freshness is based on SEC `filingDate` calendar dates in UTC.
 
-`checkedAt - maxAgeDays`
+The cutoff is computed from the UTC start of the checked calendar day minus `maxAgeDays`. A filing on the cutoff calendar date counts as recent regardless of the time of day the check runs.
 
-`no_recent_filing` means the SEC company resolved successfully but no matching filing falls within the requested window.
+## Source contract
 
-`company_not_found` means the requested ticker/CIK did not resolve to a submissions record.
+The SEC `filings.recent` payload must provide aligned arrays for:
+- `form`
+- `filingDate`
+- `accessionNumber`
+- `primaryDocument`
+
+Missing or misaligned required arrays are treated as source-contract failure, not as `no_recent_filing`.
+
+Ticker aliases normalize dotted forms such as `BRK.B` to SEC's `BRK-B` convention.
 
 ## x402 ordering
 
@@ -51,37 +63,38 @@ It does not:
 
 ## Verification completed
 
-- direct SEC adapter unit tests: passing
-- ticker/CIK normalization: passing
-- exact form filter tests: passing
-- not-found behavior: passing
-- source-failure behavior: passing
+- SEC source-adapter tests: passing
+- declared SEC User-Agent verification: passing
+- strict ticker/CIK normalization: passing
+- dotted ticker alias test: passing
+- malformed/misaligned SEC array contract tests: passing
 - deterministic freshness tests: passing
-- x402 ordering/payment tests: passing
+- x402 payment ordering tests: passing
 - resource-level `accepts[]` discovery tests: passing
-- factory CI: passing
+- live SEC smoke: passing
 
-## Live-source blocker
+Live smoke on 2026-10-02:
+- ticker: `AAPL`
+- resolved CIK: `0000320193`
+- source: U.S. Securities and Exchange Commission EDGAR
+- decision: `recent_filing`
+- latest observed filing date: `2026-10-01`
 
-A GitHub-hosted diagnostic on 2026-10-02 observed:
+## Deployment blocker
 
-- `www.sec.gov/files/company_tickers.json` -> HTTP 403, Akamai page titled "Request Rate Threshold Exceeded"
-- `data.sec.gov/submissions/CIK0000320193.json` -> HTTP 403, Akamai page titled "Your Request Originates from an Undeclared Automated Tool"
+AppDeploy reported an account-wide weekly Free-tier pause until:
 
-Therefore the GitHub Actions environment cannot be used as authoritative fresh SEC proof at this time.
+`2026-10-05T00:00:00Z`
 
-This does not establish a Product 006 code defect.
+No upgrade/payment is authorized.
 
-The existing AppDeploy SEC product uses the same SEC endpoints and source algorithm, but AppDeploy app usage/deployment is currently account-wide paused until the reported weekly reset.
+## Required post-deploy acceptance
 
-## Required post-reset acceptance
-
-Before production release:
-1. Run SEC live smoke from the deployment environment with a compliant declared User-Agent.
-2. Confirm AAPL resolves to CIK 0000320193.
-3. Confirm at least one valid filing metadata row is returned.
-4. Confirm unpaid Product 006 returns exact 402 / 5000 atomic USDC.
-5. Confirm invalid input does not settle.
-6. Confirm SEC source failure does not settle.
-7. Confirm successful evidence settles before 200.
-8. Confirm x402 catalogs expose resource-level `accepts[]`.
+1. Confirm live AAPL lookup resolves to CIK `0000320193`.
+2. Confirm unpaid Product 006 returns exact 402 / 5000 atomic USDC.
+3. Confirm malformed/oversized payment headers fail safely.
+4. Confirm invalid input does not settle.
+5. Confirm SEC source/contract failure does not settle.
+6. Confirm completed evidence settles before 200.
+7. Confirm x402 catalogs expose resource-level `accepts[]`.
+8. Confirm Products 001–005 remain unchanged.
