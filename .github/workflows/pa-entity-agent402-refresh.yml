@@ -1,5 +1,5 @@
 name: PA Entity Agent402 refresh
-# refresh-marker: 2026-10-01T19:17Z
+# refresh-marker: agent402-after-first-settlement-2026-10-02
 on:
   push:
     paths:
