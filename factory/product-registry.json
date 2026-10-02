@@ -83,7 +83,7 @@
     {
       "id": "domain-registration-age",
       "number": "007",
-      "status": "design",
+      "status": "live-source-verified-staging",
       "method": "GET",
       "path": "/api/domain-registration-age",
       "price_usdc": "0.002",
@@ -92,7 +92,9 @@
         "recent_registration",
         "unregistered",
         "human_review"
-      ]
+      ],
+      "release_gate": "factory/scripts/validate-product-007.js",
+      "deployment_blocker": "AppDeploy weekly credit reset 2026-10-05T00:00:00Z"
     },
     {
       "id": "treasury-average-rate-threshold",
