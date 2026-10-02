@@ -123,6 +123,24 @@ Keep writes serialized and carry the returned project version forward when the w
 7. Run Floot tests.
 8. Do not publish if either fails.
 
+## Interruption-safe resume protocol
+
+The deployment source is frozen at branch `floot-recovery-lock-2026-10-02`, commit `ceb21b651764ffaa0c893f4e725eccce0c10ba5f`.
+
+If execution is interrupted during the 26 writes:
+
+1. **Do not restart at write 1.**
+2. Call `list_files` once to get the current Floot version and tree.
+3. Identify the highest ordered deploy-map target that is already present with the expected mapped size/content.
+4. For any uncertain boundary file, read that one Floot file and compare it against the locked GitHub source/blob SHA.
+5. Resume with the **next unfinished map entry** using the freshly returned Floot version as `expected_version`.
+6. Continue serialized writes from there.
+7. Run the full typecheck/tests before publish regardless of where the interruption occurred.
+
+Never overwrite the four preserved PA baseline files as part of a resume.
+
+A deployment progress template is stored at `verification/floot-deployment-progress-template.json`; it is bookkeeping only and is not part of the runtime release.
+
 ## Pre-publish content checks
 
 Confirm the staged Floot project contains:
