@@ -6,10 +6,20 @@ function parseDate(value){
   return Number.isFinite(ms)?ms:null;
 }
 
+function utcDayStartMs(value){
+  const date=new Date(value);
+  if(Number.isNaN(date.getTime()))return null;
+  return Date.UTC(date.getUTCFullYear(),date.getUTCMonth(),date.getUTCDate());
+}
+
 function assessFilingFreshness(evidence,{maxAgeDays=30,now=new Date().toISOString()}={}){
   const checkedAt=new Date(now);
-  if(Number.isNaN(checkedAt.getTime()))throw new Error("invalid_now");
+  const checkedDayMs=utcDayStartMs(now);
+  if(Number.isNaN(checkedAt.getTime())||checkedDayMs==null)throw new Error("invalid_now");
   if(!Number.isInteger(maxAgeDays)||maxAgeDays<1||maxAgeDays>365)throw new Error("invalid_max_age_days");
+
+  const cutoffMs=checkedDayMs-maxAgeDays*86400000;
+  const cutoffDate=new Date(cutoffMs).toISOString().slice(0,10);
 
   if(evidence?.available!==true){
     return {
@@ -18,8 +28,9 @@ function assessFilingFreshness(evidence,{maxAgeDays=30,now=new Date().toISOStrin
       company:null,
       latestMatchingFiling:null,
       matchingFilingCount:0,
+      recentFilingCount:0,
       maxAgeDays,
-      cutoffDate:new Date(checkedAt.getTime()-maxAgeDays*86400000).toISOString().slice(0,10),
+      cutoffDate,
       checkedAt:checkedAt.toISOString()
     };
   }
@@ -31,13 +42,13 @@ function assessFilingFreshness(evidence,{maxAgeDays=30,now=new Date().toISOStrin
       company:null,
       latestMatchingFiling:null,
       matchingFilingCount:0,
+      recentFilingCount:0,
       maxAgeDays,
-      cutoffDate:new Date(checkedAt.getTime()-maxAgeDays*86400000).toISOString().slice(0,10),
+      cutoffDate,
       checkedAt:checkedAt.toISOString()
     };
   }
 
-  const cutoffMs=checkedAt.getTime()-maxAgeDays*86400000;
   const filings=Array.isArray(evidence.filings)?evidence.filings:[];
   const dated=filings
     .map(f=>({filing:f,ms:parseDate(f?.filingDate)}))
@@ -55,9 +66,9 @@ function assessFilingFreshness(evidence,{maxAgeDays=30,now=new Date().toISOStrin
     matchingFilingCount:filings.length,
     recentFilingCount:recent.length,
     maxAgeDays,
-    cutoffDate:new Date(cutoffMs).toISOString().slice(0,10),
+    cutoffDate,
     checkedAt:checkedAt.toISOString()
   };
 }
 
-module.exports={parseDate,assessFilingFreshness};
+module.exports={parseDate,utcDayStartMs,assessFilingFreshness};
