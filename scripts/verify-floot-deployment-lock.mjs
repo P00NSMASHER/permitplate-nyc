@@ -33,6 +33,7 @@ assert.equal(queue.preserveTargets.length, 4);
 assert.equal(queue.expectedPaidResourceCount, 8);
 assert.match(queue.sourceBranch, /^floot-recovery-lock-/);
 assert.match(queue.sourceCommit, /^[0-9a-f]{40}$/);
+assert.match(queue.sourceMapBlobSha, /^[0-9a-f]{40}$/);
 assert.ok(Array.isArray(queue.deploymentBundles));
 assert.equal(queue.deploymentBundles.length, 2);
 
@@ -52,6 +53,11 @@ for (const bundle of queue.deploymentBundles) {
   );
 
   const parsed = JSON.parse(bytes.toString('utf8'));
+  assert.equal(
+    parsed.deployMapBlobSha,
+    queue.sourceMapBlobSha,
+    'deployment bundle is not pinned to the locked deploy-map blob: ' + bundle.path
+  );
   assert.deepEqual(parsed.range, bundle.range);
   assert.equal(parsed.items?.length, bundle.itemCount);
   bundledItems.push(...parsed.items);
@@ -79,6 +85,14 @@ const treeResponse = await github(
 );
 const tree = Array.isArray(treeResponse.tree) ? treeResponse.tree : [];
 const byPath = new Map(tree.map((item) => [item.path, item]));
+const lockedDeployMap = byPath.get('docs/pa-entity-floot-recovery/deploy-map.json');
+assert(lockedDeployMap, 'locked deploy-map missing');
+assert.equal(lockedDeployMap.type, 'blob', 'locked deploy-map is not a blob');
+assert.equal(
+  lockedDeployMap.sha,
+  queue.sourceMapBlobSha,
+  'locked deploy-map blob SHA does not match queue sourceMapBlobSha'
+);
 
 for (const write of queue.writes) {
   const expectedSourceUrl =
@@ -151,6 +165,7 @@ console.log(
       currentMain: mainSha,
       mainCommitsAheadOfLock: comparison.ahead_by ?? null,
       lockedWrites: queue.writes.length,
+      lockedDeployMapBlobSha: queue.sourceMapBlobSha,
       deploymentBundles: queue.deploymentBundles.length,
       bundledWrites: bundledItems.length,
       lockedSourcesChangedOnMain: mutatedLockedSources.length,
