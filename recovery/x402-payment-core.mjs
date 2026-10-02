@@ -5,6 +5,37 @@ export const X402_FACILITATOR = 'https://facilitator.payai.network';
 
 const MAX_PAYMENT_HEADER_LENGTH = 16_384;
 const FACILITATOR_TIMEOUT_MS = 6_000;
+const RESOURCE_METADATA_MAX_LENGTH = 32;
+const RESOURCE_TAG_MAX_COUNT = 5;
+const PRINTABLE_ASCII = /^[\\x20-\\x7E]+$/;
+
+export function validateResourceMetadata({ serviceName, tags = [] } = {}) {
+  if (serviceName !== undefined) {
+    if (
+      typeof serviceName !== 'string' ||
+      serviceName.length === 0 ||
+      serviceName.length > RESOURCE_METADATA_MAX_LENGTH ||
+      !PRINTABLE_ASCII.test(serviceName)
+    ) {
+      throw new Error('invalid_service_name');
+    }
+  }
+
+  if (!Array.isArray(tags)) throw new Error('invalid_resource_tags');
+  if (tags.length > RESOURCE_TAG_MAX_COUNT) throw new Error('too_many_resource_tags');
+  for (const tag of tags) {
+    if (
+      typeof tag !== 'string' ||
+      tag.length === 0 ||
+      tag.length > RESOURCE_METADATA_MAX_LENGTH ||
+      !PRINTABLE_ASCII.test(tag)
+    ) {
+      throw new Error('invalid_resource_tag');
+    }
+  }
+
+  return { serviceName, tags: [...tags] };
+}
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -82,14 +113,15 @@ export function buildPaymentDocument({
   extensions,
 }) {
   if (!origin || !path || !description) throw new Error('invalid_payment_document');
+  const metadata = validateResourceMetadata({ serviceName, tags });
   const resourceUrl = new URL(path, origin).toString();
   const resource = {
     url: resourceUrl,
     description,
     mimeType,
   };
-  if (serviceName) resource.serviceName = serviceName;
-  if (Array.isArray(tags) && tags.length) resource.tags = tags;
+  if (metadata.serviceName) resource.serviceName = metadata.serviceName;
+  if (metadata.tags.length) resource.tags = metadata.tags;
 
   const doc = {
     x402Version: 2,
