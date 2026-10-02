@@ -75,6 +75,77 @@ test("PA registry adapter treats multiple strong candidates as ambiguous", async
   assert.equal(result.strongMatch, false);
 });
 
+
+test("PA registry retries one transient timeout and then succeeds", async () => {
+  const rows = [
+    {
+      business_name: "Example LLC",
+      filing_number: "123",
+      typeofbusinessregistration: "Limited Liability Company",
+      address_line1: "100 Market St",
+      city: "Pottsville",
+      state: "PA",
+      zip: "17901"
+    },
+    {
+      business_name: "Zeta Holdings LLC",
+      filing_number: "456",
+      typeofbusinessregistration: "Limited Liability Company",
+      address_line1: "200 Market St",
+      city: "Pottsville",
+      state: "PA",
+      zip: "17901"
+    },
+    {
+      business_name: "Omega Corp",
+      filing_number: "789",
+      typeofbusinessregistration: "Corporation",
+      address_line1: "300 Market St",
+      city: "Pottsville",
+      state: "PA",
+      zip: "17901"
+    }
+  ];
+  let calls = 0;
+  let sleeps = 0;
+  const adapter = createPaRegistryAdapter({
+    fetchImpl: async () => {
+      calls += 1;
+      if (calls === 1) {
+        const error = new Error("aborted");
+        error.name = "AbortError";
+        throw error;
+      }
+      return response(rows);
+    },
+    sleepImpl: async () => { sleeps += 1; },
+    retryDelayMs: 1
+  });
+  const result = await adapter.lookup({ company: "Example" });
+  assert.equal(calls, 2);
+  assert.equal(sleeps, 1);
+  assert.equal(result.strongMatch, true);
+  assert.equal(result.entity.filingNumber, "123");
+});
+
+test("PA registry does not retry non-transient HTTP 400", async () => {
+  let calls = 0;
+  const adapter = createPaRegistryAdapter({
+    fetchImpl: async () => {
+      calls += 1;
+      return response({ error: "bad request" }, 400);
+    },
+    sleepImpl: async () => {
+      throw new Error("sleep should not run");
+    }
+  });
+  await assert.rejects(
+    () => adapter.lookup({ company: "Example" }),
+    (error) => error?.code === "SOURCE_HTTP_ERROR" && /source_http_400/.test(error.message)
+  );
+  assert.equal(calls, 1);
+});
+
 test("Census adapter uses authoritative Census geocoder and compares identity", async () => {
   const calls = [];
   const raw = (matchedAddress, x, y) => ({
