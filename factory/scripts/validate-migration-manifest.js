@@ -12,54 +12,39 @@ function unique(values,label){
   }
 }
 
+function classify(product){
+  if(["reference-production","production-reference"].includes(product.status))return "production";
+  if(/staging$/.test(product.status))return "staging";
+  if(product.status==="design")return "design";
+  throw new Error("unclassified registry status "+product.number+" "+product.status);
+}
+
 function main(){
   const registryNumbers=registry.products.map(p=>p.number);
   const all=manifest.products||[];
-  const production=manifest.production_products||[];
-  const staging=manifest.staging_products||[];
-  const design=manifest.design_products||[];
 
   unique(all,"manifest product");
-  unique(production,"production product");
-  unique(staging,"staging product");
-  unique(design,"design product");
-
   assert.deepEqual(all,registryNumbers,"migration manifest products must exactly match registry numbers");
+  assert.equal(manifest.classification_source,"factory/product-registry.json");
+  assert.match(String(manifest.classification_rule||""),/derive/i);
 
-  const classified=[...production,...staging,...design];
-  unique(classified,"classified product");
+  const derived={production:[],staging:[],design:[]};
+  for(const product of registry.products){
+    derived[classify(product)].push(product.number);
+  }
+
   assert.deepEqual(
-    [...classified].sort(),
+    [...derived.production,...derived.staging,...derived.design].sort(),
     [...registryNumbers].sort(),
-    "every registry product must be classified exactly once"
+    "registry-derived classifications must cover every product exactly once"
   );
-
-  const byNumber=new Map(registry.products.map(p=>[p.number,p]));
-  for(const number of production){
-    const p=byNumber.get(number);
-    assert.ok(p,"unknown production product "+number);
-    assert.ok(
-      ["reference-production","production-reference"].includes(p.status),
-      number+" production classification conflicts with status "+p.status
-    );
-  }
-  for(const number of staging){
-    const p=byNumber.get(number);
-    assert.ok(p,"unknown staging product "+number);
-    assert.match(p.status,/staging$/);
-  }
-  for(const number of design){
-    const p=byNumber.get(number);
-    assert.ok(p,"unknown design product "+number);
-    assert.equal(p.status,"design");
-  }
 
   console.log(JSON.stringify({
     ok:true,
     productCount:registryNumbers.length,
-    production,
-    staging,
-    design,
+    production:derived.production,
+    staging:derived.staging,
+    design:derived.design,
     intendedRepository:manifest.intended_repository
   },null,2));
 }
