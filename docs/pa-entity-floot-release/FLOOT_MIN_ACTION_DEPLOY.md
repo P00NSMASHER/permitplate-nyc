@@ -1,5 +1,21 @@
 # PA Entity x402 — minimum-action Floot deployment
 
+## 2026-10-02 outage/rehost update
+
+This file is now a **legacy PA-only release note**, not the authoritative AppDeploy-outage recovery plan.
+
+For the current recovery, use:
+
+`docs/floot-rehost-implementation-map.md`
+
+Do **not** execute the old “Patch 5 only” instruction by itself. The vendor-aware discovery aliases are now large enough that the safe release bundle is intentionally split:
+
+- `FLOOT_SAFE_PATCH_5_X402_ALIASES.txt` → `static/.well-known/x402.json`
+- `FLOOT_SAFE_PATCH_8_X402_SERVICES_ALIAS.txt` → `static/.well-known/x402-services.json`
+
+The split preserves the conservative <32 KB-per-patch deployment rule while keeping both aliases byte-for-byte aligned with their tested fixtures.
+
+
 This is the approved execution order for the next free Floot window. **Do not spend money or upgrade the Floot plan.**
 
 ## Inputs
@@ -23,13 +39,16 @@ Both aliases keep their existing legacy top-level `resource` + `accepts[]` field
 
 This directly matches the resource-array shape used by CDP-style Bazaar ingestors such as Agent Bazaar. The canonical `/.well-known/x402` and `/.well-known/x402-catalog.json` already carried both resources and do not need another write.
 
-Therefore the next free Floot window should use **only**:
+Historical PA-only note: before the vendor-gate/rehost work, this section called for Patch 5 alone. That instruction is superseded for the current recovery.
+
+If only the two standard alias files ever need to be refreshed in isolation, apply both:
 
 1. `FLOOT_SAFE_PATCH_5_X402_ALIASES.txt`
+2. `FLOOT_SAFE_PATCH_8_X402_SERVICES_ALIAS.txt`
 
-Do not reapply patches 1–4, 6, or 7 unless a fresh external audit shows an actual regression.
+Do not use this legacy subsection as the outage-rehost execution plan; use `docs/floot-rehost-implementation-map.md`.
 
-After the Patch 5 write:
+After the alias writes:
 1. create one checkpoint;
 2. republish once;
 3. verify `/.well-known/x402.json` and `/.well-known/x402-services.json` each expose two `resources[]` entries with 1000/5000 atomic amounts and the unchanged payout wallet;
@@ -38,15 +57,16 @@ After the Patch 5 write:
 
 ## Approved safe patches
 
-Use these seven smaller patch payloads in order:
+Use these eight smaller patch payloads in order:
 
 1. `FLOOT_SAFE_PATCH_1_BUSINESS.txt` — main $0.005 GET endpoint + schema
 2. `FLOOT_SAFE_PATCH_2_BEST_MATCH.txt` — $0.001 GET endpoint + schema
 3. `FLOOT_SAFE_PATCH_3_OPENAPI.txt` — OpenAPI, sitemap, security.txt
 4. `FLOOT_SAFE_PATCH_4_AGENT_TEXT.txt` — llms.txt, llms-full.txt, skill.txt
-5. `FLOOT_SAFE_PATCH_5_X402_ALIASES.txt` — x402.json + x402-services.json
+5. `FLOOT_SAFE_PATCH_5_X402_ALIASES.txt` — x402.json
 6. `FLOOT_SAFE_PATCH_6_X402_CATALOG.txt` — x402-service.json + x402-catalog.json
 7. `FLOOT_SAFE_PATCH_7_EXTENSIONLESS.txt` — isolated canonical `static/.well-known/x402`
+8. `FLOOT_SAFE_PATCH_8_X402_SERVICES_ALIAS.txt` — x402-services.json
 
 The legacy `FLOOT_PATCH_CORE.txt` and `FLOOT_PATCH_DISCOVERY.txt` payloads are **superseded and must not be deployed**. They are too large for the conservative Floot patch lane and the old core payload includes unsupported custom OPTIONS endpoints.
 
@@ -78,9 +98,11 @@ Current-head integrity must be green immediately before any Floot write.
 
 ## Execution order
 
+Legacy PA-only sequence (superseded by the outage/rehost map):
+
 1. Read the current Floot project version once.
-2. Apply only `FLOOT_SAFE_PATCH_5_X402_ALIASES.txt`.
-3. Create one checkpoint after the static alias update.
+2. If performing an aliases-only refresh, apply `FLOOT_SAFE_PATCH_5_X402_ALIASES.txt` and `FLOOT_SAFE_PATCH_8_X402_SERVICES_ALIAS.txt`.
+3. Create one checkpoint after the static alias updates.
 4. Republish the already-live app once.
 5. Verify both standard alias URLs return HTTP 200 JSON and:
    - expose `resources.length === 2`;
@@ -117,7 +139,7 @@ Expected Floot build actions: a small static-only update plus checkpoint/publish
 
 ## Prepared-patch verification
 
-Permanent CI reconstructs all seven approved safe patches and compares them byte-for-byte to the current release fixtures:
+Permanent CI reconstructs all eight approved safe patches and compares them byte-for-byte to the current release fixtures:
 
 - standard supported files: 14/14 exact
 - isolated extensionless manifest: 1/1 exact
