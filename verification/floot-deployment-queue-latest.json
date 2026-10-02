@@ -12,8 +12,10 @@
   "expectedPaidResourceCount": 8,
   "preconditions": [
     "Fresh Floot list_files after quota reset.",
-    "Capture all 16 rollback/preservation files in deterministic bounded read_files batches per ROLLBACK.md; commit and validate the exact snapshot before any write.",
-    "Capture all existing overwrite targets before mutation per docs/pa-entity-floot-recovery/ROLLBACK.md.",
+    "Classify all 26 deployment targets as preexisting or absent from the fresh Floot tree.",
+    "Capture the 16 mandatory rollback/preservation files in 5 bounded read_files batches; capture any unexpectedly preexisting recovery endpoint/schema target in additional bounded reads.",
+    "Build, commit, and validate the exact pre-rehost rollback snapshot before any Floot write.",
+    "Compare the 12 captured static-source hashes against verification/floot-static-rollback-public-latest.json; freshly read Floot source remains rollback authority on any mismatch.",
     "Newest GitHub Floot release/recovery discovery gates are green.",
     "scripts/verify-floot-deployment-lock.mjs passes against the pinned source branch/commit.",
     "No AppDeploy runtime dependency is present in staged endpoint/discovery sources."
@@ -242,8 +244,8 @@
   ],
   "actionBudget": {
     "listFiles": 1,
-    "preservedReadBatch": 0,
-    "rollbackSnapshotReadBatchesMax": 6,
+    "rollbackSnapshotReadBatchesNormal": 5,
+    "rollbackSnapshotReadBatchesMax": 19,
     "guideReadMax": 1,
     "writes": 26,
     "typecheck": 1,
@@ -251,12 +253,11 @@
     "checkpoint": 1,
     "publish": 1,
     "publishStatus": 1,
-    "totalWithoutGuideMin": 36,
-    "totalWithoutGuideMax": 37,
-    "totalWithOneGuideMin": 37,
-    "totalWithOneGuideMax": 38,
-    "dailyAllowance": 100,
-    "rollbackSnapshotReadBatchesNormal": 5
+    "totalWithoutGuideNormal": 37,
+    "totalWithOneGuideNormal": 38,
+    "totalWithoutGuideWorstCase": 51,
+    "totalWithOneGuideWorstCase": 52,
+    "dailyAllowance": 100
   },
   "sourceBranch": "floot-recovery-lock-2026-10-02",
   "sourceCommit": "ceb21b651764ffaa0c893f4e725eccce0c10ba5f",
