@@ -42,7 +42,7 @@ An unpaid request returns an x402 v2 PAYMENT-REQUIRED challenge.
 
 After a payment signature is supplied, input is validated before verifier work. Payment is verified, the authoritative source is queried, and settlement occurs only after a usable result exists.
 
-If the authoritative source fails, the request returns an upstream error and is not settled.
+If the authoritative source fails, the request returns an upstream error and payment is not settled.
 
 If verification or settlement is temporarily unresolved, retry the same authorization. Do not create a new payment merely because of a transient retry response.
 
