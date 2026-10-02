@@ -70,11 +70,29 @@ Unpaid calls return HTTP 402 with `PAYMENT-REQUIRED`. Evidence collection occurs
 
 OpenAPI operationId: `checkPennsylvaniaVendorIntakeGate`.
 
+## Current hosting availability — 2026-10-02
+
+The AppDeploy control plane still reports the stored deployment as ready, but an independent GitHub cloud probe at `2026-10-02T12:51:06Z` found the public vendor-gate URL and all five other AppDeploy-hosted x402 services returning the platform availability envelope instead of the seller challenge:
+
+- HTTP 402
+- `x-appdeploy-app-availability: temporarily-unavailable`
+- `code=APP_TEMPORARILY_UNAVAILABLE`
+- no `PAYMENT-REQUIRED`
+
+Therefore the vendor gate is **temporarily not buyable** at its AppDeploy URL.
+
+AppDeploy documents that hosted apps stop when no usable account credits remain and resume automatically after usable credits return. No paid top-up/upgrade is being used under the $0-additional-spend rule.
+
+Outage receipt:
+`verification/x402-portfolio-verification-latest.json`
+
+The 2 PM ET Floot reset is now the primary zero-spend recovery path: preserve the two healthy PA routes and rehost the vendor gate on Floot if AppDeploy is still unavailable.
+
 ## Current external status — 2026-10-02
 
 Confirmed:
 
-- production remains ready at the latest successful AppDeploy deployment
+- AppDeploy control plane retains a ready deployment, but public hosting is currently paused and the paid gate is temporarily not buyable
 - Market402 submission accepted; instant self-test previously passed 11/11
 - current Market402 public index/search does not independently surface the gate
 - current 402 Index buyer-style search does not surface the gate; the earlier gate registration ID currently returns 404
