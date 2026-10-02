@@ -18,6 +18,7 @@ const MODULES = Object.freeze({
   "domain-expiration-horizon": require("../../products/domain-expiration-horizon/metadata"),
   "domain-last-changed-recency": require("../../products/domain-last-changed-recency/metadata"),
   "pa-vendor-new-domain-review": require("../../products/pa-vendor-new-domain-review/metadata"),
+  "pa-vendor-counterparty-review": require("../../products/pa-vendor-counterparty-review/metadata"),
 });
 
 function managedProducts() {
