@@ -20,29 +20,37 @@ This is a cross-check, **not** the authoritative rollback source. Public bytes c
 
 Immediately after the post-reset `list_files`, first compare the 26 deployment targets against the current Floot file tree so new-vs-existing targets are known.
 
-Then use **one** `read_files` call to capture these 16 current project files:
+Then capture these 16 current project files with **deterministic bounded `read_files` batches**. Do not put all 16 files in one call: Floot caps aggregate output and can omit whole files at the end of an oversized batch.
 
-### Four proven PA files
+Use this capture order:
 
+**Batch 1 — four proven PA endpoint/schema files**
 - `endpoints/pa-business_GET.ts`
 - `endpoints/pa-business_GET.schema.ts`
 - `endpoints/pa-entity-one_GET.ts`
 - `endpoints/pa-entity-one_GET.schema.ts`
 
-### Twelve static files that the recovery overwrites
-
+**Batch 2 — large discovery files**
 - `static/openapi.json`
+- `static/.well-known/x402`
+
+**Batch 3 — x402 aliases/catalog**
+- `static/.well-known/x402.json`
+- `static/.well-known/x402-services.json`
+- `static/.well-known/x402-catalog.json`
+
+**Batch 4 — text discovery**
 - `static/llms.txt`
 - `static/llms-full.txt`
 - `static/skill.txt`
-- `static/.well-known/x402`
-- `static/.well-known/x402.json`
-- `static/.well-known/x402-services.json`
 - `static/.well-known/x402-service.json`
-- `static/.well-known/x402-catalog.json`
+
+**Batch 5 — small public metadata**
 - `static/.well-known/security.txt`
 - `static/sitemap.xml`
 - `static/robots.txt`
+
+If any batch response says files were omitted because of the aggregate output cap, immediately read the omitted file(s) in an additional batch before any Floot write.
 
 Persist those exact contents in one GitHub JSON artifact before the first Floot write:
 
@@ -66,6 +74,8 @@ For each of the 12 static files, compare the freshly read Floot-source SHA-256 t
 Validate the snapshot with:
 
 `node scripts/validate-floot-pre-rehost-snapshot.mjs <snapshot.json>`
+
+Before building the snapshot receipt, verify that **all 16 expected paths were returned in full** across the capture batches. Do not infer omitted content from public bytes or checked-in fixtures.
 
 Do not begin recovery writes until the snapshot commit succeeds and the snapshot validator passes.
 
@@ -130,6 +140,10 @@ The four PA files are preserved during the planned migration and normally requir
 Floot records each write in project history, and `read_file` / `read_files` can walk older file versions using `older_than`. That history is a secondary recovery path.
 
 The GitHub pre-write snapshot is the primary rollback source because it is durable outside the Floot project and remains available after chat/session interruption.
+
+## Forward capture action budget
+
+The pre-write snapshot normally uses 5 `read_files` actions after `list_files`. Even if one additional recovery batch is needed because Floot omits a large file, the total forward deployment remains comfortably below the 100-action allowance.
 
 ## Rollback action budget
 
