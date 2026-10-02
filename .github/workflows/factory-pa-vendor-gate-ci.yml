@@ -118,6 +118,8 @@ jobs:
         run: node --test factory/products/pa-business-formation-age/paid-handler.test.js
       - name: Test Product 010 discovery metadata
         run: node --test factory/products/pa-business-formation-age/metadata.test.js
+      - name: Run Product 010 release gate
+        run: node factory/scripts/validate-product-010.js
 
       - name: Validate factory product registry
         run: node factory/scripts/validate-registry.js
