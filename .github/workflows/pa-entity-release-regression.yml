@@ -8,6 +8,7 @@ on:
       - 'scripts/test-pa-entity-best-match-release.mts'
       - 'scripts/test-pa-entity-discovery-fixtures.mjs'
       - 'scripts/verify-pa-entity-floot-patches.mjs'
+      - 'scripts/verify-pa-vendor-gate.mjs'
       - 'PA_ENTITY_SKILL.md'
       - 'x402-manifest.json'
       - '.github/workflows/pa-entity-release-regression.yml'
@@ -18,6 +19,7 @@ on:
       - 'scripts/test-pa-entity-best-match-release.mts'
       - 'scripts/test-pa-entity-discovery-fixtures.mjs'
       - 'scripts/verify-pa-entity-floot-patches.mjs'
+      - 'scripts/verify-pa-vendor-gate.mjs'
       - 'PA_ENTITY_SKILL.md'
       - 'x402-manifest.json'
   workflow_dispatch:
@@ -36,3 +38,5 @@ jobs:
         run: node scripts/test-pa-entity-discovery-fixtures.mjs
       - name: Verify atomic Floot patch parity
         run: node scripts/verify-pa-entity-floot-patches.mjs
+      - name: Verify live vendor-intake gate contract
+        run: node scripts/verify-pa-vendor-gate.mjs
