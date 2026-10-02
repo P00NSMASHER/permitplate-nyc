@@ -1,0 +1,35 @@
+{
+  "name": "PA Entity Lookup x402",
+  "slug": "pa-entity-lookup-x402",
+  "homepage": "https://pa-entity-x402.floot.app",
+  "description": "Pennsylvania business-registry lookup for agent entity resolution and vendor/customer verification, paid per call in Base USDC.",
+  "protocols": [
+    "x402"
+  ],
+  "endpoints": [
+    {
+      "url": "https://pa-entity-x402.floot.app/_api/pa-entity-one?q=OpenAI",
+      "method": "GET",
+      "price_usdc": "0.001"
+    },
+    {
+      "url": "https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=1",
+      "method": "GET",
+      "price_usdc": "0.005"
+    }
+  ],
+  "nominated_endpoint": 0,
+  "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+  "networks": [
+    "eip155:8453"
+  ],
+  "manifest": "https://pa-entity-x402.floot.app/.well-known/x402",
+  "llms_txt": "https://pa-entity-x402.floot.app/llms.txt",
+  "contact": "github:P00NSMASHER",
+  "proof": {
+    "tx_hash": "0x17985b16137ff8aef95641be06424a5fa4e9edacc6ade5aaf0a58d523ad1cd73",
+    "endpoint": 0,
+    "payer_kind": "customer"
+  },
+  "added_at": "2026-10-02"
+}
