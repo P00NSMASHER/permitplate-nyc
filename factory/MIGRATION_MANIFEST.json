@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "source_repository": "P00NSMASHER/permitplate-nyc",
+  "source_branch": "x402-product-factory-bootstrap",
+  "intended_repository": "P00NSMASHER/x402-product-factory",
+  "copy_roots": [
+    "factory/"
+  ],
+  "github_workflows": [
+    ".github/workflows/factory-pa-vendor-gate-ci.yml",
+    ".github/workflows/factory-product-003-live-smoke.yml"
+  ],
+  "exclude_from_migration": [
+    "production-site files outside factory/",
+    "temporary diagnostic workflows already removed"
+  ],
+  "products": [
+    "001",
+    "002",
+    "003",
+    "004"
+  ],
+  "production_products": [
+    "001",
+    "002"
+  ],
+  "staging_products": [
+    "003",
+    "004"
+  ],
+  "deployment_blocker": {
+    "provider": "AppDeploy",
+    "reason": "weekly Free tier credit limit",
+    "reset_at": "2026-10-05T00:00:00Z",
+    "spend_authorized": false
+  }
+}
