@@ -143,6 +143,20 @@
       "release_gate": "factory/scripts/validate-product-010.js",
       "deployment_blocker": "AppDeploy weekly credit reset 2026-10-05T00:00:00Z",
       "live_source_status": "PA Department of State live smoke verified OpenAI OpCo creationDate 2025-09-29; established_entity for minAgeDays 30"
+    },
+    {
+      "id": "domain-expiration-horizon",
+      "number": "011",
+      "status": "design",
+      "method": "GET",
+      "path": "/api/domain-expiration-horizon",
+      "price_usdc": "0.002",
+      "decision_values": [
+        "expiring_soon",
+        "not_expiring_soon",
+        "unregistered",
+        "human_review"
+      ]
     }
   ]
 }
