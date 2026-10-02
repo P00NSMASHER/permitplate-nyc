@@ -16,6 +16,9 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Verify Agent402 readback schema handling
+        run: node scripts/test-agent402-route-field-readback.mjs
+
       - name: Verify Floot public portfolio first
         env:
           EXPECTED_FLOOT_RESOURCES: '8'
