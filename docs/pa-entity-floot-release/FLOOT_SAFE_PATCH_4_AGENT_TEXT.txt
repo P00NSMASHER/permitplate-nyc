@@ -10,6 +10,8 @@
 +Best-match price: $0.001 USDC per successful settled lookup
 +Enriched search endpoint: GET https://pa-entity-x402.floot.app/_api/pa-business?q=NAME&limit=10
 +Enriched search price: $0.005 USDC per successful settled lookup
++Vendor-intake decision endpoint: GET https://pa-entity-x402.floot.app/_api/vendor-intake-gate?name=NAME&address=ADDRESS&domain=DOMAIN
++Vendor-intake price: $0.020 USDC per successful settled decision
 +Protocol: x402 v2
 +Network: Base mainnet (eip155:8453)
 +Source: Pennsylvania Department of State public business-registration data via data.pa.gov
@@ -113,6 +115,17 @@
 +Fallback source copy: https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/main/PA_ENTITY_SKILL.md
 +x402 service manifest: https://pa-entity-x402.floot.app/.well-known/x402-service.json
 +x402 catalog: https://pa-entity-x402.floot.app/.well-known/x402-catalog.json
++
++## $0.020 vendor-intake decision gate
++
++GET https://pa-entity-x402.floot.app/_api/vendor-intake-gate?name=NAME&address=ADDRESS&domain=DOMAIN
++
++Use this route when an agent must decide whether to continue a Pennsylvania vendor-intake workflow or pause for human review. It combines Pennsylvania registry identity, U.S. Census address consistency, OFAC SDN candidate-name screening, and authoritative RDAP domain evidence.
++
++The gate is fail-closed. Missing, ambiguous, incomplete, or conflicting evidence produces human_review. A proceed result is only a workflow signal and is not legal/compliance approval, sanctions clearance, fraud/credit approval, proof of good standing, or proof of address/domain ownership.
++
++Price: $0.020 USDC per successfully settled call on Base.
++
 +
 *** Add File: static/llms-full.txt
 +# PA Entity Lookup x402 — Full Agent Reference
@@ -290,13 +303,23 @@
 +Catalog:
 +https://pa-entity-x402.floot.app/.well-known/x402-catalog.json
 +
++## $0.020 vendor-intake decision gate
++
++GET https://pa-entity-x402.floot.app/_api/vendor-intake-gate?name=NAME&address=ADDRESS&domain=DOMAIN
++
++Use this route when an agent must decide whether to continue a Pennsylvania vendor-intake workflow or pause for human review. It combines Pennsylvania registry identity, U.S. Census address consistency, OFAC SDN candidate-name screening, and authoritative RDAP domain evidence.
++
++The gate is fail-closed. Missing, ambiguous, incomplete, or conflicting evidence produces human_review. A proceed result is only a workflow signal and is not legal/compliance approval, sanctions clearance, fraud/credit approval, proof of good standing, or proof of address/domain ownership.
++
++Price: $0.020 USDC per successfully settled call on Base.
++
 +
 *** Add File: static/skill.txt
 +# PA Entity Lookup x402
 +
 +Use this tool for Pennsylvania business-registry lookup, company identity resolution, legal-entity enrichment, vendor/customer verification, due diligence, filing-number lookup, registration-type lookup, creation-date lookup, and registered-address/county confirmation.
 +
-+Choose one of two paid endpoints:
++Choose one of three paid endpoints:
 +
 +Low-cost best match:
 +
@@ -355,5 +378,16 @@
 +
 +OpenAPI: https://pa-entity-x402.floot.app/openapi.json
 +LLM guide: https://pa-entity-x402.floot.app/llms.txt
++
++## $0.020 vendor-intake decision gate
++
++GET https://pa-entity-x402.floot.app/_api/vendor-intake-gate?name=NAME&address=ADDRESS&domain=DOMAIN
++
++Use this route when an agent must decide whether to continue a Pennsylvania vendor-intake workflow or pause for human review. It combines Pennsylvania registry identity, U.S. Census address consistency, OFAC SDN candidate-name screening, and authoritative RDAP domain evidence.
++
++The gate is fail-closed. Missing, ambiguous, incomplete, or conflicting evidence produces human_review. A proceed result is only a workflow signal and is not legal/compliance approval, sanctions clearance, fraud/credit approval, proof of good standing, or proof of address/domain ownership.
++
++Price: $0.020 USDC per successfully settled call on Base.
++
 +
 *** End Patch
