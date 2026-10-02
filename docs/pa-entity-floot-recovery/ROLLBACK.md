@@ -67,7 +67,8 @@ The snapshot must include:
 - whether each file existed
 - UTF-8 byte length
 - a SHA-256 digest for each content string
-- list of recovery targets that were absent before migration
+- `preexistingRecoveryTargets`: every deploy-map target that existed before recovery
+- `absentRecoveryTargets`: every deploy-map target that did not exist before recovery
 
 For each of the 12 static files, compare the freshly read Floot-source SHA-256 to the matching public baseline entry. If the hashes differ, record the mismatch and **trust the freshly read Floot source** as rollback authority.
 
