@@ -16,7 +16,7 @@ test("compiler includes every modular staging product exactly once", () => {
   const products = managedProducts();
   assert.deepEqual(
     products.map((product) => product.number),
-    ["003", "004", "005", "006", "007", "008"]
+    ["003", "004", "005", "006", "007", "008", "009"]
   );
   assert.equal(new Set(products.map((product) => product.path)).size, products.length);
 });
@@ -24,7 +24,7 @@ test("compiler includes every modular staging product exactly once", () => {
 test("compiled x402 catalog uses resource-level accepts for every product", () => {
   const catalog = buildCatalog(BASE);
   assert.equal(catalog.x402Version, 2);
-  assert.equal(catalog.resources.length, 6);
+  assert.equal(catalog.resources.length, 7);
   for (const resource of catalog.resources) {
     assert.ok(resource.resource.startsWith("https://candidate.example/api/"));
     assert.ok(Array.isArray(resource.accepts));
@@ -59,7 +59,7 @@ test("compiled agent text contains every product route and price", () => {
 
 test("compiled package passes cross-surface validation", () => {
   const built = validateCompiled(BASE);
-  assert.equal(built.productCount, 6);
-  assert.equal(built.catalog.resources.length, 6);
-  assert.equal(Object.keys(built.openapi.paths).length, 6);
+  assert.equal(built.productCount, 7);
+  assert.equal(built.catalog.resources.length, 7);
+  assert.equal(Object.keys(built.openapi.paths).length, 7);
 });
