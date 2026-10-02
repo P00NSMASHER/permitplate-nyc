@@ -5,7 +5,10 @@ on:
     paths:
       - 'docs/pa-entity-floot-recovery/**'
       - 'verification/floot-static-rollback-public-latest.json'
+      - 'verification/floot-deployment-queue-latest.json'
       - 'scripts/test-floot-recovery-discovery.mjs'
+      - 'scripts/build-floot-pre-rehost-snapshot.mjs'
+      - 'scripts/test-floot-pre-rehost-snapshot-builder.mjs'
       - 'scripts/validate-floot-pre-rehost-snapshot.mjs'
       - 'scripts/compare-floot-snapshot-to-public-baseline.mjs'
       - 'scripts/build-floot-rollback-plan.mjs'
@@ -31,10 +34,15 @@ jobs:
 
       - name: Syntax-check rollback helpers
         run: |
+          node --check scripts/build-floot-pre-rehost-snapshot.mjs
+          node --check scripts/test-floot-pre-rehost-snapshot-builder.mjs
           node --check scripts/validate-floot-pre-rehost-snapshot.mjs
           node --check scripts/compare-floot-snapshot-to-public-baseline.mjs
           node --check scripts/build-floot-rollback-plan.mjs
           node --check scripts/test-floot-rollback-tooling.mjs
+
+      - name: Verify snapshot builder round trip
+        run: node scripts/test-floot-pre-rehost-snapshot-builder.mjs
 
       - name: Verify deterministic rollback tooling
         run: node scripts/test-floot-rollback-tooling.mjs
