@@ -19,6 +19,7 @@ Build narrow, deterministic, machine-purchasable decision tools for autonomous a
 | 007 | Domain Registration Age | live-source-verified staging | `/api/domain-registration-age` | $0.002 |
 | 008 | Treasury Average Rate Threshold | live-source-verified staging | `/api/treasury-average-rate-threshold` | $0.003 |
 | 009 | OFAC Name Review Gate | live-source-verified staging | `/api/ofac-name-review-gate` | $0.003 |
+| 010 | PA Business Formation Age | live-source-verified staging | `/api/pa-business-formation-age` | $0.002 |
 
 Product 001 has an independently verified third-party Base USDC settlement and remains the payment/distribution reference.
 
@@ -112,9 +113,23 @@ Returns:
 - `candidate_found`
 - `no_candidate`
 
-Live smoke: `VLADIMIR PUTIN` at threshold `90` returned one review candidate at score `99` from the current OFAC SDN/ALT files.
+Live smoke: the neutral query `OpenAI OpCo` at threshold `90` completed against the current OFAC SDN/ALT files and returned `no_candidate`.
 
-A candidate is not a legal sanctions determination. A no-candidate result is not sanctions clearance. OFAC 50 Percent Rule ownership analysis is not included.
+That verifies source transport and deterministic decision execution only. A candidate is not a legal sanctions determination. A no-candidate result is not sanctions clearance. OFAC 50 Percent Rule ownership analysis is not included.
+
+## Product 010
+
+Pennsylvania Department of State formation-age threshold.
+
+Returns:
+- `established_entity`
+- `recent_entity`
+- `company_not_found`
+- `human_review`
+
+Live smoke for `OpenAI OpCo` observed creation date `2025-09-29` and returned `established_entity` at a 30-day threshold.
+
+Formation age is an identity/history signal only and does not establish current good standing, ownership, authority, legitimacy, fraud risk, sanctions status, creditworthiness, or legal compliance.
 
 ## Shared layers
 
@@ -145,7 +160,7 @@ AppDeploy reported an account-wide Free tier pause with weekly reset at:
 
 `2026-10-05T00:00:00Z`
 
-No upgrade/payment has been authorized. Products 003–009 therefore remain staging candidates rather than production claims.
+No upgrade/payment has been authorized. Products 003–010 therefore remain staging candidates rather than production claims.
 
 ## Branch isolation
 
