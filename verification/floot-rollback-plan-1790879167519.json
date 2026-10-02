@@ -1,0 +1,199 @@
+{
+  "generatedAt": "2026-10-02T18:07:01.701Z",
+  "projectId": "b69a3ee6-eb01-430d-aa51-da2fc7beeac4",
+  "productionOrigin": "https://pa-entity-x402.floot.app",
+  "preWriteProjectVersion": 1790879167519,
+  "sourceBranch": "floot-recovery-lock-2026-10-02",
+  "sourceCommit": "ceb21b651764ffaa0c893f4e725eccce0c10ba5f",
+  "deploymentWriteCount": 26,
+  "rollbackActions": [
+    {
+      "action": "delete_file",
+      "target": "endpoints/vendor-intake-gate_GET.ts",
+      "reason": "target was absent before recovery"
+    },
+    {
+      "action": "delete_file",
+      "target": "endpoints/vendor-intake-gate_GET.schema.ts",
+      "reason": "target was absent before recovery"
+    },
+    {
+      "action": "delete_file",
+      "target": "endpoints/vendor-intake-demo_GET.ts",
+      "reason": "target was absent before recovery"
+    },
+    {
+      "action": "delete_file",
+      "target": "endpoints/vendor-intake-demo_GET.schema.ts",
+      "reason": "target was absent before recovery"
+    },
+    {
+      "action": "delete_file",
+      "target": "endpoints/sec-filings_GET.ts",
+      "reason": "target was absent before recovery"
+    },
+    {
+      "action": "delete_file",
+      "target": "endpoints/sec-filings_GET.schema.ts",
+      "reason": "target was absent before recovery"
+    },
+    {
+      "action": "delete_file",
+      "target": "endpoints/us-address-geocode_GET.ts",
+      "reason": "target was absent before recovery"
+    },
+    {
+      "action": "delete_file",
+      "target": "endpoints/us-address-geocode_GET.schema.ts",
+      "reason": "target was absent before recovery"
+    },
+    {
+      "action": "delete_file",
+      "target": "endpoints/ofac-sdn-screen_GET.ts",
+      "reason": "target was absent before recovery"
+    },
+    {
+      "action": "delete_file",
+      "target": "endpoints/ofac-sdn-screen_GET.schema.ts",
+      "reason": "target was absent before recovery"
+    },
+    {
+      "action": "delete_file",
+      "target": "endpoints/domain-rdap_GET.ts",
+      "reason": "target was absent before recovery"
+    },
+    {
+      "action": "delete_file",
+      "target": "endpoints/domain-rdap_GET.schema.ts",
+      "reason": "target was absent before recovery"
+    },
+    {
+      "action": "delete_file",
+      "target": "endpoints/treasury-average-rates_GET.ts",
+      "reason": "target was absent before recovery"
+    },
+    {
+      "action": "delete_file",
+      "target": "endpoints/treasury-average-rates_GET.schema.ts",
+      "reason": "target was absent before recovery"
+    },
+    {
+      "action": "write_file",
+      "target": "static/openapi.json",
+      "contentSource": "snapshot",
+      "sha256": "f86d47db7b396e826bf4717ff9b3e6e609d843bc2b68ffa360874715e675a0e8",
+      "byteLength": 24208
+    },
+    {
+      "action": "write_file",
+      "target": "static/llms.txt",
+      "contentSource": "snapshot",
+      "sha256": "cf08b1b60ee3e162aa118d249d0a418ce61d565c165bd204b07f55ca5ad1efbf",
+      "byteLength": 3415
+    },
+    {
+      "action": "write_file",
+      "target": "static/llms-full.txt",
+      "contentSource": "snapshot",
+      "sha256": "97085264462ee28414351ac1dc5fb597521f87f046ab8a8b5ee4d619ba41c08b",
+      "byteLength": 4508
+    },
+    {
+      "action": "write_file",
+      "target": "static/skill.txt",
+      "contentSource": "snapshot",
+      "sha256": "412c3c30fcb27670bbf708d5b9e75aa457142ac9148d6fb715d4e69f3db61756",
+      "byteLength": 2134
+    },
+    {
+      "action": "write_file",
+      "target": "static/.well-known/x402",
+      "contentSource": "snapshot",
+      "sha256": "c638e6dc040e42ac86ae93f0c4c1c99d96f14c46d57184750c3ff1748a8c3bbc",
+      "byteLength": 8023
+    },
+    {
+      "action": "write_file",
+      "target": "static/.well-known/x402.json",
+      "contentSource": "snapshot",
+      "sha256": "2036be3c49269a550c4ab6f258fd91420f7d7865b61154a2fbc72f1f2a182f8e",
+      "byteLength": 14267
+    },
+    {
+      "action": "write_file",
+      "target": "static/.well-known/x402-services.json",
+      "contentSource": "snapshot",
+      "sha256": "2036be3c49269a550c4ab6f258fd91420f7d7865b61154a2fbc72f1f2a182f8e",
+      "byteLength": 14267
+    },
+    {
+      "action": "write_file",
+      "target": "static/.well-known/x402-service.json",
+      "contentSource": "snapshot",
+      "sha256": "b562f63ed485cf516a32cbe378311e0b72ce18e5d741bbb75215d5630891ab40",
+      "byteLength": 1064
+    },
+    {
+      "action": "write_file",
+      "target": "static/.well-known/x402-catalog.json",
+      "contentSource": "snapshot",
+      "sha256": "3b24784e82f33fc321f239f8fd390bae46cc19fb464d9c44eb8d178b856370da",
+      "byteLength": 8875
+    },
+    {
+      "action": "write_file",
+      "target": "static/.well-known/security.txt",
+      "contentSource": "snapshot",
+      "sha256": "aa5c25c7699ff24fa8db8b523a5c85a04b6e84ed12ffd134901cad0fa8f629eb",
+      "byteLength": 258
+    },
+    {
+      "action": "write_file",
+      "target": "static/sitemap.xml",
+      "contentSource": "snapshot",
+      "sha256": "83250fb2a9fa2215dd75e9a21b3d7b9fe2c966d6a49b737999ceffd8707e8905",
+      "byteLength": 933
+    },
+    {
+      "action": "write_file",
+      "target": "static/robots.txt",
+      "contentSource": "snapshot",
+      "sha256": "01464ca10c89e876646fab0bea3512ce391cbcbd6df3d368aa24262f51847064",
+      "byteLength": 213
+    }
+  ],
+  "preservedVerification": [
+    {
+      "target": "endpoints/pa-business_GET.ts",
+      "sha256": "dee040e099ef02399c550bee0b368f6d73270a460b777f555fc66df20bb0ae96",
+      "byteLength": 19951
+    },
+    {
+      "target": "endpoints/pa-business_GET.schema.ts",
+      "sha256": "46d05575e33ab19b9c16730538e28c2664590e2bbff5c3ba96f7a1243907b13c",
+      "byteLength": 169
+    },
+    {
+      "target": "endpoints/pa-entity-one_GET.ts",
+      "sha256": "c2a6fc10d7f07d82e1631ae0a02ec9cf73433c13f03036c8856ccf86611b2ca8",
+      "byteLength": 19311
+    },
+    {
+      "target": "endpoints/pa-entity-one_GET.schema.ts",
+      "sha256": "36c2b8a1ba75b6fb5da2b8bba140f98b25fc70bfb595f37fbed157a63e6cc9fe",
+      "byteLength": 137
+    }
+  ],
+  "summary": {
+    "restoreWrites": 12,
+    "deletes": 14,
+    "preservedFiles": 4,
+    "flootActionsBeforePublicVerification": 30
+  },
+  "rules": [
+    "Serialize every Floot delete/write and carry current expected_version forward.",
+    "Do not rewrite the four preserved PA files unless an independent verification proves they were unexpectedly mutated.",
+    "Run typecheck and tests before publishing the rollback.",
+    "After rollback publish, require the two-route public baseline preflight to pass before resuming recovery."
+  ]
+}
