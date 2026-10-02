@@ -1,4 +1,4 @@
-name: PA Entity PayAPI internal status trace
+name: PA Entity PayAPI public status read
 
 on:
   push:
@@ -6,17 +6,19 @@ on:
       - '.github/workflows/tmp-pa-entity-payapi-status-trace.yml'
 
 jobs:
-  trace:
+  read:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Extract exact PayAPI dashboard requests
+      - name: Read public PayAPI listing and settlement state
         shell: bash
         run: |
           set -euo pipefail
+          LISTING_ID='3b5351ff-4a2c-4ff9-911e-88c938486208'
+
           curl -fsSL 'https://payapi.market/list' -o /tmp/list.html
-          python3 - <<'PY'
-          import re, urllib.parse, subprocess, pathlib
+          python3 - <<'PY' > /tmp/env.sh
+          import re, urllib.parse, subprocess, pathlib, shlex
           base='https://payapi.market'
           html=pathlib.Path('/tmp/list.html').read_text(errors='ignore')
           chunks=[]
@@ -26,13 +28,25 @@ jobs:
               if subprocess.run(['curl','-fsSL','--max-time','20',u,'-o',str(out)]).returncode==0 and out.exists():
                   chunks.append(out.read_text(errors='ignore'))
           s='\n'.join(chunks)
-          for needle in ["fetch(`/api/provider-login`","fetch(`/api/get-provider`"]:
-              print(f'=== {needle} ===')
-              start=0
-              while True:
-                  i=s.find(needle,start)
-                  if i<0: break
-                  print(s[max(0,i-700):min(len(s),i+1800)].replace('\n',' '))
-                  print('\n---\n')
-                  start=i+len(needle)
+
+          urls=re.findall(r'https://[A-Za-z0-9.-]+\.supabase\.co',s)
+          keys=re.findall(r'(?:sb_publishable_[A-Za-z0-9_-]+|eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)',s)
+          if not urls or not keys:
+              raise SystemExit('public Supabase config not found')
+          print('SUPABASE_URL='+shlex.quote(urls[0]))
+          print('ANON_KEY='+shlex.quote(keys[0]))
           PY
+          source /tmp/env.sh
+
+          echo '=== LISTING ==='
+          curl -fsSL "$SUPABASE_URL/rest/v1/api_listings?id=eq.$LISTING_ID&select=id,name,status,payment_verified,health_status,triage_status,triage_reasons,triage_checked_at,x402_payto_status,x402_payto_checked_at,reliability_score,total_requests,total_revenue,updated_at,paid_route_url,paid_route_quote_usdc" \
+            -H "apikey: $ANON_KEY" \
+            -H "Authorization: Bearer $ANON_KEY" | jq .
+
+          echo '=== PUBLIC PRODUCT LEDGER ==='
+          curl -fsSL --get "$SUPABASE_URL/rest/v1/x402_ledger_public" \
+            --data-urlencode 'listing=eq.PA Entity Lookup x402' \
+            --data-urlencode 'outcome=eq.PRODUCT' \
+            --data-urlencode 'select=listing,route,amount_usdc,outcome' \
+            -H "apikey: $ANON_KEY" \
+            -H "Authorization: Bearer $ANON_KEY" | jq .
