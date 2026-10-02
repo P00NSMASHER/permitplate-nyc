@@ -1,0 +1,88 @@
+{
+  "checkedAt": "2026-10-02T12:56:26.056Z",
+  "mode": "zero-spend-direct-upstream-readiness",
+  "appdeployDependency": false,
+  "checks": {
+    "paRegistry": {
+      "ok": true,
+      "status": 200,
+      "latencyMs": 325,
+      "rowCount": 5,
+      "sample": [
+        {
+          "business_name": "Openai Opco, Llc",
+          "filing_number": "0014879623",
+          "registration_type": "Foreign Limited Liability Company",
+          "address_line1": "600 North Second Street, Suite 401",
+          "city": "Harrisburg",
+          "state": "PA",
+          "zip": "17101"
+        },
+        {
+          "business_name": "Openai, L.l.c.",
+          "filing_number": "0014371957",
+          "registration_type": "Foreign Limited Liability Company",
+          "address_line1": "600 North Second Street, Suite 401",
+          "city": "Harrisburg",
+          "state": "PA",
+          "zip": "17101"
+        },
+        {
+          "business_name": "Openair Aviation Llc",
+          "filing_number": "0013589861",
+          "registration_type": "Foreign Limited Liability Company",
+          "address_line1": "430 Stableview Ct",
+          "city": "Duncansville",
+          "state": "PA",
+          "zip": "16635"
+        }
+      ],
+      "source": "Pennsylvania Department of State via data.pa.gov",
+      "error": null
+    },
+    "census": {
+      "ok": true,
+      "status": 200,
+      "latencyMs": 209,
+      "input": "600 North Second Street, Suite 401, Harrisburg, PA 17101",
+      "matchedAddress": "600 N 2ND ST, HARRISBURG, PA, 17101",
+      "coordinates": {
+        "x": -76.887703108196,
+        "y": 40.263592196649
+      },
+      "source": "U.S. Census Bureau Geocoding Services",
+      "error": null
+    },
+    "ofac": {
+      "ok": true,
+      "sdn": {
+        "status": 200,
+        "latencyMs": 1651,
+        "bytes": 5728772,
+        "sha256": "4297a36558e1a73053460d37d7fa8eba83b2668dd2a72be1dc7c263a2d389b59"
+      },
+      "alt": {
+        "status": 200,
+        "latencyMs": 1254,
+        "bytes": 1065703,
+        "sha256": "8f395a60e00b77891a0b1acc12401b829beb51304efbdc5e4f440cae16654ef2"
+      },
+      "source": "U.S. Treasury OFAC Sanctions List Service"
+    },
+    "rdap": {
+      "ok": true,
+      "bootstrapStatus": 200,
+      "authoritativeBase": "https://rdap.verisign.com/com/v1/",
+      "domainStatus": 200,
+      "ldhName": "OPENAI.COM",
+      "handle": "764064142_DOMAIN_COM-VRSN",
+      "source": "IANA RDAP bootstrap + authoritative registry RDAP",
+      "error": null
+    }
+  },
+  "summary": {
+    "passed": 4,
+    "total": 4,
+    "allReady": true
+  }
+}
