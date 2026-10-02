@@ -516,7 +516,7 @@ async function observePublicDirectories() {
     {
       id: 'nohumans',
       url:
-        'https://nohumans.directory/v1/discover' +
+        'https://api.nohumans.directory/v1/discover' +
         '?q=Pennsylvania%20Vendor%20Intake%20Decision%20Gate',
     },
   ];
