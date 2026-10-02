@@ -1,0 +1,30 @@
+{
+  "preparedAt": "2026-10-02",
+  "projectId": "b69a3ee6-eb01-430d-aa51-da2fc7beeac4",
+  "deployMapBlobSha": "be374305376eacbfd7d843e3285b5ab0b9e0b8f7",
+  "bundles": [
+    {
+      "range": {
+        "from": 1,
+        "to": 13
+      },
+      "path": "recovery/floot-deployment-bundle-01.json",
+      "gitBlobSha": "8b040e229e25782336442b72591172645236b896",
+      "commit": "f50584ac3f52562a5864577eda43c6308b01e748",
+      "rawUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/f50584ac3f52562a5864577eda43c6308b01e748/recovery/floot-deployment-bundle-01.json",
+      "itemCount": 13
+    },
+    {
+      "range": {
+        "from": 14,
+        "to": 26
+      },
+      "path": "recovery/floot-deployment-bundle-02.json",
+      "gitBlobSha": "47a073817132dec73442b76d7fcf7eb34b4467c1",
+      "commit": "34a69f21a865f174196af3358b9e4d2411decc35",
+      "rawUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/34a69f21a865f174196af3358b9e4d2411decc35/recovery/floot-deployment-bundle-02.json",
+      "itemCount": 13
+    }
+  ],
+  "rule": "Fetch these immutable raw commit URLs after reset; verify deployMapBlobSha and ranges before any Floot write. Do not use mutable main bundle paths."
+}
