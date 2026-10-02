@@ -26,6 +26,7 @@ on:
       - 'factory/products/domain-last-changed-recency/**'
       - 'factory/products/pa-entity-type-policy/**'
       - 'factory/products/pa-registered-county-policy/**'
+      - 'factory/products/pa-local-vendor-policy-gate/**'
       - 'factory/packages/sources/live-pa-identity.js'
       - 'factory/packages/sources/sec-filings.js'
       - 'factory/packages/sources/treasury-average-rates.js'
@@ -52,6 +53,8 @@ jobs:
         run: node factory/products/pa-entity-type-policy/live-smoke.js
       - name: Product 022 live source smoke
         run: node factory/products/pa-registered-county-policy/live-smoke.js
+      - name: Product 023 live source smoke
+        run: node factory/products/pa-local-vendor-policy-gate/live-smoke.js
       - name: Product 006 live SEC smoke
         run: node factory/products/sec-filing-freshness/live-smoke.js
       - name: Product 013 SEC identity smoke
