@@ -1,0 +1,57 @@
+name: PA Entity PayAPI internal status trace
+
+on:
+  push:
+    paths:
+      - '.github/workflows/tmp-pa-entity-payapi-status-trace.yml'
+
+jobs:
+  trace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Trace PayAPI provider/listing status reads
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL 'https://payapi.market/list' -o /tmp/list.html
+
+          python3 - <<'PY'
+          import re, urllib.parse, subprocess, pathlib
+          base='https://payapi.market'
+          html=pathlib.Path('/tmp/list.html').read_text(errors='ignore')
+          chunks=[]
+          for i,src in enumerate(re.findall(r'<script[^>]+src=["\x27]([^"\x27]+)["\x27]',html,re.I)):
+              u=urllib.parse.urljoin(base+'/',src)
+              out=pathlib.Path(f'/tmp/s{i}.js')
+              if subprocess.run(['curl','-fsSL','--max-time','20',u,'-o',str(out)]).returncode==0 and out.exists():
+                  chunks.append(out.read_text(errors='ignore'))
+          s='\n'.join(chunks)
+          low=s.lower()
+
+          for needle in [
+              '/api/get-provider','provider-login','api_listings',
+              'pending_review','payment_verified','triage_status',
+              'listing status','review status'
+          ]:
+              print(f'=== {needle} ===')
+              start=0; shown=0; n=needle.lower()
+              while shown<20:
+                  i=low.find(n,start)
+                  if i<0: break
+                  print(s[max(0,i-1800):min(len(s),i+3600)].replace('\n',' ')[:5400])
+                  print('\n---\n')
+                  start=i+len(n); shown+=1
+
+          print('=== STATUS API CANDIDATES ===')
+          vals=set()
+          for pat in [
+              r'/api/[A-Za-z0-9._~!$&()*+,;=:@%/?-]{1,220}',
+              r'\.from\(["\x27][^"\x27]+["\x27]\)',
+              r'\.eq\(["\x27][^"\x27]+["\x27][^)]{0,180}\)'
+          ]:
+              vals.update(m.group(0) for m in re.finditer(pat,s,re.I))
+          for v in sorted(vals):
+              if any(k in v.lower() for k in ['provider','listing','review','triage','verify','payment']):
+                  print(v)
+          PY
