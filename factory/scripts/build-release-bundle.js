@@ -34,6 +34,7 @@ function buildReleaseBundle(publicApiBase=DEFAULT_BASE){
   for(const [id,modulePath] of PRODUCT_MODULES){
     const p=registry.products.find(row=>row.id===id);
     if(!p)throw new Error("missing registry product "+id);
+    if(!/staging$/.test(p.status))continue;
     const metadata=require(path.join(ROOT,modulePath));
     if(typeof metadata.catalogResource!=="function"||typeof metadata.openApiPath!=="function"){
       throw new Error("metadata module incomplete for "+id);
@@ -60,7 +61,7 @@ function buildReleaseBundle(publicApiBase=DEFAULT_BASE){
     catalog:{
       x402Version:2,
       name:"x402 Product Factory staging catalog",
-      description:"Machine-generated candidate catalog for factory Products 003–009. Production references 001–002 are intentionally not replaced by this staging bundle.",
+      description:"Machine-generated candidate catalog for factory deployable staging products. Production references 001–002 are intentionally not replaced by this staging bundle.",
       resources
     },
     openapi:{
@@ -68,7 +69,7 @@ function buildReleaseBundle(publicApiBase=DEFAULT_BASE){
       info:{
         title:"x402 Product Factory staging API",
         version:"0.1.0",
-        description:"Machine-generated staging OpenAPI for Products 003–009."
+        description:"Machine-generated staging OpenAPI for deployable staging products."
       },
       servers:[{url:base}],
       paths
