@@ -52,7 +52,25 @@ Use this capture order:
 
 If any batch response says files were omitted because of the aggregate output cap, immediately read the omitted file(s) in an additional batch before any Floot write.
 
-Persist those exact contents in one GitHub JSON artifact before the first Floot write:
+Normalize the raw capture with:
+
+`node scripts/build-floot-pre-rehost-snapshot.mjs <raw-capture.json> verification/floot-pre-rehost-rollback-<projectVersion>.json`
+
+The raw capture JSON must contain:
+- `projectId`
+- `projectVersion` from the fresh Floot `list_files`
+- `productionOrigin`
+- `projectPaths` from the current Floot file tree
+- every file returned by the bounded capture batches as `{ path, exists, content }`
+
+The builder automatically:
+- derives which of the 26 recovery targets already exist,
+- classifies the remaining recovery targets as absent,
+- computes UTF-8 byte lengths,
+- computes SHA-256 hashes,
+- embeds the pinned recovery branch/commit from the deployment queue.
+
+Persist the normalized result in one GitHub JSON artifact before the first Floot write:
 
 `verification/floot-pre-rehost-rollback-<projectVersion>.json`
 
