@@ -16,7 +16,7 @@ function main(){
   assert.equal(PRICE,"$0.003");
   assert.equal(AMOUNT_ATOMIC,"3000");
   assert.equal(NETWORK,"eip155:8453");
-  assert.equal(USDC.toLowerCase(),"0x833589fcd6edb6e08f4c7c32d4f71b54bdA02913");
+  assert.equal(USDC.toLowerCase(),"0x833589fcd6edb6e08f4c7c32d4f71b54bda02913");
   assert.equal(PAY_TO.toLowerCase(),"0x708f7b52b56eafd7fc1de65fc7752ed732914021");
 
   assert.ok(Array.isArray(p.required_env));
