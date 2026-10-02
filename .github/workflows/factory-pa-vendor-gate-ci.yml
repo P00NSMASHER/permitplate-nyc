@@ -100,3 +100,7 @@ jobs:
         run: node --test factory/products/treasury-average-rate-threshold/paid-handler.test.js
       - name: Test Product 008 discovery metadata
         run: node --test factory/products/treasury-average-rate-threshold/metadata.test.js
+      - name: Run Product 007 release gate
+        run: node factory/scripts/validate-product-007.js
+      - name: Run Product 008 release gate
+        run: node factory/scripts/validate-product-008.js
