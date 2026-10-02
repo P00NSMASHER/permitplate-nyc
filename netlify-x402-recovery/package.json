@@ -1,0 +1,13 @@
+{
+  "name": "agent-data-tools-x402-recovery",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "check:core": "node --check lib/vendor-core.mjs"
+  }
+}
