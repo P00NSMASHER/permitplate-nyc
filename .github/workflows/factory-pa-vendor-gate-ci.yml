@@ -104,3 +104,7 @@ jobs:
         run: node --test factory/packages/discovery/generator.test.js
       - name: Validate compiled discovery surfaces
         run: node factory/scripts/validate-discovery.js
+      - name: Test factory release-bundle generator
+        run: node --test factory/scripts/build-release-bundle.test.js
+      - name: Build staging release bundle
+        run: node factory/scripts/build-release-bundle.js /tmp/x402-factory-bundle https://candidate.example
