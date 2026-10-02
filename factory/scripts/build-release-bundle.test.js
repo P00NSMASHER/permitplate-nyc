@@ -15,7 +15,7 @@ test("USDC prices convert deterministically to six-decimal atomic amounts",()=>{
 
 test("bundle contains every deployable staging product exactly once",()=>{
   const b=buildReleaseBundle("https://candidate.example");
-  const expected=registry.products.filter(p=>/staging$/.test(p.status)&&["003","004","005","006","007","008","010"].includes(p.number));
+  const expected=registry.products.filter(p=>/staging$/.test(p.status));
   assert.equal(b.manifest.product_count,expected.length);
   assert.deepEqual(b.manifest.products.map(p=>p.number),expected.map(p=>p.number));
   assert.equal(new Set(b.catalog.resources.map(r=>r.resource)).size,expected.length);
