@@ -103,8 +103,8 @@ The locked map contains 26 writes.
 Expected actions after the free-plan reset:
 
 - 1 `list_files`
-- 1 expected batched `read_files` snapshot call (2 only if unexpected preexisting recovery files exceed the 20-path batch limit)
-- 1–2 batched `read_files` calls to capture all existing overwrite targets for rollback
+- 5 normal bounded `read_files` snapshot batches (per `ROLLBACK.md`)
+- up to 14 additional single/bounded reads only in the pathological case that every normally-new recovery endpoint/schema file already exists
 - 1 guide read if required
 - 26 sequential file writes
 - 1 typecheck
@@ -113,7 +113,7 @@ Expected actions after the free-plan reset:
 - 1 publish
 - 1 publish-status check
 
-Expected total: **34–35 Floot actions without a guide, 35–36 with one guide**, comfortably below the 100-action daily allowance.
+Expected normal total: **37 Floot actions without a guide, 38 with one guide**. Absolute conservative worst case: **51 without a guide, 52 with one guide**. All remain comfortably below the 100-action daily allowance.
 
 Keep writes serialized and carry the returned project version forward when the write tool exposes it. Do not make concurrent writes against one expected version.
 
