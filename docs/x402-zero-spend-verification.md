@@ -25,6 +25,29 @@ Manual GitHub workflow:
 
 The workflow has **no schedule and no automatic push/pull-request trigger**.
 
+## Same-origin Floot rehost mode
+
+The verifier can switch the six AppDeploy-hosted products to same-origin Floot replacements without editing the script.
+
+For the full rehost run, set:
+
+- `expected_floot_resources = 8`
+- `rehost_base_url = https://pa-entity-x402.floot.app`
+
+That changes the verifier targets to:
+
+- `/_api/vendor-intake-gate`
+- `/_api/vendor-intake-demo`
+- `/_api/sec-filings`
+- `/_api/us-address-geocode`
+- `/_api/ofac-sdn-screen`
+- `/_api/domain-rdap`
+- `/_api/treasury-average-rates`
+
+The two existing PA Floot routes remain unchanged.
+
+When `rehost_base_url` is empty, the verifier continues testing the current AppDeploy URLs and the AppDeploy PA discovery manifest.
+
 ## Before Floot consolidation
 
 Run the manual workflow with:
