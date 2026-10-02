@@ -112,6 +112,17 @@ jobs:
         run: node factory/scripts/validate-product-008.js
 
 
+      - name: Test Product 014 Treasury trend decision
+        run: node --test factory/products/treasury-average-rate-trend/decision.test.js
+      - name: Test Product 014 Treasury trend service
+        run: node --test factory/products/treasury-average-rate-trend/service.test.js
+      - name: Test Product 014 paid x402 handler
+        run: node --test factory/products/treasury-average-rate-trend/paid-handler.test.js
+      - name: Test Product 014 discovery metadata
+        run: node --test factory/products/treasury-average-rate-trend/metadata.test.js
+      - name: Run Product 014 release gate
+        run: node factory/scripts/validate-product-014.js
+
       - name: Test OFAC direct source adapter
         run: node --test factory/packages/sources/ofac-name-screen.test.js
       - name: Test Product 009 OFAC review decision
