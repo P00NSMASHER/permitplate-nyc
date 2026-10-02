@@ -282,12 +282,22 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          SNAPSHOT='verification/pa-entity-directory-status-latest.json'
+          cp "$SNAPSHOT" /tmp/pa-entity-directory-status-latest.json
+
+          # Other read-only verification lanes may commit while this job runs.
+          # Refresh to the latest main first, then restore only this generated
+          # receipt so a concurrent bot commit cannot make the push non-FF.
+          git fetch origin main
+          git reset --hard origin/main
+          cp /tmp/pa-entity-directory-status-latest.json "$SNAPSHOT"
+
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add verification/pa-entity-directory-status-latest.json
+          git add "$SNAPSHOT"
           if git diff --cached --quiet; then
             echo 'Directory receipt unchanged.'
             exit 0
           fi
           git commit -m 'chore: refresh PA x402 directory status'
-          git push
+          git push origin HEAD:main
