@@ -31,6 +31,24 @@ function buildReleaseBundle(publicApiBase=DEFAULT_BASE){
   const appDeployEntrypoint=buildAppDeployEntrypoint(base);
   const appDeployEntrypointFileName="appdeploy-backend-index.ts";
   const appDeployEntrypointSha256=sha256(appDeployEntrypoint.source);
+  const appDeployFileMap={
+    schema_version:1,
+    files:[
+      {
+        target_path:"backend/index.ts",
+        source_file:appDeployEntrypointFileName,
+        sha256:appDeployEntrypointSha256
+      },
+      {
+        target_path:"backend/factory-runtime-bundle.js",
+        source_file:runtimeFileName,
+        sha256:runtimeSha256
+      }
+    ]
+  };
+  const appDeployFileMapFileName="appdeploy-deploy-files.json";
+  const appDeployFileMapContent=JSON.stringify(appDeployFileMap,null,2)+"\\n";
+  const appDeployFileMapSha256=sha256(appDeployFileMapContent);
   const catalog=parseJsonFile(deployment,"x402-catalog.json");
   const openapi=parseJsonFile(deployment,"openapi.json");
   const productIndex=parseJsonFile(deployment,"product-index.json");
@@ -78,6 +96,11 @@ function buildReleaseBundle(publicApiBase=DEFAULT_BASE){
       paid_route_count:appDeployEntrypoint.paidRouteCount,
       options_route_count:appDeployEntrypoint.optionsRouteCount,
       static_route_count:appDeployEntrypoint.staticRouteCount
+    },
+    appdeploy_deploy_files:{
+      name:appDeployFileMapFileName,
+      sha256:appDeployFileMapSha256,
+      targets:appDeployFileMap.files
     }
   };
 
@@ -90,10 +113,12 @@ function buildReleaseBundle(publicApiBase=DEFAULT_BASE){
     manifest:releaseManifest,
     runtimeBundle,
     appDeployEntrypoint,
+    appDeployFileMap,
     canonicalFiles:{
       ...deployment.files,
       [runtimeFileName]:runtimeBundle.source,
-      [appDeployEntrypointFileName]:appDeployEntrypoint.source
+      [appDeployEntrypointFileName]:appDeployEntrypoint.source,
+      [appDeployFileMapFileName]:appDeployFileMapContent
     }
   };
 }
