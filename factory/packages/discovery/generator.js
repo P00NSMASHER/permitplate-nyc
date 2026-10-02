@@ -1,126 +1,109 @@
 "use strict";
 
-const registry = require("../../product-registry.json");
+const fs=require("node:fs");
+const path=require("node:path");
+const registry=require("../../product-registry.json");
 
-const MODULES = Object.freeze({
-  "pa-vendor-identity-match": require("../../products/pa-vendor-identity-match/metadata"),
-  "pa-business-address-match": require("../../products/pa-business-address-match/metadata"),
-  "pa-business-domain-match": require("../../products/pa-business-domain-match/metadata"),
-  "sec-filing-freshness": require("../../products/sec-filing-freshness/metadata"),
-  "sec-company-identity-match": require("../../products/sec-company-identity-match/metadata"),
-  "domain-registration-age": require("../../products/domain-registration-age/metadata"),
-  "treasury-average-rate-threshold": require("../../products/treasury-average-rate-threshold/metadata"),
-  "treasury-average-rate-trend": require("../../products/treasury-average-rate-trend/metadata"),
-  "treasury-average-rate-spread": require("../../products/treasury-average-rate-spread/metadata"),
-  "ofac-name-review-gate": require("../../products/ofac-name-review-gate/metadata"),
-  "pa-entity-ofac-review": require("../../products/pa-entity-ofac-review/metadata"),
-  "pa-business-formation-age": require("../../products/pa-business-formation-age/metadata"),
-  "domain-expiration-horizon": require("../../products/domain-expiration-horizon/metadata"),
-  "domain-last-changed-recency": require("../../products/domain-last-changed-recency/metadata"),
-  "pa-vendor-new-domain-review": require("../../products/pa-vendor-new-domain-review/metadata"),
-  "pa-vendor-counterparty-review": require("../../products/pa-vendor-counterparty-review/metadata"),
-  "pa-vendor-maturity-review": require("../../products/pa-vendor-maturity-review/metadata"),
-  "pa-vendor-domain-continuity-review": require("../../products/pa-vendor-domain-continuity-review/metadata"),
-});
-
-function managedProducts() {
-  return registry.products.filter(
-    (product) => MODULES[product.id] && /staging$/.test(product.status)
-  );
+function loadMetadataModules(){
+  const modules={};
+  for(const product of registry.products){
+    const file=path.join(__dirname,"..","..","products",product.id,"metadata.js");
+    if(!fs.existsSync(file)) continue;
+    modules[product.id]=require(file);
+  }
+  return modules;
 }
 
-function normalizeBase(base) {
-  if (typeof base !== "string" || !/^https:\/\//.test(base)) {
+const MODULES=Object.freeze(loadMetadataModules());
+
+function managedProducts(){
+  const staging=registry.products.filter(product=>/staging$/.test(product.status));
+  for(const product of staging){
+    if(!MODULES[product.id]){
+      throw new Error(product.id+" staging product missing metadata module");
+    }
+  }
+  return staging;
+}
+
+function normalizeBase(base){
+  if(typeof base!=="string"||!/^https:\/\//.test(base)){
     throw new TypeError("https base URL is required");
   }
-  return base.replace(/\/$/, "");
+  return base.replace(/\/$/,"");
 }
 
-function buildCatalog(base) {
-  const normalized = normalizeBase(base);
-  const products = managedProducts();
-  const resources = products.map((product) => {
-    const resource = MODULES[product.id].catalogResource(normalized);
-    if (!Array.isArray(resource.accepts) || resource.accepts.length === 0) {
-      throw new Error(product.id + " missing resource-level accepts");
+function buildCatalog(base){
+  const normalized=normalizeBase(base);
+  const products=managedProducts();
+  const resources=products.map(product=>{
+    const resource=MODULES[product.id].catalogResource(normalized);
+    if(!Array.isArray(resource.accepts)||resource.accepts.length===0){
+      throw new Error(product.id+" missing resource-level accepts");
     }
     return resource;
   });
-
   return {
-    x402Version: 2,
-    name: "x402 Product Factory",
-    description:
-      "Machine-purchasable decision and verification tools for autonomous agents.",
-    resources,
+    x402Version:2,
+    name:"x402 Product Factory",
+    description:"Machine-purchasable decision and verification tools for autonomous agents.",
+    resources
   };
 }
 
-function buildOpenApi(base) {
-  const normalized = normalizeBase(base);
-  const paths = {};
-  for (const product of managedProducts()) {
-    const fragment = MODULES[product.id].openApiPath();
-    if (!fragment || typeof fragment !== "object") {
-      throw new Error(product.id + " missing OpenAPI fragment");
+function buildOpenApi(base){
+  const normalized=normalizeBase(base);
+  const paths={};
+  for(const product of managedProducts()){
+    const fragment=MODULES[product.id].openApiPath();
+    if(!fragment||typeof fragment!=="object"){
+      throw new Error(product.id+" missing OpenAPI fragment");
     }
-    paths[product.path] = fragment;
+    paths[product.path]=fragment;
   }
   return {
-    openapi: "3.1.0",
-    info: {
-      title: "x402 Product Factory",
-      version: "0.1.0",
-      description:
-        "Paid agent decision and verification endpoints sharing hardened x402 payment semantics.",
+    openapi:"3.1.0",
+    info:{
+      title:"x402 Product Factory",
+      version:"0.1.0",
+      description:"Paid agent decision and verification endpoints sharing hardened x402 payment semantics."
     },
-    servers: [{ url: normalized }],
-    paths,
+    servers:[{url:normalized}],
+    paths
   };
 }
 
-function buildProductIndex(base) {
-  const normalized = normalizeBase(base);
+function buildProductIndex(base){
+  const normalized=normalizeBase(base);
   return {
-    schema_version: 1,
-    base_url: normalized,
-    products: managedProducts().map((product) => ({
-      number: product.number,
-      id: product.id,
-      method: product.method,
-      path: product.path,
-      price_usdc: product.price_usdc,
-      status: product.status,
-      decision_values: Array.isArray(product.decision_values)
-        ? product.decision_values
-        : [],
-    })),
+    schema_version:1,
+    base_url:normalized,
+    products:managedProducts().map(product=>({
+      number:product.number,
+      id:product.id,
+      method:product.method,
+      path:product.path,
+      price_usdc:product.price_usdc,
+      status:product.status,
+      decision_values:Array.isArray(product.decision_values)?product.decision_values:[]
+    }))
   };
 }
 
-function buildLlmsText(base) {
-  const normalized = normalizeBase(base);
-  const lines = [
+function buildLlmsText(base){
+  const normalized=normalizeBase(base);
+  const lines=[
     "# x402 Product Factory",
     "",
-    "Base URL: " + normalized,
+    "Base URL: "+normalized,
     "Payment network: Base (eip155:8453), USDC via x402.",
     "",
-    "Products:",
+    "Products:"
   ];
-  for (const product of managedProducts()) {
-    const resource = MODULES[product.id].catalogResource(normalized);
+  for(const product of managedProducts()){
+    const resource=MODULES[product.id].catalogResource(normalized);
     lines.push(
-      "- " +
-        product.number +
-        " " +
-        product.id +
-        " — GET " +
-        product.path +
-        " — $" +
-        product.price_usdc +
-        " USDC — " +
-        resource.description
+      "- "+product.number+" "+product.id+" — GET "+product.path+" — $"+product.price_usdc+" USDC — "+resource.description
     );
   }
   lines.push(
@@ -131,42 +114,35 @@ function buildLlmsText(base) {
   return lines.join("\n");
 }
 
-function validateCompiled(base) {
-  const catalog = buildCatalog(base);
-  const openapi = buildOpenApi(base);
-  const products = managedProducts();
-
-  const urls = new Set();
-  for (let index = 0; index < products.length; index += 1) {
-    const product = products[index];
-    const resource = catalog.resources[index];
-    if (urls.has(resource.resource)) {
-      throw new Error("duplicate resource URL: " + resource.resource);
-    }
+function validateCompiled(base){
+  const catalog=buildCatalog(base);
+  const openapi=buildOpenApi(base);
+  const products=managedProducts();
+  const urls=new Set();
+  for(let index=0;index<products.length;index+=1){
+    const product=products[index];
+    const resource=catalog.resources[index];
+    if(urls.has(resource.resource)) throw new Error("duplicate resource URL: "+resource.resource);
     urls.add(resource.resource);
-    if (resource.price !== "$" + product.price_usdc) {
-      throw new Error(product.id + " price mismatch");
-    }
-    if (!openapi.paths[product.path]) {
-      throw new Error(product.id + " missing compiled OpenAPI path");
-    }
+    if(resource.price!=="$"+product.price_usdc) throw new Error(product.id+" price mismatch");
+    if(!openapi.paths[product.path]) throw new Error(product.id+" missing compiled OpenAPI path");
   }
-
   return {
-    productCount: products.length,
-    ids: products.map((product) => product.id),
+    productCount:products.length,
+    ids:products.map(product=>product.id),
     catalog,
     openapi,
-    llms: buildLlmsText(base),
+    llms:buildLlmsText(base)
   };
 }
 
-module.exports = {
+module.exports={
   MODULES,
+  loadMetadataModules,
   managedProducts,
   buildCatalog,
   buildOpenApi,
   buildProductIndex,
   buildLlmsText,
-  validateCompiled,
+  validateCompiled
 };
