@@ -22,7 +22,9 @@ async function run(name, fn, validate) {
       latencyMs: Date.now() - started,
       error: error instanceof Error ? error.message : String(error),
     });
-    console.log('FAIL ' + name + ' ' + (error instanceof Error ? error.message : String(error)));
+    const message = error instanceof Error ? error.message : String(error);
+    const cause = error instanceof Error && error.cause ? JSON.stringify(error.cause) : '';
+    console.log('FAIL ' + name + ' ' + message + (cause ? ' cause=' + cause : ''));
   }
 }
 
