@@ -160,6 +160,20 @@
       "release_gate": "factory/scripts/validate-product-011.js",
       "deployment_blocker": "AppDeploy weekly credit reset 2026-10-05T00:00:00Z",
       "live_source_status": "authoritative RDAP smoke verified openai.com expiration 2029-01-19; not_expiring_soon for horizonDays 180"
+    },
+    {
+      "id": "domain-last-changed-recency",
+      "number": "012",
+      "status": "design",
+      "method": "GET",
+      "path": "/api/domain-last-changed-recency",
+      "price_usdc": "0.002",
+      "decision_values": [
+        "recently_changed",
+        "stable_since_window",
+        "unregistered",
+        "human_review"
+      ]
     }
   ]
 }
