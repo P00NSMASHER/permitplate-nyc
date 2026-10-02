@@ -164,7 +164,7 @@
     {
       "id": "domain-last-changed-recency",
       "number": "012",
-      "status": "design",
+      "status": "live-source-verified-staging",
       "method": "GET",
       "path": "/api/domain-last-changed-recency",
       "price_usdc": "0.002",
@@ -173,7 +173,10 @@
         "stable_since_window",
         "unregistered",
         "human_review"
-      ]
+      ],
+      "release_gate": "factory/scripts/validate-product-012.js",
+      "deployment_blocker": "AppDeploy weekly credit reset 2026-10-05T00:00:00Z",
+      "live_source_status": "authoritative RDAP smoke verified openai.com lastChanged 2024-10-17; recently_changed for maxAgeDays 730"
     }
   ]
 }
