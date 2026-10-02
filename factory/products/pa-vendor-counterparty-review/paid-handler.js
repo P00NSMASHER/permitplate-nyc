@@ -36,7 +36,7 @@ function temporary(reason){
 }
 
 function productPaymentDocument(base){
-  base=base.replace(//$/,"");
+  base=base.replace(/\/$/,"");
   return paymentDocument({
     resourceUrl:base+RESOURCE_PATH,
     amountAtomic:AMOUNT_ATOMIC,
