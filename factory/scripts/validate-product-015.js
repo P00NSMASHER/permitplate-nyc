@@ -9,6 +9,7 @@ function main(){
   const p=registry.products.find(row=>row.id==="treasury-average-rate-spread");
   assert.ok(p,"Product 015 missing from registry");
   assert.equal(p.number,"015");
+  assert.equal(p.status,"live-source-verified-staging");
   assert.equal(p.method,"GET");
   assert.equal(p.path,RESOURCE_PATH);
   assert.equal(p.price_usdc,"0.003");
