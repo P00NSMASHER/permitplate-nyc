@@ -401,6 +401,123 @@ async function verifyDiscovery() {
   return results;
 }
 
+async function observePublicDirectories() {
+  const gateUrl =
+    'https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-gate';
+  const checks = [
+    {
+      id: 'agent402',
+      url: 'https://agent402.tools/api/index?seller=pa-entity-x402.floot.app',
+    },
+    {
+      id: '402index',
+      url:
+        'https://402index.io/api/v1/services' +
+        '?q=Pennsylvania%20Vendor%20Intake%20Decision%20Gate&protocol=x402',
+    },
+    {
+      id: 'market402',
+      url:
+        'https://market402.com/search.json' +
+        '?q=Pennsylvania%20Vendor%20Intake%20Decision%20Gate',
+    },
+    {
+      id: 'nohumans',
+      url:
+        'https://nohumans.directory/v1/discover' +
+        '?q=Pennsylvania%20Vendor%20Intake%20Decision%20Gate',
+    },
+  ];
+
+  const results = [];
+  for (const check of checks) {
+    const item = {
+      id: check.id,
+      url: check.url,
+      reachable: false,
+      status: null,
+      json: false,
+      containsVendorGate: false,
+      topLevelKeys: [],
+      summary: {},
+      error: null,
+    };
+
+    try {
+      const response = await fetch(check.url, {
+        headers: {
+          accept: 'application/json',
+          'user-agent': 'x402-zero-spend-buyer-verifier/1.0',
+        },
+        signal: AbortSignal.timeout(15000),
+      });
+      item.status = response.status;
+      item.reachable = response.ok;
+
+      const text = await response.text();
+      let body = null;
+      try {
+        body = JSON.parse(text);
+        item.json = true;
+      } catch {
+        body = null;
+      }
+
+      if (body && typeof body === 'object') {
+        item.topLevelKeys = Object.keys(body).slice(0, 30);
+        const serialized = JSON.stringify(body).toLowerCase();
+        item.containsVendorGate =
+          serialized.includes('pennsylvania vendor intake') ||
+          serialized.includes('vendor-intake-gate') ||
+          serialized.includes(gateUrl.toLowerCase());
+
+        if (check.id === 'agent402') {
+          item.summary = {
+            listed: body?.listed ?? null,
+            routable: body?.routable ?? null,
+            health: body?.health ?? null,
+            toolCount: body?.toolCount ?? null,
+            paidToolCount: body?.paidToolCount ?? null,
+          };
+        } else if (check.id === '402index') {
+          const services = Array.isArray(body?.services) ? body.services : [];
+          item.summary = {
+            total: body?.total ?? services.length,
+            returned: services.length,
+            matchingNames: services
+              .filter((service) =>
+                String(service?.name ?? '')
+                  .toLowerCase()
+                  .includes('vendor intake')
+              )
+              .slice(0, 10)
+              .map((service) => ({
+                id: service?.id ?? null,
+                name: service?.name ?? null,
+                status: service?.status ?? null,
+                health: service?.health_status ?? null,
+                paymentValid: service?.x402_payment_valid ?? null,
+                priceUsd: service?.price_usd ?? null,
+              })),
+          };
+        }
+      }
+
+      if (!response.ok) {
+        item.error = `HTTP ${response.status}`;
+      } else if (!item.json) {
+        item.error = 'response was not JSON';
+      }
+    } catch (error) {
+      item.error = error instanceof Error ? error.message : String(error);
+    }
+
+    results.push(item);
+  }
+
+  return results;
+}
+
 async function main() {
   console.log('x402 zero-spend buyer verification');
   console.log(`checkedAt=${new Date().toISOString()}`);
@@ -440,6 +557,15 @@ async function main() {
     }
   }
 
+  console.log('\nPublic directory observations (advisory, not release-gating):');
+  const directoryResults = await observePublicDirectories();
+  for (const result of directoryResults) {
+    console.log(
+      `${result.reachable && result.json ? 'OBSERVED' : 'UNAVAILABLE'} ${result.id} | status=${result.status} | containsVendorGate=${result.containsVendorGate}`
+    );
+    if (result.error) console.log(`  - ${result.error}`);
+  }
+
   const passedServices = serviceResults.filter((x) => x.ok).length;
   const passedFixtures = fixtureResults.filter((x) => x.ok).length;
   const passedDiscovery = discoveryResults.filter((x) => x.ok).length;
@@ -465,6 +591,7 @@ async function main() {
     services: serviceResults,
     fixtures: fixtureResults,
     discovery: discoveryResults,
+    directories: directoryResults,
   };
 
   const reportJson = JSON.stringify(report, null, 2);
