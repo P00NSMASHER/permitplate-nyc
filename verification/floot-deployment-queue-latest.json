@@ -249,5 +249,19 @@
     "totalWithoutGuide": 32,
     "totalWithOneGuide": 33,
     "dailyAllowance": 100
+  },
+  "sourceBranch": "floot-recovery-lock-2026-10-02",
+  "sourceCommit": "ceb21b651764ffaa0c893f4e725eccce0c10ba5f",
+  "sourcePolicy": "Fetch every deploy-map source file from the locked branch/commit, never mutable main.",
+  "postLockComparison": {
+    "comparedTo": "main",
+    "commitsAhead": 4,
+    "deploymentSourceFilesChanged": 0,
+    "changedFiles": [
+      "docs/pa-entity-floot-release/FLOOT_MIN_ACTION_DEPLOY.md",
+      "verification/floot-deployment-queue-latest.json",
+      "verification/floot-rehost-deploy-readiness-latest.json",
+      "verification/netlify-x402-fallback-readiness-latest.json"
+    ]
   }
 }
