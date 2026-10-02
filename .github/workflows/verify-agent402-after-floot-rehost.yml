@@ -1,0 +1,39 @@
+name: Verify Agent402 after Floot rehost
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verify Floot public portfolio first
+        env:
+          EXPECTED_FLOOT_RESOURCES: '8'
+          X402_REHOST_BASE_URL: 'https://pa-entity-x402.floot.app'
+          REPORT_PATH: x402-verification-report.json
+        run: node scripts/verify-x402-portfolio.mjs
+
+      - name: Re-register and verify Agent402
+        env:
+          REPORT_PATH: agent402-post-rehost-report.json
+        run: node scripts/verify-agent402-after-floot-rehost.mjs
+
+      - name: Upload post-rehost reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent402-post-rehost
+          path: |
+            x402-verification-report.json
+            agent402-post-rehost-report.json
+          if-no-files-found: warn
