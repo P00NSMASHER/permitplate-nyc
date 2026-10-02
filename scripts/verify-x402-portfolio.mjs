@@ -479,11 +479,27 @@ async function observePublicDirectories() {
 
       if (body && typeof body === 'object') {
         item.topLevelKeys = Object.keys(body).slice(0, 30);
-        const serialized = JSON.stringify(body).toLowerCase();
-        item.containsVendorGate =
-          serialized.includes('pennsylvania vendor intake') ||
-          serialized.includes('vendor-intake-gate') ||
-          serialized.includes(gateUrl.toLowerCase());
+
+        let candidates = [];
+        if (check.id === 'agent402') {
+          candidates = Array.isArray(body?.tools) ? body.tools : [];
+        } else if (check.id === '402index') {
+          candidates = Array.isArray(body?.services) ? body.services : [];
+        } else {
+          candidates = Array.isArray(body?.results) ? body.results : [];
+        }
+
+        const isVendorGateRecord = (record) => {
+          const serialized = JSON.stringify(record).toLowerCase();
+          return (
+            serialized.includes('pennsylvania vendor intake') ||
+            serialized.includes('vendor-intake-gate') ||
+            serialized.includes(gateUrl.toLowerCase())
+          );
+        };
+
+        const matches = candidates.filter(isVendorGateRecord);
+        item.containsVendorGate = matches.length > 0;
 
         if (check.id === 'agent402') {
           item.summary = {
@@ -492,27 +508,47 @@ async function observePublicDirectories() {
             health: body?.health ?? null,
             toolCount: body?.toolCount ?? null,
             paidToolCount: body?.paidToolCount ?? null,
+            matchingTools: matches.map((tool) => ({
+              name: tool?.name ?? null,
+              resource: tool?.resource ?? tool?.url ?? null,
+              price: tool?.price ?? null,
+            })),
           };
         } else if (check.id === '402index') {
-          const services = Array.isArray(body?.services) ? body.services : [];
           item.summary = {
-            total: body?.total ?? services.length,
-            returned: services.length,
-            matchingNames: services
-              .filter((service) =>
-                String(service?.name ?? '')
-                  .toLowerCase()
-                  .includes('vendor intake')
-              )
-              .slice(0, 10)
-              .map((service) => ({
-                id: service?.id ?? null,
-                name: service?.name ?? null,
-                status: service?.status ?? null,
-                health: service?.health_status ?? null,
-                paymentValid: service?.x402_payment_valid ?? null,
-                priceUsd: service?.price_usd ?? null,
-              })),
+            total: body?.total ?? candidates.length,
+            returned: candidates.length,
+            matchingServices: matches.slice(0, 10).map((service) => ({
+              id: service?.id ?? null,
+              name: service?.name ?? null,
+              url: service?.url ?? service?.endpoint_url ?? null,
+              status: service?.status ?? null,
+              health: service?.health_status ?? null,
+              paymentValid: service?.x402_payment_valid ?? null,
+              priceUsd: service?.price_usd ?? null,
+            })),
+          };
+        } else {
+          item.summary = {
+            total: body?.total ?? body?.count ?? candidates.length,
+            returned: candidates.length,
+            matchingResults: matches.slice(0, 10).map((record) => ({
+              id: record?.id ?? null,
+              name: record?.name ?? record?.title ?? null,
+              url:
+                record?.url ??
+                record?.endpoint_url ??
+                record?.resource ??
+                record?.resource_url ??
+                null,
+              status: record?.status ?? null,
+              price:
+                record?.price ??
+                record?.price_amount ??
+                record?.price_usd ??
+                null,
+              paidVerified: record?.paid_verified ?? null,
+            })),
           };
         }
       }
