@@ -2,6 +2,14 @@
 
 _Status: draft only — do not send until Floot bare-origin consolidation and Agent402 re-indexing are complete._
 
+## Current availability incident — 2026-10-02
+
+As of **2026-10-02 13:04 UTC**, the AppDeploy shared API edge is returning HTTP 402 with `x-appdeploy-app-availability: temporarily-unavailable`, body code `APP_TEMPORARILY_UNAVAILABLE`, and no seller `PAYMENT-REQUIRED` header for the AppDeploy-hosted x402 services. Reapplying the current vendor-gate deployment did not clear the condition.
+
+This is being tracked in [incident #38](https://github.com/P00NSMASHER/permitplate-nyc/issues/38). The direct Floot rehost is tracked in [recovery #39](https://github.com/P00NSMASHER/permitplate-nyc/issues/39).
+
+The two Floot Pennsylvania raw routes remain healthy and continue to return valid x402 challenges. Do **not** treat the AppDeploy vendor gate or other AppDeploy-hosted routes as currently buyer-available until the zero-spend buyer verifier is green again.
+
 ## Proposed listing name
 
 Pennsylvania Vendor Intake Decision Gate
