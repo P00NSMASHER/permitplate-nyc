@@ -45,7 +45,7 @@ test("every catalog resource has resource-level exact Base USDC accepts",()=>{
 test("writer produces deterministic catalog, OpenAPI, and manifest files",()=>{
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),"x402-factory-"));
   const b=writeReleaseBundle(dir,"https://candidate.example");
-  for(const name of ["x402-catalog.json","openapi.json","factory-runtime-bundle.js","appdeploy-backend-index.ts","release-manifest.json"]){
+  for(const name of ["x402-catalog.json","openapi.json","factory-runtime-bundle.js","appdeploy-backend-index.ts","appdeploy-deploy-files.json","release-manifest.json"]){
     assert.ok(fs.existsSync(path.join(dir,name)));
   }
   const catalog=JSON.parse(fs.readFileSync(path.join(dir,"x402-catalog.json"),"utf8"));
@@ -90,4 +90,26 @@ test("release manifest binds the generated AppDeploy entrypoint hash",()=>{
   assert.equal(b.manifest.appdeploy_entrypoint.paid_route_count,b.appDeployEntrypoint.paidRouteCount);
   assert.equal(b.manifest.appdeploy_entrypoint.options_route_count,b.appDeployEntrypoint.optionsRouteCount);
   assert.equal(b.manifest.appdeploy_entrypoint.static_route_count,b.appDeployEntrypoint.staticRouteCount);
+});
+
+
+test("AppDeploy file mapping binds deployment targets to release artifacts",()=>{
+  const b=buildReleaseBundle("https://candidate.example");
+  const map=JSON.parse(b.canonicalFiles["appdeploy-deploy-files.json"]);
+  assert.equal(map.schema_version,1);
+  assert.deepEqual(
+    map.files.map(x=>x.target_path),
+    ["backend/index.ts","backend/factory-runtime-bundle.js"]
+  );
+  const entry=map.files.find(x=>x.target_path==="backend/index.ts");
+  const runtime=map.files.find(x=>x.target_path==="backend/factory-runtime-bundle.js");
+  assert.equal(entry.source_file,"appdeploy-backend-index.ts");
+  assert.equal(runtime.source_file,"factory-runtime-bundle.js");
+  assert.equal(entry.sha256,sha256(b.canonicalFiles[entry.source_file]));
+  assert.equal(runtime.sha256,sha256(b.canonicalFiles[runtime.source_file]));
+  assert.equal(
+    b.manifest.appdeploy_deploy_files.sha256,
+    sha256(b.canonicalFiles["appdeploy-deploy-files.json"])
+  );
+  assert.deepEqual(b.manifest.appdeploy_deploy_files.targets,map.files);
 });
