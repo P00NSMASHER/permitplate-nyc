@@ -1,4 +1,4 @@
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 
 const target = JSON.parse(
   await readFile(new URL('../recovery/floot-target-manifest.json', import.meta.url), 'utf8')
