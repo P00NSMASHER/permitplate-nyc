@@ -13,6 +13,7 @@ const MODULES = Object.freeze({
   "treasury-average-rate-trend": require("../../products/treasury-average-rate-trend/metadata"),
   "treasury-average-rate-spread": require("../../products/treasury-average-rate-spread/metadata"),
   "ofac-name-review-gate": require("../../products/ofac-name-review-gate/metadata"),
+  "pa-entity-ofac-review": require("../../products/pa-entity-ofac-review/metadata"),
   "pa-business-formation-age": require("../../products/pa-business-formation-age/metadata"),
   "domain-expiration-horizon": require("../../products/domain-expiration-horizon/metadata"),
   "domain-last-changed-recency": require("../../products/domain-last-changed-recency/metadata"),
