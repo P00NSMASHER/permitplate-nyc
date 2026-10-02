@@ -113,6 +113,10 @@ jobs:
         run: node factory/scripts/validate-migration-manifest.js
       - name: Test compiled discovery surfaces
         run: node --test factory/packages/discovery/generator.test.js
+      - name: Test deterministic deployment bundle
+        run: node --test factory/packages/discovery/bundle.test.js
+      - name: Dry-run deployment bundle writer
+        run: node factory/scripts/write-deployment-bundle.js https://candidate.example /tmp/x402-factory-bundle
       - name: Validate compiled discovery surfaces
         run: node factory/scripts/validate-discovery.js
       - name: Test factory release-bundle generator
