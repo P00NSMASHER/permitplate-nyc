@@ -274,5 +274,22 @@
   },
   "lastUpdatedAt": null,
   "lastCompletedWriteOrder": 0,
-  "resumeRule": "Never restart from write 1 after interruption. Refresh Floot list_files, verify boundary content against the locked deployment bundle, then resume at the next unfinished ordered write."
+  "resumeRule": "Never restart from write 1 after interruption. Refresh Floot list_files, verify boundary content against the locked deployment bundle, confirm the rollback snapshot/plan still match the captured pre-write project version, then resume at the next unfinished ordered write.",
+  "rollbackPlan": {
+    "status": "pending",
+    "projectVersion": null,
+    "artifactPath": null,
+    "githubCommit": null,
+    "restoreWrites": null,
+    "deletes": null,
+    "validator": "pending"
+  },
+  "deploymentLock": {
+    "status": "pending",
+    "sourceBranch": "floot-recovery-lock-2026-10-02",
+    "sourceCommit": "ceb21b651764ffaa0c893f4e725eccce0c10ba5f",
+    "checkedMain": null,
+    "workflowRunId": null,
+    "result": null
+  }
 }
