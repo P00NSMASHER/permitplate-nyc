@@ -10,6 +10,8 @@ on:
       - 'factory/products/pa-business-domain-match/**'
       - 'factory/products/sec-filing-freshness/**'
       - 'factory/products/domain-registration-age/**'
+      - 'factory/products/ofac-name-review-gate/**'
+      - 'factory/packages/sources/ofac-name-screen.js'
       - 'factory/products/treasury-average-rate-threshold/**'
       - 'factory/products/pa-business-formation-age/**'
       - 'factory/packages/sources/live-pa-identity.js'
@@ -34,6 +36,8 @@ jobs:
         run: node factory/products/sec-filing-freshness/live-smoke.js
       - name: Product 007 live RDAP smoke
         run: node factory/products/domain-registration-age/live-smoke.js
+      - name: Product 009 live OFAC smoke
+        run: node factory/products/ofac-name-review-gate/live-smoke.js
       - name: Product 008 live Treasury smoke
         run: node factory/products/treasury-average-rate-threshold/live-smoke.js
       - name: Product 009 live formation-age smoke
