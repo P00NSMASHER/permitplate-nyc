@@ -12,6 +12,7 @@ on:
       - 'factory/products/sec-company-identity-match/**'
       - 'factory/products/domain-registration-age/**'
       - 'factory/products/ofac-name-review-gate/**'
+      - 'factory/products/pa-entity-ofac-review/**'
       - 'factory/packages/sources/ofac-name-screen.js'
       - 'factory/products/treasury-average-rate-threshold/**'
       - 'factory/products/treasury-average-rate-trend/**'
@@ -49,6 +50,8 @@ jobs:
         run: node factory/products/domain-registration-age/live-smoke.js
       - name: Product 009 live OFAC smoke
         run: node factory/products/ofac-name-review-gate/live-smoke.js
+      - name: Product 016 live PA entity OFAC smoke
+        run: node factory/products/pa-entity-ofac-review/live-smoke.js
       - name: Product 008 live Treasury smoke
         run: node factory/products/treasury-average-rate-threshold/live-smoke.js
       - name: Product 014 live Treasury trend smoke
