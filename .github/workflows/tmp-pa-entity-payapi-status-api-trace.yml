@@ -1,0 +1,44 @@
+name: PA Entity PayAPI status API trace
+
+on:
+  push:
+    paths:
+      - '.github/workflows/tmp-pa-entity-payapi-status-api-trace.yml'
+
+jobs:
+  trace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Extract PayAPI pending review status handlers
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL 'https://payapi.market/list' -o /tmp/list.html
+          python3 - <<'PY'
+          import re, urllib.parse, subprocess, pathlib
+          base='https://payapi.market'
+          html=pathlib.Path('/tmp/list.html').read_text(errors='ignore')
+          chunks=[]
+          for i,src in enumerate(re.findall(r'<script[^>]+src=["\x27]([^"\x27]+)["\x27]',html,re.I)):
+              u=urllib.parse.urljoin(base+'/',src)
+              out=pathlib.Path(f'/tmp/s{i}.js')
+              if subprocess.run(['curl','-fsSL','--max-time','20',u,'-o',str(out)]).returncode==0 and out.exists():
+                  chunks.append(out.read_text(errors='ignore'))
+          s='\n'.join(chunks)
+          low=s.lower()
+          needles=[
+            '/api/get-provider','/api/provider-login','pending_review',
+            'payment_verified','triage_status','provider_id','listingid',
+            'api_listings'
+          ]
+          for needle in needles:
+              print(f'=== {needle} ===')
+              start=0; shown=0; n=needle.lower()
+              while shown<20:
+                  i=low.find(n,start)
+                  if i<0: break
+                  print(s[max(0,i-2200):min(len(s),i+4200)].replace('\n',' ')[:6400])
+                  print('\n---\n')
+                  start=i+len(n); shown+=1
+          PY
