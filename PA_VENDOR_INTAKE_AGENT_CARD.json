@@ -1,8 +1,8 @@
 {
   "name": "Pennsylvania Vendor Intake Gate x402",
-  "description": "Checks a prospective Pennsylvania vendor inside an agent workflow and returns proceed or human_review with auditable PA registry, Census address, OFAC candidate-screen, and RDAP evidence.",
+  "description": "Fail-closed Pennsylvania vendor-intake decision tool for autonomous agents. Returns proceed or human_review with typed PA registry, Census address, OFAC candidate-screen, and authoritative RDAP evidence.",
   "url": "https://pa-entity-lookup-x402-4fbm4s.v2.appdeploy.ai/",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "capabilities": {
     "streaming": false,
     "pushNotifications": false,
@@ -19,11 +19,12 @@
     {
       "id": "pennsylvania-vendor-intake-gate",
       "name": "Pennsylvania Vendor Intake Gate",
-      "description": "Given a prospective vendor name, U.S. address, and domain, run a bounded four-source intake check and return proceed or human_review with explicit evidence and review triggers.",
+      "description": "Given a prospective vendor name, U.S. address, and domain, run a bounded four-source intake check and return a machine-actionable proceed or human_review decision. Ambiguous, incomplete, inconsistent, or review-triggering evidence fails closed to human review.",
       "tags": [
         "vendor-intake",
         "agent-decision",
         "human-review",
+        "fail-closed",
         "pennsylvania-business-registry",
         "ofac-screening",
         "census-geocoder",
@@ -31,11 +32,14 @@
       ],
       "examples": [
         "Check whether this Pennsylvania vendor can continue through automated intake.",
-        "Pause vendor onboarding for human review if registry identity, address consistency, OFAC candidate screening, or domain registration triggers review."
+        "Pause vendor onboarding if the Pennsylvania registry record is ambiguous or incomplete.",
+        "Pause vendor onboarding if Census evidence is incomplete or the submitted and registry addresses differ.",
+        "Pause vendor onboarding if OFAC returns a review candidate or its evidence contract is incomplete.",
+        "Pause vendor onboarding if RDAP evidence is incomplete, the domain is unregistered, or the registered domain does not plausibly align with the vendor name."
       ]
     }
   ],
-  "documentationUrl": "https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/skill.md",
+  "documentationUrl": "https://github.com/P00NSMASHER/permitplate-nyc/blob/main/docs/vendor-intake-gate-evidence.md",
   "openapiUrl": "https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/openapi.json",
   "x402": {
     "version": 2,
@@ -45,10 +49,11 @@
     "endpoint": "https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-gate"
   },
   "limitations": [
-    "proceed is a workflow signal, not legal/compliance approval or sanctions clearance",
+    "proceed is a workflow signal, not legal/compliance approval, sanctions clearance, fraud approval, or credit approval",
     "OFAC evidence is candidate-name screening only and does not implement 50 Percent Rule ownership analysis",
-    "PA registry matching does not prove good standing or ownership",
-    "Census matching does not prove control of an address",
-    "RDAP registration does not prove domain ownership"
+    "PA registry matching does not prove current good standing, ownership, or authority to contract",
+    "Census matching does not prove physical presence or control of an address",
+    "RDAP registration and vendor-name alignment do not prove domain ownership or control",
+    "brand/domain heuristics are conservative and can intentionally send legitimate vendors to human review"
   ]
 }
