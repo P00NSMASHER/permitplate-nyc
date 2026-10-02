@@ -22,6 +22,8 @@ const {createTreasuryRateThresholdService}=require("../products/treasury-average
 const {createPaidTreasuryThresholdHandler}=require("../products/treasury-average-rate-threshold/paid-handler");
 const {createTreasuryRateTrendService}=require("../products/treasury-average-rate-trend/service");
 const {createPaidTreasuryTrendHandler}=require("../products/treasury-average-rate-trend/paid-handler");
+const {createTreasuryRateSpreadService}=require("../products/treasury-average-rate-spread/service");
+const {createPaidTreasuryRateSpreadHandler}=require("../products/treasury-average-rate-spread/paid-handler");
 const {createOfacReviewService}=require("../products/ofac-name-review-gate/service");
 const {createPaidOfacReviewHandler}=require("../products/ofac-name-review-gate/paid-handler");
 const {createFormationAgeService}=require("../products/pa-business-formation-age/service");
@@ -98,6 +100,7 @@ function createFactoryRuntime({
     "domain-registration-age":createDomainAgeService({rdap:a.rdap,now}),
     "treasury-average-rate-threshold":createTreasuryRateThresholdService({treasury:a.treasury,now}),
     "treasury-average-rate-trend":createTreasuryRateTrendService({treasury:a.treasury,now}),
+    "treasury-average-rate-spread":createTreasuryRateSpreadService({treasury:a.treasury,now}),
     "ofac-name-review-gate":createOfacReviewService({ofac:a.ofac,now}),
     "pa-business-formation-age":createFormationAgeService({registry:a.registry,now}),
     "domain-expiration-horizon":createDomainExpirationService({rdap:a.rdap,now}),
@@ -113,6 +116,7 @@ function createFactoryRuntime({
     "domain-registration-age":createPaidDomainAgeHandler,
     "treasury-average-rate-threshold":createPaidTreasuryThresholdHandler,
     "treasury-average-rate-trend":createPaidTreasuryTrendHandler,
+    "treasury-average-rate-spread":createPaidTreasuryRateSpreadHandler,
     "ofac-name-review-gate":createPaidOfacReviewHandler,
     "pa-business-formation-age":createPaidFormationAgeHandler,
     "domain-expiration-horizon":createPaidDomainExpirationHandler,
