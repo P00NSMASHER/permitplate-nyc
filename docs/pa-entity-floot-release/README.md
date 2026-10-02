@@ -12,6 +12,8 @@ Copy these files into Floot after the daily action reset:
 | pa-business_GET.schema.ts | endpoints/pa-business_GET.schema.ts |
 | pa-entity-one_GET.ts | endpoints/pa-entity-one_GET.ts |
 | pa-entity-one_GET.schema.ts | endpoints/pa-entity-one_GET.schema.ts |
+| vendor-intake-gate_GET.ts | endpoints/vendor-intake-gate_GET.ts |
+| vendor-intake-gate_GET.schema.ts | endpoints/vendor-intake-gate_GET.schema.ts |
 | openapi.json | static/openapi.json |
 | llms.txt | static/llms.txt |
 | llms-full.txt | static/llms-full.txt |
@@ -24,17 +26,21 @@ Copy these files into Floot after the daily action reset:
 | security.txt | static/.well-known/security.txt |
 | sitemap.xml | static/sitemap.xml |
 
-The canonical extensionless path is intentionally a **two-resource** manifest:
+The currently deployed canonical extensionless manifest remains a **two-resource** baseline:
 - `/_api/pa-entity-one` at $0.001
 - `/_api/pa-business` at $0.005
 
-The staged `x402` file has been parsed successfully by Agent402's current `normaliseManifestTools` implementation with both prices, Base network, and seller wallet preserved.
+A Floot-native `/_api/vendor-intake-gate` release candidate at $0.020 is now staged in this bundle and covered by `scripts/test-floot-vendor-gate-release.mts`. It uses PA/Census/OFAC/RDAP public-data logic directly and has **zero AppDeploy runtime dependencies**. During hosting incident #38, do not mistake the old two-resource baseline for the target recovery state; follow issue #39 and `docs/floot-rehost-implementation-map.md` for the eight-resource recovery sequence.
+
+The existing two-resource `x402` baseline has been parsed successfully by Agent402's current `normaliseManifestTools` implementation with both prices, Base network, and seller wallet preserved.
 
 Keep `x402.json` and `x402-services.json` as conservative compatibility aliases: preserve the legacy top-level resource/accepts fields and also expose a minimal two-entry `resources[]` view so CDP-style Bazaar ingestors can discover both paid routes. If Floot cannot serve the extensionless static file as HTTP 200 `application/json`, record that platform limitation and do not claim Agent402 canonical discovery is fixed.
 
 ## Approved deployment payloads
 
-Use the seven `FLOOT_SAFE_PATCH_*.txt` files described in `FLOOT_MIN_ACTION_DEPLOY.md`. They are the only approved live-deployment payloads.
+The seven `FLOOT_SAFE_PATCH_*.txt` files remain the approved **PA-baseline** patch set. They do not by themselves perform the AppDeploy-incident rehost. While incident #38 is active, use them only where the recovery plan explicitly calls for preserving or refreshing the two proven PA routes/discovery files.
+
+The staged vendor-gate endpoint files above are pretested recovery inputs, not yet proof of a live Floot deployment. Full incident recovery is governed by issue #39 and `docs/floot-rehost-implementation-map.md`.
 
 The older `FLOOT_PATCH_CORE.txt` and `FLOOT_PATCH_DISCOVERY.txt` files are retained only as historical build artifacts. **Do not deploy them.** They are oversized for the conservative patch lane, and the old core payload contains explicit OPTIONS endpoint files that Floot does not support.
 
@@ -84,7 +90,9 @@ Floot endpoint files support GET/POST only. Explicit OPTIONS endpoint files are 
 24. Refresh x402scan.
 25. Re-register Agent402 and inspect routable/health state.
 26. Re-check 402 Index and nohumans rankings.
-27. Revenue remains $0 until a third-party settlement is observed.
+27. Staged Floot-native vendor gate release test passes challenge, verify, decision, settlement, address-review and domain-review branches with no AppDeploy dependency.
+28. After incident rehost, the zero-spend portfolio verifier passes the actual consolidated manifest/resource count before Agent402 re-registration.
+29. Revenue remains $0 until a third-party settlement is observed.
 
 ## Floot CORS limitation
 
