@@ -58,5 +58,17 @@
     "Require post-publish buyer-style verification and Agent402 expanded-tool readback before Step 2 completion.",
     "Do not self-fund settlement history.",
     "Confirmed attributable third-party revenue remains $0 until independent settlement evidence exists."
-  ]
+  ],
+  "publicBaselinePreflight": {
+    "workflow": "Preflight Floot public baseline",
+    "runId": 37028449394,
+    "conclusion": "success",
+    "checkedAt": "2026-10-02T15:39:03Z",
+    "staticFilesPassed": 12,
+    "staticFilesTotal": 12,
+    "paidRoutesPassed": 2,
+    "paidRoutesTotal": 2,
+    "canonicalManifestResourceCount": 2,
+    "green": true
+  }
 }
