@@ -8,6 +8,7 @@ const {
   managedProducts,
   buildCatalog,
   buildOpenApi,
+  buildProductIndex,
   buildLlmsText,
   validateCompiled,
 }=require("./generator");
@@ -78,4 +79,19 @@ test("design products are never published solely because metadata exists",()=>{
   for(const product of registry.products.filter(p=>p.status==="design"&&MODULES[p.id])){
     assert.ok(!published.has(product.id),product.id+" must remain unpublished while design");
   }
+});
+
+test("product index matches catalog and OpenAPI staging order",()=>{
+  const index=buildProductIndex(BASE);
+  const catalog=buildCatalog(BASE);
+  const api=buildOpenApi(BASE);
+  const products=managedProducts();
+  assert.equal(index.base_url,BASE);
+  assert.deepEqual(index.products.map(p=>p.id),products.map(p=>p.id));
+  assert.deepEqual(index.products.map(p=>p.path),products.map(p=>p.path));
+  assert.deepEqual(
+    index.products.map(p=>p.path),
+    catalog.resources.map(r=>new URL(r.resource).pathname)
+  );
+  assert.deepEqual(index.products.map(p=>p.path),Object.keys(api.paths));
 });
