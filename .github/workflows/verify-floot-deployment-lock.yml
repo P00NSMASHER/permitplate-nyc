@@ -8,6 +8,9 @@ on:
       - 'scripts/verify-floot-deployment-lock.mjs'
       - 'verification/floot-static-rollback-public-latest.json'
       - 'scripts/validate-floot-static-rollback-public.mjs'
+      - 'scripts/build-floot-pre-rehost-snapshot.mjs'
+      - 'scripts/test-floot-pre-rehost-snapshot-builder.mjs'
+      - 'scripts/validate-floot-pre-rehost-snapshot.mjs'
       - '.github/workflows/verify-floot-deployment-lock.yml'
   workflow_dispatch:
 
@@ -28,3 +31,6 @@ jobs:
 
       - name: Verify public static rollback receipt
         run: node scripts/validate-floot-static-rollback-public.mjs
+
+      - name: Test pre-rehost snapshot builder
+        run: node scripts/test-floot-pre-rehost-snapshot-builder.mjs
