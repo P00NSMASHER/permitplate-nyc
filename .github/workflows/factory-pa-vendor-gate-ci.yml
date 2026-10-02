@@ -14,6 +14,10 @@ on:
       - '.github/workflows/factory-pa-vendor-gate-ci.yml'
   workflow_dispatch:
 
+concurrency:
+  group: factory-product-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
