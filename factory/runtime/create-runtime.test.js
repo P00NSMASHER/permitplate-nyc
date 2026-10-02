@@ -31,6 +31,7 @@ test("runtime wires exactly every modular staging product",()=>{
   assert.ok(expected.some(p=>p.id==="sec-company-identity-match"));
   assert.ok(expected.some(p=>p.id==="treasury-average-rate-trend"));
   assert.ok(expected.some(p=>p.id==="treasury-average-rate-spread"));
+  assert.ok(expected.some(p=>p.id==="pa-entity-ofac-review"));
 });
 
 test("every staged paid route returns 402 without source or facilitator work",async()=>{
