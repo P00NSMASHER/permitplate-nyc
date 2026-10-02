@@ -1,0 +1,25 @@
+name: Verify Floot deployment lock
+
+on:
+  push:
+    paths:
+      - 'verification/floot-deployment-queue-latest.json'
+      - 'docs/pa-entity-floot-recovery/deploy-map.json'
+      - 'scripts/verify-floot-deployment-lock.mjs'
+      - '.github/workflows/verify-floot-deployment-lock.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Verify immutable Floot deployment source lock
+        run: node scripts/verify-floot-deployment-lock.mjs
