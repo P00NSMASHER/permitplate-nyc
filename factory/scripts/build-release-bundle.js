@@ -47,7 +47,7 @@ function buildReleaseBundle(publicApiBase=DEFAULT_BASE){
     ]
   };
   const appDeployFileMapFileName="appdeploy-deploy-files.json";
-  const appDeployFileMapContent=JSON.stringify(appDeployFileMap,null,2)+"\\n";
+  const appDeployFileMapContent=JSON.stringify(appDeployFileMap,null,2)+"\n";
   const appDeployFileMapSha256=sha256(appDeployFileMapContent);
   const catalog=parseJsonFile(deployment,"x402-catalog.json");
   const openapi=parseJsonFile(deployment,"openapi.json");
