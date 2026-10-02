@@ -6,6 +6,11 @@ const raw = await readFile(
 );
 const manifest = JSON.parse(raw);
 const failures = [];
+const printableAscii32 = (value) =>
+  typeof value === 'string' &&
+  value.length > 0 &&
+  value.length <= 32 &&
+  /^[\\x20-\\x7E]+$/.test(value);
 
 const expected = new Map([
   ['pa-best-match', ['$0.001', '1000']],
@@ -56,6 +61,16 @@ for (const resource of resources) {
   if (JSON.stringify(resource).includes('api-v2.appdeploy.ai')) {
     failures.push(resource.id + ' reintroduces AppDeploy runtime URL');
   }
+  if (!printableAscii32(resource.serviceName)) {
+    failures.push(resource.id + ' invalid x402 serviceName');
+  }
+  if (!Array.isArray(resource.tags) || resource.tags.length > 5) {
+    failures.push(resource.id + ' invalid x402 tag count');
+  } else {
+    for (const tag of resource.tags) {
+      if (!printableAscii32(tag)) failures.push(resource.id + ' invalid x402 tag ' + tag);
+    }
+  }
 }
 
 for (const id of expected.keys()) {
@@ -85,4 +100,5 @@ if (failures.length) {
   console.log('PASS Base USDC/network/payout contract');
   console.log('PASS 3 bounded vendor-gate fixtures');
   console.log('PASS no AppDeploy runtime dependency');
+  console.log('PASS x402 serviceName/tag metadata constraints');
 }
