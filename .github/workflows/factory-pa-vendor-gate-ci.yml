@@ -123,3 +123,9 @@ jobs:
         run: node --test factory/scripts/build-release-bundle.test.js
       - name: Build staging release bundle
         run: node factory/scripts/build-release-bundle.js /tmp/x402-factory-bundle https://candidate.example
+      - name: Test direct OFAC source adapter
+        run: node --test factory/packages/sources/ofac-name-screen.test.js
+      - name: Test Product 009 OFAC review decision
+        run: node --test factory/products/ofac-name-review-gate/decision.test.js
+      - name: Test Product 009 OFAC review service
+        run: node --test factory/products/ofac-name-review-gate/service.test.js
