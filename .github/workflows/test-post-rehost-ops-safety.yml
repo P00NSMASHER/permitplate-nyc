@@ -8,6 +8,7 @@ on:
       - 'scripts/repair-marketplaces-after-floot-rehost.mjs'
       - '.github/workflows/verify-agent402-after-floot-rehost.yml'
       - '.github/workflows/repair-marketplaces-after-floot-rehost.yml'
+      - '.github/workflows/post-floot-x402-distribution.yml'
       - 'docs/agentic-ai-vendor-gate-resubmission-draft.md'
       - '.github/workflows/test-post-rehost-ops-safety.yml'
   workflow_dispatch:
