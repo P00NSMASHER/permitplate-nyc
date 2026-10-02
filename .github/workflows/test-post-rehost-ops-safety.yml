@@ -25,4 +25,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: node scripts/test-post-rehost-ops-safety.mjs
+      - name: Syntax-check post-rehost operations
+        run: |
+          node --check scripts/verify-agent402-after-floot-rehost.mjs
+          node --check scripts/repair-marketplaces-after-floot-rehost.mjs
+          node --check scripts/postdeploy-floot-x402.mjs
+          node --check scripts/test-post-rehost-ops-safety.mjs
+
+      - name: Verify post-rehost safety invariants
+        run: node scripts/test-post-rehost-ops-safety.mjs
