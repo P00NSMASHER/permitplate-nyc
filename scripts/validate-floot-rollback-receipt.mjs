@@ -24,8 +24,8 @@ const receipt = JSON.parse(await readFile(receiptPath, 'utf8'));
 assert.equal(receipt.projectId, queue.projectId);
 assert.equal(receipt.productionOrigin, queue.productionOrigin);
 assert.ok(
-  Number.isInteger(receipt.preWriteVersion) && receipt.preWriteVersion >= 0,
-  'preWriteVersion must be a non-negative integer'
+  Number.isInteger(receipt.preWriteProjectVersion) && receipt.preWriteProjectVersion >= 0,
+  'preWriteProjectVersion must be a non-negative integer'
 );
 assert.match(
   String(receipt.capturedAt ?? ''),
@@ -80,7 +80,7 @@ console.log(
     {
       ok: true,
       projectId: receipt.projectId,
-      preWriteVersion: receipt.preWriteVersion,
+      preWriteProjectVersion: receipt.preWriteProjectVersion,
       deploymentTargets: expectedTargets.size,
       capturedExistingTargets: existing.length,
       absentTargets: absent.length,
