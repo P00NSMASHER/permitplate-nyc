@@ -54,3 +54,5 @@ jobs:
         run: node --test factory/products/pa-business-domain-match/paid-handler.test.js
       - name: Test Product 005 discovery metadata
         run: node --test factory/products/pa-business-domain-match/metadata.test.js
+      - name: Run Product 005 release gate
+        run: node factory/scripts/validate-product-005.js
