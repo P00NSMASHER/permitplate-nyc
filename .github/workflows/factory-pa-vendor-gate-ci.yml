@@ -199,6 +199,8 @@ jobs:
         run: node --test factory/runtime/appdeploy-bridge.test.js
       - name: Test self-contained AppDeploy ESM runtime bundle
         run: node --test factory/scripts/build-appdeploy-runtime-bundle.test.js
+      - name: Test generated AppDeploy backend entrypoint
+        run: node --test factory/scripts/build-appdeploy-entrypoint.test.js
       - name: Enforce no nested seller-owned AppDeploy calls
         run: node --test factory/scripts/validate-no-nested-seller-calls.test.js
       - name: Test unified deploy-candidate validator
