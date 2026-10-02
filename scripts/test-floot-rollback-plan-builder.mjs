@@ -5,6 +5,7 @@ import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 const root = await mkdtemp(join(tmpdir(), 'floot-rollback-plan-test-'));
 const snapshotPath = join(root, 'snapshot.json');
@@ -54,7 +55,7 @@ await writeFile(snapshotPath, JSON.stringify(snapshot), 'utf8');
 const result = spawnSync(
   process.execPath,
   [
-    new URL('./build-floot-rollback-plan.mjs', import.meta.url).pathname,
+    fileURLToPath(new URL('./build-floot-rollback-plan.mjs', import.meta.url)),
     snapshotPath,
     planPath,
   ],
