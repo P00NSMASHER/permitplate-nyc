@@ -1,0 +1,313 @@
+{
+  "402index": {
+    "register": {
+      "data": {
+        "detail": "Endpoint returned 402 but no valid x402 challenge was detected.",
+        "error": "x402 verification failed",
+        "probe": {
+          "bodySnippet": null,
+          "detectedProtocols": [],
+          "headersPresent": {
+            "PAYMENT-REQUIRED": false,
+            "WWW-Authenticate": false
+          },
+          "httpStatus": 402
+        }
+      },
+      "error": "HTTP Error 422: Unprocessable Entity",
+      "headers": {
+        "Connection": "close",
+        "Content-Length": "249",
+        "Content-Type": "application/json; charset=utf-8",
+        "Date": "Fri, 02 Oct 2026 12:48:00 GMT",
+        "Server": "railway-hikari",
+        "content-security-policy": "default-src 'self';script-src 'self' 'unsafe-inline' https://plausible.io;style-src 'self' 'unsafe-inline';img-src 'self' data:;connect-src 'self' https://plausible.io;font-src 'self';script-src-attr 'unsafe-inline';object-src 'none';frame-ancestors 'none';base-uri 'self';form-action 'self';upgrade-insecure-requests",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "etag": "W/\"f9-MP4LsooCalYR9jh4j5sW0s2LHjA\"",
+        "origin-agent-cluster": "?1",
+        "ratelimit": "limit=50, remaining=47, reset=1532",
+        "ratelimit-policy": "50;w=3600",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-hikari-trace": "lax1.e74w",
+        "x-permitted-cross-domain-policies": "none",
+        "x-railway-edge": "lax1",
+        "x-railway-request-id": "5fTkgiXzT_aJ8YOUEuroCg",
+        "x-xss-protection": "0"
+      },
+      "ok": false,
+      "status": 422,
+      "url": "https://402index.io/api/v1/register"
+    },
+    "search": {
+      "headers": {
+        "Cache-Control": "public, max-age=60",
+        "Connection": "close",
+        "Content-Length": "40343",
+        "Content-Type": "application/json; charset=utf-8",
+        "Date": "Fri, 02 Oct 2026 12:48:08 GMT",
+        "Server": "railway-hikari",
+        "content-security-policy": "default-src 'self';script-src 'self' 'unsafe-inline' https://plausible.io;style-src 'self' 'unsafe-inline';img-src 'self' data:;connect-src 'self' https://plausible.io;font-src 'self';script-src-attr 'unsafe-inline';object-src 'none';frame-ancestors 'none';base-uri 'self';form-action 'self';upgrade-insecure-requests",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "etag": "W/\"9d97-X1GU2e3FNTXGD3K1/kI09QcVI8c\"",
+        "origin-agent-cluster": "?1",
+        "ratelimit": "limit=100, remaining=99, reset=60",
+        "ratelimit-policy": "100;w=60",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "vary": "accept-encoding",
+        "x-402index-semantic-cap": "true",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-hikari-trace": "lax1.e74w",
+        "x-permitted-cross-domain-policies": "none",
+        "x-railway-edge": "lax1",
+        "x-railway-request-id": "aMKyxRnhQ-i7h5RRjUJq2g",
+        "x-xss-protection": "0"
+      },
+      "matches": [],
+      "ok": true,
+      "status": 200,
+      "url": "https://402index.io/api/v1/services?q=Pennsylvania+Vendor+Intake&protocol=x402&limit=50"
+    }
+  },
+  "accounting_note": "Directory submissions, self-tests, unpaid probes, and registrations are not revenue and must never be counted as buyers.",
+  "checked_at": "2026-10-02T12:47:57.924279+00:00",
+  "live_unpaid_challenge": {
+    "body": {
+      "code": "APP_TEMPORARILY_UNAVAILABLE",
+      "message": "This app is temporarily unavailable. Please try again later. If the problem continues, contact the app\u2019s support team."
+    },
+    "http_status": 402,
+    "payment_required": null
+  },
+  "market402": {
+    "index": {
+      "headers": {
+        "Accept-Ranges": "bytes",
+        "CF-RAY": "a443d1b7b91a7ddc-LAX",
+        "Cache-Control": "public, max-age=600",
+        "Connection": "close",
+        "Content-Length": "25253555",
+        "Content-Type": "application/json",
+        "Date": "Fri, 02 Oct 2026 12:48:05 GMT",
+        "Nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "Report-To": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=U4YS2ayLICC10jeChmHGQeM93vXWb26%2B%2FMdtep2F7GYRXg4y8%2BBhTaAqlv4HrUN%2Brj4%2BMFc%2BB5MO5pQG%2BPVJcW5oUotTvS%2BDYxdzdkqU1YE60GAs0AyAQBUIvKIzgRcN\"}]}",
+        "Server": "cloudflare",
+        "alt-svc": "h3=\":443\"; ma=86400",
+        "cf-cache-status": "EXPIRED",
+        "etag": "\"scores-1790910688\"",
+        "last-modified": "Fri, 02 Oct 2026 03:11:28 GMT",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff"
+      },
+      "matches": [],
+      "ok": true,
+      "status": 200,
+      "url": "https://market402.com/index.json"
+    },
+    "search": {
+      "headers": {
+        "CF-RAY": "a443d1b63a27b021-LAX",
+        "Connection": "close",
+        "Content-Length": "678",
+        "Content-Type": "application/json",
+        "Date": "Fri, 02 Oct 2026 12:48:03 GMT",
+        "Nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "Report-To": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=xYsBCg4jK0MbYz7hUSFVU0ea7puyWCkqmTjK9bY1RrveSokcfsXFwtK65aG4HxkWuJsBMaa3eUdqbJ4cYbhVKYOhV1gwBJzfNzzrQXXtaAmh6MOn8THrmtXHQcVUyxh5\"}]}",
+        "Server": "cloudflare",
+        "alt-svc": "h3=\":443\"; ma=86400",
+        "cf-cache-status": "DYNAMIC",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff"
+      },
+      "matches": [],
+      "ok": true,
+      "status": 200,
+      "url": "https://market402.com/search.json?q=Pennsylvania%20Vendor%20Intake"
+    },
+    "selftest": {
+      "data": {
+        "checks": [
+          {
+            "check": "https_url",
+            "hint": "",
+            "pass": true
+          },
+          {
+            "check": "public_hostname",
+            "hint": "",
+            "pass": true
+          },
+          {
+            "check": "reachable",
+            "hint": "",
+            "pass": true
+          },
+          {
+            "check": "returns_402_unpaid",
+            "hint": "",
+            "pass": true
+          },
+          {
+            "check": "body_json",
+            "hint": "",
+            "pass": true
+          },
+          {
+            "check": "x402_version",
+            "hint": "Missing \"x402Version\" in 402 body.",
+            "pass": false
+          },
+          {
+            "check": "accepts_present",
+            "hint": "Missing/empty \"accepts\" array.",
+            "pass": false
+          },
+          {
+            "check": "pay_to",
+            "hint": "accepts[0].payTo missing.",
+            "pass": false
+          },
+          {
+            "check": "amount",
+            "hint": "accepts[0] needs maxAmountRequired (v1) or amount (v2).",
+            "pass": false
+          },
+          {
+            "check": "network_present",
+            "hint": "accepts[0].network missing.",
+            "pass": false
+          }
+        ],
+        "latency_ms": 159,
+        "not_a_verified_badge": "Passing this self-test does NOT grant 402 Verified. Badges come only from Market402's own scheduled probes. POST /submit to get listed and probed.",
+        "ok": false,
+        "self_test_only": true,
+        "summary": {
+          "failed": 5,
+          "passed": 5,
+          "verdict": "issues_found"
+        },
+        "url": "https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-gate?name=OpenAI%20OpCo&address=600%20North%20Second%20Street%2C%20Suite%20401%2C%20Harrisburg%2C%20PA%2017101&domain=openai.com"
+      },
+      "headers": {
+        "CF-RAY": "a443d19898967b5d-LAX",
+        "Connection": "close",
+        "Content-Length": "1153",
+        "Content-Type": "application/json",
+        "Date": "Fri, 02 Oct 2026 12:47:59 GMT",
+        "Nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "Report-To": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=i9LQXtqzTx4%2BnF82%2FaqHQjgNqQb352wNQ1V0IEqGAQjpJtKC3zinCtj%2Bw3Xz7dAvHnoQJrqOB8N0keBPHpPjy38zjH4%2BNPC4PELAvtteEsNTI5l20jy4u5p7qgHQ2Ilj\"}]}",
+        "Server": "cloudflare",
+        "alt-svc": "h3=\":443\"; ma=86400",
+        "cf-cache-status": "DYNAMIC",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff"
+      },
+      "ok": true,
+      "status": 200,
+      "url": "https://market402.com/selftest"
+    },
+    "submit": {
+      "data": {
+        "already_listed": true,
+        "declared_price_note": "recorded; future probes compare the live 402 amount against this declaration (SCORE_DESIGN v0.4)",
+        "declared_price_usd": 0.02,
+        "dedupe_note": "identical submission within 24h - self-check ran fresh below, but the queue entry was not duplicated (SCORE_DESIGN v0.4.2)",
+        "instant_check": {
+          "checks": [
+            {
+              "check": "https_url",
+              "hint": "",
+              "pass": true
+            },
+            {
+              "check": "public_hostname",
+              "hint": "",
+              "pass": true
+            },
+            {
+              "check": "reachable",
+              "hint": "",
+              "pass": true
+            },
+            {
+              "check": "returns_402_unpaid",
+              "hint": "",
+              "pass": true
+            },
+            {
+              "check": "body_json",
+              "hint": "",
+              "pass": true
+            },
+            {
+              "check": "x402_version",
+              "hint": "Missing \"x402Version\" in 402 body.",
+              "pass": false
+            },
+            {
+              "check": "accepts_present",
+              "hint": "Missing/empty \"accepts\" array.",
+              "pass": false
+            },
+            {
+              "check": "pay_to",
+              "hint": "accepts[0].payTo missing.",
+              "pass": false
+            },
+            {
+              "check": "amount",
+              "hint": "accepts[0] needs maxAmountRequired (v1) or amount (v2).",
+              "pass": false
+            },
+            {
+              "check": "network_present",
+              "hint": "accepts[0].network missing.",
+              "pass": false
+            }
+          ],
+          "latency_ms": 240,
+          "ok": false,
+          "summary": {
+            "failed": 5,
+            "passed": 5,
+            "verdict": "issues_found"
+          },
+          "url": "https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-gate?name=OpenAI%20OpCo&address=600%20North%20Second%20Street%2C%20Suite%20401%2C%20Harrisburg%2C%20PA%2017101&domain=openai.com"
+        },
+        "message": "Queued. Your endpoint will be probed in the next round (no payment attached; we expect a spec-compliant 402).",
+        "note": "instant_check is advisory self-test output; the 402 Verified badge is granted only by our own scheduled probes.",
+        "ok": true
+      },
+      "headers": {
+        "CF-RAY": "a443d193bcd4c4e7-LAX",
+        "Connection": "close",
+        "Content-Length": "1538",
+        "Content-Type": "application/json",
+        "Date": "Fri, 02 Oct 2026 12:47:58 GMT",
+        "Nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "Report-To": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=OB9UlSGAnnBBjM257EUSdFq6qwMiXu1Jjb2OTGGy531%2BpEXgsrbQAHjmUGxeXbIUtb1yegvoopxIYZVaI0o1VkQwi7oO5J3ysDN2T2B636pSRFUzHroXjTVXvFyEq9Of\"}]}",
+        "Server": "cloudflare",
+        "alt-svc": "h3=\":443\"; ma=86400",
+        "cf-cache-status": "DYNAMIC",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "x-content-type-options": "nosniff"
+      },
+      "ok": true,
+      "status": 200,
+      "url": "https://market402.com/submit"
+    }
+  },
+  "mode": "zero_spend_directory_repair",
+  "target": "https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-gate?name=OpenAI%20OpCo&address=600%20North%20Second%20Street%2C%20Suite%20401%2C%20Harrisburg%2C%20PA%2017101&domain=openai.com"
+}
