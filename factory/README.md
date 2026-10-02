@@ -21,6 +21,7 @@ Build narrow, deterministic, machine-purchasable decision tools for autonomous a
 | 009 | OFAC Name Review Gate | live-source-verified staging | `/api/ofac-name-review-gate` | $0.003 |
 | 010 | PA Business Formation Age | live-source-verified staging | `/api/pa-business-formation-age` | $0.002 |
 | 011 | Domain Expiration Horizon | live-source-verified staging | `/api/domain-expiration-horizon` | $0.002 |
+| 012 | Domain Last-Changed Recency | live-source-verified staging | `/api/domain-last-changed-recency` | $0.002 |
 
 Product 001 has an independently verified third-party Base USDC settlement and remains the payment/distribution reference.
 
@@ -145,6 +146,20 @@ Returns:
 Live smoke for `openai.com` observed expiration date `2029-01-19` and returned `not_expiring_soon` for a 180-day horizon.
 
 This is a registration timing signal only; registry renewal/grace/redemption policies vary and the result does not prove ownership, control, legitimacy, security, fraud risk, or business identity.
+
+## Product 012
+
+Authoritative RDAP last-changed recency decision.
+
+Returns:
+- `recently_changed`
+- `stable_since_window`
+- `unregistered`
+- `human_review`
+
+Live smoke for `openai.com` observed the true domain `lastChanged` event on `2024-10-17` and returned `recently_changed` for a 730-day window.
+
+The product deliberately does **not** treat RDAP's `lastUpdateOfRdapDatabase` event as a domain change. A recent metadata change is not by itself evidence of compromise, fraud, ownership transfer, malicious activity, security risk, or business risk.
 
 ## Shared layers
 
