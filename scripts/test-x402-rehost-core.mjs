@@ -1,0 +1,81 @@
+import {
+  geocodeAddress,
+  lookupDomain,
+  screenOfacName,
+  lookupSecFilings,
+  latestTreasuryRates,
+} from '../recovery/x402-rehost-core.mjs';
+
+const checks = [];
+
+async function run(name, fn, validate) {
+  const started = Date.now();
+  try {
+    const value = await fn();
+    const ok = validate(value);
+    checks.push({ name, ok, latencyMs: Date.now() - started, value });
+    console.log((ok ? 'PASS ' : 'FAIL ') + name + ' ' + JSON.stringify(value).slice(0, 500));
+  } catch (error) {
+    checks.push({
+      name,
+      ok: false,
+      latencyMs: Date.now() - started,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    console.log('FAIL ' + name + ' ' + (error instanceof Error ? error.message : String(error)));
+  }
+}
+
+await run(
+  'Census',
+  () => geocodeAddress('4600 Silver Hill Rd, Washington, DC 20233'),
+  (v) =>
+    v?.matched === true &&
+    typeof v?.matchedAddress === 'string' &&
+    Number.isFinite(v?.coordinates?.latitude) &&
+    Number.isFinite(v?.coordinates?.longitude)
+);
+
+await run(
+  'RDAP',
+  () => lookupDomain('example.com'),
+  (v) =>
+    v?.domain === 'example.com' &&
+    v?.registered === true &&
+    typeof v?.authoritativeRdap === 'string'
+);
+
+await run(
+  'OFAC',
+  () => screenOfacName('VLADIMIR PUTIN', { limit: 3, minScore: 90 }),
+  (v) =>
+    v?.query === 'VLADIMIR PUTIN' &&
+    v?.minScore === 90 &&
+    Number.isInteger(v?.totalCandidatesAboveThreshold) &&
+    Array.isArray(v?.candidates) &&
+    v.candidates.length >= 1
+);
+
+await run(
+  'SEC',
+  () => lookupSecFilings({ ticker: 'AAPL', form: '10-K', limit: 1 }),
+  (v) =>
+    v?.company?.cik === '0000320193' &&
+    Array.isArray(v?.filings) &&
+    v.filings.length === 1 &&
+    v.filings[0]?.form === '10-K'
+);
+
+await run(
+  'Treasury',
+  () => latestTreasuryRates('Total Marketable'),
+  (v) =>
+    typeof v?.recordDate === 'string' &&
+    v.recordDate.length === 10 &&
+    Array.isArray(v?.rates) &&
+    v.rates.length >= 1
+);
+
+const passed = checks.filter((x) => x.ok).length;
+console.log('\nSUMMARY ' + passed + '/' + checks.length + ' passed');
+if (passed !== checks.length) process.exitCode = 1;
