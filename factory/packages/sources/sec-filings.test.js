@@ -8,6 +8,7 @@ const {
   normalizeCik,
   normalizeTicker,
   createSecFilingsAdapter,
+  hasContactEmail,
 } = require("./sec-filings");
 
 function response(body, status = 200) {
@@ -17,6 +18,11 @@ function response(body, status = 200) {
     async json() { return body; },
   };
 }
+
+test("declared SEC user agent requires a contact email", () => {
+  assert.equal(hasContactEmail("Example Co bot@example.com"), true);
+  assert.equal(hasContactEmail("x402-sec-filings/1.0 https://example.com"), false);
+});
 
 test("normalizes CIK and ticker", () => {
   assert.equal(normalizeCik("320193"), "0000320193");
@@ -29,7 +35,7 @@ test("normalizes CIK and ticker", () => {
 test("ticker resolves through SEC map and returns filings", async () => {
   const calls = [];
   const headers = [];
-  const adapter = createSecFilingsAdapter({
+  const adapter = createSecFilingsAdapter({ userAgent: "Example Co bot@example.com",
     fetchImpl: async (url, init) => {
       calls.push(url);
       headers.push(init?.headers || {});
@@ -62,8 +68,8 @@ test("ticker resolves through SEC map and returns filings", async () => {
 
   const result = await adapter.lookup({ ticker: "AAPL", limit: 25 });
   assert.equal(calls.length, 2);
-  assert.match(String(headers[0]["user-agent"]), /x402-sec-filings\/1\.0/);
-  assert.match(String(headers[1]["user-agent"]), /sec-recent-filings-x402-f9qatj\.v2\.appdeploy\.ai/);
+  assert.equal(String(headers[0]["user-agent"]), "Example Co bot@example.com");
+  assert.equal(String(headers[1]["user-agent"]), "Example Co bot@example.com");
   assert.equal(result.available, true);
   assert.equal(result.found, true);
   assert.equal(result.company.cik, "0000320193");
@@ -72,7 +78,7 @@ test("ticker resolves through SEC map and returns filings", async () => {
 });
 
 test("form filter is exact and case-insensitive", async () => {
-  const adapter = createSecFilingsAdapter({
+  const adapter = createSecFilingsAdapter({ userAgent: "Example Co bot@example.com",
     fetchImpl: async () => response({
       name: "Apple Inc.",
       tickers: ["AAPL"],
@@ -92,7 +98,7 @@ test("form filter is exact and case-insensitive", async () => {
 });
 
 test("unknown ticker is a completed not-found result", async () => {
-  const adapter = createSecFilingsAdapter({
+  const adapter = createSecFilingsAdapter({ userAgent: "Example Co bot@example.com",
     fetchImpl: async () => response({
       "0": { cik_str: 320193, ticker: "AAPL" },
     }),
@@ -104,7 +110,7 @@ test("unknown ticker is a completed not-found result", async () => {
 });
 
 test("SEC transport error throws source error", async () => {
-  const adapter = createSecFilingsAdapter({
+  const adapter = createSecFilingsAdapter({ userAgent: "Example Co bot@example.com",
     fetchImpl: async () => response({}, 503),
   });
   await assert.rejects(
@@ -114,7 +120,7 @@ test("SEC transport error throws source error", async () => {
 });
 
 test("invalid SEC recent-filings shape throws contract error", async () => {
-  const adapter = createSecFilingsAdapter({
+  const adapter = createSecFilingsAdapter({ userAgent: "Example Co bot@example.com",
     fetchImpl: async () => response({ name: "Apple Inc.", filings: {} }),
   });
   await assert.rejects(
@@ -124,7 +130,7 @@ test("invalid SEC recent-filings shape throws contract error", async () => {
 });
 
 test("dotted ticker alias resolves against SEC hyphen form", async () => {
-  const adapter = createSecFilingsAdapter({
+  const adapter = createSecFilingsAdapter({ userAgent: "Example Co bot@example.com",
     fetchImpl: async (url) => {
       if (url === TICKERS_URL) {
         return response({
@@ -145,7 +151,7 @@ test("dotted ticker alias resolves against SEC hyphen form", async () => {
 });
 
 test("missing required SEC recent-filings arrays fails closed", async () => {
-  const adapter = createSecFilingsAdapter({
+  const adapter = createSecFilingsAdapter({ userAgent: "Example Co bot@example.com",
     fetchImpl: async () => response({
       name: "Apple Inc.",
       filings: {
@@ -164,7 +170,7 @@ test("missing required SEC recent-filings arrays fails closed", async () => {
 });
 
 test("misaligned SEC recent-filings arrays fail closed", async () => {
-  const adapter = createSecFilingsAdapter({
+  const adapter = createSecFilingsAdapter({ userAgent: "Example Co bot@example.com",
     fetchImpl: async () => response({
       name: "Apple Inc.",
       filings: {
