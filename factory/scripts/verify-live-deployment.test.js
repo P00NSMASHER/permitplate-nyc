@@ -52,7 +52,8 @@ function runtimeFetch(runtime,{mutate}={}){
       }
     }
 
-    return new Response(body,{status,headers:responseHeaders});
+    const responseBody=[204,205,304].includes(status)?null:body;
+    return new Response(responseBody,{status,headers:responseHeaders});
   };
 
   return {
