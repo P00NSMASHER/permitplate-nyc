@@ -1,6 +1,6 @@
 {
-  "checkedAt": "2026-10-02T14:18:00Z",
-  "sourceHead": "2ffaf96884a9c452d9e0561ecdf59e4b64a9fb1f",
+  "checkedAt": "2026-10-02T14:25:45Z",
+  "sourceHead": "ceb21b651764ffaa0c893f4e725eccce0c10ba5f",
   "projectId": "b69a3ee6-eb01-430d-aa51-da2fc7beeac4",
   "productionOrigin": "https://pa-entity-x402.floot.app",
   "status": "deploy-ready-awaiting-floot-quota-reset",
@@ -17,19 +17,20 @@
     "releaseFingerprint": "30b624815307e5d59a3797e2aba8e70f2dbd000fdb89179a67f6ee91601c23bc"
   },
   "githubActions": {
-    "workflow": "Test Floot rehost endpoints",
-    "runId": 37018802635,
-    "conclusion": "success",
-    "headSha": "2ffaf96884a9c452d9e0561ecdf59e4b64a9fb1f",
-    "steps": {
-      "rawRehostEndpointTests": "success",
-      "vendorGatePaidFlow": "success",
-      "boundedReviewerWrapper": "success",
-      "recoveryDiscoveryBundle": "success",
-      "recoveryDiscoveryDocuments": "success",
-      "patchIntegrity": "success",
-      "paymentSafetyInvariants": "success",
-      "successCommitStatus": "success"
+    "flootRehostEndpoints": {
+      "runId": 37019766570,
+      "conclusion": "success",
+      "headSha": "ceb21b651764ffaa0c893f4e725eccce0c10ba5f"
+    },
+    "flootRecoveryDiscovery": {
+      "runId": 37019766762,
+      "conclusion": "success",
+      "headSha": "ceb21b651764ffaa0c893f4e725eccce0c10ba5f"
+    },
+    "deterministicRegression": {
+      "runId": 37019766818,
+      "conclusion": "success",
+      "headSha": "ceb21b651764ffaa0c893f4e725eccce0c10ba5f"
     }
   },
   "deployQueue": {
@@ -39,14 +40,15 @@
     "preserveTargets": 4,
     "totalBytes": 270592,
     "approximateKiB": 264,
-    "expectedFlootActionsWithoutGuide": 31,
-    "expectedFlootActionsWithOneGuide": 32,
+    "expectedFlootActionsWithoutGuide": 32,
+    "expectedFlootActionsWithOneGuide": 33,
     "dailyAllowanceAfterReset": 100
   },
   "target": {
     "paidResources": 8,
     "fixedReviewerFixtures": 3,
-    "appDeployRuntimeDependencies": 0
+    "appDeployRuntimeDependencies": 0,
+    "releaseFingerprint": "30b624815307e5d59a3797e2aba8e70f2dbd000fdb89179a67f6ee91601c23bc"
   },
   "releaseRules": [
     "Preserve the four existing PA endpoint/schema files.",
