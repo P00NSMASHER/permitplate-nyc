@@ -1,5 +1,5 @@
 name: PA Entity Market402 refresh
-# refresh-marker: 2026-10-01T20:34Z
+# refresh-marker: 2026-10-02T12:10Z vendor-gate-executable
 on:
   push:
     paths:
@@ -17,6 +17,7 @@ jobs:
           ORIGIN='https://pa-entity-x402.floot.app'
           ENRICHED="$ORIGIN/_api/pa-business?q=OpenAI&limit=1"
           CHEAP="$ORIGIN/_api/pa-entity-one?q=OpenAI"
+          GATE='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-gate?name=OpenAI%20OpCo&address=600%20North%20Second%20Street%2C%20Suite%20401%2C%20Harrisburg%2C%20PA%2017101&domain=openai.com'
 
           submit () {
             label="$1"
@@ -36,8 +37,52 @@ jobs:
 
           submit enriched "$ENRICHED"
           submit cheap "$CHEAP"
+          echo '=== SUBMIT vendor-gate ($0.020 declared) ==='
+          curl -sS -i -X POST 'https://market402.com/submit' \
+            -H 'content-type: application/json' \
+            --data "$(jq -nc --arg resource "$GATE" '{resource:$resource,declared_price_usd:0.02}')" \
+            | head -c 16000
+          echo
+
           selftest enriched "$ENRICHED"
           selftest cheap "$CHEAP"
+          selftest vendor-gate "$GATE"
+
+          echo '=== 402 INDEX vendor-gate executable URL refresh ==='
+          curl -sS -i -X POST 'https://402index.io/api/v1/register' \
+            -H 'content-type: application/json' \
+            --data "$(jq -nc \
+              --arg url "$GATE" \
+              --arg name 'Pennsylvania Vendor Intake Decision Gate' \
+              --arg description 'Fail-closed agent-loop vendor intake decision for Pennsylvania vendors using PA registry identity, Census address consistency, OFAC candidate-name screening, and authoritative RDAP domain evidence. Returns proceed or human_review with typed evidence and explicit review triggers.' \
+              '{url:$url,name:$name,protocol:"x402",http_method:"GET",description:$description,price_usd:0.02,payment_asset:"USDC",payment_network:"Base",category:"business/vendor-verification",provider:"P00NSMASHER"}')" \
+            | head -c 20000
+          echo
+
+          echo '=== RAW vendor-gate unpaid response ==='
+          curl -sS -D /tmp/gate-headers.txt -o /tmp/gate-body.txt "$GATE" || true
+          cat /tmp/gate-headers.txt
+          echo '--- body ---'
+          cat /tmp/gate-body.txt
+          echo
+          echo '--- decoded PAYMENT-REQUIRED ---'
+          python3 - <<'PY'
+          import base64,json
+          headers=open('/tmp/gate-headers.txt',errors='replace').read().splitlines()
+          value=None
+          for line in headers:
+              if line.lower().startswith('payment-required:'):
+                  value=line.split(':',1)[1].strip()
+                  break
+          if not value:
+              print('PAYMENT_REQUIRED_MISSING')
+          else:
+              value += '=' * (-len(value) % 4)
+              try:
+                  print(json.dumps(json.loads(base64.b64decode(value).decode()),indent=2,sort_keys=True))
+              except Exception as exc:
+                  print('PAYMENT_REQUIRED_DECODE_ERROR',repr(exc))
+          PY
 
           echo '=== OPERATOR JSON ==='
           curl -sS -i 'https://market402.com/op/pa-entity-x402.floot.app.json' | head -c 20000
