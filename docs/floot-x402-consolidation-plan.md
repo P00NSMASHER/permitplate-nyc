@@ -145,7 +145,23 @@ Confirm:
 
 remain valid and describe the expanded portfolio.
 
-### C. Agent402 re-registration
+### C. Zero-spend portfolio verification
+
+Run the manual GitHub workflow `Verify x402 portfolio` with:
+
+`expected_floot_resources = 8`
+
+Acceptance:
+
+- all 8 paid routes pass unpaid HTTP 402 challenge validation,
+- all three vendor-gate decision fixtures pass,
+- Floot manifest reports 8 resources,
+- AppDeploy PA manifest remains healthy,
+- `x402-verification-report.json` is uploaded as the workflow artifact.
+
+Runbook: `docs/x402-zero-spend-verification.md`
+
+### D. Agent402 re-registration
 
 POST the Floot origin to Agent402 registration:
 
@@ -163,7 +179,7 @@ Acceptance:
 
 **Important:** do not declare portfolio consolidation complete merely because Floot serves eight manifest entries. Agent402 must actually accept/index the external absolute resource URLs.
 
-### D. External-resource same-origin fallback
+### E. External-resource same-origin fallback
 
 If Agent402 ignores or rejects external AppDeploy resource URLs because they are not on the Floot host:
 
