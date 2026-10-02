@@ -6,6 +6,7 @@ import {
   encodeX402Header,
   decodePaymentHeader,
   buildChallenge,
+  validateResourceMetadata,
   successReceiptHeaders,
   temporaryPaymentFailure,
 } from '../recovery/x402-payment-core.mjs';
@@ -40,6 +41,23 @@ expect(challenge.body.accepts?.[0]?.amount === '20000', 'body amount mismatch');
 expect(challenge.headers['x402-price'] === '$0.020', 'price header mismatch');
 expect(challenge.headers['x402-network'] === X402_NETWORK, 'network header mismatch');
 expect(challenge.headers['x402-pay-to'] === X402_PAY_TO, 'payTo header mismatch');
+expect(challenge.document.resource.serviceName === 'Pennsylvania Vendor Intake Gate', 'serviceName missing');
+expect(challenge.document.resource.tags?.length === 1, 'valid tags missing');
+
+for (const [label, metadata, expected] of [
+  ['non-ascii-service-name', { serviceName: 'PA Registry — Lookup', tags: [] }, 'invalid_service_name'],
+  ['overlong-service-name', { serviceName: 'X'.repeat(33), tags: [] }, 'invalid_service_name'],
+  ['too-many-tags', { serviceName: 'PA Registry', tags: ['one', 'two', 'three', 'four', 'five', 'six'] }, 'too_many_resource_tags'],
+  ['non-ascii-tag', { serviceName: 'PA Registry', tags: ['due-diligence', 'vendor—intake'] }, 'invalid_resource_tag'],
+]) {
+  let actual = null;
+  try {
+    validateResourceMetadata(metadata);
+  } catch (error) {
+    actual = error instanceof Error ? error.message : String(error);
+  }
+  expect(actual === expected, label + ' expected ' + expected + ' got ' + actual);
+}
 
 const decodedChallenge = decodePaymentHeader(challenge.headers['PAYMENT-REQUIRED']);
 expect(
@@ -94,6 +112,7 @@ if (failures.length) {
 } else {
   console.log('PASS payment requirements');
   console.log('PASS 402 body/header parity');
+  console.log('PASS x402 resource metadata constraints');
   console.log('PASS payment header validation');
   console.log('PASS settlement receipt header');
   console.log('PASS unresolved-settlement same-payment retry response');
