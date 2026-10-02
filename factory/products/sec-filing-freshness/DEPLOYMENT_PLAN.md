@@ -98,3 +98,18 @@ No upgrade/payment is authorized.
 6. Confirm completed evidence settles before 200.
 7. Confirm x402 catalogs expose resource-level `accepts[]`.
 8. Confirm Products 001–005 remain unchanged.
+
+
+## SEC automated-access identity
+
+Production must configure `SEC_USER_AGENT` with an organization/product identifier and a real monitored contact email, consistent with SEC automated-access guidance.
+
+The staging SEC adapter intentionally refuses real SEC HTTP calls when the configured User-Agent lacks a contact email. This avoids shipping an undeclared automated client.
+
+Example shape only:
+
+`Your Organization your-contact@example.com`
+
+Do not hard-code or invent a personal contact address in source control.
+
+The GitHub Actions live smoke remains source-blocked unless that configuration is intentionally supplied. A GitHub-runner SEC 403 must not be reclassified as a product-data result.
