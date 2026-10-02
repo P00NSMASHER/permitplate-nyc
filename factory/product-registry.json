@@ -183,6 +183,25 @@
       "release_gate": "factory/scripts/validate-product-012.js",
       "deployment_blocker": "AppDeploy weekly credit reset 2026-10-05T00:00:00Z",
       "live_source_status": "authoritative RDAP smoke verified openai.com lastChanged 2024-10-17; recently_changed for maxAgeDays 730"
+    },
+    {
+      "id": "sec-company-identity-match",
+      "number": "013",
+      "status": "design",
+      "method": "GET",
+      "path": "/api/sec-company-identity-match",
+      "price_usdc": "0.003",
+      "decision_values": [
+        "match",
+        "human_review",
+        "company_not_found"
+      ],
+      "required_env": [
+        "SEC_USER_AGENT"
+      ],
+      "deployment_requirements": [
+        "SEC_USER_AGENT must contain a declared client identity and contact email before enabling live SEC EDGAR calls"
+      ]
     }
   ]
 }
