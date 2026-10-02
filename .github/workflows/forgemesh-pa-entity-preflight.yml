@@ -1,0 +1,55 @@
+name: ForgeMesh PA Entity preflight
+
+on:
+  push:
+    paths:
+      - 'verification/forgemesh-pa-entity-seller.json'
+      - '.github/workflows/forgemesh-pa-entity-preflight.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clone current ForgeMesh validator
+        run: git clone --depth 1 https://github.com/forgemeshlabs/x402-verified.git /tmp/x402-verified
+
+      - name: Install ForgeMesh validator dependencies
+        working-directory: /tmp/x402-verified
+        run: npm ci
+
+      - name: Validate prepared PA seller record
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp verification/forgemesh-pa-entity-seller.json /tmp/x402-verified/sellers/pa-entity-lookup-x402.json
+          cd /tmp/x402-verified
+          node scripts/validate.js --slug pa-entity-lookup-x402 --out /tmp/forgemesh-preflight.md
+          cp /tmp/forgemesh-preflight.md "$GITHUB_WORKSPACE/verification/forgemesh-pa-entity-preflight-latest.md"
+
+      - name: Commit preflight receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          RECEIPT='verification/forgemesh-pa-entity-preflight-latest.md'
+          cp "$RECEIPT" /tmp/forgemesh-pa-entity-preflight-latest.md
+
+          git fetch origin main
+          git reset --hard origin/main
+          cp /tmp/forgemesh-pa-entity-preflight-latest.md "$RECEIPT"
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$RECEIPT"
+          if git diff --cached --quiet; then
+            echo 'ForgeMesh preflight receipt unchanged.'
+            exit 0
+          fi
+          git commit -m 'chore: refresh ForgeMesh PA Entity preflight'
+          git push origin HEAD:main
