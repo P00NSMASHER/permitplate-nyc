@@ -25,6 +25,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Validate generated product module registry
+        run: node factory/scripts/generate-product-module-registry.js --check
+
       - name: Validate factory JavaScript syntax
         run: node factory/scripts/validate-js-syntax.js
 
