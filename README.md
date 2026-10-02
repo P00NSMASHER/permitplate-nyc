@@ -56,7 +56,7 @@ This repository also carries the deployment history for the separate [PA Entity 
 - **$0.001 USDC — Pennsylvania Business Registry: Best Match:** resolves a company name to one best-ranked Pennsylvania legal-entity record.
 - **$0.005 USDC — PA Entity Lookup: Multi Result:** returns multiple Pennsylvania registry candidates when an agent needs name disambiguation.
 - **$0.020 USDC — Pennsylvania Vendor Intake Decision Gate:** combines PA registry identity, Census address consistency, OFAC SDN candidate-name screening, and authoritative RDAP domain evidence, then returns `proceed` or `human_review` with explicit reasons. The gate fails closed on ambiguous, incomplete, or inconsistent evidence.
-- **Current availability:** the AppDeploy-hosted composed gate and non-PA routes are temporarily unavailable at the hosting edge as of October 2, 2026; see AppDeploy availability incident #38 and Floot recovery #39. The two Floot PA raw routes remain healthy.
+- **Current availability:** the AppDeploy-hosted composed gate and non-PA routes are unavailable because the account's weekly hosting-credit allowance is exhausted; AppDeploy Support says it resets October 5, 2026 at 00:00 UTC and there is no path-level exemption for discovery files. No credits/upgrade are authorized. See incident #38 and Floot recovery #39. The two Floot PA raw routes remain healthy.
 - All use x402 v2 on Base USDC with no per-buyer account or API key.
 - Current service map: [docs/pa-entity-x402.md](docs/pa-entity-x402.md)
 - Vendor-gate reviewer evidence: [docs/vendor-intake-gate-evidence.md](docs/vendor-intake-gate-evidence.md)
