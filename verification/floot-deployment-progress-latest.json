@@ -279,7 +279,7 @@
     "checkpointId": null,
     "description": null
   },
-  "lastUpdatedAt": "2026-10-02T17:52:00Z",
+  "lastUpdatedAt": "2026-10-02T17:52:30Z",
   "lastCompletedWriteOrder": 0,
   "resumeRule": "Never restart from write 1 after interruption. Refresh Floot list_files, verify boundary content against the locked deployment bundle, confirm the rollback snapshot/plan still match the captured pre-write project version, then resume at the next unfinished ordered write.",
   "rollbackPlan": {
@@ -301,5 +301,33 @@
     "latestDirectCheckAt": "2026-10-02T17:45:00Z",
     "mainCommitsAheadOfLock": 152,
     "lockedSourcesChangedOnMain": 0
+  },
+  "bundleTransport": {
+    "status": "validated",
+    "fetchPlan": "verification/floot-bundle-fetch-plan-latest.json",
+    "deployMapBlobSha": "be374305376eacbfd7d843e3285b5ab0b9e0b8f7",
+    "bundles": [
+      {
+        "range": {
+          "from": 1,
+          "to": 13
+        },
+        "gitBlobSha": "8b040e229e25782336442b72591172645236b896",
+        "pinnedRawCommit": "f50584ac3f52562a5864577eda43c6308b01e748",
+        "itemCount": 13,
+        "pinnedTextEqualsBlobVerifiedBundle": true
+      },
+      {
+        "range": {
+          "from": 14,
+          "to": 26
+        },
+        "gitBlobSha": "47a073817132dec73442b76d7fcf7eb34b4467c1",
+        "pinnedRawCommit": "34a69f21a865f174196af3358b9e4d2411decc35",
+        "itemCount": 13,
+        "pinnedTextEqualsBlobVerifiedBundle": true
+      }
+    ],
+    "totalItems": 26
   }
 }
