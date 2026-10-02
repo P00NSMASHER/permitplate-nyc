@@ -164,17 +164,30 @@ remain valid and describe the expanded portfolio.
 
 ### C. Zero-spend portfolio verification
 
-Run the manual GitHub workflow `Verify x402 portfolio` with:
+Run the manual GitHub workflow `Verify x402 portfolio` with `expected_floot_resources` set to the number of resources actually published in the Floot manifest.
 
-`expected_floot_resources = 8`
+There are two distinct acceptance states:
 
-Acceptance:
+**Interim recovery acceptance**
 
-- all 8 paid routes pass unpaid HTTP 402 challenge validation,
-- all three vendor-gate decision fixtures pass,
-- Floot manifest reports 8 resources,
-- AppDeploy PA manifest remains healthy,
-- `x402-verification-report.json` is uploaded as the workflow artifact.
+Use this while AppDeploy remains unavailable and only a subset has been rehosted.
+
+- every resource actually advertised by Floot must pass its real unpaid HTTP 402 challenge,
+- the Floot manifest count must match the published set,
+- the two existing PA Floot routes must remain green,
+- any rehosted vendor-gate fixtures must pass,
+- unavailable AppDeploy routes remain explicitly red in the full portfolio report and must not be advertised as healthy,
+- `x402-verification-report.json` is uploaded as evidence.
+
+**Full Step 2 acceptance**
+
+Do not call Step 2 complete until:
+
+- all 8 target paid routes pass the unpaid buyer-style challenge,
+- all 3 vendor-gate fixtures pass,
+- Floot advertises all 8 healthy resources,
+- no resource in the manifest points to an `APP_TEMPORARILY_UNAVAILABLE` upstream,
+- Agent402 recognizes the expanded set.
 
 Runbook: `docs/x402-zero-spend-verification.md`
 
@@ -198,7 +211,11 @@ Acceptance:
 
 ### E. External-resource same-origin fallback
 
-If Agent402 ignores or rejects external AppDeploy resource URLs because they are not on the Floot host:
+If Agent402 ignores/rejects healthy external AppDeploy resource URLs because they are not on the Floot host, use same-origin proxies.
+
+**Do not use a proxy as a workaround for `APP_TEMPORARILY_UNAVAILABLE`.** A proxy to a dead AppDeploy upstream is still dead. When AppDeploy is unavailable, port/rehost the implementation itself on Floot.
+
+For the healthy-external-URL case:
 
 1. Keep the valid expanded documentation.
 2. Add same-origin Floot proxy endpoints one at a time.
