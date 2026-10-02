@@ -298,3 +298,11 @@ jobs:
         run: node --test factory/products/pa-registered-county-policy/paid-handler.test.js
       - name: Test Product 022 discovery metadata
         run: node --test factory/products/pa-registered-county-policy/metadata.test.js
+      - name: Test Product 023 decision policy
+        run: node --test factory/products/pa-local-vendor-policy-gate/decision.test.js
+      - name: Test Product 023 service composition
+        run: node --test factory/products/pa-local-vendor-policy-gate/service.test.js
+      - name: Test Product 023 paid x402 handler
+        run: node --test factory/products/pa-local-vendor-policy-gate/paid-handler.test.js
+      - name: Test Product 023 discovery metadata
+        run: node --test factory/products/pa-local-vendor-policy-gate/metadata.test.js
