@@ -7,7 +7,9 @@ on:
       - 'scripts/test-x402-rehost-core.mjs'
       - 'scripts/verify-x402-portfolio.mjs'
       - 'recovery/x402-portfolio-target.json'
+      - 'recovery/x402-payment-core.mjs'
       - 'scripts/test-x402-target-manifest.mjs'
+      - 'scripts/test-x402-payment-core.mjs'
       - '.github/workflows/test-x402-rehost-core.yml'
   workflow_dispatch:
 
@@ -34,9 +36,14 @@ jobs:
           node --check scripts/test-x402-rehost-core.mjs
           node --check scripts/verify-x402-portfolio.mjs
           node --check scripts/test-x402-target-manifest.mjs
+          node --check recovery/x402-payment-core.mjs
+          node --check scripts/test-x402-payment-core.mjs
 
       - name: Validate target portfolio contract
         run: node scripts/test-x402-target-manifest.mjs
+
+      - name: Validate x402 payment core
+        run: node scripts/test-x402-payment-core.mjs
 
       - name: Test official public upstreams
         run: node scripts/test-x402-rehost-core.mjs
