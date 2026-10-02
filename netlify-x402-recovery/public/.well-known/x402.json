@@ -1,0 +1,187 @@
+{
+  "x402Version": 2,
+  "name": "Agent Data Tools x402",
+  "description": "Working bare-origin x402 catalog for Pennsylvania entity lookup and a composed vendor-intake decision gate. Unavailable AppDeploy backends are intentionally omitted.",
+  "openapi": "https://agent-data-tools-x402.netlify.app/openapi.json",
+  "llms": "https://agent-data-tools-x402.netlify.app/llms.txt",
+  "skill": "https://agent-data-tools-x402.netlify.app/skill.txt",
+  "resources": [
+    {
+      "resource": "https://agent-data-tools-x402.netlify.app/api/vendor-intake-gate",
+      "type": "http",
+      "x402Version": 2,
+      "method": "GET",
+      "description": "Return proceed or human_review for a prospective Pennsylvania vendor using live PA registry, Census, OFAC SDN candidate-name, and authoritative RDAP evidence.",
+      "price": "$0.020",
+      "tags": [
+        "vendor-intake",
+        "agent-decision",
+        "human-review",
+        "pennsylvania",
+        "ofac",
+        "census",
+        "rdap"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "address": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 240
+          },
+          "domain": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 253
+          }
+        },
+        "required": [
+          "name",
+          "address",
+          "domain"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "proceed",
+              "human_review"
+            ]
+          },
+          "agentAction": {
+            "type": "string",
+            "enum": [
+              "continue_vendor_intake",
+              "pause_and_request_human_review"
+            ]
+          },
+          "reviewTriggers": {
+            "type": "array"
+          },
+          "evidence": {
+            "type": "object"
+          },
+          "limitations": {
+            "type": "array"
+          }
+        },
+        "required": [
+          "decision",
+          "agentAction",
+          "reviewTriggers",
+          "evidence",
+          "limitations"
+        ]
+      },
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "20000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ]
+    },
+    {
+      "resource": "https://pa-entity-x402.floot.app/_api/pa-entity-one",
+      "type": "http",
+      "x402Version": 2,
+      "method": "GET",
+      "description": "Resolve one best Pennsylvania legal-entity match by company name.",
+      "price": "$0.001",
+      "tags": [
+        "pennsylvania-business-registry",
+        "company-identity",
+        "best-match"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "q": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "q"
+        ]
+      },
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "1000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ]
+    },
+    {
+      "resource": "https://pa-entity-x402.floot.app/_api/pa-business",
+      "type": "http",
+      "x402Version": 2,
+      "method": "GET",
+      "description": "Search Pennsylvania business-registration records and return ranked candidates.",
+      "price": "$0.005",
+      "tags": [
+        "pennsylvania-business-registry",
+        "company-identity",
+        "entity-search"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "q": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 25,
+            "default": 10
+          }
+        },
+        "required": [
+          "q"
+        ]
+      },
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "amount": "5000",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+          "maxTimeoutSeconds": 60,
+          "extra": {
+            "name": "USD Coin",
+            "version": "2"
+          }
+        }
+      ]
+    }
+  ]
+}
