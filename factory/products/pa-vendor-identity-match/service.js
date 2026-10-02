@@ -18,6 +18,14 @@ function cleanRequired(value, field, minLength, maxLength) {
   return cleaned;
 }
 
+function validateVendorIdentityInput(input) {
+  return {
+    company: cleanRequired(input?.company, "company", 2, 120),
+    address: cleanRequired(input?.address, "address", 5, 240),
+    domain: cleanRequired(input?.domain, "domain", 3, 253).toLowerCase(),
+  };
+}
+
 function entityAddress(entity) {
   if (!entity || typeof entity !== "object") return null;
   const parts = [entity.address1, entity.address2, entity.city, entity.state, entity.zip]
@@ -59,9 +67,10 @@ function createVendorIdentityService({ registry, address, rdap, now = () => new 
   requireAdapter("rdap", rdap, "lookup");
 
   async function check(input) {
-    const company = cleanRequired(input?.company, "company", 2, 120);
-    const suppliedAddress = cleanRequired(input?.address, "address", 5, 240);
-    const domain = cleanRequired(input?.domain, "domain", 3, 253).toLowerCase();
+    const normalized = validateVendorIdentityInput(input);
+    const company = normalized.company;
+    const suppliedAddress = normalized.address;
+    const domain = normalized.domain;
 
     const sourceFailures = [];
 
@@ -116,4 +125,10 @@ function createVendorIdentityService({ registry, address, rdap, now = () => new 
   return { check };
 }
 
-module.exports = { createVendorIdentityService, entityAddress, canonicalBusinessName, domainNameAligned };
+module.exports = {
+  createVendorIdentityService,
+  validateVendorIdentityInput,
+  entityAddress,
+  canonicalBusinessName,
+  domainNameAligned,
+};
