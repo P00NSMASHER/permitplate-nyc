@@ -19,13 +19,12 @@ test("SEC_USER_AGENT must include a contact email",()=>{
   );
 });
 
-test("current staging bundle reports Product 006 as blocked without SEC_USER_AGENT",()=>{
+test("current staging bundle reports both SEC products blocked without SEC_USER_AGENT",()=>{
   const result=checkDeploymentPrereqs({});
   assert.equal(result.ready,false);
-  const sec=result.missing.find(x=>x.productId==="sec-filing-freshness");
-  assert.ok(sec);
-  assert.equal(sec.name,"SEC_USER_AGENT");
-  assert.equal(sec.reason,"missing");
+  const ids=result.missing.filter(x=>x.name==="SEC_USER_AGENT").map(x=>x.productId).sort();
+  assert.deepEqual(ids,["sec-company-identity-match","sec-filing-freshness"]);
+  assert.ok(result.missing.every(x=>x.reason==="missing"));
 });
 
 test("declared SEC contact makes current staging prerequisites ready",()=>{
