@@ -9,6 +9,7 @@ const MODULES = Object.freeze({
   "sec-filing-freshness": require("../../products/sec-filing-freshness/metadata"),
   "domain-registration-age": require("../../products/domain-registration-age/metadata"),
   "treasury-average-rate-threshold": require("../../products/treasury-average-rate-threshold/metadata"),
+  "ofac-name-review-gate": require("../../products/ofac-name-review-gate/metadata"),
   "pa-business-formation-age": require("../../products/pa-business-formation-age/metadata"),
 });
 
