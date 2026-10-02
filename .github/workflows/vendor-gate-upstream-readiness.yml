@@ -1,0 +1,64 @@
+name: Vendor gate upstream readiness
+
+on:
+  push:
+    paths:
+      - 'scripts/verify-vendor-gate-upstreams.mjs'
+      - '.github/workflows/vendor-gate-upstream-readiness.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verify direct public upstreams
+        id: verify
+        continue-on-error: true
+        run: node scripts/verify-vendor-gate-upstreams.mjs
+
+      - name: Commit readiness receipt
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          REPORT='verification/vendor-gate-upstreams-latest.json'
+          if [ ! -f "$REPORT" ]; then
+            echo 'Readiness verifier did not create a report.'
+            exit 1
+          fi
+          cp "$REPORT" /tmp/vendor-gate-upstreams-latest.json
+
+          git fetch origin main
+          git reset --hard origin/main
+          cp /tmp/vendor-gate-upstreams-latest.json "$REPORT"
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$REPORT"
+          if git diff --cached --quiet; then
+            echo 'Upstream readiness receipt unchanged.'
+          else
+            git commit -m 'chore: refresh vendor gate upstream readiness'
+            git push origin HEAD:main
+          fi
+
+      - name: Enforce readiness after receipt is saved
+        if: always()
+        shell: bash
+        env:
+          VERIFY_OUTCOME: ${{ steps.verify.outcome }}
+        run: |
+          if [ "$VERIFY_OUTCOME" != 'success' ]; then
+            echo 'One or more direct upstreams failed readiness checks.'
+            exit 1
+          fi
