@@ -66,6 +66,16 @@ Absolute conservative worst case: **19 read batches** (the 5 normal groups plus 
 
 If any batch response says files were omitted because of the aggregate output cap, immediately read the omitted file(s) in an additional batch before any Floot write.
 
+### Exact-content handling
+
+Floot read tools may present source in a line-numbered (`cat -n`-style) display. The rollback artifact must contain the **file contents only**, never presentation line numbers or headers.
+
+- Prefer any raw/structured content field returned by the Floot tool.
+- If only line-numbered presentation is available, reconstruct the content deterministically by removing only the tool-added line-number prefix while preserving every source character, blank line, and line ending that can be represented.
+- For the 12 static files, compute the reconstructed SHA-256 and compare it with `verification/floot-static-rollback-public-latest.json`.
+- If exact content cannot be reconstructed confidently, or a static hash mismatch cannot be explained by a known source-vs-public transformation, **abort before the first Floot write** and capture the file through a safer read path.
+- Do not substitute checked-in recovery fixtures for unreadable current Floot source.
+
 Normalize the raw capture with:
 
 `node scripts/build-floot-pre-rehost-snapshot.mjs <raw-capture.json> verification/floot-pre-rehost-rollback-<projectVersion>.json`
