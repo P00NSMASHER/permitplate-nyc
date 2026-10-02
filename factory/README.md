@@ -245,6 +245,8 @@ Recent registration is a review signal, not proof of fraud. Domain-name alignmen
 - `scripts/validate-registry.js` — collision/integrity gate
 - `runtime/create-runtime.js` — one portable runtime wiring every staged paid route and compiled discovery surface
 - `runtime/appdeploy-bridge.js` — AppDeploy-compatible GET/OPTIONS route map
+- `scripts/build-appdeploy-runtime-bundle.js` — deterministic self-contained ESM bundle for the CommonJS factory runtime
+- `APPDEPLOY_HANDOFF.md` — reset-day provider integration boundary and secret-binding checklist
 - `runtime/deployment-preflight.js` — environment prerequisite checks such as Product 006's SEC identity requirement
 - `runtime/validate-deploy-candidate.js` — unified structural deploy-candidate gate
 - `scripts/validate-no-nested-seller-calls.js` — prevents products from calling seller-owned AppDeploy APIs internally
@@ -271,6 +273,8 @@ A candidate deployment must pass all of the following from the same registry hea
 - product-specific release gates
 - factory registry and migration-manifest integrity
 - canonical discovery bundle generation and hashes
+- executable ESM runtime bundle generation + dynamic-import execution test
+- release-manifest SHA-256 binding for `factory-runtime-bundle.js`
 - portable runtime route coverage
 - CORS OPTIONS coverage for every paid route
 - malformed-payment and invalid-input ordering checks
