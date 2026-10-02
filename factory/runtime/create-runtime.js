@@ -27,6 +27,14 @@ const {createPaidDomainExpirationHandler}=require("../products/domain-expiration
 const {createDomainLastChangedService}=require("../products/domain-last-changed-recency/service");
 const {createPaidDomainLastChangedHandler}=require("../products/domain-last-changed-recency/paid-handler");
 
+const PREFLIGHT_HEADERS=Object.freeze({
+  "access-control-allow-origin":"*",
+  "access-control-allow-methods":"GET, OPTIONS",
+  "access-control-allow-headers":"PAYMENT-SIGNATURE, X-PAYMENT, Content-Type, Accept",
+  "access-control-expose-headers":"PAYMENT-REQUIRED, PAYMENT-RESPONSE, x402-settled, x402-price, x402-network, x402-asset, x402-pay-to, Retry-After",
+  "cache-control":"no-store"
+});
+
 function json(statusCode,body,headers={}){
   return {
     statusCode,
@@ -117,6 +125,13 @@ function createFactoryRuntime({
 
   async function handle({method="GET",path="/",query={},event={}}={}){
     const verb=String(method).toUpperCase();
+    if(verb==="OPTIONS"&&managedProducts().some(product=>product.path===path)){
+      return {
+        statusCode:204,
+        headers:{...PREFLIGHT_HEADERS},
+        body:""
+      };
+    }
     if(verb==="GET"&&path==="/api/_healthcheck"){
       return json(200,{
         ok:true,
@@ -149,4 +164,4 @@ function createFactoryRuntime({
   };
 }
 
-module.exports={defaultAdapters,createFactoryRuntime};
+module.exports={PREFLIGHT_HEADERS,defaultAdapters,createFactoryRuntime};
