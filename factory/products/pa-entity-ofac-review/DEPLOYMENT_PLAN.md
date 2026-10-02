@@ -1,6 +1,6 @@
 # Product 016 deployment plan — PA Entity OFAC Review Gate x402
 
-Status: design candidate pending live-source promotion.
+Status: live-source-verified staging candidate.
 
 ## Contract
 
@@ -77,3 +77,13 @@ OpenAPI operationId:
 ## Deployment blocker
 
 AppDeploy weekly Free-tier reset remains recorded as `2026-10-05T00:00:00Z`. No paid upgrade is authorized.
+
+## Verified live-source evidence
+
+- submitted company: OpenAI OpCo
+- resolved Pennsylvania legal name: Openai Opco, Llc
+- filing number: 0014879623
+- OFAC minimum score: 90
+- OFAC candidate count: 0
+- decision: `no_candidate`
+- source failures: none
