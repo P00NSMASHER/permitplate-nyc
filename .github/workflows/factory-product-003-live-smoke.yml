@@ -5,31 +5,10 @@ on:
     branches:
       - x402-product-factory-bootstrap
     paths:
-      - 'factory/products/pa-vendor-identity-match/**'
-      - 'factory/products/pa-business-address-match/**'
-      - 'factory/products/pa-business-domain-match/**'
-      - 'factory/products/sec-filing-freshness/**'
-      - 'factory/products/sec-company-identity-match/**'
-      - 'factory/products/domain-registration-age/**'
-      - 'factory/products/ofac-name-review-gate/**'
-      - 'factory/products/pa-entity-ofac-review/**'
-      - 'factory/products/pa-vendor-new-domain-review/**'
-      - 'factory/products/pa-vendor-counterparty-review/**'
-      - 'factory/products/pa-vendor-maturity-review/**'
-      - 'factory/products/pa-vendor-domain-continuity-review/**'
-      - 'factory/packages/sources/ofac-name-screen.js'
-      - 'factory/products/treasury-average-rate-threshold/**'
-      - 'factory/products/treasury-average-rate-trend/**'
-      - 'factory/products/treasury-average-rate-spread/**'
-      - 'factory/products/pa-business-formation-age/**'
-      - 'factory/products/domain-expiration-horizon/**'
-      - 'factory/products/domain-last-changed-recency/**'
-      - 'factory/products/pa-entity-type-policy/**'
-      - 'factory/products/pa-registered-county-policy/**'
-      - 'factory/products/pa-local-vendor-policy-gate/**'
-      - 'factory/packages/sources/live-pa-identity.js'
-      - 'factory/packages/sources/sec-filings.js'
-      - 'factory/packages/sources/treasury-average-rates.js'
+      - 'factory/product-registry.json'
+      - 'factory/products/**'
+      - 'factory/packages/sources/**'
+      - 'factory/scripts/run-live-smokes.js'
       - '.github/workflows/factory-product-003-live-smoke.yml'
   workflow_dispatch:
 
@@ -40,48 +19,8 @@ concurrency:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 7
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Product 003 live source smoke
-        run: node factory/products/pa-vendor-identity-match/live-smoke.js
-      - name: Product 004 live source smoke
-        run: node factory/products/pa-business-address-match/live-smoke.js
-      - name: Product 005 live source smoke
-        run: node factory/products/pa-business-domain-match/live-smoke.js
-      - name: Product 021 live source smoke
-        run: node factory/products/pa-entity-type-policy/live-smoke.js
-      - name: Product 022 live source smoke
-        run: node factory/products/pa-registered-county-policy/live-smoke.js
-      - name: Product 023 live source smoke
-        run: node factory/products/pa-local-vendor-policy-gate/live-smoke.js
-      - name: Product 006 live SEC smoke
-        run: node factory/products/sec-filing-freshness/live-smoke.js
-      - name: Product 013 SEC identity smoke
-        run: node factory/products/sec-company-identity-match/live-smoke.js
-      - name: Product 007 live RDAP smoke
-        run: node factory/products/domain-registration-age/live-smoke.js
-      - name: Product 009 live OFAC smoke
-        run: node factory/products/ofac-name-review-gate/live-smoke.js
-      - name: Product 016 live PA entity OFAC smoke
-        run: node factory/products/pa-entity-ofac-review/live-smoke.js
-      - name: Product 008 live Treasury smoke
-        run: node factory/products/treasury-average-rate-threshold/live-smoke.js
-      - name: Product 014 live Treasury trend smoke
-        run: node factory/products/treasury-average-rate-trend/live-smoke.js
-      - name: Product 015 live Treasury spread smoke
-        run: node factory/products/treasury-average-rate-spread/live-smoke.js
-      - name: Product 010 live formation-age smoke
-        run: node factory/products/pa-business-formation-age/live-smoke.js
-      - name: Product 011 live expiration-horizon smoke
-        run: node factory/products/domain-expiration-horizon/live-smoke.js
-      - name: Product 012 live RDAP recency smoke
-        run: node factory/products/domain-last-changed-recency/live-smoke.js
-      - name: Product 017 live PA vendor new-domain smoke
-        run: node factory/products/pa-vendor-new-domain-review/live-smoke.js
-      - name: Product 018 live PA vendor counterparty smoke
-        run: node factory/products/pa-vendor-counterparty-review/live-smoke.js
-      - name: Product 019 live PA vendor maturity smoke
-        run: node factory/products/pa-vendor-maturity-review/live-smoke.js
-      - name: Product 020 live PA vendor domain continuity smoke
-        run: node factory/products/pa-vendor-domain-continuity-review/live-smoke.js
+      - name: Run every staging product live smoke
+        run: node factory/scripts/run-live-smokes.js
