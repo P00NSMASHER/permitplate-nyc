@@ -82,7 +82,7 @@ await run(
 
 await run(
   'PA registry',
-  () => searchPennsylvaniaEntities('OpenAI OpCo', 3),
+  () => searchPennsylvaniaEntities('OpenAI OpCo', 1),
   (v) =>
     Array.isArray(v?.results) &&
     v.results.length >= 1 &&
