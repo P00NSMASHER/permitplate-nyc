@@ -93,6 +93,7 @@ The locked map contains 26 writes.
 Expected actions after the free-plan reset:
 
 - 1 `list_files`
+- 1 batched `read_files` for the four preserved PA endpoint/schema files
 - 1 guide read if required
 - 26 sequential file writes
 - 1 typecheck
@@ -100,7 +101,7 @@ Expected actions after the free-plan reset:
 - 1 publish
 - 1 publish-status check
 
-Expected core total: **32 Floot actions**, comfortably below the 100-action daily allowance.
+Expected total: **32 Floot actions without a guide, 33 with one guide**, comfortably below the 100-action daily allowance.
 
 Keep writes serialized and carry the returned project version forward when the write tool exposes it. Do not make concurrent writes against one expected version.
 
@@ -111,7 +112,7 @@ Keep writes serialized and carry the returned project version forward when the w
    - current project version
    - existing endpoint/static paths
    - published metadata
-3. Compare the four preserved PA files against the current live project; do not rewrite them.
+3. Use one batched `read_files` call for the four preserved PA files and compare them against the tested baseline; do not rewrite them.
 4. Re-read `deploy-map.json` and confirm its source hashes are still green in CI.
 5. For each map entry in order:
    - fetch exact GitHub source bytes from the recorded source path
