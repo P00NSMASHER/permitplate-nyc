@@ -275,6 +275,18 @@
       "release_gate": "factory/scripts/validate-product-017.js",
       "deployment_blocker": "AppDeploy weekly credit reset 2026-10-05T00:00:00Z",
       "live_source_status": "PA Department of State + authoritative RDAP smoke resolved OpenAI OpCo to Openai Opco, Llc and openai.com registration 2007-01-19; established_domain_match at minDomainAgeDays 90 with zero source failures"
+    },
+    {
+      "id": "pa-vendor-counterparty-review",
+      "number": "018",
+      "status": "design",
+      "method": "GET",
+      "path": "/api/pa-vendor-counterparty-review",
+      "price_usdc": "0.010",
+      "decision_values": [
+        "proceed",
+        "human_review"
+      ]
     }
   ]
 }
