@@ -1,0 +1,48 @@
+name: x402 revenue attribution
+
+on:
+  push:
+    paths:
+      - 'verification/pa-entity-directory-status-latest.json'
+      - 'verification/x402-revenue-attribution-rules.json'
+      - 'scripts/classify-x402-revenue.mjs'
+      - '.github/workflows/x402-revenue-attribution.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  classify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Classify settlement provenance
+        run: node scripts/classify-x402-revenue.mjs
+
+      - name: Commit attribution receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          RECEIPT='verification/x402-revenue-attribution-latest.json'
+          cp "$RECEIPT" /tmp/x402-revenue-attribution-latest.json
+
+          git fetch origin main
+          git reset --hard origin/main
+          cp /tmp/x402-revenue-attribution-latest.json "$RECEIPT"
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$RECEIPT"
+          if git diff --cached --quiet; then
+            echo 'Revenue attribution receipt unchanged.'
+            exit 0
+          fi
+          git commit -m 'chore: refresh x402 revenue attribution'
+          git push origin HEAD:main
