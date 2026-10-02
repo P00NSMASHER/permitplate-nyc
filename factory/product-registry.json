@@ -92,6 +92,20 @@
         "threshold_not_met",
         "human_review"
       ]
+    },
+    {
+      "id": "domain-registration-age",
+      "number": "007",
+      "status": "design",
+      "method": "GET",
+      "path": "/api/domain-registration-age",
+      "price_usdc": "0.002",
+      "decision_values": [
+        "established",
+        "recent_registration",
+        "unregistered",
+        "human_review"
+      ]
     }
   ]
 }
