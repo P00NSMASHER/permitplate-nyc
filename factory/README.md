@@ -20,6 +20,7 @@ Build narrow, deterministic, machine-purchasable decision tools for autonomous a
 | 008 | Treasury Average Rate Threshold | live-source-verified staging | `/api/treasury-average-rate-threshold` | $0.003 |
 | 009 | OFAC Name Review Gate | live-source-verified staging | `/api/ofac-name-review-gate` | $0.003 |
 | 010 | PA Business Formation Age | live-source-verified staging | `/api/pa-business-formation-age` | $0.002 |
+| 011 | Domain Expiration Horizon | live-source-verified staging | `/api/domain-expiration-horizon` | $0.002 |
 
 Product 001 has an independently verified third-party Base USDC settlement and remains the payment/distribution reference.
 
@@ -131,6 +132,20 @@ Live smoke for `OpenAI OpCo` observed creation date `2025-09-29` and returned `e
 
 Formation age is an identity/history signal only and does not establish current good standing, ownership, authority, legitimacy, fraud risk, sanctions status, creditworthiness, or legal compliance.
 
+## Product 011
+
+Authoritative RDAP domain expiration-horizon check.
+
+Returns:
+- `expiring_soon`
+- `not_expiring_soon`
+- `unregistered`
+- `human_review`
+
+Live smoke for `openai.com` observed expiration date `2029-01-19` and returned `not_expiring_soon` for a 180-day horizon.
+
+This is a registration timing signal only; registry renewal/grace/redemption policies vary and the result does not prove ownership, control, legitimacy, security, fraud risk, or business identity.
+
 ## Shared layers
 
 - `packages/x402/payment.js` — hardened Base USDC verify/settle flow
@@ -160,7 +175,7 @@ AppDeploy reported an account-wide Free tier pause with weekly reset at:
 
 `2026-10-05T00:00:00Z`
 
-No upgrade/payment has been authorized. Products 003–010 therefore remain staging candidates rather than production claims.
+No upgrade/payment has been authorized. Products 003–011 therefore remain staging candidates rather than production claims.
 
 ## Branch isolation
 
