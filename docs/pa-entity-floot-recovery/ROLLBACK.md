@@ -50,6 +50,18 @@ Use this capture order:
 - `static/sitemap.xml`
 - `static/robots.txt`
 
+### Unexpected preexisting recovery targets
+
+After the five mandatory batches, inspect the classification from the fresh `list_files` tree.
+
+If any of the 14 recovery endpoint/schema targets that are normally absent already exist in the Floot project, capture **each of those preexisting files too** before any write. Use additional bounded `read_files` batches; for safety, a single unexpectedly large endpoint may be read by itself.
+
+The snapshot builder deliberately refuses to proceed when a deployment target is classified as preexisting but its exact source content was not captured.
+
+Normal expected snapshot cost: **5 read batches**.
+
+Absolute conservative worst case: **19 read batches** (the 5 normal groups plus one read for each of 14 unexpectedly preexisting recovery endpoint/schema files). Even that worst case keeps the full forward migration comfortably below the 100-action daily allowance.
+
 If any batch response says files were omitted because of the aggregate output cap, immediately read the omitted file(s) in an additional batch before any Floot write.
 
 Normalize the raw capture with:
@@ -162,7 +174,7 @@ The GitHub pre-write snapshot is the primary rollback source because it is durab
 
 ## Forward capture action budget
 
-The pre-write snapshot normally uses 5 `read_files` actions after `list_files`. Even if one additional recovery batch is needed because Floot omits a large file, the total forward deployment remains comfortably below the 100-action allowance.
+The pre-write snapshot normally uses 5 `read_files` actions after `list_files`. Additional bounded reads are mandatory for any omitted file or unexpectedly preexisting recovery endpoint/schema target. The absolute conservative bound is 19 snapshot-read actions, and the full forward deployment still remains comfortably below the 100-action allowance.
 
 ## Rollback action budget
 
