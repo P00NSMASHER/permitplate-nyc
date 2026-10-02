@@ -1,13 +1,37 @@
 const SOURCE_TIMEOUT_MS = 15000;
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function fetchWithTimeout(url, init = {}, timeoutMs = SOURCE_TIMEOUT_MS) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    return await fetch(url, { ...init, signal: controller.signal });
-  } finally {
-    clearTimeout(timer);
+  const attempts = 2;
+  let lastError = null;
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(url, { ...init, signal: controller.signal });
+      if (
+        attempt < attempts - 1 &&
+        (response.status === 429 || response.status >= 500)
+      ) {
+        await response.body?.cancel().catch(() => {});
+        await sleep(250);
+        continue;
+      }
+      return response;
+    } catch (error) {
+      lastError = error;
+      if (attempt === attempts - 1) throw error;
+      await sleep(250);
+    } finally {
+      clearTimeout(timer);
+    }
   }
+
+  throw lastError ?? new Error('fetch_failed');
 }
 
 function numeric(value) {
