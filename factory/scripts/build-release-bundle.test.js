@@ -6,6 +6,7 @@ const os=require("node:os");
 const fs=require("node:fs");
 const path=require("node:path");
 const {managedProducts}=require("../packages/discovery/generator");
+const {sha256}=require("../packages/discovery/bundle");
 const {expectedAtomic,buildReleaseBundle,writeReleaseBundle}=require("./build-release-bundle");
 
 test("USDC prices convert deterministically to six-decimal atomic amounts",()=>{
@@ -44,7 +45,7 @@ test("every catalog resource has resource-level exact Base USDC accepts",()=>{
 test("writer produces deterministic catalog, OpenAPI, and manifest files",()=>{
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),"x402-factory-"));
   const b=writeReleaseBundle(dir,"https://candidate.example");
-  for(const name of ["x402-catalog.json","openapi.json","release-manifest.json"]){
+  for(const name of ["x402-catalog.json","openapi.json","factory-runtime-bundle.js","release-manifest.json"]){
     assert.ok(fs.existsSync(path.join(dir,name)));
   }
   const catalog=JSON.parse(fs.readFileSync(path.join(dir,"x402-catalog.json"),"utf8"));
@@ -62,4 +63,17 @@ test("release manifest preserves per-product deployment prerequisites",()=>{
   for(const p of b.manifest.products.filter(p=>p.id!=="sec-filing-freshness")){
     assert.ok(Array.isArray(p.required_env));
   }
+});
+
+
+test("release manifest binds the executable runtime bundle hash",()=>{
+  const b=buildReleaseBundle("https://candidate.example");
+  const runtime=b.canonicalFiles["factory-runtime-bundle.js"];
+  assert.equal(typeof runtime,"string");
+  assert.ok(runtime.length>0);
+  assert.equal(b.manifest.runtime_bundle.name,"factory-runtime-bundle.js");
+  assert.equal(b.manifest.runtime_bundle.sha256,sha256(runtime));
+  assert.equal(b.manifest.runtime_bundle.module_count,b.runtimeBundle.moduleCount);
+  assert.deepEqual(b.manifest.runtime_bundle.entries,b.runtimeBundle.entries);
+  assert.equal(b.runtimeBundle.external.length,0);
 });
