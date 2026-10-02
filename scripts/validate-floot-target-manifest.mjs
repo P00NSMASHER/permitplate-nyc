@@ -9,6 +9,11 @@ const EXPECTED_ORIGIN = 'https://pa-entity-x402.floot.app';
 const NETWORK = 'eip155:8453';
 const USDC = '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913';
 const PAY_TO = '0x708f7b52b56eafd7fc1de65fc7752ed732914021';
+const printableAscii32 = (value) =>
+  typeof value === 'string' &&
+  value.length > 0 &&
+  value.length <= 32 &&
+  /^[\\x20-\\x7E]+$/.test(value);
 
 const expected = [
   ['/_api/pa-entity-one', '$0.001', '1000'],
@@ -45,6 +50,12 @@ for (const [path, price, amount] of expected) {
   assert.equal(terms.maxTimeoutSeconds, 60);
   assert.equal(terms.extra?.name, 'USD Coin');
   assert.equal(terms.extra?.version, '2');
+  assert(printableAscii32(resource.serviceName), path + ' invalid x402 serviceName');
+  assert(Array.isArray(resource.tags) && resource.tags.length <= 5, path + ' invalid x402 tag count');
+  for (const tag of resource.tags) {
+    assert(printableAscii32(tag), path + ' invalid x402 tag ' + tag);
+  }
 }
 
 console.log('PASS 8/8 Floot target manifest resources');
+console.log('PASS x402 serviceName/tag metadata constraints');
