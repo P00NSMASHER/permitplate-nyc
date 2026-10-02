@@ -1,8 +1,8 @@
 "use strict";
 
 const PA_SOURCE = "https://data.pa.gov/resource/xvd7-5r2c.json";
-const CENSUS_DEMO = "https://api-v2.appdeploy.ai/app/us-census-address-geocoder-x402-23mj4x/api/demo";
-const RDAP_DEMO = "https://api-v2.appdeploy.ai/app/domain-rdap-lookup-x402-spdfnq/api/demo";
+const CENSUS_GEOCODER = "https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress";
+const IANA_RDAP_BOOTSTRAP = "https://data.iana.org/rdap/dns.json";
 const SOURCE_TIMEOUT_MS = 10000;
 
 function canonicalBusinessName(value) {
@@ -50,20 +50,24 @@ function normalizeCompany(raw) {
   return value;
 }
 
-async function fetchJson(fetchImpl, url, init = {}, timeoutMs = SOURCE_TIMEOUT_MS) {
+async function fetchResponse(fetchImpl, url, init = {}, timeoutMs = SOURCE_TIMEOUT_MS) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetchImpl(url, { ...init, signal: controller.signal });
-    if (!response || response.ok !== true) {
-      const error = new Error("source_http_" + (response?.status ?? "unknown"));
-      error.code = "SOURCE_HTTP_ERROR";
-      throw error;
-    }
-    return await response.json();
+    return await fetchImpl(url, { ...init, signal: controller.signal });
   } finally {
     clearTimeout(timer);
   }
+}
+
+async function fetchJson(fetchImpl, url, init = {}, timeoutMs = SOURCE_TIMEOUT_MS) {
+  const response = await fetchResponse(fetchImpl, url, init, timeoutMs);
+  if (!response || response.ok !== true) {
+    const error = new Error("source_http_" + (response?.status ?? "unknown"));
+    error.code = "SOURCE_HTTP_ERROR";
+    throw error;
+  }
+  return await response.json();
 }
 
 function entityProjection() {
@@ -87,9 +91,10 @@ function mapEntity(row) {
     businessName: row.business_name == null ? null : String(row.business_name),
     filingNumber: row.filing_number == null ? null : String(row.filing_number),
     registrationType: row.typeofbusinessregistration == null ? null : String(row.typeofbusinessregistration),
-    creationDate: row.creationdate == null || String(row.creationdate).startsWith("1753-01-01")
-      ? null
-      : String(row.creationdate).slice(0, 10),
+    creationDate:
+      row.creationdate == null || String(row.creationdate).startsWith("1753-01-01")
+        ? null
+        : String(row.creationdate).slice(0, 10),
     address1: row.address_line1 == null ? null : String(row.address_line1),
     address2: row.address_line2 == null ? null : String(row.address_line2),
     city: row.city == null ? null : String(row.city),
@@ -109,7 +114,9 @@ function entityAddress(entity) {
 function dedupeAndRank(rows, query, limit) {
   const unique = new Map();
   for (const row of rows) {
-    const key = row.filingNumber || [row.businessName || "", row.address1 || "", row.city || ""].join("|");
+    const key =
+      row.filingNumber ||
+      [row.businessName || "", row.address1 || "", row.city || ""].join("|");
     if (!unique.has(key)) unique.set(key, row);
   }
   return [...unique.values()]
@@ -132,9 +139,12 @@ function createPaRegistryAdapter({ fetchImpl = fetch, timeoutMs = SOURCE_TIMEOUT
     url.searchParams.set("$select", "distinct " + entityProjection());
     url.searchParams.set("$where", "upper(business_name) like '" + pattern + "'");
     url.searchParams.set("$limit", "100");
-    const rows = await fetchJson(fetchImpl, url.toString(), {
-      headers: { "user-agent": "x402-product-factory/0.1" },
-    }, timeoutMs);
+    const rows = await fetchJson(
+      fetchImpl,
+      url.toString(),
+      { headers: { "user-agent": "x402-product-factory/0.1" } },
+      timeoutMs
+    );
     if (!Array.isArray(rows)) {
       const error = new Error("pa_registry_invalid_json");
       error.code = "SOURCE_CONTRACT_INVALID";
@@ -147,19 +157,26 @@ function createPaRegistryAdapter({ fetchImpl = fetch, timeoutMs = SOURCE_TIMEOUT
     async lookup({ company }) {
       const query = normalizeCompany(company);
       const starts = await candidates(query, "starts");
-      const rows = starts.length >= 3 ? starts : [...starts, ...(await candidates(query, "contains"))];
+      const rows =
+        starts.length >= 3
+          ? starts
+          : [...starts, ...(await candidates(query, "contains"))];
       const ranked = dedupeAndRank(rows, query, 3);
       const entity = ranked[0] || null;
-      const score = entity?.businessName ? matchScore(entity.businessName, query) : null;
+      const score = entity?.businessName
+        ? matchScore(entity.businessName, query)
+        : null;
       const strongCandidates = ranked.filter((candidate) =>
-        candidate.businessName ? matchScore(candidate.businessName, query) <= 1 : false
+        candidate.businessName
+          ? matchScore(candidate.businessName, query) <= 1
+          : false
       );
       const ambiguous = strongCandidates.length > 1;
       const complete = Boolean(
         entity?.businessName &&
-        entity?.filingNumber &&
-        entity?.registrationType &&
-        entityAddress(entity)
+          entity?.filingNumber &&
+          entity?.registrationType &&
+          entityAddress(entity)
       );
       return {
         available: true,
@@ -180,14 +197,10 @@ function createPaRegistryAdapter({ fetchImpl = fetch, timeoutMs = SOURCE_TIMEOUT
 }
 
 function normalizeAddress(value) {
-  return String(value || "").trim().replace(/\s+/g, " ").toUpperCase();
-}
-
-function coords(payload) {
-  const c = payload?.coordinates;
-  const latitude = Number(c?.latitude);
-  const longitude = Number(c?.longitude);
-  return Number.isFinite(latitude) && Number.isFinite(longitude) ? { latitude, longitude } : null;
+  return String(value || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toUpperCase();
 }
 
 function addressIdentity(value) {
@@ -206,60 +219,153 @@ function distanceMiles(a, b) {
   const dLon = radians(b.longitude - a.longitude);
   const lat1 = radians(a.latitude);
   const lat2 = radians(b.latitude);
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
   return 2 * radius * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+function censusResultFromRaw(address, raw) {
+  const match = raw?.result?.addressMatches?.[0];
+  if (!match) {
+    return {
+      input: address,
+      matched: false,
+      matchedAddress: null,
+      coordinates: null,
+      source: "U.S. Census Bureau Geocoding Services",
+    };
+  }
+  const latitude = Number(match?.coordinates?.y);
+  const longitude = Number(match?.coordinates?.x);
+  return {
+    input: address,
+    matched: true,
+    matchedAddress:
+      typeof match.matchedAddress === "string" ? match.matchedAddress : null,
+    coordinates:
+      Number.isFinite(latitude) && Number.isFinite(longitude)
+        ? { latitude, longitude }
+        : null,
+    source: "U.S. Census Bureau Geocoding Services",
+  };
 }
 
 function censusPayloadComplete(payload, requestedAddress) {
   if (!payload || typeof payload !== "object") return false;
-  if (normalizeAddress(payload.input) !== normalizeAddress(requestedAddress)) return false;
-  if (typeof payload.source !== "string" || !/Census Bureau/i.test(payload.source)) return false;
+  if (normalizeAddress(payload.input) !== normalizeAddress(requestedAddress))
+    return false;
+  if (
+    typeof payload.source !== "string" ||
+    !/Census Bureau/i.test(payload.source)
+  )
+    return false;
   if (typeof payload.matched !== "boolean") return false;
   if (payload.matched === true) {
-    if (typeof payload.matchedAddress !== "string" || !payload.matchedAddress.trim()) return false;
-    if (!coords(payload)) return false;
+    if (
+      typeof payload.matchedAddress !== "string" ||
+      !payload.matchedAddress.trim()
+    )
+      return false;
+    if (
+      !payload.coordinates ||
+      !Number.isFinite(Number(payload.coordinates.latitude)) ||
+      !Number.isFinite(Number(payload.coordinates.longitude))
+    )
+      return false;
   }
   return true;
 }
 
-function createCensusAddressAdapter({ fetchImpl = fetch, timeoutMs = SOURCE_TIMEOUT_MS } = {}) {
-  async function lookup(address) {
-    const url = new URL(CENSUS_DEMO);
+function createCensusAddressAdapter({
+  fetchImpl = fetch,
+  timeoutMs = SOURCE_TIMEOUT_MS,
+} = {}) {
+  async function geocode(address) {
+    const url = new URL(CENSUS_GEOCODER);
     url.searchParams.set("address", address);
-    return await fetchJson(fetchImpl, url.toString(), { headers: { accept: "application/json" } }, timeoutMs);
+    url.searchParams.set("benchmark", "Public_AR_Current");
+    url.searchParams.set("vintage", "Current_Current");
+    url.searchParams.set("format", "json");
+    const raw = await fetchJson(
+      fetchImpl,
+      url.toString(),
+      { headers: { accept: "application/json" } },
+      timeoutMs
+    );
+    return censusResultFromRaw(address, raw);
   }
 
   return {
     async compare({ suppliedAddress, registryAddress }) {
-      const [supplied, registered] = await Promise.all([lookup(suppliedAddress), lookup(registryAddress)]);
-      if (!censusPayloadComplete(supplied, suppliedAddress) || !censusPayloadComplete(registered, registryAddress)) {
+      const [supplied, registered] = await Promise.all([
+        geocode(suppliedAddress),
+        geocode(registryAddress),
+      ]);
+      if (
+        !censusPayloadComplete(supplied, suppliedAddress) ||
+        !censusPayloadComplete(registered, registryAddress)
+      ) {
         return { available: false, detail: "census_contract_incomplete" };
       }
-      const suppliedCoordinates = coords(supplied);
-      const registryCoordinates = coords(registered);
       const suppliedId = addressIdentity(supplied.matchedAddress);
       const registryId = addressIdentity(registered.matchedAddress);
-      const bothMatched = supplied.matched === true && registered.matched === true;
+      const bothMatched =
+        supplied.matched === true && registered.matched === true;
+      const distance =
+        supplied.coordinates && registered.coordinates
+          ? Number(
+              distanceMiles(
+                supplied.coordinates,
+                registered.coordinates
+              ).toFixed(3)
+            )
+          : null;
       return {
         available: true,
         suppliedMatched: supplied.matched === true,
         registryMatched: registered.matched === true,
-        sameStreetNumber: bothMatched && suppliedId.streetNumber != null && suppliedId.streetNumber === registryId.streetNumber,
-        sameZip: bothMatched && suppliedId.zip != null && suppliedId.zip === registryId.zip,
-        distanceMiles: suppliedCoordinates && registryCoordinates
-          ? Number(distanceMiles(suppliedCoordinates, registryCoordinates).toFixed(3))
-          : null,
+        sameStreetNumber:
+          bothMatched &&
+          suppliedId.streetNumber != null &&
+          suppliedId.streetNumber === registryId.streetNumber,
+        sameZip:
+          bothMatched &&
+          suppliedId.zip != null &&
+          suppliedId.zip === registryId.zip,
+        distanceMiles: distance,
         suppliedMatchedAddress: supplied.matchedAddress ?? null,
         registryMatchedAddress: registered.matchedAddress ?? null,
-        provenance: { source: "U.S. Census Bureau Geocoding Services", url: CENSUS_DEMO },
+        provenance: {
+          source: "U.S. Census Bureau Geocoding Services",
+          url: CENSUS_GEOCODER,
+        },
       };
     },
   };
 }
 
 function normalizeDomain(raw) {
-  const value = String(raw || "").trim().toLowerCase().replace(/\.$/, "");
-  if (value.length < 3 || value.length > 253 || !/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])$/.test(value)) {
+  let value = String(raw || "")
+    .trim()
+    .toLowerCase();
+  if (value.endsWith(".")) value = value.slice(0, -1);
+  if (value.length < 3 || value.length > 253 || !/^[a-z0-9.-]+$/.test(value)) {
+    const error = new Error("invalid_domain");
+    error.code = "INVALID_INPUT";
+    throw error;
+  }
+  const labels = value.split(".");
+  if (
+    labels.length < 2 ||
+    labels.some(
+      (label) =>
+        !label ||
+        label.length > 63 ||
+        label.startsWith("-") ||
+        label.endsWith("-")
+    )
+  ) {
     const error = new Error("invalid_domain");
     error.code = "INVALID_INPUT";
     throw error;
@@ -267,32 +373,145 @@ function normalizeDomain(raw) {
   return value;
 }
 
-function createRdapAdapter({ fetchImpl = fetch, timeoutMs = SOURCE_TIMEOUT_MS } = {}) {
+function findRdapBase(bootstrap, tld) {
+  for (const service of bootstrap?.services || []) {
+    const tlds = service?.[0] || [];
+    const urls = service?.[1] || [];
+    if (
+      tlds.some((value) => String(value).toLowerCase() === tld.toLowerCase()) &&
+      urls.length
+    ) {
+      return String(urls[0]);
+    }
+  }
+  return null;
+}
+
+function vcardName(entity) {
+  const card = entity?.vcardArray;
+  if (!Array.isArray(card) || !Array.isArray(card[1])) return null;
+  for (const item of card[1]) {
+    if (Array.isArray(item) && item[0] === "fn") {
+      const value = String(item[3] ?? "");
+      return value || null;
+    }
+  }
+  return null;
+}
+
+function eventMap(events) {
+  const out = {};
+  if (!Array.isArray(events)) return out;
+  for (const item of events) {
+    const action = String(item?.eventAction ?? "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+(.)/g, (_m, c) => c.toUpperCase());
+    const date = String(item?.eventDate ?? "");
+    if (action && date && !out[action]) out[action] = date;
+  }
+  return out;
+}
+
+function createRdapAdapter({
+  fetchImpl = fetch,
+  timeoutMs = SOURCE_TIMEOUT_MS,
+} = {}) {
+  let bootstrapCache = null;
+
+  async function bootstrap() {
+    if (bootstrapCache) return bootstrapCache;
+    const data = await fetchJson(
+      fetchImpl,
+      IANA_RDAP_BOOTSTRAP,
+      {
+        headers: {
+          accept: "application/json",
+          "user-agent": "x402-product-factory/0.1",
+        },
+      },
+      timeoutMs
+    );
+    bootstrapCache = data;
+    return data;
+  }
+
   return {
     async lookup({ domain }) {
       const requested = normalizeDomain(domain);
-      const url = new URL(RDAP_DEMO);
-      url.searchParams.set("domain", requested);
-      const payload = await fetchJson(fetchImpl, url.toString(), { headers: { accept: "application/json" } }, timeoutMs);
-      const returned = typeof payload?.domain === "string" ? payload.domain.trim().toLowerCase().replace(/\.$/, "") : null;
-      const authoritative = typeof payload?.authoritativeRdap === "string" && /^https?:\/\//i.test(payload.authoritativeRdap)
-        ? payload.authoritativeRdap
-        : null;
-      const complete =
-        returned === requested &&
-        typeof payload?.registered === "boolean" &&
-        authoritative != null &&
-        typeof payload?.source === "string" &&
-        payload.source.trim().length > 0;
-      if (!complete) return { available: false, detail: "rdap_contract_incomplete" };
+      const tld = requested.split(".").pop();
+      const rdapBase = findRdapBase(await bootstrap(), tld);
+      if (!rdapBase) {
+        return {
+          available: false,
+          detail: "rdap_bootstrap_service_missing",
+        };
+      }
+
+      const url =
+        rdapBase.replace(/\/+$/, "") +
+        "/domain/" +
+        encodeURIComponent(requested);
+      const response = await fetchResponse(
+        fetchImpl,
+        url,
+        {
+          headers: {
+            accept: "application/rdap+json, application/json",
+            "user-agent": "x402-product-factory/0.1",
+          },
+          redirect: "follow",
+        },
+        timeoutMs
+      );
+
+      if (response.status === 404) {
+        return {
+          available: true,
+          registered: false,
+          domain: requested,
+          authoritativeRdap: rdapBase,
+          registrar: null,
+          events: {},
+          provenance: {
+            source:
+              "Authoritative RDAP server discovered via IANA bootstrap",
+            url,
+          },
+        };
+      }
+      if (!response.ok) {
+        const error = new Error("rdap_http_" + response.status);
+        error.code = "SOURCE_HTTP_ERROR";
+        throw error;
+      }
+
+      const data = await response.json();
+      const registrarEntity = Array.isArray(data?.entities)
+        ? data.entities.find(
+            (entity) =>
+              Array.isArray(entity?.roles) &&
+              entity.roles
+                .map((role) => String(role).toLowerCase())
+                .includes("registrar")
+          )
+        : undefined;
+
       return {
         available: true,
-        registered: payload.registered === true,
-        domain: returned,
-        authoritativeRdap: authoritative,
-        registrar: payload.registrar ?? null,
-        events: payload.events ?? null,
-        provenance: { source: payload.source, url: RDAP_DEMO },
+        registered: true,
+        domain: requested,
+        authoritativeRdap: rdapBase,
+        registrar: registrarEntity
+          ? {
+              name: vcardName(registrarEntity),
+              handle: registrarEntity.handle ?? null,
+            }
+          : null,
+        events: eventMap(data?.events),
+        provenance: {
+          source: "Authoritative RDAP server discovered via IANA bootstrap",
+          url,
+        },
       };
     },
   };
@@ -300,8 +519,8 @@ function createRdapAdapter({ fetchImpl = fetch, timeoutMs = SOURCE_TIMEOUT_MS } 
 
 module.exports = {
   PA_SOURCE,
-  CENSUS_DEMO,
-  RDAP_DEMO,
+  CENSUS_GEOCODER,
+  IANA_RDAP_BOOTSTRAP,
   canonicalBusinessName,
   matchScore,
   addressIdentity,
