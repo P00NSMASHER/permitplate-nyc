@@ -1,66 +1,70 @@
 {
-  "id": "pa-vendor-gate",
-  "version": "0.1.0",
-  "purpose": "Check whether available public evidence is sufficiently consistent for an agent to proceed with a prospective Pennsylvania vendor or require human review.",
+  "id": "pa-vendor-intake-gate",
+  "version": "1.0.0",
+  "production_reference": "https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-gate",
+  "purpose": "Decide whether an automated Pennsylvania vendor-intake workflow may continue or must pause for human review based on bounded public evidence.",
   "input": {
     "required": [
-      "company"
+      "company",
+      "address",
+      "domain"
     ],
     "properties": {
       "company": {
         "type": "string",
         "minLength": 2
       },
-      "domain": {
-        "type": [
-          "string",
-          "null"
-        ]
-      },
       "address": {
-        "type": [
-          "string",
-          "null"
-        ]
+        "type": "string",
+        "minLength": 5
+      },
+      "domain": {
+        "type": "string",
+        "minLength": 3
       }
     }
   },
   "checks": [
     "pa_registry_identity",
-    "ofac_screen",
-    "domain_rdap",
-    "address_consistency"
+    "census_address_consistency",
+    "ofac_sdn_candidate_screen",
+    "domain_rdap"
   ],
+  "thresholds": {
+    "registry_strong_match_required": true,
+    "census_max_distance_miles": 0.25,
+    "ofac_review_score_gte": 90,
+    "rdap_registered_required": true
+  },
   "decision_policy": {
-    "HUMAN_REVIEW": [
-      "no confident Pennsylvania entity match",
-      "material identity conflict",
-      "potential sanctions match requiring review",
-      "insufficient or contradictory evidence"
-    ],
-    "PROCEED": [
-      "confident entity match",
-      "no review-triggering sanctions evidence",
-      "supplied domain/address evidence is consistent or absent"
-    ]
+    "proceed": "All four required checks pass.",
+    "human_review": "Any failed, unavailable, uncertain, or contradictory required check.",
+    "automatic_reject": false
   },
   "output": {
     "required": [
       "decision",
-      "reason_codes",
+      "agentAction",
+      "reviewTriggers",
       "checks",
-      "evidence",
-      "checked_at"
+      "policy",
+      "checkedAt"
     ],
     "decision": [
-      "PROCEED",
-      "HUMAN_REVIEW"
+      "proceed",
+      "human_review"
+    ],
+    "agentAction": [
+      "continue_vendor_intake",
+      "pause_and_request_human_review"
     ]
   },
-  "forbidden_claims": [
-    "safe",
-    "fraud-free",
-    "legally compliant",
-    "approved by government"
+  "claim_boundaries": [
+    "proceed is not legal or compliance approval",
+    "a no-candidate OFAC result is not sanctions clearance",
+    "OFAC 50 Percent Rule ownership analysis is not included",
+    "registry matching is not proof of good standing, ownership, or authority",
+    "Census matching is not proof of control of an address",
+    "RDAP registration is not proof of domain ownership"
   ]
 }
