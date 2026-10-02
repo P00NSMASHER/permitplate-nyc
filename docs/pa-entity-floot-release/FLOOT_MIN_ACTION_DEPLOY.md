@@ -44,11 +44,11 @@ Both aliases keep their existing legacy top-level `resource` + `accepts[]` field
 
 This directly matches the resource-array shape used by CDP-style Bazaar ingestors such as Agent Bazaar. The canonical `/.well-known/x402` and `/.well-known/x402-catalog.json` already carried both resources and do not need another write.
 
-For a **PA-only alias refresh**, the next free Floot window would use only `FLOOT_SAFE_PATCH_5_X402_ALIASES.txt`. During active incident recovery #39, however, that is only a baseline-preservation operation and is not sufficient to restore the eight-resource portfolio.
+For a **PA-only alias refresh**, the next free Floot window would use `FLOOT_SAFE_PATCH_5_X402_ALIASES.txt` plus `FLOOT_SAFE_PATCH_8_X402_SERVICES.txt`. During active incident recovery #39, however, that is only a baseline-preservation operation and is not sufficient to restore the eight-resource portfolio.
 
 Do not reapply PA baseline patches 1–4, 6, or 7 unless a fresh external audit shows an actual regression. Apply the incident-recovery endpoint/discovery changes separately, after reading the current Floot project state once the quota resets.
 
-After the Patch 5 write:
+After the Patch 5 + Patch 8 alias writes:
 1. create one checkpoint;
 2. republish once;
 3. verify `/.well-known/x402.json` and `/.well-known/x402-services.json` each expose two `resources[]` entries with 1000/5000 atomic amounts and the unchanged payout wallet;
@@ -57,15 +57,16 @@ After the Patch 5 write:
 
 ## Approved safe patches
 
-Use these seven smaller patch payloads in order:
+Use these eight smaller patch payloads in order:
 
 1. `FLOOT_SAFE_PATCH_1_BUSINESS.txt` — main $0.005 GET endpoint + schema
 2. `FLOOT_SAFE_PATCH_2_BEST_MATCH.txt` — $0.001 GET endpoint + schema
 3. `FLOOT_SAFE_PATCH_3_OPENAPI.txt` — OpenAPI, sitemap, security.txt
 4. `FLOOT_SAFE_PATCH_4_AGENT_TEXT.txt` — llms.txt, llms-full.txt, skill.txt
-5. `FLOOT_SAFE_PATCH_5_X402_ALIASES.txt` — x402.json + x402-services.json
+5. `FLOOT_SAFE_PATCH_5_X402_ALIASES.txt` — x402.json
 6. `FLOOT_SAFE_PATCH_6_X402_CATALOG.txt` — x402-service.json + x402-catalog.json
 7. `FLOOT_SAFE_PATCH_7_EXTENSIONLESS.txt` — isolated canonical `static/.well-known/x402`
+8. `FLOOT_SAFE_PATCH_8_X402_SERVICES.txt` — x402-services.json
 
 The legacy `FLOOT_PATCH_CORE.txt` and `FLOOT_PATCH_DISCOVERY.txt` payloads are **superseded and must not be deployed**. They are too large for the conservative Floot patch lane and the old core payload includes unsupported custom OPTIONS endpoints.
 
@@ -84,8 +85,8 @@ Last verified safe-patch integrity:
 - release regression run: `36977374501` — success
 - standard deploy files: `14/14 exact`
 - extensionless canonical manifest: `1/1 exact`
-- safe patch count: `7`
-- release fingerprint: `3bbe93099a301a023dc7016e2028c718519e6d78e2fc0d2a029ce7518f09d8ab`
+- safe patch count: `8` (7 standard + 1 extensionless)
+- release fingerprint: `30b624815307e5d59a3797e2aba8e70f2dbd000fdb89179a67f6ee91601c23bc`
 
 After any chat/stream interruption:
 1. re-read current `main`;
@@ -98,8 +99,8 @@ Current-head integrity must be green immediately before any Floot write.
 ## Execution order
 
 1. Read the current Floot project version once.
-2. Apply only `FLOOT_SAFE_PATCH_5_X402_ALIASES.txt`.
-3. Create one checkpoint after the static alias update.
+2. Apply `FLOOT_SAFE_PATCH_5_X402_ALIASES.txt` and `FLOOT_SAFE_PATCH_8_X402_SERVICES.txt`.
+3. Create one checkpoint after both static alias updates.
 4. Republish the already-live app once.
 5. Verify both standard alias URLs return HTTP 200 JSON and:
    - expose `resources.length === 2`;
@@ -136,9 +137,10 @@ Expected Floot build actions: a small static-only update plus checkpoint/publish
 
 ## Prepared-patch verification
 
-Permanent CI reconstructs all seven approved safe patches and compares them byte-for-byte to the current release fixtures:
+Permanent CI reconstructs all eight approved safe patches and compares them byte-for-byte to the current release fixtures:
 
 - standard supported files: 14/14 exact
+- standard safe patches: 7
 - isolated extensionless manifest: 1/1 exact
 - total: 15/15 exact
 - any unsupported OPTIONS target fails the release gate
