@@ -1,0 +1,42 @@
+{
+  "checkedAt": "2026-10-02",
+  "sourceHead": "d3b8177209a9c319c23d2515b1ac4cdf841b6403",
+  "currentProductionState": "two-route-floot-baseline",
+  "zeroSpend": true,
+  "paymentSent": false,
+  "tests": {
+    "postdeployWithRegistrationRequested": {
+      "result": "fail_closed",
+      "exitCode": 1,
+      "publicGreen": false,
+      "directoryRegistrationAttempted": false,
+      "reason": "six target paid routes and three fixtures not live yet; manifest/openapi still 2 resources"
+    },
+    "agent402Verifier": {
+      "result": "refused_before_registration_post",
+      "exitCode": 1,
+      "reason": "public Floot manifest resourceCount=2 expected=8"
+    },
+    "marketplaceRepair": {
+      "result": "refused_before_mutation",
+      "exitCode": 1,
+      "reason": "Floot manifest is not verified 8-resource state"
+    }
+  },
+  "unchangedReadback": {
+    "agent402": {
+      "toolCount": 2,
+      "paidToolCount": 2,
+      "health": 1,
+      "routable": true
+    },
+    "market402": {
+      "vendorIntakeTotal": 0
+    },
+    "index402": {
+      "catalogTotal": 46,
+      "vendorIntakeMatches": 0
+    }
+  },
+  "conclusion": "Post-rehost automation fails closed and did not mutate Agent402 or marketplaces before the Floot 8-route public precondition exists."
+}
