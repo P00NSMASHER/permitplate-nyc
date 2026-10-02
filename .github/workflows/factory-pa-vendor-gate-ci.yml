@@ -21,288 +21,36 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate all factory JavaScript syntax
+      - name: Validate factory JavaScript syntax
         run: node factory/scripts/validate-js-syntax.js
-      - name: Test factory JavaScript syntax validator
-        run: node --test factory/scripts/validate-js-syntax.test.js
 
-      - name: Test Product 002 PA Vendor Intake Gate
-        run: node --test factory/products/pa-vendor-gate/decision.test.js
+      - name: Run all discovered factory tests
+        run: node factory/scripts/run-all-tests.js
 
-      - name: Test Product 003 decision policy
-        run: node --test factory/products/pa-vendor-identity-match/decision.test.js
-      - name: Test Product 003 service composition
-        run: node --test factory/products/pa-vendor-identity-match/service.test.js
-      - name: Test concrete PA Census RDAP adapters
-        run: node --test factory/packages/sources/appdeploy-public.test.js
-      - name: Test direct PA Census RDAP source adapter internals
-        run: node --test factory/packages/sources/live-pa-identity.test.js
-      - name: Test shared x402 payment flow
-        run: node --test factory/packages/x402/payment.test.js
-      - name: Test Product 003 paid x402 handler
-        run: node --test factory/products/pa-vendor-identity-match/paid-handler.test.js
-      - name: Test Product 003 discovery metadata
-        run: node --test factory/products/pa-vendor-identity-match/metadata.test.js
-      - name: Run Product 003 release gate
-        run: node factory/scripts/validate-product-003.js
-
-      - name: Test Product 004 decision policy
-        run: node --test factory/products/pa-business-address-match/decision.test.js
-      - name: Test Product 004 service composition
-        run: node --test factory/products/pa-business-address-match/service.test.js
-      - name: Test Product 004 paid x402 handler
-        run: node --test factory/products/pa-business-address-match/paid-handler.test.js
-      - name: Test Product 004 discovery metadata
-        run: node --test factory/products/pa-business-address-match/metadata.test.js
-      - name: Run Product 004 release gate
-        run: node factory/scripts/validate-product-004.js
-
-      - name: Test Product 005 decision policy
-        run: node --test factory/products/pa-business-domain-match/decision.test.js
-      - name: Test Product 005 service composition
-        run: node --test factory/products/pa-business-domain-match/service.test.js
-      - name: Test Product 005 paid x402 handler
-        run: node --test factory/products/pa-business-domain-match/paid-handler.test.js
-      - name: Test Product 005 discovery metadata
-        run: node --test factory/products/pa-business-domain-match/metadata.test.js
-      - name: Run Product 005 release gate
-        run: node factory/scripts/validate-product-005.js
-
-      - name: Test direct SEC EDGAR adapter
-        run: node --test factory/packages/sources/sec-filings.test.js
-      - name: Test Product 006 freshness decision
-        run: node --test factory/products/sec-filing-freshness/decision.test.js
-      - name: Test Product 006 service composition
-        run: node --test factory/products/sec-filing-freshness/service.test.js
-      - name: Test Product 006 paid x402 handler
-        run: node --test factory/products/sec-filing-freshness/paid-handler.test.js
-      - name: Test Product 006 discovery metadata
-        run: node --test factory/products/sec-filing-freshness/metadata.test.js
-      - name: Run Product 006 release gate
-        run: node factory/scripts/validate-product-006.js
-
-      - name: Test Product 013 SEC identity decision
-        run: node --test factory/products/sec-company-identity-match/decision.test.js
-      - name: Test Product 013 SEC identity service
-        run: node --test factory/products/sec-company-identity-match/service.test.js
-      - name: Test Product 013 paid x402 handler
-        run: node --test factory/products/sec-company-identity-match/paid-handler.test.js
-      - name: Test Product 013 discovery metadata
-        run: node --test factory/products/sec-company-identity-match/metadata.test.js
-      - name: Run Product 013 release gate
-        run: node factory/scripts/validate-product-013.js
-
-      - name: Test Product 007 domain-age decision
-        run: node --test factory/products/domain-registration-age/decision.test.js
-      - name: Test Product 007 domain-age service
-        run: node --test factory/products/domain-registration-age/service.test.js
-      - name: Test Product 007 paid x402 handler
-        run: node --test factory/products/domain-registration-age/paid-handler.test.js
-      - name: Test Product 007 discovery metadata
-        run: node --test factory/products/domain-registration-age/metadata.test.js
-      - name: Run Product 007 release gate
-        run: node factory/scripts/validate-product-007.js
-
-      - name: Test Treasury Fiscal Data adapter
-        run: node --test factory/packages/sources/treasury-average-rates.test.js
-      - name: Test Product 008 Treasury threshold decision
-        run: node --test factory/products/treasury-average-rate-threshold/decision.test.js
-      - name: Test Product 008 Treasury threshold service
-        run: node --test factory/products/treasury-average-rate-threshold/service.test.js
-      - name: Test Product 008 paid x402 handler
-        run: node --test factory/products/treasury-average-rate-threshold/paid-handler.test.js
-      - name: Test Product 008 discovery metadata
-        run: node --test factory/products/treasury-average-rate-threshold/metadata.test.js
-      - name: Run Product 008 release gate
-        run: node factory/scripts/validate-product-008.js
-
-
-      - name: Test Product 014 Treasury trend decision
-        run: node --test factory/products/treasury-average-rate-trend/decision.test.js
-      - name: Test Product 014 Treasury trend service
-        run: node --test factory/products/treasury-average-rate-trend/service.test.js
-      - name: Test Product 014 paid x402 handler
-        run: node --test factory/products/treasury-average-rate-trend/paid-handler.test.js
-      - name: Test Product 014 discovery metadata
-        run: node --test factory/products/treasury-average-rate-trend/metadata.test.js
-      - name: Run Product 014 release gate
-        run: node factory/scripts/validate-product-014.js
-
-      - name: Test OFAC direct source adapter
-        run: node --test factory/packages/sources/ofac-name-screen.test.js
-      - name: Test Product 009 OFAC review decision
-        run: node --test factory/products/ofac-name-review-gate/decision.test.js
-      - name: Test Product 009 OFAC review service
-        run: node --test factory/products/ofac-name-review-gate/service.test.js
-      - name: Test Product 009 paid x402 handler
-        run: node --test factory/products/ofac-name-review-gate/paid-handler.test.js
-      - name: Test Product 009 discovery metadata
-        run: node --test factory/products/ofac-name-review-gate/metadata.test.js
-
-      - name: Test Product 010 formation-age decision
-        run: node --test factory/products/pa-business-formation-age/decision.test.js
-      - name: Test Product 010 formation-age service
-        run: node --test factory/products/pa-business-formation-age/service.test.js
-      - name: Test Product 010 paid x402 handler
-        run: node --test factory/products/pa-business-formation-age/paid-handler.test.js
-      - name: Test Product 010 discovery metadata
-        run: node --test factory/products/pa-business-formation-age/metadata.test.js
-      - name: Run Product 010 release gate
-        run: node factory/scripts/validate-product-010.js
-
-      - name: Test Product 011 expiration decision
-        run: node --test factory/products/domain-expiration-horizon/decision.test.js
-      - name: Test Product 011 expiration service
-        run: node --test factory/products/domain-expiration-horizon/service.test.js
-      - name: Test Product 011 paid x402 handler
-        run: node --test factory/products/domain-expiration-horizon/paid-handler.test.js
-      - name: Test Product 011 discovery metadata
-        run: node --test factory/products/domain-expiration-horizon/metadata.test.js
-      - name: Run Product 011 release gate
-        run: node factory/scripts/validate-product-011.js
-
-      - name: Validate factory product registry
+      - name: Validate product registry
         run: node factory/scripts/validate-registry.js
-      - name: Validate migration manifest classification
+
+      - name: Validate migration manifest
         run: node factory/scripts/validate-migration-manifest.js
-      - name: Test compiled discovery surfaces
-        run: node --test factory/packages/discovery/generator.test.js
-      - name: Test deterministic deployment bundle
-        run: node --test factory/packages/discovery/bundle.test.js
-      - name: Dry-run deployment bundle writer
-        run: node factory/scripts/write-deployment-bundle.js https://candidate.example /tmp/x402-factory-bundle
+
       - name: Validate compiled discovery surfaces
         run: node factory/scripts/validate-discovery.js
-      - name: Test factory release-bundle generator
-        run: node --test factory/scripts/build-release-bundle.test.js
+
+      - name: Build deterministic deployment bundle
+        run: node factory/scripts/write-deployment-bundle.js https://candidate.example /tmp/x402-factory-bundle
+
       - name: Build staging release bundle
         run: node factory/scripts/build-release-bundle.js /tmp/x402-factory-bundle https://candidate.example
-      - name: Run Product 009 release gate
-        run: node factory/scripts/validate-product-009.js
-      - name: Test Product 012 last-changed decision
-        run: node --test factory/products/domain-last-changed-recency/decision.test.js
-      - name: Test Product 012 last-changed service
-        run: node --test factory/products/domain-last-changed-recency/service.test.js
-      - name: Test Product 012 paid x402 handler
-        run: node --test factory/products/domain-last-changed-recency/paid-handler.test.js
-      - name: Test Product 012 discovery metadata
-        run: node --test factory/products/domain-last-changed-recency/metadata.test.js
-      - name: Run Product 012 release gate
-        run: node factory/scripts/validate-product-012.js
-      - name: Run Product 015 release gate
-        run: node factory/scripts/validate-product-015.js
 
-      - name: Test portable factory runtime composition
-        run: node --test factory/runtime/create-runtime.test.js
-      - name: Test deployment prerequisite preflight
-        run: node --test factory/runtime/deployment-preflight.test.js
-      - name: Test AppDeploy runtime bridge
-        run: node --test factory/runtime/appdeploy-bridge.test.js
-      - name: Test self-contained AppDeploy ESM runtime bundle
-        run: node --test factory/scripts/build-appdeploy-runtime-bundle.test.js
-      - name: Test generated AppDeploy backend entrypoint
-        run: node --test factory/scripts/build-appdeploy-entrypoint.test.js
-      - name: Test zero-spend post-deploy verifier
-        run: node --test factory/scripts/verify-live-deployment.test.js
-      - name: Enforce no nested seller-owned AppDeploy calls
-        run: node --test factory/scripts/validate-no-nested-seller-calls.test.js
-      - name: Test unified deploy-candidate validator
-        run: node --test factory/runtime/validate-deploy-candidate.test.js
+      - name: Run every staging product release gate
+        run: node factory/scripts/run-release-gates.js
+
       - name: Run structural deploy-candidate preflight
         env:
           SEC_USER_AGENT: x402-product-factory-ci/1.0 ci@example.com
           PUBLIC_API_BASE: https://candidate.example
         run: node factory/runtime/validate-deploy-candidate.js
-      - name: Test Product 015 Treasury spread decision
-        run: node --test factory/products/treasury-average-rate-spread/decision.test.js
-      - name: Test Product 015 Treasury spread service
-        run: node --test factory/products/treasury-average-rate-spread/service.test.js
-      - name: Test Product 015 paid x402 handler
-        run: node --test factory/products/treasury-average-rate-spread/paid-handler.test.js
-      - name: Test Product 015 discovery metadata
-        run: node --test factory/products/treasury-average-rate-spread/metadata.test.js
-      - name: Validate complete staging portfolio coverage
-        run: node --test factory/scripts/validate-portfolio-coverage.test.js
-      - name: Test Product 016 PA entity OFAC decision
-        run: node --test factory/products/pa-entity-ofac-review/decision.test.js
-      - name: Test Product 016 PA entity OFAC service
-        run: node --test factory/products/pa-entity-ofac-review/service.test.js
-      - name: Test Product 016 paid x402 handler
-        run: node --test factory/products/pa-entity-ofac-review/paid-handler.test.js
-      - name: Test Product 016 discovery metadata
-        run: node --test factory/products/pa-entity-ofac-review/metadata.test.js
-      - name: Run Product 016 release gate
-        run: node factory/scripts/validate-product-016.js
-      - name: Test Product 017 PA vendor new-domain decision
-        run: node --test factory/products/pa-vendor-new-domain-review/decision.test.js
-      - name: Test Product 017 PA vendor new-domain service
-        run: node --test factory/products/pa-vendor-new-domain-review/service.test.js
-      - name: Test Product 017 paid x402 handler
-        run: node --test factory/products/pa-vendor-new-domain-review/paid-handler.test.js
-      - name: Test Product 017 discovery metadata
-        run: node --test factory/products/pa-vendor-new-domain-review/metadata.test.js
-      - name: Run Product 017 release gate
-        run: node factory/scripts/validate-product-017.js
-
-      - name: Test Product 018 PA vendor counterparty decision
-        run: node --test factory/products/pa-vendor-counterparty-review/decision.test.js
-      - name: Test Product 018 PA vendor counterparty service
-        run: node --test factory/products/pa-vendor-counterparty-review/service.test.js
-      - name: Test Product 018 paid x402 handler
-        run: node --test factory/products/pa-vendor-counterparty-review/paid-handler.test.js
-      - name: Test Product 018 discovery metadata
-        run: node --test factory/products/pa-vendor-counterparty-review/metadata.test.js
-      - name: Run Product 018 release gate
-        run: node factory/scripts/validate-product-018.js
-
-      - name: Test Product 019 PA vendor maturity decision
-        run: node --test factory/products/pa-vendor-maturity-review/decision.test.js
-      - name: Test Product 019 PA vendor maturity service
-        run: node --test factory/products/pa-vendor-maturity-review/service.test.js
-      - name: Test Product 019 paid x402 handler
-        run: node --test factory/products/pa-vendor-maturity-review/paid-handler.test.js
-      - name: Test Product 019 discovery metadata
-        run: node --test factory/products/pa-vendor-maturity-review/metadata.test.js
-      - name: Run Product 019 release gate
-        run: node factory/scripts/validate-product-019.js
-
-      - name: Test Product 020 PA vendor domain continuity decision
-        run: node --test factory/products/pa-vendor-domain-continuity-review/decision.test.js
-      - name: Test Product 020 PA vendor domain continuity service
-        run: node --test factory/products/pa-vendor-domain-continuity-review/service.test.js
-      - name: Test Product 020 paid x402 handler
-        run: node --test factory/products/pa-vendor-domain-continuity-review/paid-handler.test.js
-      - name: Test Product 020 discovery metadata
-        run: node --test factory/products/pa-vendor-domain-continuity-review/metadata.test.js
-      - name: Run Product 020 release gate
-        run: node factory/scripts/validate-product-020.js
-      - name: Test Product 021 decision policy
-        run: node --test factory/products/pa-entity-type-policy/decision.test.js
-      - name: Test Product 021 service composition
-        run: node --test factory/products/pa-entity-type-policy/service.test.js
-      - name: Test Product 021 paid x402 handler
-        run: node --test factory/products/pa-entity-type-policy/paid-handler.test.js
-      - name: Test Product 021 discovery metadata
-        run: node --test factory/products/pa-entity-type-policy/metadata.test.js
-      - name: Run Product 021 release gate
-        run: node factory/scripts/validate-product-021.js
-      - name: Test Product 022 decision policy
-        run: node --test factory/products/pa-registered-county-policy/decision.test.js
-      - name: Test Product 022 service composition
-        run: node --test factory/products/pa-registered-county-policy/service.test.js
-      - name: Test Product 022 paid x402 handler
-        run: node --test factory/products/pa-registered-county-policy/paid-handler.test.js
-      - name: Test Product 022 discovery metadata
-        run: node --test factory/products/pa-registered-county-policy/metadata.test.js
-      - name: Test Product 023 decision policy
-        run: node --test factory/products/pa-local-vendor-policy-gate/decision.test.js
-      - name: Test Product 023 service composition
-        run: node --test factory/products/pa-local-vendor-policy-gate/service.test.js
-      - name: Test Product 023 paid x402 handler
-        run: node --test factory/products/pa-local-vendor-policy-gate/paid-handler.test.js
-      - name: Test Product 023 discovery metadata
-        run: node --test factory/products/pa-local-vendor-policy-gate/metadata.test.js
