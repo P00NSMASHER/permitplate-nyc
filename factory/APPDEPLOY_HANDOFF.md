@@ -72,15 +72,17 @@ The factory preflight deliberately blocks deployment when that prerequisite is m
 
 No personal contact identity is invented or embedded by the factory.
 
-## Secret-binding syntax remains intentionally unresolved
+## Secret-binding syntax verified
 
-The current production AppDeploy project is ESM-based (`"type": "module"`) and uses `backend/index.ts`.
+Read-only inspection of existing deployed AppDeploy apps confirms the supported backend pattern:
 
-The factory ESM bundle solves the CommonJS/ESM runtime packaging problem.
+- import `secrets` from `@appdeploy/sdk`
+- call `await secrets.listSecretNames()`
+- call `await secrets.readSecret('NAME')`
 
-However, the exact AppDeploy-supported mechanism for binding `SEC_USER_AGENT` into the final backend entrypoint must be confirmed from current AppDeploy deployment/secret instructions before deployment.
+The generated `appdeploy-backend-index.ts` uses that proven pattern for `SEC_USER_AGENT` and deliberately does **not** use `process.env`.
 
-Do not assume `process.env.SEC_USER_AGENT` or any other secret API until the current AppDeploy instructions are available.
+The actual `SEC_USER_AGENT` value remains a deployment prerequisite. It must contain a declared client identity and a real user-approved contact email; the factory does not invent one.
 
 ## Current provider blocker
 
@@ -101,15 +103,14 @@ Until that blocker clears:
 
 1. Confirm AppDeploy deployment credits/app usage are available.
 2. Read current AppDeploy deployment instructions.
-3. Read current AppDeploy secret-binding instructions.
-4. Bind a user-approved `SEC_USER_AGENT` with contact email.
-5. Generate a release bundle using the actual public API base.
-6. Verify `release-manifest.json` runtime SHA against `factory-runtime-bundle.js`.
-7. Use the generated ESM runtime bundle behind a thin AppDeploy `router` entrypoint.
-8. Run the factory deploy-candidate preflight with the actual environment.
-9. Deploy.
-10. Poll AppDeploy status through terminal state and inspect QA/errors.
-11. Verify every unpaid paid route returns its exact HTTP 402 challenge.
-12. Verify discovery surfaces list every staged product with resource-level `accepts[]`.
-13. Verify existing production-reference Products 001 and 002 remain unchanged unless the deployment plan explicitly migrates them.
-14. Only after production verification begin external marketplace submission.
+3. Bind a user-approved `SEC_USER_AGENT` with contact email using AppDeploy secrets.
+4. Generate a release bundle using the actual public API base.
+5. Verify `release-manifest.json` hashes for both `factory-runtime-bundle.js` and `appdeploy-backend-index.ts`.
+6. Use the generated `appdeploy-backend-index.ts` and `factory-runtime-bundle.js` as the backend deployment pair.
+7. Run the factory deploy-candidate preflight with the actual environment.
+8. Deploy.
+9. Poll AppDeploy status through terminal state and inspect QA/errors.
+10. Verify every unpaid paid route returns its exact HTTP 402 challenge.
+11. Verify discovery surfaces list every staged product with resource-level `accepts[]`.
+12. Verify existing production-reference Products 001 and 002 remain unchanged unless the deployment plan explicitly migrates them.
+13. Only after production verification begin external marketplace submission.
