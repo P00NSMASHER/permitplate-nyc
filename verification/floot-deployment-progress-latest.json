@@ -288,7 +288,7 @@
     "checkpointId": null,
     "description": null
   },
-  "lastUpdatedAt": "2026-10-02T17:55:00Z",
+  "lastUpdatedAt": "2026-10-02T17:56:33Z",
   "lastCompletedWriteOrder": 0,
   "resumeRule": "Never restart from write 1 after interruption. Refresh Floot list_files, verify boundary content against the locked deployment bundle, confirm the rollback snapshot/plan still match the captured pre-write project version, then resume at the next unfinished ordered write.",
   "rollbackPlan": {
@@ -337,7 +337,22 @@
         "pinnedTextEqualsBlobVerifiedBundle": true
       }
     ],
-    "totalItems": 26
+    "totalItems": 26,
+    "localContingency": {
+      "device": "PAAM-L044",
+      "directory": "%TEMP%\\floot-locked-bundles",
+      "bundle01": {
+        "file": "bundle-01.json",
+        "bytes": 131660,
+        "sha256": "f64e7bd70007e15335470cf8e12e4105df66f9ff0f6317237ee852088a0c4bcd"
+      },
+      "bundle02": {
+        "file": "bundle-02.json",
+        "bytes": 164261,
+        "sha256": "46f0db975e9bb525878a2b601f824ab0d570a44cfe7a4a306d0c8703bd372880"
+      },
+      "note": "Contingency only; immutable Git blob/commit sources remain canonical."
+    }
   },
   "nextAction": {
     "tool": "Floot list_files",
