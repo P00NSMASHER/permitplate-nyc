@@ -5,7 +5,7 @@
   "productionOrigin": "https://pa-entity-x402.floot.app",
   "status": "writing",
   "startedAt": "2026-10-02T18:02:42.694Z",
-  "currentFlootVersion": 1790964878277,
+  "currentFlootVersion": 1790964968403,
   "writes": [
     {
       "order": 1,
@@ -58,8 +58,8 @@
       "target": "endpoints/sec-filings_GET.schema.ts",
       "expectedBlobSha": "65632d4dce5759d9d1f9b62ee2b6011a3eb9e43f",
       "expectedSize": 235,
-      "status": "pending",
-      "flootVersionAfter": null
+      "status": "completed",
+      "flootVersionAfter": 1790964914808
     },
     {
       "order": 7,
@@ -67,8 +67,8 @@
       "target": "endpoints/us-address-geocode_GET.ts",
       "expectedBlobSha": "264f727ecc1a1eeb32eb8890a45c21a90ec4571b",
       "expectedSize": 13368,
-      "status": "pending",
-      "flootVersionAfter": null
+      "status": "completed",
+      "flootVersionAfter": 1790964919600
     },
     {
       "order": 8,
@@ -76,8 +76,8 @@
       "target": "endpoints/us-address-geocode_GET.schema.ts",
       "expectedBlobSha": "29f0ec0067b1cad1a54f9b577c347dd6bcdfe410",
       "expectedSize": 143,
-      "status": "pending",
-      "flootVersionAfter": null
+      "status": "completed",
+      "flootVersionAfter": 1790964923868
     },
     {
       "order": 9,
@@ -85,8 +85,8 @@
       "target": "endpoints/ofac-sdn-screen_GET.ts",
       "expectedBlobSha": "7a54e70bcace8bb8dcf8c5e13648edd81821e93c",
       "expectedSize": 18478,
-      "status": "pending",
-      "flootVersionAfter": null
+      "status": "completed",
+      "flootVersionAfter": 1790964928837
     },
     {
       "order": 10,
@@ -94,8 +94,8 @@
       "target": "endpoints/ofac-sdn-screen_GET.schema.ts",
       "expectedBlobSha": "391e9c763619ae9674c91cb8d55b403840bb0057",
       "expectedSize": 207,
-      "status": "pending",
-      "flootVersionAfter": null
+      "status": "completed",
+      "flootVersionAfter": 1790964945446
     },
     {
       "order": 11,
@@ -103,8 +103,8 @@
       "target": "endpoints/domain-rdap_GET.ts",
       "expectedBlobSha": "3bf9001fe51dcc0a2b64e3881d361c7e946b3d84",
       "expectedSize": 15139,
-      "status": "pending",
-      "flootVersionAfter": null
+      "status": "completed",
+      "flootVersionAfter": 1790964958692
     },
     {
       "order": 12,
@@ -112,8 +112,8 @@
       "target": "endpoints/domain-rdap_GET.schema.ts",
       "expectedBlobSha": "72d31c48dbfa2475e8d8abd137d04d492974a4b0",
       "expectedSize": 142,
-      "status": "pending",
-      "flootVersionAfter": null
+      "status": "completed",
+      "flootVersionAfter": 1790964963891
     },
     {
       "order": 13,
@@ -121,8 +121,8 @@
       "target": "endpoints/treasury-average-rates_GET.ts",
       "expectedBlobSha": "ba41708dd6524b0ab937f118cad6e204cccd9712",
       "expectedSize": 12341,
-      "status": "pending",
-      "flootVersionAfter": null
+      "status": "completed",
+      "flootVersionAfter": 1790964968403
     },
     {
       "order": 14,
@@ -289,8 +289,8 @@
     "checkpointId": null,
     "description": null
   },
-  "lastUpdatedAt": "2026-10-02T18:14:53.708Z",
-  "lastCompletedWriteOrder": 5,
+  "lastUpdatedAt": "2026-10-02T18:16:20.865Z",
+  "lastCompletedWriteOrder": 13,
   "resumeRule": "Never restart from write 1 after interruption. Refresh Floot list_files, verify boundary content against the locked deployment bundle, confirm the rollback snapshot/plan still match the captured pre-write project version, then resume at the next unfinished ordered write.",
   "rollbackPlan": {
     "status": "passed",
