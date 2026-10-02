@@ -25,6 +25,7 @@ Build narrow, deterministic, machine-purchasable decision tools for autonomous a
 | 013 | SEC Public Company Identity Match | source-contract-verified staging | `/api/sec-company-identity-match` | $0.003 |
 | 014 | Treasury Average Rate Trend | live-source-verified staging | `/api/treasury-average-rate-trend` | $0.003 |
 | 015 | Treasury Average Rate Spread | live-source-verified staging | `/api/treasury-average-rate-spread` | $0.003 |
+| 016 | PA Entity OFAC Review Gate | live-source-verified staging | `/api/pa-entity-ofac-review` | $0.005 |
 
 Product 001 has an independently verified third-party Base USDC settlement and remains the payment/distribution reference.
 
@@ -206,6 +207,19 @@ Returns:
 Live smoke: `Treasury Bills` 3.788% versus `Treasury Notes` 3.345% on 2026-08-31, a +44.3 bp spread, returned `left_higher` at a 2 bp tolerance.
 
 Both categories must resolve uniquely from the same latest monthly record date. This is not a live market-yield spread, yield-curve trading signal, forecast, or investment recommendation.
+
+## Product 016
+
+Pennsylvania legal-entity resolution followed by current OFAC SDN/alias review.
+
+Flow:
+- resolve the submitted company to one strong Pennsylvania legal entity,
+- screen the **resolved legal business name** against current OFAC SDN primary names and aliases,
+- return `candidate_found`, `no_candidate`, `company_not_found`, or `human_review`.
+
+Live smoke for `OpenAI OpCo` resolved `Openai Opco, Llc`, screened that exact legal name at score threshold 90, and returned `no_candidate` with zero source failures.
+
+This is candidate-name screening only. `candidate_found` is not a legal sanctions determination, `no_candidate` is not sanctions clearance, and OFAC 50 Percent Rule ownership analysis is not included.
 
 ## Shared layers
 
