@@ -5,7 +5,7 @@ const SUBMISSIONS_BASE = "https://data.sec.gov/submissions/CIK";
 const SEC_ARCHIVES_BASE = "https://www.sec.gov/Archives/edgar/data";
 const SOURCE_TIMEOUT_MS = 10000;
 const DEFAULT_USER_AGENT =
-  "x402-product-factory/0.1 https://github.com/P00NSMASHER/permitplate-nyc";
+  "x402-sec-filings/1.0 https://sec-recent-filings-x402-f9qatj.v2.appdeploy.ai";
 
 function normalizeCik(value) {
   const digits = String(value || "").replace(/\D/g, "");
@@ -16,7 +16,7 @@ function normalizeCik(value) {
 function normalizeTicker(value) {
   const ticker = String(value || "").trim().toUpperCase();
   if (!ticker || ticker.length > 12 || !/^[A-Z0-9.\-]+$/.test(ticker)) return null;
-  return ticker;
+  return ticker.replaceAll(".", "-");
 }
 
 async function fetchResponse(fetchImpl, url, init = {}, timeoutMs = SOURCE_TIMEOUT_MS) {
