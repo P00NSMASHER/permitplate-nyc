@@ -25,6 +25,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Validate all factory JavaScript syntax
+        run: node factory/scripts/validate-js-syntax.js
+      - name: Test factory JavaScript syntax validator
+        run: node --test factory/scripts/validate-js-syntax.test.js
+
       - name: Test Product 002 PA Vendor Intake Gate
         run: node --test factory/products/pa-vendor-gate/decision.test.js
 
