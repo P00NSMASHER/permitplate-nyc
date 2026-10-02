@@ -76,6 +76,17 @@ jobs:
       - name: Run Product 006 release gate
         run: node factory/scripts/validate-product-006.js
 
+      - name: Test Product 013 SEC identity decision
+        run: node --test factory/products/sec-company-identity-match/decision.test.js
+      - name: Test Product 013 SEC identity service
+        run: node --test factory/products/sec-company-identity-match/service.test.js
+      - name: Test Product 013 paid x402 handler
+        run: node --test factory/products/sec-company-identity-match/paid-handler.test.js
+      - name: Test Product 013 discovery metadata
+        run: node --test factory/products/sec-company-identity-match/metadata.test.js
+      - name: Run Product 013 release gate
+        run: node factory/scripts/validate-product-013.js
+
       - name: Test Product 007 domain-age decision
         run: node --test factory/products/domain-registration-age/decision.test.js
       - name: Test Product 007 domain-age service
