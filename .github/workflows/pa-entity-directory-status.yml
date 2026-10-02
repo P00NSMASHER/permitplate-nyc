@@ -1,5 +1,5 @@
 name: PA Entity directory status
-# refresh-marker: 2026-10-02T07:09Z
+# refresh-marker: nohumans-after-first-settlement-2026-10-02
 
 on:
   push:
