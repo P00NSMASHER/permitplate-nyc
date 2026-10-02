@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "seller_pay_to": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+  "policy": {
+    "unknown_payer": "external_unattributed",
+    "count_unknown_as_revenue": false,
+    "count_probe_or_verifier_as_revenue": false,
+    "count_self_or_internal_as_revenue": false,
+    "require_resource_specific_settlement_evidence": true
+  },
+  "known_internal_payers": [],
+  "known_probe_or_verifier_payers": [],
+  "verified_customer_payers": [],
+  "notes": [
+    "Addresses are case-insensitive.",
+    "Add an address to verified_customer_payers only when there is evidence it represents a genuine third-party buyer rather than a probe, verifier, test, deployment, or seller-funded transaction.",
+    "A resource-specific facilitator settlement plus an on-chain transfer confirms a settlement occurred, but does not by itself prove customer provenance."
+  ]
+}
