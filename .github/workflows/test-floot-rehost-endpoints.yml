@@ -14,6 +14,7 @@ on:
       - 'scripts/validate-floot-recovery-bundle.mjs'
       - 'scripts/test-floot-recovery-discovery.mjs'
       - 'scripts/verify-pa-entity-floot-patches.mjs'
+      - 'scripts/test-floot-release-payment-invariants.mjs'
       - '.github/workflows/test-floot-rehost-endpoints.yml'
   workflow_dispatch:
 
@@ -48,6 +49,9 @@ jobs:
 
       - name: Verify atomic Floot patches match tested release files
         run: node scripts/verify-pa-entity-floot-patches.mjs
+
+      - name: Verify payment-safety invariants across all paid routes
+        run: node scripts/test-floot-release-payment-invariants.mjs
 
       - name: Publish success commit status
         if: success()
