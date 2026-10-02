@@ -1,0 +1,49 @@
+name: PA Entity PayAPI deep status once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/tmp-pa-entity-payapi-deep-status.yml'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Inspect own PayAPI listing status fields
+        shell: bash
+        env:
+          GH_REPOSITORY: ${{ github.repository }}
+          GH_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          COMMIT_JSON=$(curl -fsSL -H 'Accept: application/vnd.github+json' \
+            "https://api.github.com/repos/$GH_REPOSITORY/commits/$GH_SHA")
+          EMAIL=$(printf '%s' "$COMMIT_JSON" | jq -r '.commit.author.email // .commit.committer.email // empty')
+          test -n "$EMAIL"
+
+          TOKEN=$(curl -fsSL -X POST 'https://payapi.market/api/provider-login' \
+            -H 'content-type: application/json' \
+            --data "$(jq -nc --arg email "$EMAIL" '{email:$email}')" | jq -r '.token // empty')
+          test -n "$TOKEN"
+
+          curl -fsSL -X POST 'https://payapi.market/api/get-provider' \
+            -H 'content-type: application/json' \
+            -H "authorization: Bearer $TOKEN" \
+            --data "$(jq -nc --arg email "$EMAIL" '{email:$email}')" > /tmp/status.json
+
+          python3 - <<'PY'
+          import json,re
+          d=json.load(open('/tmp/status.json'))
+          listing=next((x for x in d.get('listings',[]) if x.get('id')=='3b5351ff-4a2c-4ff9-911e-88c938486208'),{})
+          print('ALL_LISTING_KEYS')
+          print(json.dumps(sorted(listing.keys()),indent=2))
+          interesting={}
+          pat=re.compile(r'(review|triage|verify|verified|verification|payment|payto|health|monitor|queue|canary|settle|settlement|ledger|request|revenue|status|check|approved|reject|live|updated|created)',re.I)
+          for k,v in listing.items():
+              if pat.search(k):
+                  interesting[k]=v
+          print('INTERESTING_STATUS_FIELDS')
+          print(json.dumps(interesting,indent=2))
+          PY
