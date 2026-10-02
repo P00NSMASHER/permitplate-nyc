@@ -24,7 +24,8 @@ const METADATA_MODULES=Object.freeze({
   "pa-vendor-domain-continuity-review":require("../products/pa-vendor-domain-continuity-review/metadata"),
   "pa-entity-type-policy":require("../products/pa-entity-type-policy/metadata"),
   "pa-registered-county-policy":require("../products/pa-registered-county-policy/metadata"),
-  "pa-local-vendor-policy-gate":require("../products/pa-local-vendor-policy-gate/metadata")
+  "pa-local-vendor-policy-gate":require("../products/pa-local-vendor-policy-gate/metadata"),
+  "pa-vendor-distance-gate":require("../products/pa-vendor-distance-gate/metadata")
 });
 
 const SERVICE_MODULES=Object.freeze({
@@ -48,7 +49,8 @@ const SERVICE_MODULES=Object.freeze({
   "pa-vendor-domain-continuity-review":require("../products/pa-vendor-domain-continuity-review/service"),
   "pa-entity-type-policy":require("../products/pa-entity-type-policy/service"),
   "pa-registered-county-policy":require("../products/pa-registered-county-policy/service"),
-  "pa-local-vendor-policy-gate":require("../products/pa-local-vendor-policy-gate/service")
+  "pa-local-vendor-policy-gate":require("../products/pa-local-vendor-policy-gate/service"),
+  "pa-vendor-distance-gate":require("../products/pa-vendor-distance-gate/service")
 });
 
 const PAID_HANDLER_MODULES=Object.freeze({
@@ -72,7 +74,8 @@ const PAID_HANDLER_MODULES=Object.freeze({
   "pa-vendor-domain-continuity-review":require("../products/pa-vendor-domain-continuity-review/paid-handler"),
   "pa-entity-type-policy":require("../products/pa-entity-type-policy/paid-handler"),
   "pa-registered-county-policy":require("../products/pa-registered-county-policy/paid-handler"),
-  "pa-local-vendor-policy-gate":require("../products/pa-local-vendor-policy-gate/paid-handler")
+  "pa-local-vendor-policy-gate":require("../products/pa-local-vendor-policy-gate/paid-handler"),
+  "pa-vendor-distance-gate":require("../products/pa-vendor-distance-gate/paid-handler")
 });
 
 module.exports={METADATA_MODULES,SERVICE_MODULES,PAID_HANDLER_MODULES};
