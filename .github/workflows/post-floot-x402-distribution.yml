@@ -29,15 +29,15 @@ jobs:
           REPORT_PATH: x402-verification-report.json
         run: node scripts/verify-x402-portfolio.mjs
 
-      - name: Repair zero-spend marketplace listings
-        env:
-          REPORT_PATH: marketplace-post-floot-rehost.json
-        run: node scripts/repair-marketplaces-after-floot-rehost.mjs
-
       - name: Re-register and verify Agent402
         env:
           REPORT_PATH: agent402-post-rehost-report.json
         run: node scripts/verify-agent402-after-floot-rehost.mjs
+
+      - name: Repair zero-spend marketplace listings
+        env:
+          REPORT_PATH: marketplace-post-floot-rehost.json
+        run: node scripts/repair-marketplaces-after-floot-rehost.mjs
 
       - name: Upload distribution receipts
         if: always()
