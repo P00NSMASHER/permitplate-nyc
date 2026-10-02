@@ -1,0 +1,19 @@
+name: Temporary Product 022-023 live smoke
+
+on:
+  push:
+    branches:
+      - x402-product-factory-bootstrap
+    paths:
+      - '.github/workflows/tmp-factory-022-023-live-smoke.yml'
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Product 022 PA Registered County Policy
+        run: node factory/products/pa-registered-county-policy/live-smoke.js
+      - name: Product 023 PA Local Vendor Policy Gate
+        run: node factory/products/pa-local-vendor-policy-gate/live-smoke.js
