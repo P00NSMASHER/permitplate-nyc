@@ -1,0 +1,30 @@
+name: Repair marketplaces after Floot rehost
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Repair zero-spend marketplace listings
+        env:
+          REPORT_PATH: marketplace-post-floot-rehost.json
+        run: node scripts/repair-marketplaces-after-floot-rehost.mjs
+
+      - name: Upload repair receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: marketplace-post-floot-rehost
+          path: marketplace-post-floot-rehost.json
+          if-no-files-found: warn
