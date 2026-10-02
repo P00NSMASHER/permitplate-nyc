@@ -492,8 +492,10 @@ async function verifyDiscovery() {
 }
 
 async function observePublicDirectories() {
-  const gateUrl =
-    'https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-gate';
+  const gateUrl = targetUrl(
+    APPDEPLOY_PA_BASE + '/api/vendor-intake-gate',
+    '/_api/vendor-intake-gate'
+  );
   const checks = [
     {
       id: 'agent402',
