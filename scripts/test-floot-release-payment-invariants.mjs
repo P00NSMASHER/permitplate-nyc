@@ -66,12 +66,20 @@ for (const name of files) {
     source.indexOf("facilitatorPost('verify'"),
     source.indexOf('facilitatorPost("verify"')
   );
-  const settlePosition = Math.max(
-    source.lastIndexOf("facilitatorPost('settle'"),
-    source.lastIndexOf('facilitatorPost("settle"')
+  const settleHelperPosition = Math.max(
+    source.indexOf("facilitatorPost('settle'"),
+    source.indexOf('facilitatorPost("settle"')
+  );
+  const settleCallPosition = Math.max(
+    source.lastIndexOf('await settleSamePayment(paymentPayload)'),
+    source.lastIndexOf('await settleSamePayment(paymentPayload,')
   );
   require(verifyPosition >= 0, 'verify facilitator call missing');
-  require(settlePosition > verifyPosition, 'settle must occur after verification');
+  require(settleHelperPosition >= 0, 'settle facilitator call missing');
+  require(
+    settleCallPosition > verifyPosition,
+    'handler must call settleSamePayment only after verification'
+  );
 
   const upstreamFailurePosition = Math.max(
     source.indexOf('payment was not settled'),
