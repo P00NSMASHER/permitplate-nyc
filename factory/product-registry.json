@@ -239,6 +239,20 @@
       "release_gate": "factory/scripts/validate-product-015.js",
       "deployment_blocker": "AppDeploy weekly credit reset 2026-10-05T00:00:00Z",
       "live_source_status": "Treasury Fiscal Data smoke verified Treasury Bills 3.788% vs Treasury Notes 3.345% on 2026-08-31; +44.3 bps => left_higher at toleranceBps 2"
+    },
+    {
+      "id": "pa-entity-ofac-review",
+      "number": "016",
+      "status": "design",
+      "method": "GET",
+      "path": "/api/pa-entity-ofac-review",
+      "price_usdc": "0.005",
+      "decision_values": [
+        "candidate_found",
+        "no_candidate",
+        "company_not_found",
+        "human_review"
+      ]
     }
   ]
 }
