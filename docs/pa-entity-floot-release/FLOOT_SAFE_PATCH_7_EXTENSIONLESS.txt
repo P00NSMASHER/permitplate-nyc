@@ -2,8 +2,8 @@
 *** Add File: static/.well-known/x402
 +{
 +  "x402Version": 2,
-+  "name": "PA Entity Lookup x402",
-+  "description": "Two Pennsylvania business-registry products for agents: a $0.001 single best-match resolver and a $0.005 multi-result enriched company-identity search.",
++  "name": "PA Entity + Vendor Intake x402",
++  "description": "Three paid agent tools: $0.001 Pennsylvania entity best match, $0.005 enriched registry search, and a $0.020 fail-closed vendor-intake decision gate using PA registry, Census, OFAC, and authoritative RDAP evidence.",
 +  "openapi": "https://pa-entity-x402.floot.app/openapi.json",
 +  "llms": "https://pa-entity-x402.floot.app/llms.txt",
 +  "skill": "https://pa-entity-x402.floot.app/skill.txt",
@@ -225,6 +225,118 @@
 +                    },
 +                    "required": [
 +                      "q"
++                    ],
++                    "additionalProperties": false
++                  }
++                },
++                "required": [
++                  "type",
++                  "method",
++                  "queryParams"
++                ],
++                "additionalProperties": false
++              },
++              "output": {
++                "type": "object",
++                "properties": {
++                  "type": {
++                    "const": "json"
++                  },
++                  "example": {
++                    "type": "object"
++                  }
++                },
++                "required": [
++                  "type",
++                  "example"
++                ],
++                "additionalProperties": false
++              }
++            },
++            "required": [
++              "input",
++              "output"
++            ],
++            "additionalProperties": false
++          }
++        }
++      }
++    },
++    {
++      "resource": "https://pa-entity-x402.floot.app/_api/vendor-intake-gate",
++      "type": "http",
++      "x402Version": 2,
++      "accepts": [
++        {
++          "scheme": "exact",
++          "network": "eip155:8453",
++          "amount": "20000",
++          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
++          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
++          "maxTimeoutSeconds": 60,
++          "extra": {
++            "name": "USD Coin",
++            "version": "2"
++          }
++        }
++      ],
++      "extensions": {
++        "bazaar": {
++          "info": {
++            "input": {
++              "type": "http",
++              "method": "GET",
++              "queryParams": {
++                "name": "OpenAI OpCo",
++                "address": "600 North Second Street, Suite 401, Harrisburg, PA 17101",
++                "domain": "openai.com"
++              }
++            },
++            "output": {
++              "type": "json",
++              "example": {
++                "decision": "proceed",
++                "agentAction": "continue_vendor_intake",
++                "reviewTriggers": [],
++                "paid": true
++              }
++            }
++          },
++          "schema": {
++            "type": "object",
++            "properties": {
++              "input": {
++                "type": "object",
++                "properties": {
++                  "type": {
++                    "const": "http"
++                  },
++                  "method": {
++                    "const": "GET"
++                  },
++                  "queryParams": {
++                    "type": "object",
++                    "properties": {
++                      "name": {
++                        "type": "string",
++                        "minLength": 2,
++                        "maxLength": 120
++                      },
++                      "address": {
++                        "type": "string",
++                        "minLength": 6,
++                        "maxLength": 240
++                      },
++                      "domain": {
++                        "type": "string",
++                        "minLength": 3,
++                        "maxLength": 253
++                      }
++                    },
++                    "required": [
++                      "name",
++                      "address",
++                      "domain"
 +                    ],
 +                    "additionalProperties": false
 +                  }
