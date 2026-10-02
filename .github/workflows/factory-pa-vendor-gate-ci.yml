@@ -188,6 +188,9 @@ jobs:
         run: node --test factory/products/domain-last-changed-recency/metadata.test.js
       - name: Run Product 012 release gate
         run: node factory/scripts/validate-product-012.js
+      - name: Run Product 015 release gate
+        run: node factory/scripts/validate-product-015.js
+
       - name: Test portable factory runtime composition
         run: node --test factory/runtime/create-runtime.test.js
       - name: Test deployment prerequisite preflight
