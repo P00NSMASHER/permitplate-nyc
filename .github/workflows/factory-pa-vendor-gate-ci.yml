@@ -32,3 +32,5 @@ jobs:
         run: node --test factory/products/pa-vendor-identity-match/paid-handler.test.js
       - name: Test Product 003 discovery metadata
         run: node --test factory/products/pa-vendor-identity-match/metadata.test.js
+      - name: Run Product 003 release gate
+        run: node factory/scripts/validate-product-003.js
