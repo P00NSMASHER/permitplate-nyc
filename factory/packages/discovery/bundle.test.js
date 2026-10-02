@@ -2,6 +2,7 @@
 
 const test=require("node:test");
 const assert=require("node:assert/strict");
+const registry=require("../../product-registry.json");
 const {buildDeploymentBundle,sha256}=require("./bundle");
 
 const BASE="https://candidate.example";
@@ -17,8 +18,9 @@ test("deployment bundle emits all discovery surfaces deterministically",()=>{
     "product-index.json",
     "x402-catalog.json"
   ]);
-  assert.equal(a.products.length,6);
-  assert.deepEqual(a.products.map(p=>p.number),["003","004","005","006","007","008"]);
+  const expected=registry.products.filter(p=>/staging$/.test(p.status));
+  assert.equal(a.products.length,expected.length);
+  assert.deepEqual(a.products.map(p=>p.number),expected.map(p=>p.number));
 });
 
 test("bundle catalog and OpenAPI contain every managed route",()=>{
