@@ -20,5 +20,9 @@ jobs:
         run: node --test factory/products/pa-vendor-gate/decision.test.js
       - name: Test Product 003 decision policy
         run: node --test factory/products/pa-vendor-identity-match/decision.test.js
-      - name: Test Product 003 source-adapter composition
+      - name: Test Product 003 service composition
         run: node --test factory/products/pa-vendor-identity-match/service.test.js
+      - name: Test concrete PA Census RDAP adapters
+        run: node --test factory/packages/sources/appdeploy-public.test.js
+      - name: Test Product 003 HTTP handler
+        run: node --test factory/products/pa-vendor-identity-match/http-handler.test.js
