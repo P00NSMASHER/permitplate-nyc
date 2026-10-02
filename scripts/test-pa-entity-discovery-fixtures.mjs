@@ -30,6 +30,23 @@ assert.equal(x402.facilitator, 'https://facilitator.payai.network')
 assert.equal(x402.owner_url, 'https://pa-entity-x402.floot.app')
 assert.match(x402.generated_at, /^2026-10-01T/)
 assert.equal(x402.services.length, 2)
+assert.equal(x402.resources.length, 2)
+const resourceCheap = x402.resources.find(r => r.resource.endsWith('/_api/pa-entity-one'))
+const resourceMain = x402.resources.find(r => r.resource.endsWith('/_api/pa-business'))
+assert.ok(resourceCheap)
+assert.ok(resourceMain)
+assert.equal(resourceCheap.accepts[0].amount, '1000')
+assert.equal(resourceMain.accepts[0].amount, '5000')
+assert.equal(resourceCheap.accepts[0].network, 'eip155:8453')
+assert.equal(resourceMain.accepts[0].network, 'eip155:8453')
+assert.equal(
+  resourceCheap.accepts[0].payTo.toLowerCase(),
+  '0x708f7b52b56eafd7fc1de65fc7752ed732914021',
+)
+assert.equal(
+  resourceMain.accepts[0].payTo.toLowerCase(),
+  '0x708f7b52b56eafd7fc1de65fc7752ed732914021',
+)
 const manifestCheap = x402.services.find(s => s.endpoint.endsWith('/_api/pa-entity-one'))
 const manifestMain = x402.services.find(s => s.endpoint.endsWith('/_api/pa-business'))
 assert.ok(manifestCheap)
