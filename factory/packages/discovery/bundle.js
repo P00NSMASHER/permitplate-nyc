@@ -26,7 +26,9 @@ function buildDeploymentBundle(base){
     method:p.method,
     path:p.path,
     price_usdc:p.price_usdc,
-    status:p.status
+    status:p.status,
+    required_env:Array.isArray(p.required_env)?p.required_env:[],
+    deployment_requirements:Array.isArray(p.deployment_requirements)?p.deployment_requirements:[]
   }));
   const productIndex=stableJson({
     schema_version:1,
