@@ -10,6 +10,7 @@ on:
       - 'scripts/verify-pa-entity-floot-patches.mjs'
       - 'scripts/verify-pa-vendor-gate.mjs'
       - 'scripts/test-floot-vendor-gate-release.mts'
+      - 'scripts/test-floot-rehost-raw-endpoints.mts'
       - 'PA_ENTITY_SKILL.md'
       - 'x402-manifest.json'
       - '.github/workflows/pa-entity-release-regression.yml'
@@ -22,6 +23,7 @@ on:
       - 'scripts/verify-pa-entity-floot-patches.mjs'
       - 'scripts/verify-pa-vendor-gate.mjs'
       - 'scripts/test-floot-vendor-gate-release.mts'
+      - 'scripts/test-floot-rehost-raw-endpoints.mts'
       - 'PA_ENTITY_SKILL.md'
       - 'x402-manifest.json'
   workflow_dispatch:
@@ -42,5 +44,9 @@ jobs:
         run: node scripts/verify-pa-entity-floot-patches.mjs
       - name: Test staged Floot-native vendor gate
         run: npx -y tsx@latest scripts/test-floot-vendor-gate-release.mts
-      - name: Verify live vendor-intake gate contract
+      - name: Test staged Floot-native raw rehost endpoints
+        run: npx -y tsx@latest scripts/test-floot-rehost-raw-endpoints.mts
+      - name: Record current AppDeploy vendor-gate hosting status
+        if: always()
+        continue-on-error: true
         run: node scripts/verify-pa-vendor-gate.mjs
