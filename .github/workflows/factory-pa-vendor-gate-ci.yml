@@ -10,6 +10,7 @@ on:
       - 'factory/products/**'
       - 'factory/packages/**'
       - 'factory/scripts/**'
+      - 'factory/runtime/**'
       - '.github/workflows/factory-pa-vendor-gate-ci.yml'
   workflow_dispatch:
 
@@ -161,3 +162,5 @@ jobs:
         run: node --test factory/products/domain-last-changed-recency/metadata.test.js
       - name: Run Product 012 release gate
         run: node factory/scripts/validate-product-012.js
+      - name: Test portable factory runtime composition
+        run: node --test factory/runtime/create-runtime.test.js
