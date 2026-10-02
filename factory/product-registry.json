@@ -120,16 +120,17 @@
       "price_usdc": "0.003",
       "decision_values": [
         "candidate_found",
-        "no_candidate"
+        "no_candidate",
+        "human_review"
       ],
       "release_gate": "factory/scripts/validate-product-009.js",
       "deployment_blocker": "AppDeploy weekly credit reset 2026-10-05T00:00:00Z",
-      "live_source_status": "current OFAC SDN/ALT CSV smoke verified candidate_found at score 99"
+      "live_source_status": "current OFAC SDN/ALT CSV smoke verified with neutral OpenAI OpCo query; decision no_candidate at minScore 90"
     },
     {
       "id": "pa-business-formation-age",
       "number": "010",
-      "status": "design",
+      "status": "live-source-verified-staging",
       "method": "GET",
       "path": "/api/pa-business-formation-age",
       "price_usdc": "0.002",
@@ -138,7 +139,10 @@
         "recent_entity",
         "company_not_found",
         "human_review"
-      ]
+      ],
+      "release_gate": "factory/scripts/validate-product-010.js",
+      "deployment_blocker": "AppDeploy weekly credit reset 2026-10-05T00:00:00Z",
+      "live_source_status": "PA Department of State live smoke verified OpenAI OpCo creationDate 2025-09-29; established_entity for minAgeDays 30"
     }
   ]
 }
