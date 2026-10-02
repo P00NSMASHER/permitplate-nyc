@@ -224,3 +224,5 @@ jobs:
         run: node --test factory/products/pa-entity-ofac-review/paid-handler.test.js
       - name: Test Product 016 discovery metadata
         run: node --test factory/products/pa-entity-ofac-review/metadata.test.js
+      - name: Run Product 016 release gate
+        run: node factory/scripts/validate-product-016.js
