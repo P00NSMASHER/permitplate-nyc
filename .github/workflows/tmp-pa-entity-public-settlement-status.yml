@@ -1,4 +1,4 @@
-name: PA Entity public settlement status once
+name: PA Entity 402directory submit trace
 
 on:
   push:
@@ -6,48 +6,50 @@ on:
       - '.github/workflows/tmp-pa-entity-public-settlement-status.yml'
 
 jobs:
-  check:
+  trace:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Read PayAPI public visibility and PayAI settlements
+      - name: Inspect 402directory public submit form
         shell: bash
         run: |
           set -euo pipefail
-
-          echo '=== PAYAPI SEARCH NAME ==='
-          curl -fsSL --get 'https://payapi.market/agent/search'             --data-urlencode 'q=PA Entity Lookup x402' > /tmp/payapi-name.json
+          curl -fsSL 'https://402directory.com/submit' -o /tmp/submit.html
           python3 - <<'PY'
-          import json
-          d=json.load(open('/tmp/payapi-name.json'))
-          hits=[]
-          for x in d.get('results',[]):
-              if 'pa entity lookup x402' in str(x.get('name','')).lower() or 'pa-entity-x402.floot.app' in json.dumps(x).lower():
-                  hits.append(x)
-          print(json.dumps({'count':len(hits),'matches':hits[:5]},indent=2))
-          PY
+          import re, urllib.parse, subprocess, pathlib
+          html=pathlib.Path('/tmp/submit.html').read_text(errors='ignore')
 
-          echo '=== PAYAPI SEARCH PA REGISTRY ==='
-          curl -fsSL --get 'https://payapi.market/agent/search'             --data-urlencode 'q=Pennsylvania business registry' > /tmp/payapi-pa.json
-          python3 - <<'PY'
-          import json
-          d=json.load(open('/tmp/payapi-pa.json'))
-          hits=[x for x in d.get('results',[]) if 'pa-entity-x402.floot.app' in json.dumps(x).lower()]
-          print(json.dumps({'count':len(hits),'matches':hits[:5]},indent=2))
-          PY
+          print('=== FORM TAGS ===')
+          for m in re.finditer(r'<form\b[^>]*>|<input\b[^>]*>|<select\b[^>]*>|<textarea\b[^>]*>|<button\b[^>]*>',html,re.I):
+              print(m.group(0)[:1600])
 
-          echo '=== PAYAI CHEAP ==='
-          ENC_CHEAP=$(python3 - <<'PY'
-          import urllib.parse
-          print(urllib.parse.quote('https://pa-entity-x402.floot.app/_api/pa-entity-one',safe=''))
-          PY
-          )
-          curl -fsSL "https://facilitator.payai.network/discovery/resources/$ENC_CHEAP/stats" |             jq '{resource,settlements,volume,buyers,reliability,cachedAt}'
+          base='https://402directory.com'
+          chunks=[]
+          for i,src in enumerate(re.findall(r'<script[^>]+src=["\x27]([^"\x27]+)["\x27]',html,re.I)):
+              u=urllib.parse.urljoin(base+'/',src)
+              out=pathlib.Path(f'/tmp/s{i}.js')
+              if subprocess.run(['curl','-fsSL','--max-time','20',u,'-o',str(out)]).returncode==0 and out.exists():
+                  chunks.append(out.read_text(errors='ignore'))
+          s='\n'.join(chunks)
+          low=s.lower()
 
-          echo '=== PAYAI MAIN ==='
-          ENC_MAIN=$(python3 - <<'PY'
-          import urllib.parse
-          print(urllib.parse.quote('https://pa-entity-x402.floot.app/_api/pa-business',safe=''))
+          for needle in ['submit api','/api/','fetch(','endpointurl','price per call','email','description']:
+              print(f'=== {needle} ===')
+              start=0; shown=0; n=needle.lower()
+              while shown<20:
+                  i=low.find(n,start)
+                  if i<0: break
+                  print(s[max(0,i-1800):min(len(s),i+3600)].replace('\n',' ')[:5400])
+                  print('\n---\n')
+                  start=i+len(n); shown+=1
+
+          print('=== API CANDIDATES ===')
+          vals=set()
+          for pat in [
+              r'https://402directory\.com[^"\x27\s<>]{0,240}',
+              r'/api/[A-Za-z0-9._~!$&()*+,;=:@%/?-]{1,220}',
+              r'/[A-Za-z0-9_-]{1,80}(?:submit|directory|service)[A-Za-z0-9_/-]{0,180}'
+          ]:
+              vals.update(m.group(0) for m in re.finditer(pat,s,re.I))
+          for v in sorted(vals): print(v)
           PY
-          )
-          curl -fsSL "https://facilitator.payai.network/discovery/resources/$ENC_MAIN/stats" |             jq '{resource,settlements,volume,buyers,reliability,cachedAt}'
