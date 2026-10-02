@@ -13,7 +13,7 @@ function main(){
  const base="https://candidate.example";const doc=productPaymentDocument(base);assert.equal(doc.resource.url,base+RESOURCE_PATH);
  const cat=catalogResource(base);assert.equal(cat.accepts[0].amount,"2000");assert.equal(cat.accepts[0].payTo,PAY_TO);
  const api=openApiPath().get;assert.equal(api["x-payment-info"].price.amount,"0.002000");assert.deepEqual(api.parameters.map(x=>x.name),["company","allowedCounties"]);assert.ok(api.responses[502]);assert.ok(api.responses[503]);
- const text=llmsText(base);assert.match(text,/registry county against the caller policy/i);assert.match(text,/same PAYMENT-SIGNATURE/i);
+ const text=llmsText(base);assert.match(text,/registered county against caller policy/i);assert.match(text,/same PAYMENT-SIGNATURE/i);
  console.log(JSON.stringify({ok:true,product:p.id,status:p.status,route:RESOURCE_PATH,price:PRICE,atomicAmount:AMOUNT_ATOMIC,network:NETWORK,payTo:PAY_TO,catalogResourceAccepts:true},null,2));
 }
 main();
