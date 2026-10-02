@@ -24,6 +24,7 @@ Build narrow, deterministic, machine-purchasable decision tools for autonomous a
 | 012 | Domain Last-Changed Recency | live-source-verified staging | `/api/domain-last-changed-recency` | $0.002 |
 | 013 | SEC Public Company Identity Match | source-contract-verified staging | `/api/sec-company-identity-match` | $0.003 |
 | 014 | Treasury Average Rate Trend | live-source-verified staging | `/api/treasury-average-rate-trend` | $0.003 |
+| 015 | Treasury Average Rate Spread | live-source-verified staging | `/api/treasury-average-rate-spread` | $0.003 |
 
 Product 001 has an independently verified third-party Base USDC settlement and remains the payment/distribution reference.
 
@@ -191,6 +192,20 @@ Returns:
 Live smoke for `Total Marketable` observed 3.475% on 2026-08-31 versus 3.443% on 2026-07-31: +3.2 bps, therefore `rising` at a 1-bp threshold.
 
 This is a two-point monthly direction signal, not a long-term trend determination, live market yield, forecast, monetary-policy prediction, or investment advice.
+
+## Product 015
+
+Same-month Treasury category spread from one official Fiscal Data response.
+
+Returns:
+- `left_higher`
+- `right_higher`
+- `within_tolerance`
+- `human_review`
+
+Live smoke: `Treasury Bills` 3.788% versus `Treasury Notes` 3.345% on 2026-08-31, a +44.3 bp spread, returned `left_higher` at a 2 bp tolerance.
+
+Both categories must resolve uniquely from the same latest monthly record date. This is not a live market-yield spread, yield-curve trading signal, forecast, or investment recommendation.
 
 ## Shared layers
 
