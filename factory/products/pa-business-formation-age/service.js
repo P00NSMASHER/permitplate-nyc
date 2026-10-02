@@ -6,14 +6,14 @@ const {assessFormationAge}=require("./decision");
 function parseAge(value){
   if(value===undefined||value===null||value==="")return 365;
   const raw=String(value).trim();
-  if(!/^d+$/.test(raw)){const e=new Error("minAgeDays must be an integer");e.code="INVALID_INPUT";throw e;}
+  if(!/^\\d+$/.test(raw)){const e=new Error("minAgeDays must be an integer");e.code="INVALID_INPUT";throw e;}
   const n=Number(raw);
   if(!Number.isSafeInteger(n)||n<1||n>36500){const e=new Error("minAgeDays must be between 1 and 36500");e.code="INVALID_INPUT";throw e;}
   return n;
 }
 
 function validateFormationAgeInput(input){
-  const company=String(input?.company??"").trim().replace(/s+/g," ");
+  const company=String(input?.company??"").trim().replace(/\\s+/g," ");
   if(company.length<2||company.length>120){const e=new Error("company length must be 2-120");e.code="INVALID_INPUT";throw e;}
   return {company,minAgeDays:parseAge(input?.minAgeDays)};
 }
