@@ -5,7 +5,7 @@ const {AMOUNT_ATOMIC,PRICE,RESOURCE_PATH,productPaymentDocument}=require("./paid
 const OPERATION_ID="reviewPennsylvaniaVendorCounterparty";
 
 function catalogResource(base){
-  base=base.replace(//$/,"");
+  base=base.replace(/\/$/,"");
   const d=productPaymentDocument(base);
   return {
     resource:base+RESOURCE_PATH,
@@ -50,7 +50,7 @@ function llmsText(base){
   return [
     "# PA Vendor Counterparty Review x402",
     "",
-    "Endpoint: GET "+base.replace(//$/,"")+RESOURCE_PATH+"?company=OpenAI%20OpCo&domain=openai.com&minScore=90&minDomainAgeDays=90",
+    "Endpoint: GET "+base.replace(/\/$/,"")+RESOURCE_PATH+"?company=OpenAI%20OpCo&domain=openai.com&minScore=90&minDomainAgeDays=90",
     "Price: $0.010 USDC on Base via x402.",
     "Sources: Pennsylvania Department of State via data.pa.gov; current U.S. Treasury OFAC SDN/ALT files; IANA RDAP bootstrap plus authoritative registry RDAP.",
     "The service resolves the Pennsylvania legal entity first, screens that legal name against OFAC candidates, aligns the domain against the legal name, and checks domain registration age.",
