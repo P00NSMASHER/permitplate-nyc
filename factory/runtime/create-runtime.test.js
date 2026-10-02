@@ -13,7 +13,7 @@ function adapters(){
     address:{compare:never},
     rdap:{lookup:never},
     sec:{lookup:never},
-    treasury:{latest:never,lookup:never},
+    treasury:{latest:never,lookup:never,history:never},
     ofac:{screen:never,lookup:never}
   };
 }
