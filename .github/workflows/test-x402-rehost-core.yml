@@ -42,6 +42,10 @@ jobs:
           node --check scripts/test-x402-payment-core.mjs
           node --check recovery/x402-paid-operation.mjs
           node --check scripts/test-x402-paid-operation.mjs
+          node --check recovery/vendor-intake-gate-core.mjs
+          node --check scripts/test-vendor-intake-gate-core.mjs
+          node --check recovery/x402-paid-operation.mjs
+          node --check scripts/test-x402-paid-operation.mjs
 
       - name: Validate target portfolio contract
         run: node scripts/test-x402-target-manifest.mjs
@@ -52,5 +56,11 @@ jobs:
       - name: Validate paid-operation state machine
         run: node scripts/test-x402-paid-operation.mjs
 
+      - name: Validate paid operation lifecycle
+        run: node scripts/test-x402-paid-operation.mjs
+
       - name: Test official public upstreams
         run: node scripts/test-x402-rehost-core.mjs
+
+      - name: Test vendor-intake decision integration
+        run: node scripts/test-vendor-intake-gate-core.mjs
