@@ -19,6 +19,7 @@ const MODULES = Object.freeze({
   "domain-last-changed-recency": require("../../products/domain-last-changed-recency/metadata"),
   "pa-vendor-new-domain-review": require("../../products/pa-vendor-new-domain-review/metadata"),
   "pa-vendor-counterparty-review": require("../../products/pa-vendor-counterparty-review/metadata"),
+  "pa-vendor-maturity-review": require("../../products/pa-vendor-maturity-review/metadata"),
 });
 
 function managedProducts() {
