@@ -4,8 +4,15 @@ const TICKERS_URL = "https://www.sec.gov/files/company_tickers.json";
 const SUBMISSIONS_BASE = "https://data.sec.gov/submissions/CIK";
 const SEC_ARCHIVES_BASE = "https://www.sec.gov/Archives/edgar/data";
 const SOURCE_TIMEOUT_MS = 10000;
-const DEFAULT_USER_AGENT =
-  "x402-sec-filings/1.0 https://sec-recent-filings-x402-f9qatj.v2.appdeploy.ai";
+const DEFAULT_USER_AGENT = "";
+const SEC_USER_AGENT_ENV = "SEC_USER_AGENT";
+
+function hasContactEmail(userAgent) {
+  return (
+    typeof userAgent === "string" &&
+    /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i.test(userAgent)
+  );
+}
 
 function normalizeCik(value) {
   const digits = String(value || "").replace(/\D/g, "");
@@ -32,9 +39,16 @@ async function fetchResponse(fetchImpl, url, init = {}, timeoutMs = SOURCE_TIMEO
 function createSecFilingsAdapter({
   fetchImpl = fetch,
   timeoutMs = SOURCE_TIMEOUT_MS,
-  userAgent = DEFAULT_USER_AGENT,
+  userAgent =
+    (typeof process !== "undefined" && process?.env?.[SEC_USER_AGENT_ENV]) ||
+    DEFAULT_USER_AGENT,
 } = {}) {
   async function secJson(url) {
+    if (!hasContactEmail(userAgent)) {
+      const error = new Error("sec_declared_user_agent_required");
+      error.code = "SEC_USER_AGENT_REQUIRED";
+      throw error;
+    }
     const response = await fetchResponse(
       fetchImpl,
       url,
@@ -226,6 +240,8 @@ module.exports = {
   SUBMISSIONS_BASE,
   SEC_ARCHIVES_BASE,
   DEFAULT_USER_AGENT,
+  SEC_USER_AGENT_ENV,
+  hasContactEmail,
   normalizeCik,
   normalizeTicker,
   createSecFilingsAdapter,
