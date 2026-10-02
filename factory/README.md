@@ -15,7 +15,7 @@ Build narrow, deterministic, machine-purchasable decision tools for autonomous a
 | 003 | PA Vendor Identity Match | live-source-verified staging | `/api/pa-vendor-identity-match` | $0.005 |
 | 004 | PA Business Address Match | live-source-verified staging | `/api/pa-business-address-match` | $0.003 |
 | 005 | PA Business Domain Match | live-source-verified staging | `/api/pa-business-domain-match` | $0.003 |
-| 006 | SEC Filing Freshness Check | source-contract-verified staging | `/api/sec-filing-freshness` | $0.005 |
+| 006 | SEC Filing Freshness Check | live-source-verified staging | `/api/sec-filing-freshness` | $0.005 |
 
 Product 001 has an independently verified third-party Base USDC settlement and remains the payment/distribution reference.
 
@@ -76,7 +76,7 @@ Returns:
 - `no_recent_filing`
 - `company_not_found`
 
-GitHub Actions live SEC access is currently blocked by SEC/Akamai 403 policy; see the Product 006 deployment plan. Deterministic source-contract and payment tests pass.
+Live SEC access is verified in GitHub Actions using the declared SEC client identity. The AAPL smoke resolved CIK `0000320193` and returned `recent_filing`.
 
 ## Shared layers
 
@@ -107,7 +107,7 @@ AppDeploy reported an account-wide Free tier pause with weekly reset at:
 
 `2026-10-05T00:00:00Z`
 
-No upgrade/payment has been authorized. Products 003 and 004 therefore remain staging candidates rather than production claims.
+No upgrade/payment has been authorized. Products 003–006 therefore remain staging candidates rather than production claims.
 
 ## Branch isolation
 
