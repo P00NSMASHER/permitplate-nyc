@@ -216,3 +216,11 @@ jobs:
         run: node --test factory/products/treasury-average-rate-spread/metadata.test.js
       - name: Validate complete staging portfolio coverage
         run: node --test factory/scripts/validate-portfolio-coverage.test.js
+      - name: Test Product 016 PA entity OFAC decision
+        run: node --test factory/products/pa-entity-ofac-review/decision.test.js
+      - name: Test Product 016 PA entity OFAC service
+        run: node --test factory/products/pa-entity-ofac-review/service.test.js
+      - name: Test Product 016 paid x402 handler
+        run: node --test factory/products/pa-entity-ofac-review/paid-handler.test.js
+      - name: Test Product 016 discovery metadata
+        run: node --test factory/products/pa-entity-ofac-review/metadata.test.js
