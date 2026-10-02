@@ -98,13 +98,25 @@ jobs:
       - name: Run Product 008 release gate
         run: node factory/scripts/validate-product-008.js
 
-      - name: Test Product 009 formation-age decision
-        run: node --test factory/products/pa-business-formation-age/decision.test.js
-      - name: Test Product 009 formation-age service
-        run: node --test factory/products/pa-business-formation-age/service.test.js
+
+      - name: Test OFAC direct source adapter
+        run: node --test factory/packages/sources/ofac-name-screen.test.js
+      - name: Test Product 009 OFAC review decision
+        run: node --test factory/products/ofac-name-review-gate/decision.test.js
+      - name: Test Product 009 OFAC review service
+        run: node --test factory/products/ofac-name-review-gate/service.test.js
       - name: Test Product 009 paid x402 handler
-        run: node --test factory/products/pa-business-formation-age/paid-handler.test.js
+        run: node --test factory/products/ofac-name-review-gate/paid-handler.test.js
       - name: Test Product 009 discovery metadata
+        run: node --test factory/products/ofac-name-review-gate/metadata.test.js
+
+      - name: Test Product 010 formation-age decision
+        run: node --test factory/products/pa-business-formation-age/decision.test.js
+      - name: Test Product 010 formation-age service
+        run: node --test factory/products/pa-business-formation-age/service.test.js
+      - name: Test Product 010 paid x402 handler
+        run: node --test factory/products/pa-business-formation-age/paid-handler.test.js
+      - name: Test Product 010 discovery metadata
         run: node --test factory/products/pa-business-formation-age/metadata.test.js
 
       - name: Validate factory product registry
@@ -123,9 +135,3 @@ jobs:
         run: node --test factory/scripts/build-release-bundle.test.js
       - name: Build staging release bundle
         run: node factory/scripts/build-release-bundle.js /tmp/x402-factory-bundle https://candidate.example
-      - name: Test direct OFAC source adapter
-        run: node --test factory/packages/sources/ofac-name-screen.test.js
-      - name: Test Product 009 OFAC review decision
-        run: node --test factory/products/ofac-name-review-gate/decision.test.js
-      - name: Test Product 009 OFAC review service
-        run: node --test factory/products/ofac-name-review-gate/service.test.js
