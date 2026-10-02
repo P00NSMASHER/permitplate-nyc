@@ -78,3 +78,7 @@ jobs:
         run: node --test factory/products/treasury-average-rate-threshold/paid-handler.test.js
       - name: Test Product 007 discovery metadata
         run: node --test factory/products/treasury-average-rate-threshold/metadata.test.js
+      - name: Test Product 007 domain-age decision
+        run: node --test factory/products/domain-registration-age/decision.test.js
+      - name: Test Product 007 domain-age service
+        run: node --test factory/products/domain-registration-age/service.test.js
