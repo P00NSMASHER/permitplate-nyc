@@ -2,6 +2,11 @@ name: Post-Floot x402 distribution
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'verification/trigger-post-floot-distribution.txt'
 
 permissions:
   contents: read
