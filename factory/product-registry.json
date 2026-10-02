@@ -10,15 +10,16 @@
       "price_usdc": "0.001"
     },
     {
-      "id": "pa-vendor-gate",
+      "id": "pa-vendor-intake-gate",
       "number": "002",
-      "status": "design",
-      "method": "POST",
-      "path": "/api/pa-vendor-gate",
-      "price_usdc": "0.010",
+      "status": "production-reference",
+      "method": "GET",
+      "path": "/api/vendor-intake-gate",
+      "price_usdc": "0.020",
+      "production_origin": "https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s",
       "decision_values": [
-        "PROCEED",
-        "HUMAN_REVIEW"
+        "proceed",
+        "human_review"
       ]
     }
   ]
