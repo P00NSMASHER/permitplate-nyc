@@ -226,3 +226,11 @@ jobs:
         run: node --test factory/products/pa-entity-ofac-review/metadata.test.js
       - name: Run Product 016 release gate
         run: node factory/scripts/validate-product-016.js
+      - name: Test Product 017 PA vendor new-domain decision
+        run: node --test factory/products/pa-vendor-new-domain-review/decision.test.js
+      - name: Test Product 017 PA vendor new-domain service
+        run: node --test factory/products/pa-vendor-new-domain-review/service.test.js
+      - name: Test Product 017 paid x402 handler
+        run: node --test factory/products/pa-vendor-new-domain-review/paid-handler.test.js
+      - name: Test Product 017 discovery metadata
+        run: node --test factory/products/pa-vendor-new-domain-review/metadata.test.js
