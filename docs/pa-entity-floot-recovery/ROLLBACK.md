@@ -110,6 +110,16 @@ Before building the snapshot receipt, verify that **all 16 expected paths were r
 
 Do not begin recovery writes until the snapshot commit succeeds and the snapshot validator passes.
 
+After the normalized snapshot is committed, precompute the reverse action set with:
+
+`node scripts/build-floot-rollback-plan.mjs verification/floot-pre-rehost-rollback-<projectVersion>.json verification/floot-rollback-plan-<projectVersion>.json`
+
+Commit that rollback-plan JSON before the first Floot write. It classifies each of the 26 recovery targets as either:
+- restore the captured preexisting content, or
+- delete the target because it was absent before recovery.
+
+The four proven PA files are verification-only in the rollback plan because the forward deployment does not overwrite them.
+
 ## Staging checkpoint before publish
 
 After all 26 recovery writes are complete and both Floot typecheck and project tests pass, create one named Floot checkpoint:
