@@ -45,7 +45,7 @@ test("every catalog resource has resource-level exact Base USDC accepts",()=>{
 test("writer produces deterministic catalog, OpenAPI, and manifest files",()=>{
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),"x402-factory-"));
   const b=writeReleaseBundle(dir,"https://candidate.example");
-  for(const name of ["x402-catalog.json","openapi.json","factory-runtime-bundle.js","release-manifest.json"]){
+  for(const name of ["x402-catalog.json","openapi.json","factory-runtime-bundle.js","appdeploy-backend-index.ts","release-manifest.json"]){
     assert.ok(fs.existsSync(path.join(dir,name)));
   }
   const catalog=JSON.parse(fs.readFileSync(path.join(dir,"x402-catalog.json"),"utf8"));
@@ -76,4 +76,18 @@ test("release manifest binds the executable runtime bundle hash",()=>{
   assert.equal(b.manifest.runtime_bundle.module_count,b.runtimeBundle.moduleCount);
   assert.deepEqual(b.manifest.runtime_bundle.entries,b.runtimeBundle.entries);
   assert.equal(b.runtimeBundle.external.length,0);
+});
+
+
+test("release manifest binds the generated AppDeploy entrypoint hash",()=>{
+  const b=buildReleaseBundle("https://candidate.example");
+  const entry=b.canonicalFiles["appdeploy-backend-index.ts"];
+  assert.equal(typeof entry,"string");
+  assert.ok(entry.length>0);
+  assert.equal(b.manifest.appdeploy_entrypoint.name,"appdeploy-backend-index.ts");
+  assert.equal(b.manifest.appdeploy_entrypoint.sha256,sha256(entry));
+  assert.equal(b.manifest.appdeploy_entrypoint.total_route_count,b.appDeployEntrypoint.totalRouteCount);
+  assert.equal(b.manifest.appdeploy_entrypoint.paid_route_count,b.appDeployEntrypoint.paidRouteCount);
+  assert.equal(b.manifest.appdeploy_entrypoint.options_route_count,b.appDeployEntrypoint.optionsRouteCount);
+  assert.equal(b.manifest.appdeploy_entrypoint.static_route_count,b.appDeployEntrypoint.staticRouteCount);
 });
