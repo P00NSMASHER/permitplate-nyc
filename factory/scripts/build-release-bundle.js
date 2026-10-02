@@ -3,7 +3,8 @@
 const fs=require("node:fs");
 const path=require("node:path");
 const registry=require("../product-registry.json");
-const {buildDeploymentBundle}=require("../packages/discovery/bundle");
+const {buildDeploymentBundle,sha256}=require("../packages/discovery/bundle");
+const {buildAppDeployRuntimeBundle}=require("./build-appdeploy-runtime-bundle");
 
 const ROOT=path.resolve(__dirname,"..");
 const DEFAULT_BASE="https://candidate.example";
@@ -23,6 +24,9 @@ function buildReleaseBundle(publicApiBase=DEFAULT_BASE){
   if(!/^https:\/\//.test(base))throw new Error("publicApiBase must use https");
 
   const deployment=buildDeploymentBundle(base);
+  const runtimeBundle=buildAppDeployRuntimeBundle();
+  const runtimeFileName="factory-runtime-bundle.js";
+  const runtimeSha256=sha256(runtimeBundle.source);
   const catalog=parseJsonFile(deployment,"x402-catalog.json");
   const openapi=parseJsonFile(deployment,"openapi.json");
   const productIndex=parseJsonFile(deployment,"product-index.json");
@@ -56,7 +60,13 @@ function buildReleaseBundle(publicApiBase=DEFAULT_BASE){
     registry_version:registry.version,
     product_count:productIndex.products.length,
     products:productIndex.products,
-    discovery_bundle_manifest:bundleManifest
+    discovery_bundle_manifest:bundleManifest,
+    runtime_bundle:{
+      name:runtimeFileName,
+      sha256:runtimeSha256,
+      module_count:runtimeBundle.moduleCount,
+      entries:runtimeBundle.entries
+    }
   };
 
   return {
@@ -66,7 +76,11 @@ function buildReleaseBundle(publicApiBase=DEFAULT_BASE){
     productIndex,
     bundleManifest,
     manifest:releaseManifest,
-    canonicalFiles:deployment.files
+    runtimeBundle,
+    canonicalFiles:{
+      ...deployment.files,
+      [runtimeFileName]:runtimeBundle.source
+    }
   };
 }
 
