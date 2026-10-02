@@ -98,7 +98,8 @@ function createFactoryRuntime({
     "ofac-name-review-gate":createOfacReviewService({ofac:a.ofac,now}),
     "pa-business-formation-age":createFormationAgeService({registry:a.registry,now}),
     "domain-expiration-horizon":createDomainExpirationService({rdap:a.rdap,now}),
-    "domain-last-changed-recency":createDomainLastChangedService({rdap:a.rdap,now})
+    "domain-last-changed-recency":createDomainLastChangedService({rdap:a.rdap,now}),
+    "sec-company-identity-match":createSecCompanyIdentityService({sec:a.sec,now})
   };
 
   const handlerFactories={
@@ -112,7 +113,8 @@ function createFactoryRuntime({
     "ofac-name-review-gate":createPaidOfacReviewHandler,
     "pa-business-formation-age":createPaidFormationAgeHandler,
     "domain-expiration-horizon":createPaidDomainExpirationHandler,
-    "domain-last-changed-recency":createPaidDomainLastChangedHandler
+    "domain-last-changed-recency":createPaidDomainLastChangedHandler,
+    "sec-company-identity-match":createPaidSecCompanyIdentityHandler
   };
 
   const routes=new Map();
