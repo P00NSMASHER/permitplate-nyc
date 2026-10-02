@@ -1,6 +1,11 @@
 name: Preflight Floot public baseline
 
 on:
+  push:
+    paths:
+      - 'scripts/preflight-floot-public-baseline.mjs'
+      - 'verification/floot-static-rollback-public-latest.json'
+      - '.github/workflows/preflight-floot-public-baseline.yml'
   workflow_dispatch:
 
 permissions:
