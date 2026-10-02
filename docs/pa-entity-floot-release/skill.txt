@@ -2,7 +2,7 @@
 
 Use this tool for Pennsylvania business-registry lookup, company identity resolution, legal-entity enrichment, vendor/customer verification, due diligence, filing-number lookup, registration-type lookup, creation-date lookup, and registered-address/county confirmation.
 
-Choose one of two paid endpoints:
+Choose one of three paid endpoints:
 
 Low-cost best match:
 
@@ -61,3 +61,14 @@ If settlement is unresolved, retry the same request with the same PAYMENT-SIGNAT
 
 OpenAPI: https://pa-entity-x402.floot.app/openapi.json
 LLM guide: https://pa-entity-x402.floot.app/llms.txt
+
+## $0.020 vendor-intake decision gate
+
+GET https://pa-entity-x402.floot.app/_api/vendor-intake-gate?name=NAME&address=ADDRESS&domain=DOMAIN
+
+Use this route when an agent must decide whether to continue a Pennsylvania vendor-intake workflow or pause for human review. It combines Pennsylvania registry identity, U.S. Census address consistency, OFAC SDN candidate-name screening, and authoritative RDAP domain evidence.
+
+The gate is fail-closed. Missing, ambiguous, incomplete, or conflicting evidence produces human_review. A proceed result is only a workflow signal and is not legal/compliance approval, sanctions clearance, fraud/credit approval, proof of good standing, or proof of address/domain ownership.
+
+Price: $0.020 USDC per successfully settled call on Base.
+
