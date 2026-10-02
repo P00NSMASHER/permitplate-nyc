@@ -320,6 +320,20 @@
       "release_gate": "factory/scripts/validate-product-020.js",
       "deployment_blocker": "AppDeploy weekly credit reset 2026-10-05T00:00:00Z",
       "live_source_status": "PA Department of State + authoritative RDAP smoke resolved OpenAI OpCo to Openai Opco, Llc; openai.com aligned; expiration runway 840 days; lastChanged age 715 days; stable_domain with zero source failures"
+    },
+    {
+      "id": "pa-entity-type-policy",
+      "number": "021",
+      "status": "design",
+      "method": "GET",
+      "path": "/api/pa-entity-type-policy",
+      "price_usdc": "0.002",
+      "decision_values": [
+        "policy_match",
+        "policy_mismatch",
+        "company_not_found",
+        "human_review"
+      ]
     }
   ]
 }
