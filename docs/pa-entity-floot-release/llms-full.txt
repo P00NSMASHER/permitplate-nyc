@@ -173,3 +173,13 @@ https://pa-entity-x402.floot.app/.well-known/x402-service.json
 Catalog:
 https://pa-entity-x402.floot.app/.well-known/x402-catalog.json
 
+## $0.020 vendor-intake decision gate
+
+GET https://pa-entity-x402.floot.app/_api/vendor-intake-gate?name=NAME&address=ADDRESS&domain=DOMAIN
+
+Use this route when an agent must decide whether to continue a Pennsylvania vendor-intake workflow or pause for human review. It combines Pennsylvania registry identity, U.S. Census address consistency, OFAC SDN candidate-name screening, and authoritative RDAP domain evidence.
+
+The gate is fail-closed. Missing, ambiguous, incomplete, or conflicting evidence produces human_review. A proceed result is only a workflow signal and is not legal/compliance approval, sanctions clearance, fraud/credit approval, proof of good standing, or proof of address/domain ownership.
+
+Price: $0.020 USDC per successfully settled call on Base.
+
