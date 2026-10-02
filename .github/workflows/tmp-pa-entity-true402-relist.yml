@@ -1,0 +1,47 @@
+name: PA Entity true402 relist once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/tmp-pa-entity-true402-relist.yml'
+
+jobs:
+  relist:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Verify manifest and restore true402 catalog listing
+        shell: bash
+        run: |
+          set -euo pipefail
+          ORIGIN='https://pa-entity-x402.floot.app'
+
+          echo '=== LIVE MANIFEST ==='
+          curl -fsSL "$ORIGIN/.well-known/x402-service.json" | tee /tmp/manifest.json | head -c 12000
+          echo
+
+          echo '=== REGISTER ==='
+          code=$(curl -sS -o /tmp/register.json -w '%{http_code}' \
+            -X POST 'https://true402.dev/api/v1/services' \
+            -H 'content-type: application/json' \
+            --data "$(jq -nc --arg url "$ORIGIN" '{url:$url}')")
+          echo "HTTP_STATUS=$code"
+          cat /tmp/register.json
+          echo
+          test "$code" -ge 200
+          test "$code" -lt 300
+
+          echo '=== READBACK ==='
+          curl -fsSL 'https://true402.dev/api/v1/services' > /tmp/services.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/services.json'))
+          rows=d.get('data',[]) if isinstance(d,dict) else []
+          hits=[]
+          for r in rows:
+              if 'pa-entity-x402.floot.app' in json.dumps(r).lower():
+                  hits.append(r)
+          print(json.dumps({'matchCount':len(hits),'matches':hits[:5]},indent=2))
+          if not hits:
+              raise SystemExit('true402 readback missing after successful registration')
+          PY
