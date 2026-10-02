@@ -1,10 +1,11 @@
 "use strict";
+
 const test=require("node:test");
 const assert=require("node:assert/strict");
 const os=require("node:os");
 const fs=require("node:fs");
 const path=require("node:path");
-const registry=require("../product-registry.json");
+const {managedProducts}=require("../packages/discovery/generator");
 const {expectedAtomic,buildReleaseBundle,writeReleaseBundle}=require("./build-release-bundle");
 
 test("USDC prices convert deterministically to six-decimal atomic amounts",()=>{
@@ -13,14 +14,20 @@ test("USDC prices convert deterministically to six-decimal atomic amounts",()=>{
   assert.equal(expectedAtomic("0.005"),"5000");
 });
 
-test("bundle contains every deployable staging product exactly once",()=>{
+test("bundle contains every modular staging product exactly once",()=>{
+  const expected=managedProducts();
   const b=buildReleaseBundle("https://candidate.example");
-  const expected=registry.products.filter(p=>/staging$/.test(p.status));
   assert.equal(b.manifest.product_count,expected.length);
+  assert.deepEqual(b.manifest.products.map(p=>p.id),expected.map(p=>p.id));
   assert.deepEqual(b.manifest.products.map(p=>p.number),expected.map(p=>p.number));
   assert.equal(new Set(b.catalog.resources.map(r=>r.resource)).size,expected.length);
   assert.equal(Object.keys(b.openapi.paths).length,expected.length);
-  assert.ok(!b.manifest.products.some(p=>p.status==="design"));
+});
+
+test("design products are not emitted into release bundle",()=>{
+  const ids=new Set(buildReleaseBundle("https://candidate.example").manifest.products.map(p=>p.id));
+  assert.ok(!ids.has("ofac-name-review-gate")||managedProducts().some(p=>p.id==="ofac-name-review-gate"));
+  assert.ok(!ids.has("pa-business-formation-age")||managedProducts().some(p=>p.id==="pa-business-formation-age"));
 });
 
 test("every catalog resource has resource-level exact Base USDC accepts",()=>{
@@ -41,12 +48,7 @@ test("writer produces deterministic catalog, OpenAPI, and manifest files",()=>{
     assert.ok(fs.existsSync(path.join(dir,name)));
   }
   const catalog=JSON.parse(fs.readFileSync(path.join(dir,"x402-catalog.json"),"utf8"));
+  const manifest=JSON.parse(fs.readFileSync(path.join(dir,"release-manifest.json"),"utf8"));
   assert.equal(catalog.resources.length,b.catalog.resources.length);
-});
-
-test("design products are excluded from release bundle",()=>{
-  const b=buildReleaseBundle("https://candidate.example");
-  const ids=b.manifest.products.map(p=>p.id);
-  assert.ok(!ids.includes("ofac-name-review-gate"));
-  assert.ok(!ids.includes("pa-business-formation-age"));
+  assert.equal(manifest.product_count,managedProducts().length);
 });
