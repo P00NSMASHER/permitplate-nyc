@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 
 const target = JSON.parse(
   await readFile(new URL('../recovery/floot-target-manifest.json', import.meta.url), 'utf8')
@@ -94,7 +94,13 @@ const report = {
     liveByPath.size === targetByPath.size,
 };
 
-console.log(JSON.stringify(report, null, 2));
+const reportJson = JSON.stringify(report, null, 2);
+console.log(reportJson);
+
+const reportPath = process.env.REPORT_PATH?.trim();
+if (reportPath) {
+  await writeFile(reportPath, reportJson + '\n', 'utf8');
+}
 
 if (process.env.REQUIRE_COMPLETE === '1' && !report.complete) {
   process.exitCode = 1;
