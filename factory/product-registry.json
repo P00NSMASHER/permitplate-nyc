@@ -209,7 +209,7 @@
     {
       "id": "treasury-average-rate-trend",
       "number": "014",
-      "status": "design",
+      "status": "live-source-verified-staging",
       "method": "GET",
       "path": "/api/treasury-average-rate-trend",
       "price_usdc": "0.003",
@@ -218,7 +218,10 @@
         "falling",
         "unchanged",
         "human_review"
-      ]
+      ],
+      "release_gate": "factory/scripts/validate-product-014.js",
+      "deployment_blocker": "AppDeploy weekly credit reset 2026-10-05T00:00:00Z",
+      "live_source_status": "Treasury Fiscal Data smoke verified Total Marketable 2026-08-31 3.475% vs 2026-07-31 3.443%; +3.2 bps => rising at minChangeBps 1"
     },
     {
       "id": "treasury-average-rate-spread",
