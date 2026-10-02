@@ -5,6 +5,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const deployMap = JSON.parse(
   await readFile(
@@ -76,14 +77,14 @@ const builderPath = new URL('./build-floot-rollback-plan.mjs', import.meta.url);
 
 const validationOutput = execFileSync(
   process.execPath,
-  [validatorPath.pathname, snapshotPath],
+  [fileURLToPath(validatorPath), snapshotPath],
   { encoding: 'utf8' }
 );
 assert.match(validationOutput, /PASS Floot pre-rehost snapshot/);
 
 const planOutput = execFileSync(
   process.execPath,
-  [builderPath.pathname, snapshotPath],
+  [fileURLToPath(builderPath), snapshotPath],
   { encoding: 'utf8' }
 );
 const plan = JSON.parse(planOutput);
