@@ -243,10 +243,36 @@
     }
   ],
   "validation": {
+    "rollbackSnapshot": "pending",
+    "deploymentLock": "pending",
     "typecheck": "pending",
     "tests": "pending",
+    "stagingCheckpoint": "pending",
     "publish": "pending",
     "publicBuyerVerification": "pending",
-    "agent402Reregistration": "pending"
-  }
+    "agent402Reregistration": "pending",
+    "agent402ExpandedTools": "pending",
+    "postDeployMarketplaceRepair": "pending"
+  },
+  "preWriteSnapshot": {
+    "status": "pending",
+    "projectVersion": null,
+    "artifactPath": null,
+    "githubCommit": null,
+    "capturedFileCount": null,
+    "preexistingRecoveryTargets": null,
+    "absentRecoveryTargets": null,
+    "publicBaselineComparison": "pending",
+    "validator": "pending"
+  },
+  "stagingCheckpoint": {
+    "status": "pending",
+    "title": "x402 eight-route rehost staged",
+    "createdAfterTypecheckAndTests": true,
+    "checkpointId": null,
+    "description": null
+  },
+  "lastUpdatedAt": null,
+  "lastCompletedWriteOrder": 0,
+  "resumeRule": "Never restart from write 1 after interruption. Refresh Floot list_files, verify boundary content against the locked deployment bundle, then resume at the next unfinished ordered write."
 }
