@@ -10,44 +10,31 @@ Project:
 Production origin:
 `https://pa-entity-x402.floot.app`
 
-## Live production delta — 2026-10-01 17:13 UTC
+## Live production delta — 2026-10-02
 
-A fresh external production audit narrowed the remaining drift after the partial live deployment.
+The previously hardened PA Entity release is already live and production-verified. The only new unpublished delta is a **Bazaar-ingestion compatibility addition** to the standard JSON aliases:
 
-Already live and passing:
-- both paid routes return real HTTP 402;
-- $0.005 and $0.001 payment terms are correct;
-- malformed and decoded-invalid payments return 402 rather than fake 503;
-- invalid paid query returns 400;
-- GET CORS headers are exposed;
-- Market402 self-tests pass for both paid routes;
-- Coinbase/CDP validation passes for both paid routes;
-- PayAI reports reliability 100;
-- /skill.txt, /llms-full.txt, /.well-known/x402-catalog.json, /.well-known/security.txt, and /sitemap.xml match the frozen bundle byte-for-byte.
+- `/.well-known/x402.json`
+- `/.well-known/x402-services.json`
 
-Non-blocking drift:
-- /llms.txt differs by one character but passes the production semantic verifier;
-- /.well-known/x402-service.json differs only in capability-array ordering.
+Both aliases keep their existing legacy top-level `resource` + `accepts[]` fields and now also expose a minimal two-entry `resources[]` view:
+- `/_api/pa-entity-one` at $0.001 / 1000 atomic Base USDC
+- `/_api/pa-business` at $0.005 / 5000 atomic Base USDC
 
-Remaining substantive drift:
-- /openapi.json still advertises the older best-match operationId/summary;
-- /.well-known/x402 is still the older single-resource PaymentRequired-style document instead of the two-route canonical manifest;
-- /.well-known/x402.json and /.well-known/x402-services.json are still the older single-resource form.
+This directly matches the resource-array shape used by CDP-style Bazaar ingestors such as Agent Bazaar. The canonical `/.well-known/x402` and `/.well-known/x402-catalog.json` already carried both resources and do not need another write.
 
-Therefore the next free Floot window should use only these three patch payloads, in order:
+Therefore the next free Floot window should use **only**:
 
-1. `FLOOT_SAFE_PATCH_3_OPENAPI.txt`
-2. `FLOOT_SAFE_PATCH_5_X402_ALIASES.txt`
-3. `FLOOT_SAFE_PATCH_7_EXTENSIONLESS.txt`
+1. `FLOOT_SAFE_PATCH_5_X402_ALIASES.txt`
 
-Skip patches 1, 2, 4, and 6 unless a fresh external audit shows that production regressed. Reapplying already-live files wastes quota and increases risk.
+Do not reapply patches 1–4, 6, or 7 unless a fresh external audit shows an actual regression.
 
-After these three writes:
-1. typecheck the two GET endpoints;
-2. create one checkpoint;
-3. republish once;
+After the Patch 5 write:
+1. create one checkpoint;
+2. republish once;
+3. verify `/.well-known/x402.json` and `/.well-known/x402-services.json` each expose two `resources[]` entries with 1000/5000 atomic amounts and the unchanged payout wallet;
 4. run `scripts/verify-pa-entity-production.mjs`;
-5. refresh buyer directories only if the verifier is green.
+5. if green, resubmit the standard `/.well-known/x402.json` to Agent Bazaar and re-check catalog-driven discovery surfaces.
 
 ## Approved safe patches
 
@@ -72,13 +59,14 @@ GET responses still expose the x402 CORS headers.
 ## Interruption-safe resume checkpoint
 
 Last verified safe-patch integrity:
-- GitHub Actions run: `36903115361`
+- GitHub Actions run: `36977374462`
 - result: `success`
-- verified commit: `4ddbeaad8722a656100fd7fe858ed0238ea43876`
+- verified release commit: `e3c950cae15ba8387b2a93af7dc4ae1bd6dcbf7b`
+- release regression run: `36977374501` — success
 - standard deploy files: `14/14 exact`
 - extensionless canonical manifest: `1/1 exact`
 - safe patch count: `7`
-- release fingerprint: `f287450bbad293b8efe3bf628b53744a33ce67427e63f4eabb52a2389f47a9f7`
+- release fingerprint: `3bbe93099a301a023dc7016e2028c718519e6d78e2fc0d2a029ce7518f09d8ab`
 
 After any chat/stream interruption:
 1. re-read current `main`;
@@ -90,28 +78,24 @@ Current-head integrity must be green immediately before any Floot write.
 
 ## Execution order
 
-1. Read current Floot file tree once and capture `expected_version`.
-2. Apply safe patches 1 through 6 sequentially.
-   - Use the version returned by each successful Floot write as the next `expected_version` when available.
-   - Do not reread the whole project between patches unless a write response does not expose the new version.
-3. Apply patch 7 separately.
-   - If Floot rejects the extensionless static path, record the platform limitation.
-   - Do **not** roll back the six valid standard patches.
-4. Typecheck only the supported endpoint files:
-   - `endpoints/pa-business_GET.ts`
-   - `endpoints/pa-entity-one_GET.ts`
-5. Create one named checkpoint after the coherent source/static bundle passes typecheck.
-6. Republish the already-live app once using the available Floot publish flow.
-7. Run `scripts/verify-pa-entity-production.mjs` externally.
-8. Only after production verification passes:
-   - re-register Agent402;
-   - refresh/re-check x402scan where authentication permits;
-   - re-check nohumans;
-   - re-check 402 Index;
-   - re-check Market402;
-   - read PayAI public settlement stats.
+1. Read the current Floot project version once.
+2. Apply only `FLOOT_SAFE_PATCH_5_X402_ALIASES.txt`.
+3. Create one checkpoint after the static alias update.
+4. Republish the already-live app once.
+5. Verify both standard alias URLs return HTTP 200 JSON and:
+   - expose `resources.length === 2`;
+   - include `/_api/pa-entity-one` with amount `1000`;
+   - include `/_api/pa-business` with amount `5000`;
+   - keep Base network `eip155:8453`;
+   - keep payTo `0x708f7b52b56eafd7fc1de65fc7752ed732914021`.
+6. Run `scripts/verify-pa-entity-production.mjs` externally.
+7. Only after production verification passes:
+   - submit `https://pa-entity-x402.floot.app/.well-known/x402.json` to Agent Bazaar `POST /submit`;
+   - verify Agent Bazaar readback by hostname;
+   - re-check Vet402 / catalog-driven coverage;
+   - re-check PayAI settlement stats.
 
-Expected Floot build actions: roughly 10–12, well below the 100/day free cap.
+Expected Floot build actions: a small static-only update plus checkpoint/publish, not a full release replay.
 
 ## Non-negotiable release invariants
 
