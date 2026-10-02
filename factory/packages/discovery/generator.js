@@ -1,20 +1,9 @@
 "use strict";
 
-const fs=require("node:fs");
-const path=require("node:path");
 const registry=require("../../product-registry.json");
+const {METADATA_MODULES}=require("../../generated/product-modules");
 
-function loadMetadataModules(){
-  const modules={};
-  for(const product of registry.products){
-    const file=path.join(__dirname,"..","..","products",product.id,"metadata.js");
-    if(!fs.existsSync(file)) continue;
-    modules[product.id]=require(file);
-  }
-  return modules;
-}
-
-const MODULES=Object.freeze(loadMetadataModules());
+const MODULES=METADATA_MODULES;
 
 function managedProducts(){
   const staging=registry.products.filter(product=>/staging$/.test(product.status));
@@ -138,7 +127,6 @@ function validateCompiled(base){
 
 module.exports={
   MODULES,
-  loadMetadataModules,
   managedProducts,
   buildCatalog,
   buildOpenApi,
