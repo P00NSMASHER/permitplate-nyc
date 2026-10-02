@@ -5,6 +5,16 @@ const ORIGIN = 'https://pa-entity-x402.floot.app';
 const SELLER = 'pa-entity-x402.floot.app';
 const REGISTER = 'https://agent402.tools/api/index/register';
 const READBACK = 'https://agent402.tools/api/index?seller=' + SELLER;
+const requiredPaths = [
+  '/_api/pa-entity-one',
+  '/_api/pa-business',
+  '/_api/vendor-intake-gate',
+  '/_api/sec-filings',
+  '/_api/us-address-geocode',
+  '/_api/ofac-sdn-screen',
+  '/_api/domain-rdap',
+  '/_api/treasury-average-rates',
+];
 
 async function jsonFetch(url, init = {}) {
   const response = await fetch(url, {
@@ -47,6 +57,39 @@ if (observations.manifest.resourceCount !== 8) {
     'Floot manifest resourceCount=' +
       String(observations.manifest.resourceCount) +
       ' expected=8'
+  );
+}
+
+const manifestResources = Array.isArray(manifestResult.body?.resources)
+  ? manifestResult.body.resources
+  : [];
+const manifestPaths = new Set();
+for (const resource of manifestResources) {
+  const raw = resource?.resource ?? resource?.url ?? null;
+  if (typeof raw !== 'string') {
+    failures.push('Floot manifest resource is missing a URL');
+    continue;
+  }
+  try {
+    const parsed = new URL(raw);
+    if (parsed.origin !== ORIGIN) {
+      failures.push('Floot manifest contains non-Floot resource ' + raw);
+    }
+    manifestPaths.add(parsed.pathname);
+  } catch {
+    failures.push('Floot manifest contains invalid resource URL ' + raw);
+  }
+}
+for (const path of requiredPaths) {
+  if (!manifestPaths.has(path)) {
+    failures.push('Floot manifest missing ' + path);
+  }
+}
+
+if (failures.length) {
+  throw new Error(
+    'Refusing Agent402 registration: public Floot manifest precondition failed: ' +
+      failures.join('; ')
   );
 }
 
@@ -148,16 +191,6 @@ if (vendorTools.length < 1) {
   failures.push('Agent402 vendor-intake gate not visible');
 }
 
-const requiredPaths = [
-  '/_api/pa-entity-one',
-  '/_api/pa-business',
-  '/_api/vendor-intake-gate',
-  '/_api/sec-filings',
-  '/_api/us-address-geocode',
-  '/_api/ofac-sdn-screen',
-  '/_api/domain-rdap',
-  '/_api/treasury-average-rates',
-];
 for (const path of requiredPaths) {
   if (!paths.has(path)) {
     failures.push('Agent402 readback missing ' + path);
