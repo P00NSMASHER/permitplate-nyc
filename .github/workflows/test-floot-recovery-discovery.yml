@@ -1,0 +1,23 @@
+name: Test Floot recovery discovery
+
+on:
+  push:
+    paths:
+      - 'docs/pa-entity-floot-recovery/**'
+      - 'scripts/test-floot-recovery-discovery.mjs'
+      - '.github/workflows/test-floot-recovery-discovery.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node scripts/test-floot-recovery-discovery.mjs
