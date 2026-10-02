@@ -3,6 +3,7 @@
 const test=require("node:test");
 const assert=require("node:assert/strict");
 const {managedProducts}=require("../packages/discovery/generator");
+const {encodeHeader}=require("../packages/x402/payment");
 const {createFactoryRuntime}=require("./create-runtime");
 
 function adapters(){
@@ -98,6 +99,45 @@ test("every staged route answers CORS payment-header preflight",async()=>{
     assert.match(response.headers["access-control-allow-methods"],/OPTIONS/);
     assert.match(response.headers["access-control-allow-headers"],/PAYMENT-SIGNATURE/);
     assert.match(response.headers["access-control-allow-headers"],/X-PAYMENT/);
+  }
+  assert.equal(networkCalls,0);
+});
+
+test("every staged route rejects malformed payment before network work",async()=>{
+  let networkCalls=0;
+  const runtime=createFactoryRuntime({
+    publicApiBase:"https://candidate.example",
+    adapters:adapters(),
+    fetchImpl:async()=>{networkCalls++;throw new Error("unexpected network");}
+  });
+  for(const product of runtime.stagingProducts){
+    const response=await runtime.handle({
+      method:product.method,
+      path:product.path,
+      query:{},
+      event:{headers:{"payment-signature":"not-valid-base64-json"}}
+    });
+    assert.equal(response.statusCode,402,product.id+" malformed payment status");
+  }
+  assert.equal(networkCalls,0);
+});
+
+test("every staged route validates required input before facilitator verification",async()=>{
+  let networkCalls=0;
+  const runtime=createFactoryRuntime({
+    publicApiBase:"https://candidate.example",
+    adapters:adapters(),
+    fetchImpl:async()=>{networkCalls++;throw new Error("facilitator must not run for invalid input");}
+  });
+  const signature=encodeHeader({x402Version:2,payload:{signed:true}});
+  for(const product of runtime.stagingProducts){
+    const response=await runtime.handle({
+      method:product.method,
+      path:product.path,
+      query:{},
+      event:{headers:{"payment-signature":signature}}
+    });
+    assert.equal(response.statusCode,400,product.id+" invalid-input status");
   }
   assert.equal(networkCalls,0);
 });
