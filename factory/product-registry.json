@@ -79,6 +79,19 @@
       "release_gate": "factory/scripts/validate-product-006.js",
       "live_source_status": "verified_in_github_actions_with_declared_sec_user_agent",
       "deployment_blocker": "AppDeploy weekly credit reset 2026-10-05T00:00:00Z"
+    },
+    {
+      "id": "treasury-average-rate-threshold",
+      "number": "007",
+      "status": "design",
+      "method": "GET",
+      "path": "/api/treasury-average-rate-threshold",
+      "price_usdc": "0.003",
+      "decision_values": [
+        "threshold_met",
+        "threshold_not_met",
+        "human_review"
+      ]
     }
   ]
 }
