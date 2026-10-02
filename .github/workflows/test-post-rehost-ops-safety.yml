@@ -8,6 +8,8 @@ on:
       - 'scripts/test-agent402-registration-manifest-guard.mjs'
       - 'scripts/verify-agent402-after-floot-rehost.mjs'
       - 'scripts/repair-marketplaces-after-floot-rehost.mjs'
+      - 'scripts/postdeploy-floot-x402.mjs'
+      - 'scripts/verify-x402-portfolio.mjs'
       - '.github/workflows/verify-agent402-after-floot-rehost.yml'
       - '.github/workflows/repair-marketplaces-after-floot-rehost.yml'
       - '.github/workflows/post-floot-x402-distribution.yml'
