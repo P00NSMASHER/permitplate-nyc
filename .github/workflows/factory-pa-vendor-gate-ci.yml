@@ -288,3 +288,5 @@ jobs:
         run: node --test factory/products/pa-entity-type-policy/paid-handler.test.js
       - name: Test Product 021 discovery metadata
         run: node --test factory/products/pa-entity-type-policy/metadata.test.js
+      - name: Run Product 021 release gate
+        run: node factory/scripts/validate-product-021.js
