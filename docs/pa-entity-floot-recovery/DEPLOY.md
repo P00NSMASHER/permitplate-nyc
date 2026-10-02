@@ -131,21 +131,21 @@ Keep writes serialized and carry the returned project version forward when the w
    - current project version
    - existing endpoint/static paths
    - published metadata
-3. Start the mandatory rollback snapshot from `docs/pa-entity-floot-recovery/ROLLBACK.md`. **Rollback Batch 1 is the single authoritative read of the four preserved PA files**; use those same returned bytes both for preservation verification and for the rollback snapshot. Do not perform a duplicate PA read.
-4. Continue rollback Batches 2–5, identify every deployment target already present, and capture any unexpectedly preexisting recovery endpoint/schema target before mutation.
-5. Re-read `verification/floot-deployment-queue-latest.json` and `deploy-map.json`.
-6. Run `scripts/verify-floot-deployment-lock.mjs`; abort before any write if the pinned branch moved, any of the 26 source blob hashes/sizes drifted, or current `main` modified a locked source.
-7. Persist the normalized rollback snapshot and deterministic rollback plan to unique versioned paths under `verification/` before the first Floot write. If the GitHub create/commit races with another bot commit, retry the **identical artifact bytes** against the refreshed GitHub head; do not recapture or alter Floot solely because of a GitHub non-fast-forward/conflict. If an artifact for the same Floot project version already exists from an interrupted attempt, reuse it only when project version, pinned source commit, captured file hashes, and preexisting/absent target classification match exactly; otherwise abort before any Floot write. The first Floot `write_file` must still use the captured Floot project version as `expected_version`, so any real project-side concurrent edit fails closed.
-8. For each queue entry in order:
+4. Start the mandatory rollback snapshot from `docs/pa-entity-floot-recovery/ROLLBACK.md`. **Rollback Batch 1 is the single authoritative read of the four preserved PA files**; use those same returned bytes both for preservation verification and for the rollback snapshot. Do not perform a duplicate PA read.
+5. Continue rollback Batches 2–5, identify every deployment target already present, and capture any unexpectedly preexisting recovery endpoint/schema target before mutation.
+6. Re-read `verification/floot-deployment-queue-latest.json` and `deploy-map.json`.
+7. Run `scripts/verify-floot-deployment-lock.mjs`; abort before any write if the pinned branch moved, any of the 26 source blob hashes/sizes drifted, or current `main` modified a locked source.
+8. Persist the normalized rollback snapshot and deterministic rollback plan to unique versioned paths under `verification/` before the first Floot write. If the GitHub create/commit races with another bot commit, retry the **identical artifact bytes** against the refreshed GitHub head; do not recapture or alter Floot solely because of a GitHub non-fast-forward/conflict. If an artifact for the same Floot project version already exists from an interrupted attempt, reuse it only when project version, pinned source commit, captured file hashes, and preexisting/absent target classification match exactly; otherwise abort before any Floot write. The first Floot `write_file` must still use the captured Floot project version as `expected_version`, so any real project-side concurrent edit fails closed.
+9. For each queue entry in order:
    - fetch exact GitHub source bytes from pinned commit `ceb21b651764ffaa0c893f4e725eccce0c10ba5f` at the recorded source path
    - write complete content to the mapped Floot target path
    - use current Floot project version as `expected_version` when supported
    - carry forward the returned version
-9. Run Floot typecheck.
-10. Run Floot tests.
-11. Do not publish if either fails.
-12. Create one checkpoint titled `x402 eight-route rehost staged` with the pinned source commit and pre-write Floot version in the description.
-13. Publish once.
+10. Run Floot typecheck.
+11. Run Floot tests.
+12. Do not publish if either fails.
+13. Create one checkpoint titled `x402 eight-route rehost staged` with the pinned source commit and pre-write Floot version in the description.
+14. Publish once.
 
 ## Interruption-safe resume protocol
 
