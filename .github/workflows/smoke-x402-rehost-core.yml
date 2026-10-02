@@ -1,0 +1,34 @@
+name: Smoke test x402 rehost core
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Host-independent recovery smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Syntax check recovery modules
+        run: |
+          node --check recovery/x402-rehost-core.mjs
+          node --check recovery/vendor-intake-core.mjs
+          node --check scripts/test-vendor-intake-decision-core.mjs
+          node --check scripts/test-x402-rehost-core.mjs
+
+      - name: Run pure vendor-intake decision regressions
+        run: node scripts/test-vendor-intake-decision-core.mjs
+
+      - name: Probe official public data upstreams through recovery core
+        run: node scripts/test-x402-rehost-core.mjs
