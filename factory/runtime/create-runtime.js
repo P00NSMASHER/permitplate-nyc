@@ -40,6 +40,8 @@ const {createCounterpartyReviewService}=require("../products/pa-vendor-counterpa
 const {createPaidCounterpartyReviewHandler}=require("../products/pa-vendor-counterparty-review/paid-handler");
 const {createVendorMaturityService}=require("../products/pa-vendor-maturity-review/service");
 const {createPaidVendorMaturityHandler}=require("../products/pa-vendor-maturity-review/paid-handler");
+const {createVendorDomainContinuityService}=require("../products/pa-vendor-domain-continuity-review/service");
+const {createPaidVendorDomainContinuityHandler}=require("../products/pa-vendor-domain-continuity-review/paid-handler");
 
 const PREFLIGHT_HEADERS=Object.freeze({
   "access-control-allow-origin":"*",
@@ -116,7 +118,8 @@ function createFactoryRuntime({
     "domain-last-changed-recency":createDomainLastChangedService({rdap:a.rdap,now}),
     "pa-vendor-new-domain-review":createPaVendorNewDomainService({registry:a.registry,rdap:a.rdap,now}),
     "pa-vendor-counterparty-review":createCounterpartyReviewService({registry:a.registry,ofac:a.ofac,rdap:a.rdap,now}),
-    "pa-vendor-maturity-review":createVendorMaturityService({registry:a.registry,rdap:a.rdap,now})
+    "pa-vendor-maturity-review":createVendorMaturityService({registry:a.registry,rdap:a.rdap,now}),
+    "pa-vendor-domain-continuity-review":createVendorDomainContinuityService({registry:a.registry,rdap:a.rdap,now})
   };
 
   const handlerFactories={
@@ -136,7 +139,8 @@ function createFactoryRuntime({
     "domain-last-changed-recency":createPaidDomainLastChangedHandler,
     "pa-vendor-new-domain-review":createPaidPaVendorNewDomainHandler,
     "pa-vendor-counterparty-review":createPaidCounterpartyReviewHandler,
-    "pa-vendor-maturity-review":createPaidVendorMaturityHandler
+    "pa-vendor-maturity-review":createPaidVendorMaturityHandler,
+    "pa-vendor-domain-continuity-review":createPaidVendorDomainContinuityHandler
   };
 
   const routes=new Map();
