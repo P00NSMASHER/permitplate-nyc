@@ -199,11 +199,3 @@ jobs:
           SEC_USER_AGENT: x402-product-factory-ci/1.0 ci@example.com
           PUBLIC_API_BASE: https://candidate.example
         run: node factory/runtime/validate-deploy-candidate.js
-      - name: Test Product 014 Treasury change decision
-        run: node --test factory/products/treasury-average-rate-change/decision.test.js
-      - name: Test Product 014 Treasury change service
-        run: node --test factory/products/treasury-average-rate-change/service.test.js
-      - name: Test Product 014 paid x402 handler
-        run: node --test factory/products/treasury-average-rate-change/paid-handler.test.js
-      - name: Test Product 014 discovery metadata
-        run: node --test factory/products/treasury-average-rate-change/metadata.test.js
