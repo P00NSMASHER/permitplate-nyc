@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://pa-entity-x402.floot.app/sitemap.xml
