@@ -1,0 +1,40 @@
+name: Classify revenue after Floot rehost
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  classify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Capture eight-route revenue evidence
+        env:
+          REPORT_PATH: x402-floot-revenue-snapshot.json
+        run: node scripts/capture-x402-floot-revenue-snapshot.mjs
+
+      - name: Classify strict customer revenue
+        run: >
+          node scripts/classify-x402-revenue.mjs
+          x402-floot-revenue-snapshot.json
+          verification/x402-revenue-attribution-rules.json
+          x402-floot-revenue-attribution.json
+          recovery/x402-portfolio-target.json
+
+      - name: Upload evidence and classification
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: x402-floot-revenue-attribution
+          path: |
+            x402-floot-revenue-snapshot.json
+            x402-floot-revenue-attribution.json
+          if-no-files-found: warn
