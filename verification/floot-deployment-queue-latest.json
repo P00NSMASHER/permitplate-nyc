@@ -27,7 +27,8 @@
       "target": "endpoints/vendor-intake-gate_GET.ts",
       "gitBlobSha": "f318feaaf197783c8460899d1d419026760496b5",
       "size": 46016,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-release/vendor-intake-gate_GET.ts"
     },
     {
       "order": 2,
@@ -35,7 +36,8 @@
       "target": "endpoints/vendor-intake-gate_GET.schema.ts",
       "gitBlobSha": "f13ed84460f72035f36cd69199c6d4e679676744",
       "size": 207,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-release/vendor-intake-gate_GET.schema.ts"
     },
     {
       "order": 3,
@@ -43,7 +45,8 @@
       "target": "endpoints/vendor-intake-demo_GET.ts",
       "gitBlobSha": "d9229747651bf66f2570f80bb038a17967318a19",
       "size": 2355,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-release/vendor-intake-demo_GET.ts"
     },
     {
       "order": 4,
@@ -51,7 +54,8 @@
       "target": "endpoints/vendor-intake-demo_GET.schema.ts",
       "gitBlobSha": "5bfd5cac39b3e1be48575cba43a11f918df5b8f5",
       "size": 188,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-release/vendor-intake-demo_GET.schema.ts"
     },
     {
       "order": 5,
@@ -59,7 +63,8 @@
       "target": "endpoints/sec-filings_GET.ts",
       "gitBlobSha": "de265acbc713348fcc321bed31d85349d660c97c",
       "size": 14860,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-release/sec-filings_GET.ts"
     },
     {
       "order": 6,
@@ -67,7 +72,8 @@
       "target": "endpoints/sec-filings_GET.schema.ts",
       "gitBlobSha": "65632d4dce5759d9d1f9b62ee2b6011a3eb9e43f",
       "size": 235,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-release/sec-filings_GET.schema.ts"
     },
     {
       "order": 7,
@@ -75,7 +81,8 @@
       "target": "endpoints/us-address-geocode_GET.ts",
       "gitBlobSha": "264f727ecc1a1eeb32eb8890a45c21a90ec4571b",
       "size": 13368,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-release/us-address-geocode_GET.ts"
     },
     {
       "order": 8,
@@ -83,7 +90,8 @@
       "target": "endpoints/us-address-geocode_GET.schema.ts",
       "gitBlobSha": "29f0ec0067b1cad1a54f9b577c347dd6bcdfe410",
       "size": 143,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-release/us-address-geocode_GET.schema.ts"
     },
     {
       "order": 9,
@@ -91,7 +99,8 @@
       "target": "endpoints/ofac-sdn-screen_GET.ts",
       "gitBlobSha": "7a54e70bcace8bb8dcf8c5e13648edd81821e93c",
       "size": 18478,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-release/ofac-sdn-screen_GET.ts"
     },
     {
       "order": 10,
@@ -99,7 +108,8 @@
       "target": "endpoints/ofac-sdn-screen_GET.schema.ts",
       "gitBlobSha": "391e9c763619ae9674c91cb8d55b403840bb0057",
       "size": 207,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-release/ofac-sdn-screen_GET.schema.ts"
     },
     {
       "order": 11,
@@ -107,7 +117,8 @@
       "target": "endpoints/domain-rdap_GET.ts",
       "gitBlobSha": "3bf9001fe51dcc0a2b64e3881d361c7e946b3d84",
       "size": 15139,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-release/domain-rdap_GET.ts"
     },
     {
       "order": 12,
@@ -115,7 +126,8 @@
       "target": "endpoints/domain-rdap_GET.schema.ts",
       "gitBlobSha": "72d31c48dbfa2475e8d8abd137d04d492974a4b0",
       "size": 142,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-release/domain-rdap_GET.schema.ts"
     },
     {
       "order": 13,
@@ -123,7 +135,8 @@
       "target": "endpoints/treasury-average-rates_GET.ts",
       "gitBlobSha": "ba41708dd6524b0ab937f118cad6e204cccd9712",
       "size": 12341,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-release/treasury-average-rates_GET.ts"
     },
     {
       "order": 14,
@@ -131,7 +144,8 @@
       "target": "endpoints/treasury-average-rates_GET.schema.ts",
       "gitBlobSha": "bcac0bcd7145c949829e40c152b97014007ce9cf",
       "size": 144,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-release/treasury-average-rates_GET.schema.ts"
     },
     {
       "order": 15,
@@ -139,7 +153,8 @@
       "target": "static/openapi.json",
       "gitBlobSha": "35bc5c1a3728c15fcae709d0028309c708ba032f",
       "size": 37007,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-recovery/openapi.json"
     },
     {
       "order": 16,
@@ -147,7 +162,8 @@
       "target": "static/llms.txt",
       "gitBlobSha": "374a4fc63d123f6bc38ec53112a1a32128a54b1b",
       "size": 3035,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-recovery/llms.txt"
     },
     {
       "order": 17,
@@ -155,7 +171,8 @@
       "target": "static/llms-full.txt",
       "gitBlobSha": "f97c4f2b5f7e070403eea8d7d6e04ef9e853c75f",
       "size": 4636,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-recovery/llms-full.txt"
     },
     {
       "order": 18,
@@ -163,7 +180,8 @@
       "target": "static/skill.txt",
       "gitBlobSha": "58bab03ae5077076d086313e206aa3e170dda93a",
       "size": 2222,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-recovery/skill.txt"
     },
     {
       "order": 19,
@@ -171,7 +189,8 @@
       "target": "static/.well-known/x402",
       "gitBlobSha": "02ced38868891823008a6fc1e2f52f5a5bd1f201",
       "size": 24383,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-recovery/x402"
     },
     {
       "order": 20,
@@ -179,7 +198,8 @@
       "target": "static/.well-known/x402.json",
       "gitBlobSha": "02ced38868891823008a6fc1e2f52f5a5bd1f201",
       "size": 24383,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-recovery/x402.json"
     },
     {
       "order": 21,
@@ -187,7 +207,8 @@
       "target": "static/.well-known/x402-services.json",
       "gitBlobSha": "02ced38868891823008a6fc1e2f52f5a5bd1f201",
       "size": 24383,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-recovery/x402-services.json"
     },
     {
       "order": 22,
@@ -195,7 +216,8 @@
       "target": "static/.well-known/x402-service.json",
       "gitBlobSha": "65cf6da88c8431b9e1a52d5eab05ad4d4533fa9c",
       "size": 1062,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-recovery/x402-service.json"
     },
     {
       "order": 23,
@@ -203,7 +225,8 @@
       "target": "static/.well-known/x402-catalog.json",
       "gitBlobSha": "02ced38868891823008a6fc1e2f52f5a5bd1f201",
       "size": 24383,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-recovery/x402-catalog.json"
     },
     {
       "order": 24,
@@ -211,7 +234,8 @@
       "target": "static/.well-known/security.txt",
       "gitBlobSha": "8633f76b16af225715c72c01517294bacc8029f8",
       "size": 259,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-recovery/security.txt"
     },
     {
       "order": 25,
@@ -219,7 +243,8 @@
       "target": "static/sitemap.xml",
       "gitBlobSha": "64b024d6149df67346de5c1fed697946bedd4843",
       "size": 939,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-recovery/sitemap.xml"
     },
     {
       "order": 26,
@@ -227,7 +252,8 @@
       "target": "static/robots.txt",
       "gitBlobSha": "04e2420a446067d88e32d971ed539f8046511638",
       "size": 77,
-      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state"
+      "expectedVersionRule": "use the version returned by the immediately preceding Floot mutation/read state",
+      "sourceUrl": "https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/ceb21b651764ffaa0c893f4e725eccce0c10ba5f/docs/pa-entity-floot-recovery/robots.txt"
     }
   ],
   "postWrite": [
