@@ -82,7 +82,7 @@
     },
     {
       "id": "treasury-average-rate-threshold",
-      "number": "007",
+      "number": "008",
       "status": "design",
       "method": "GET",
       "path": "/api/treasury-average-rate-threshold",
