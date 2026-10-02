@@ -11,19 +11,19 @@
     {
       "source": "402radar",
       "page": "https://402radar.io/toolshed.lemon-agent.dev",
-      "observation": "The same address appears as both payer and facilitator for an unrelated x402 service transaction."
+      "observation": "The same address appears as both payer and facilitator on an unrelated x402 service transaction, rather than only as an ordinary buyer."
     },
     {
       "source": "402radar",
       "page": "https://402radar.io/x402-agents-production.up.railway.app",
-      "observation": "The same address appears as both payer and facilitator for another unrelated x402 service transaction."
+      "observation": "The same address again appears as both payer and facilitator for a different unrelated x402 service transaction."
     }
   ],
   "conclusion": {
     "customerVerified": false,
     "probeOrVerifierConfirmed": false,
     "classification": "external_unattributed",
-    "rationale": "The wallet clearly participates in x402 activity across unrelated services, but public evidence does not establish a named customer or conclusively identify it as a marketplace probe/verifier. Under the strict attribution policy it must not count as customer revenue."
+    "rationale": "Public x402 transaction evidence now shows this wallet acting as both payer and facilitator across multiple unrelated services, which makes ordinary end-customer attribution less plausible. However, the evidence still does not conclusively identify the wallet as a marketplace probe, verifier, facilitator operator, or named customer. Under the strict attribution policy it remains external_unattributed and must not count as customer revenue."
   },
   "accountingEffect": {
     "settlementObserved": true,
