@@ -28,7 +28,7 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Verify unpaid x402 challenges and fixed decision fixtures
+      - name: Verify unpaid x402 challenges, decision fixtures, and directory observations
         env:
           EXPECTED_FLOOT_RESOURCES: ${{ inputs.expected_floot_resources || '2' }}
           REPORT_PATH: x402-verification-report.json
