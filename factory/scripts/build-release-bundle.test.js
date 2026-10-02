@@ -12,12 +12,12 @@ test("USDC prices convert deterministically to six-decimal atomic amounts",()=>{
   assert.equal(expectedAtomic("0.005"),"5000");
 });
 
-test("bundle contains Products 003 through 008 exactly once",()=>{
+test("bundle contains Products 003 through 009 exactly once",()=>{
   const b=buildReleaseBundle("https://candidate.example");
-  assert.equal(b.manifest.product_count,6);
-  assert.deepEqual(b.manifest.products.map(p=>p.number),["003","004","005","006","007","008"]);
-  assert.equal(new Set(b.catalog.resources.map(r=>r.resource)).size,6);
-  assert.equal(Object.keys(b.openapi.paths).length,6);
+  assert.equal(b.manifest.product_count,7);
+  assert.deepEqual(b.manifest.products.map(p=>p.number),["003","004","005","006","007","008","009"]);
+  assert.equal(new Set(b.catalog.resources.map(r=>r.resource)).size,7);
+  assert.equal(Object.keys(b.openapi.paths).length,7);
 });
 
 test("every catalog resource has resource-level exact Base USDC accepts",()=>{
