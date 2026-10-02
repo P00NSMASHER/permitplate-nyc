@@ -5,7 +5,8 @@ on:
     branches:
       - x402-product-factory-bootstrap
     paths:
-      - 'factory/products/pa-vendor-identity-match/live-smoke.js'
+      - 'factory/products/pa-vendor-identity-match/**'
+      - 'factory/packages/sources/live-pa-identity.js'
       - '.github/workflows/factory-product-003-live-smoke.yml'
   workflow_dispatch:
 
