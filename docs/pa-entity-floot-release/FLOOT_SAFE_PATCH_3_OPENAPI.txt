@@ -3,14 +3,14 @@
 +{
 +  "openapi": "3.1.0",
 +  "info": {
-+    "title": "PA Entity Lookup x402",
-+    "version": "2.0.0",
-+    "description": "Low-cost Pennsylvania business-registry and company-identity lookup for autonomous agents. Resolves a company name to structured Department of State registration facts and source-published principal/officer records.",
++    "title": "PA Entity + Vendor Intake x402",
++    "version": "3.0.0",
++    "description": "Pennsylvania business-registry lookup plus a fail-closed $0.020 vendor-intake decision gate for autonomous agents using Pennsylvania registry, Census address, OFAC candidate-name, and authoritative RDAP evidence.",
 +    "contact": {
 +      "name": "PA Entity Lookup x402",
 +      "url": "https://pa-entity-x402.floot.app"
 +    },
-+    "x-guidance": "Choose GET /_api/pa-entity-one?q=NAME for a low-friction $0.001 single best Pennsylvania legal-entity match. Choose GET /_api/pa-business?q=NAME&limit=N for the $0.005 multi-result enriched registry search. Both use Pennsylvania Department of State public data, x402 v2 on Base, creation-date enrichment, and source-published principal/officer roles. If settlement is unresolved, retry the same PAYMENT-SIGNATURE rather than creating a new authorization. Do not treat results as legal advice, proof of current good standing, sanctions screening, a risk score, or independent proof of current management authority."
++    "x-guidance": "Use /_api/vendor-intake-gate when an agent must decide whether to continue a Pennsylvania vendor-intake workflow or pause for human review. Use /_api/pa-entity-one for a $0.001 single registry match and /_api/pa-business for a $0.005 enriched multi-result search. A vendor-gate proceed result is only a workflow signal, not legal/compliance/sanctions/fraud/credit approval."
 +  },
 +  "externalDocs": {
 +    "description": "Agent usage guide",
@@ -649,9 +649,88 @@
 +          }
 +        }
 +      }
++    },
++    "/_api/vendor-intake-gate": {
++      "get": {
++        "operationId": "checkPennsylvaniaVendorIntakeGate",
++        "summary": "Return proceed or human_review for a prospective Pennsylvania vendor",
++        "description": "Fail-closed composed check using PA registry identity, Census address consistency, OFAC SDN candidate-name screening, and authoritative RDAP domain evidence. Incomplete or conflicting evidence pauses for human review.",
++        "tags": [
++          "Vendor Intake",
++          "Agent Decision",
++          "Human Review"
++        ],
++        "x-payment-info": {
++          "price": {
++            "mode": "fixed",
++            "currency": "USD",
++            "amount": "0.020000"
++          },
++          "protocols": [
++            {
++              "x402": {}
++            }
++          ],
++          "network": "eip155:8453",
++          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021"
++        },
++        "parameters": [
++          {
++            "name": "name",
++            "in": "query",
++            "required": true,
++            "schema": {
++              "type": "string",
++              "minLength": 2,
++              "maxLength": 120
++            },
++            "example": "OpenAI OpCo"
++          },
++          {
++            "name": "address",
++            "in": "query",
++            "required": true,
++            "schema": {
++              "type": "string",
++              "minLength": 6,
++              "maxLength": 240
++            },
++            "example": "600 North Second Street, Suite 401, Harrisburg, PA 17101"
++          },
++          {
++            "name": "domain",
++            "in": "query",
++            "required": true,
++            "schema": {
++              "type": "string",
++              "minLength": 3,
++              "maxLength": 253
++            },
++            "example": "openai.com"
++          }
++        ],
++        "responses": {
++          "200": {
++            "description": "Paid vendor-intake decision with evidence and explicit review triggers"
++          },
++          "400": {
++            "description": "Invalid vendor name, address, or domain after a payment signature is present"
++          },
++          "402": {
++            "description": "Payment Required: $0.020 USDC on Base"
++          },
++          "502": {
++            "description": "A required authoritative evidence source was unavailable; payment is not settled"
++          },
++          "503": {
++            "description": "Payment verifier/settlement unavailable or unresolved; retry the same payment authorization"
++          }
++        }
++      }
 +    }
 +  }
 +}
++
 *** Add File: static/sitemap.xml
 +<?xml version="1.0" encoding="UTF-8"?>
 +<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -666,10 +745,12 @@
 +  <url><loc>https://pa-entity-x402.floot.app/.well-known/x402-catalog.json</loc></url>
 +  <url><loc>https://pa-entity-x402.floot.app/.well-known/security.txt</loc></url>
 +</urlset>
++
 *** Add File: static/.well-known/security.txt
 +Contact: https://github.com/P00NSMASHER/permitplate-nyc/security
 +Canonical: https://pa-entity-x402.floot.app/.well-known/security.txt
 +Policy: https://github.com/P00NSMASHER/permitplate-nyc/security/policy
 +Preferred-Languages: en
 +Expires: 2027-09-30T00:00:00Z
++
 *** End Patch
