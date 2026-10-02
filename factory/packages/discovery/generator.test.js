@@ -63,3 +63,10 @@ test("compiled package passes cross-surface validation", () => {
   assert.equal(built.catalog.resources.length, 7);
   assert.equal(Object.keys(built.openapi.paths).length, 7);
 });
+
+
+test("design products are not published even if metadata exists", () => {
+  const ids = managedProducts().map((product) => product.id);
+  assert.ok(!ids.includes("ofac-name-review-gate"));
+  assert.ok(!ids.includes("pa-business-formation-age"));
+});
