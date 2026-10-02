@@ -5,19 +5,23 @@ on:
     branches:
       - x402-product-factory-bootstrap
     paths:
+      - 'factory/product-registry.json'
       - 'factory/products/**'
       - 'factory/packages/**'
+      - 'factory/scripts/**'
       - '.github/workflows/factory-pa-vendor-gate-ci.yml'
   workflow_dispatch:
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+
       - name: Test Product 002 PA Vendor Intake Gate
         run: node --test factory/products/pa-vendor-gate/decision.test.js
+
       - name: Test Product 003 decision policy
         run: node --test factory/products/pa-vendor-identity-match/decision.test.js
       - name: Test Product 003 service composition
@@ -34,6 +38,7 @@ jobs:
         run: node --test factory/products/pa-vendor-identity-match/metadata.test.js
       - name: Run Product 003 release gate
         run: node factory/scripts/validate-product-003.js
+
       - name: Test Product 004 decision policy
         run: node --test factory/products/pa-business-address-match/decision.test.js
       - name: Test Product 004 service composition
@@ -44,8 +49,7 @@ jobs:
         run: node --test factory/products/pa-business-address-match/metadata.test.js
       - name: Run Product 004 release gate
         run: node factory/scripts/validate-product-004.js
-      - name: Validate factory product registry
-        run: node factory/scripts/validate-registry.js
+
       - name: Test Product 005 decision policy
         run: node --test factory/products/pa-business-domain-match/decision.test.js
       - name: Test Product 005 service composition
@@ -56,6 +60,7 @@ jobs:
         run: node --test factory/products/pa-business-domain-match/metadata.test.js
       - name: Run Product 005 release gate
         run: node factory/scripts/validate-product-005.js
+
       - name: Test direct SEC EDGAR adapter
         run: node --test factory/packages/sources/sec-filings.test.js
       - name: Test Product 006 freshness decision
@@ -68,29 +73,19 @@ jobs:
         run: node --test factory/products/sec-filing-freshness/metadata.test.js
       - name: Run Product 006 release gate
         run: node factory/scripts/validate-product-006.js
-      - name: Test Treasury Fiscal Data adapter
-        run: node --test factory/packages/sources/treasury-average-rates.test.js
-      - name: Test Product 007 threshold decision
-        run: node --test factory/products/treasury-average-rate-threshold/decision.test.js
-      - name: Test Product 007 service composition
-        run: node --test factory/products/treasury-average-rate-threshold/service.test.js
-      - name: Test Product 007 paid x402 handler
-        run: node --test factory/products/treasury-average-rate-threshold/paid-handler.test.js
-      - name: Test Product 007 discovery metadata
-        run: node --test factory/products/treasury-average-rate-threshold/metadata.test.js
+
       - name: Test Product 007 domain-age decision
         run: node --test factory/products/domain-registration-age/decision.test.js
       - name: Test Product 007 domain-age service
         run: node --test factory/products/domain-registration-age/service.test.js
-      - name: Test compiled discovery surfaces
-        run: node --test factory/packages/discovery/generator.test.js
-      - name: Validate compiled discovery surfaces
-        run: node factory/scripts/validate-discovery.js
-      - name: Test Product 007 domain age decision
-        run: node --test factory/products/domain-registration-age/decision.test.js
-      - name: Test Product 007 domain age service
-        run: node --test factory/products/domain-registration-age/service.test.js
-      - name: Test Treasury average-rates source adapter
+      - name: Test Product 007 paid x402 handler
+        run: node --test factory/products/domain-registration-age/paid-handler.test.js
+      - name: Test Product 007 discovery metadata
+        run: node --test factory/products/domain-registration-age/metadata.test.js
+      - name: Run Product 007 release gate
+        run: node factory/scripts/validate-product-007.js
+
+      - name: Test Treasury Fiscal Data adapter
         run: node --test factory/packages/sources/treasury-average-rates.test.js
       - name: Test Product 008 Treasury threshold decision
         run: node --test factory/products/treasury-average-rate-threshold/decision.test.js
@@ -100,7 +95,12 @@ jobs:
         run: node --test factory/products/treasury-average-rate-threshold/paid-handler.test.js
       - name: Test Product 008 discovery metadata
         run: node --test factory/products/treasury-average-rate-threshold/metadata.test.js
-      - name: Run Product 007 release gate
-        run: node factory/scripts/validate-product-007.js
       - name: Run Product 008 release gate
         run: node factory/scripts/validate-product-008.js
+
+      - name: Validate factory product registry
+        run: node factory/scripts/validate-registry.js
+      - name: Test compiled discovery surfaces
+        run: node --test factory/packages/discovery/generator.test.js
+      - name: Validate compiled discovery surfaces
+        run: node factory/scripts/validate-discovery.js
