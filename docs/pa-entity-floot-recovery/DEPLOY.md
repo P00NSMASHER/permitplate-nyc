@@ -16,6 +16,16 @@ Locked deployment map:
 
 `docs/pa-entity-floot-recovery/deploy-map.json`
 
+Immutable execution queue:
+
+`verification/floot-deployment-queue-latest.json`
+
+The execution queue pins:
+- branch: `floot-recovery-lock-2026-10-02`
+- commit: `ceb21b651764ffaa0c893f4e725eccce0c10ba5f`
+
+**Fetch every deployment source from that pinned branch/commit, never mutable `main`.** Blob SHA + byte-size checks in the queue remain authoritative even if `main` receives unrelated documentation or verification commits.
+
 Current target:
 
 - 8 paid x402 resources
@@ -113,15 +123,16 @@ Keep writes serialized and carry the returned project version forward when the w
    - existing endpoint/static paths
    - published metadata
 3. Use one batched `read_files` call for the four preserved PA files and compare them against the tested baseline; do not rewrite them.
-4. Re-read `deploy-map.json` and confirm its source hashes are still green in CI.
-5. For each map entry in order:
-   - fetch exact GitHub source bytes from the recorded source path
+4. Re-read `verification/floot-deployment-queue-latest.json` and `deploy-map.json`.
+5. Run `scripts/verify-floot-deployment-lock.mjs`; abort before any write if the pinned branch moved, any of the 26 source blob hashes/sizes drifted, or current `main` modified a locked source.
+6. For each queue entry in order:
+   - fetch exact GitHub source bytes from pinned commit `ceb21b651764ffaa0c893f4e725eccce0c10ba5f` at the recorded source path
    - write complete content to the mapped Floot target path
    - use current Floot project version as `expected_version` when supported
    - carry forward the returned version
-6. Run Floot typecheck.
-7. Run Floot tests.
-8. Do not publish if either fails.
+7. Run Floot typecheck.
+8. Run Floot tests.
+9. Do not publish if either fails.
 
 ## Interruption-safe resume protocol
 
