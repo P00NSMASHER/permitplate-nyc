@@ -28,6 +28,7 @@ Build narrow, deterministic, machine-purchasable decision tools for autonomous a
 | 016 | PA Entity OFAC Review Gate | live-source-verified staging | `/api/pa-entity-ofac-review` | $0.005 |
 | 017 | PA Vendor New-Domain Review | live-source-verified staging | `/api/pa-vendor-new-domain-review` | $0.005 |
 | 018 | PA Vendor Counterparty Review | live-source-verified staging | `/api/pa-vendor-counterparty-review` | $0.010 |
+| 019 | PA Vendor Maturity Review | live-source-verified staging | `/api/pa-vendor-maturity-review` | $0.007 |
 
 Product 001 has an independently verified third-party Base USDC settlement and remains the payment/distribution reference.
 
@@ -253,6 +254,21 @@ Live smoke for `OpenAI OpCo` resolved `Openai Opco, Llc`, returned zero OFAC can
 
 `proceed` is only a workflow signal. A no-candidate OFAC result is not sanctions clearance, OFAC 50 Percent Rule ownership analysis is not included, domain alignment does not prove ownership/control, and recent domain registration is a review signal rather than proof of fraud.
 
+## Product 019
+
+Pennsylvania vendor entity + domain maturity review.
+
+Flow:
+- resolve one strong Pennsylvania legal entity,
+- require entity formation age at/above a caller threshold,
+- align the supplied domain against the **resolved legal business name**,
+- require authoritative domain registration age at/above a caller threshold,
+- return `established_vendor` or `human_review`.
+
+Live smoke for `OpenAI OpCo` resolved `Openai Opco, Llc`, observed entity age 368 days and `openai.com` age 7,196 days, and returned `established_vendor` with zero source failures.
+
+This is a maturity/history signal only. Older entity/domain history is not proof of legitimacy, safety, ownership, authority, creditworthiness, or legal compliance, and recent registration is a review signal rather than proof of fraud.
+
 ## Shared layers
 
 - `packages/x402/payment.js` — hardened Base USDC verify/settle flow
@@ -307,7 +323,7 @@ AppDeploy reported an account-wide Free tier pause with weekly reset at:
 
 `2026-10-05T00:00:00Z`
 
-No upgrade/payment has been authorized. Products 003–018 therefore remain staging candidates rather than production claims.
+No upgrade/payment has been authorized. Products 003–019 therefore remain staging candidates rather than production claims.
 
 ## Branch isolation
 
