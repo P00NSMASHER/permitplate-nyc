@@ -1,0 +1,47 @@
+# Agent Data Tools x402
+
+Use this service when an agent needs low-cost authoritative public-data lookups or a bounded Pennsylvania vendor-intake workflow decision.
+
+## Endpoints and prices
+
+- /_api/pa-entity-one — $0.001 — Pennsylvania registry best match
+- /_api/pa-business — $0.005 — Pennsylvania enriched multi-result search
+- /_api/vendor-intake-gate — $0.020 — proceed/human_review vendor-intake decision
+- /_api/sec-filings — $0.005 — SEC EDGAR recent filings
+- /_api/us-address-geocode — $0.005 — Census address geocoding
+- /_api/ofac-sdn-screen — $0.005 — OFAC SDN candidate-name screening
+- /_api/domain-rdap — $0.005 — authoritative domain RDAP
+- /_api/treasury-average-rates — $0.005 — Treasury monthly average rates
+
+All prices are USDC on Base via x402 v2.
+
+## Selection guidance
+
+Choose /_api/vendor-intake-gate when an agent needs an action decision rather than raw source records.
+
+Choose the underlying raw endpoints when the agent needs source facts directly or wants to perform its own decision policy.
+
+The vendor gate calls its evidence-source logic internally and does not create nested seller-funded x402 purchases.
+
+## Safety and interpretation
+
+OFAC output is candidate-name screening only. A match is not a legal determination; a no-match is not sanctions clearance; ownership analysis under the OFAC 50 Percent Rule is not performed.
+
+PA registry records do not independently prove current good standing, ownership, or authority to contract.
+
+Census geocoding does not prove physical presence or control of an address.
+
+RDAP registration and name alignment do not prove domain ownership or control.
+
+Treasury average-interest-rate data are monthly averages on outstanding debt, not live market yields.
+
+SEC filing metadata are authoritative EDGAR identifiers and dates, not investment advice or a claim about filing contents.
+
+## Payment recovery
+
+If a source fails before a usable result, payment is not settled.
+
+If settlement is unresolved, retry the same request with the same PAYMENT-SIGNATURE rather than generating a fresh authorization.
+
+OpenAPI: https://pa-entity-x402.floot.app/openapi.json
+Discovery: https://pa-entity-x402.floot.app/.well-known/x402
