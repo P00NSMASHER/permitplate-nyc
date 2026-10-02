@@ -1,0 +1,38 @@
+{
+  "checkedAt": "2026-10-02T14:22:51Z",
+  "sourceHead": "7e2d2910667a2b1669e880d533fab4a59dcd5ea7",
+  "status": "tested-not-deployed",
+  "targetSite": {
+    "name": "agent-data-tools-x402",
+    "siteId": "963477ed-829f-4ae4-91dc-110e5607b83e",
+    "origin": "https://agent-data-tools-x402.netlify.app",
+    "plan": "Free"
+  },
+  "tests": {
+    "targetManifest": "pass",
+    "paymentCore": "pass",
+    "paidOperationStateMachine": "pass",
+    "netlifyPackage": "pass",
+    "officialUpstreamSmoke": {
+      "passed": 9,
+      "total": 9
+    },
+    "vendorGateCore": {
+      "passed": 8,
+      "total": 8
+    },
+    "finalExit": 0
+  },
+  "target": {
+    "paidResources": 8,
+    "fixedVendorFixtures": 3,
+    "appDeployRuntimeDependencies": 0
+  },
+  "deploymentSafety": [
+    "Draft deploy must be verified before production deploy.",
+    "Use the existing site; do not create a new site.",
+    "No paid plan or upgrade is authorized.",
+    "Do not deploy if CLI authentication is unavailable without explicit user action.",
+    "No seller-funded settlement is permitted."
+  ]
+}
