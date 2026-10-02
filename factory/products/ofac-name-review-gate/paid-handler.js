@@ -45,11 +45,11 @@ function productPaymentDocument(base){
   return paymentDocument({
     resourceUrl:base+RESOURCE_PATH,
     amountAtomic:AMOUNT_ATOMIC,
-    description:"Run deterministic first-pass name and alias screening against the current U.S. Treasury OFAC SDN list. Returns candidate_found or no_candidate. Results are review signals only: a candidate is not a legal sanctions determination, no_candidate is not sanctions clearance, and OFAC 50 Percent Rule ownership analysis is not included.",
+    description:"Run deterministic first-pass name and alias screening against the current U.S. Treasury OFAC SDN list. Returns candidate_found, no_candidate, or human_review. Results are review signals only: a candidate is not a legal sanctions determination, no_candidate is not sanctions clearance, and OFAC 50 Percent Rule ownership analysis is not included.",
     serviceName:"OFAC Name Review Gate",
     tags:["OFAC","SDN","sanctions-screening","name-review","human-review"],
-    inputExample:{type:"http",method:"GET",queryParams:{name:"VLADIMIR PUTIN",minScore:90}},
-    outputExample:{type:"json",example:{decision:"candidate_found",candidateCount:1,paid:true}}
+    inputExample:{type:"http",method:"GET",queryParams:{name:"Example LLC",minScore:90}},
+    outputExample:{type:"json",example:{decision:"no_candidate",candidateCount:0,paid:true}}
   });
 }
 
