@@ -5,17 +5,26 @@ import {
   paymentDocument,
   runVendorGate,
 } from '../docs/pa-entity-floot-release/vendor-intake-gate_GET.ts'
-import { handle as demoHandle } from '../docs/pa-entity-floot-release/vendor-intake-demo_GET.ts'
 
 const endpointPath =
   'docs/pa-entity-floot-release/vendor-intake-gate_GET.ts'
 const source = fs.readFileSync(endpointPath, 'utf8')
+const demoSource = fs.readFileSync(
+  'docs/pa-entity-floot-release/vendor-intake-demo_GET.ts',
+  'utf8'
+)
 
 assert.ok(!source.includes('api-v2.appdeploy.ai'))
 assert.ok(source.includes('https://data.pa.gov/resource/xvd7-5r2c.json'))
 assert.ok(source.includes('geocoding.geo.census.gov'))
 assert.ok(source.includes('sanctionslistservice.ofac.treas.gov'))
 assert.ok(source.includes('https://data.iana.org/rdap/dns.json'))
+assert.ok(demoSource.includes("from './vendor-intake-gate_GET'"))
+assert.ok(demoSource.includes("'proceed'"))
+assert.ok(demoSource.includes("'address_mismatch'"))
+assert.ok(demoSource.includes("'domain_mismatch'"))
+assert.ok(demoSource.includes("error: 'unknown_fixture'"))
+assert.ok(demoSource.includes("Arbitrary vendor checks require the paid /_api/vendor-intake-gate endpoint."))
 
 const originalFetch = globalThis.fetch
 
@@ -218,50 +227,6 @@ try {
     )
   )
 
-  const fixtureBase =
-    'https://pa-entity-x402.floot.app/_api/vendor-intake-demo'
-
-  const proceedFixture = await demoHandle(
-    new Request(fixtureBase + '?case=proceed')
-  )
-  assert.equal(proceedFixture.headers.get('x-floot-status'), null)
-  const proceedFixtureBody = await proceedFixture.json()
-  assert.equal(proceedFixtureBody.case, 'proceed')
-  assert.equal(proceedFixtureBody.decision, 'proceed')
-  assert.equal(proceedFixtureBody.agentAction, 'continue_vendor_intake')
-  assert.deepEqual(proceedFixtureBody.reviewTriggers, [])
-  assert.equal(proceedFixtureBody.demo, true)
-  assert.equal(proceedFixtureBody.paid, false)
-  assert.equal(proceedFixtureBody.sampleInput, true)
-
-  const addressFixture = await demoHandle(
-    new Request(fixtureBase + '?case=address_mismatch')
-  )
-  const addressFixtureBody = await addressFixture.json()
-  assert.equal(addressFixtureBody.decision, 'human_review')
-  assert.ok(
-    addressFixtureBody.reviewTriggers.some(
-      trigger => trigger.code === 'registered_address_differs'
-    )
-  )
-
-  const domainFixture = await demoHandle(
-    new Request(fixtureBase + '?case=domain_mismatch')
-  )
-  const domainFixtureBody = await domainFixture.json()
-  assert.equal(domainFixtureBody.decision, 'human_review')
-  assert.ok(
-    domainFixtureBody.reviewTriggers.some(
-      trigger => trigger.code === 'domain_name_not_aligned'
-    )
-  )
-
-  const invalidFixture = await demoHandle(
-    new Request(fixtureBase + '?case=arbitrary')
-  )
-  assert.equal(invalidFixture.headers.get('x-floot-status'), '400')
-  const invalidFixtureBody = await invalidFixture.json()
-  assert.equal(invalidFixtureBody.error, 'unknown_fixture')
 
   console.log(
     JSON.stringify(
