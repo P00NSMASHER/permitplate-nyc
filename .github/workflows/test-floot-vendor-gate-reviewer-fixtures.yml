@@ -1,0 +1,38 @@
+name: Test Floot vendor gate reviewer fixtures
+
+on:
+  push:
+    paths:
+      - 'docs/pa-entity-floot-release/vendor-intake-demo_GET.ts'
+      - 'docs/pa-entity-floot-release/vendor-intake-demo_GET.schema.ts'
+      - 'scripts/test-floot-vendor-gate-demo-wrapper.mjs'
+      - 'scripts/test-vendor-intake-gate-core.mjs'
+      - '.github/workflows/test-floot-vendor-gate-reviewer-fixtures.yml'
+  pull_request:
+    paths:
+      - 'docs/pa-entity-floot-release/vendor-intake-demo_GET.ts'
+      - 'docs/pa-entity-floot-release/vendor-intake-demo_GET.schema.ts'
+      - 'scripts/test-floot-vendor-gate-demo-wrapper.mjs'
+      - 'scripts/test-vendor-intake-gate-core.mjs'
+      - '.github/workflows/test-floot-vendor-gate-reviewer-fixtures.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fixtures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Verify bounded free-review wrapper
+        run: node scripts/test-floot-vendor-gate-demo-wrapper.mjs
+
+      - name: Verify decision engine paths
+        run: node scripts/test-vendor-intake-gate-core.mjs
