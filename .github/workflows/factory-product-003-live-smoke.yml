@@ -9,6 +9,7 @@ on:
       - 'factory/products/pa-business-address-match/**'
       - 'factory/products/pa-business-domain-match/**'
       - 'factory/products/sec-filing-freshness/**'
+      - 'factory/products/sec-company-identity-match/**'
       - 'factory/products/domain-registration-age/**'
       - 'factory/products/ofac-name-review-gate/**'
       - 'factory/packages/sources/ofac-name-screen.js'
@@ -36,6 +37,8 @@ jobs:
         run: node factory/products/pa-business-domain-match/live-smoke.js
       - name: Product 006 live SEC smoke
         run: node factory/products/sec-filing-freshness/live-smoke.js
+      - name: Product 013 SEC identity smoke
+        run: node factory/products/sec-company-identity-match/live-smoke.js
       - name: Product 007 live RDAP smoke
         run: node factory/products/domain-registration-age/live-smoke.js
       - name: Product 009 live OFAC smoke
