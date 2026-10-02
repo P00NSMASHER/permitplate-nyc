@@ -12,7 +12,7 @@
   "expectedPaidResourceCount": 8,
   "preconditions": [
     "Fresh Floot list_files after quota reset.",
-    "One batched read_files call verifies the four preserved PA files.",
+    "Capture all 16 rollback/preservation files in deterministic bounded read_files batches per ROLLBACK.md; commit and validate the exact snapshot before any write.",
     "Capture all existing overwrite targets before mutation per docs/pa-entity-floot-recovery/ROLLBACK.md.",
     "Newest GitHub Floot release/recovery discovery gates are green.",
     "scripts/verify-floot-deployment-lock.mjs passes against the pinned source branch/commit.",
@@ -242,8 +242,8 @@
   ],
   "actionBudget": {
     "listFiles": 1,
-    "preservedReadBatch": 1,
-    "rollbackSnapshotReadBatchesMax": 2,
+    "preservedReadBatch": 0,
+    "rollbackSnapshotReadBatchesMax": 6,
     "guideReadMax": 1,
     "writes": 26,
     "typecheck": 1,
@@ -251,11 +251,12 @@
     "checkpoint": 1,
     "publish": 1,
     "publishStatus": 1,
-    "totalWithoutGuideMin": 34,
-    "totalWithoutGuideMax": 35,
-    "totalWithOneGuideMin": 35,
-    "totalWithOneGuideMax": 36,
-    "dailyAllowance": 100
+    "totalWithoutGuideMin": 36,
+    "totalWithoutGuideMax": 37,
+    "totalWithOneGuideMin": 37,
+    "totalWithOneGuideMax": 38,
+    "dailyAllowance": 100,
+    "rollbackSnapshotReadBatchesNormal": 5
   },
   "sourceBranch": "floot-recovery-lock-2026-10-02",
   "sourceCommit": "ceb21b651764ffaa0c893f4e725eccce0c10ba5f",
