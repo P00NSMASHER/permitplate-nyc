@@ -12,11 +12,14 @@ on:
       - 'recovery/floot-target-manifest.json'
       - 'recovery/x402-portfolio-target.json'
       - 'scripts/validate-floot-recovery-bundle.mjs'
+      - 'scripts/test-floot-recovery-discovery.mjs'
+      - 'scripts/verify-pa-entity-floot-patches.mjs'
       - '.github/workflows/test-floot-rehost-endpoints.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
+  statuses: write
 
 jobs:
   test:
@@ -39,3 +42,29 @@ jobs:
 
       - name: Validate eight-resource recovery discovery bundle
         run: node scripts/validate-floot-recovery-bundle.mjs
+
+      - name: Verify recovery discovery documents
+        run: node scripts/test-floot-recovery-discovery.mjs
+
+      - name: Verify atomic Floot patches match tested release files
+        run: node scripts/verify-pa-entity-floot-patches.mjs
+
+      - name: Publish success commit status
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=success \
+            -f context='x402/floot-release' \
+            -f description='Floot 8-route release bundle passed'
+
+      - name: Publish failure commit status
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=failure \
+            -f context='x402/floot-release' \
+            -f description='Floot 8-route release bundle failed'
