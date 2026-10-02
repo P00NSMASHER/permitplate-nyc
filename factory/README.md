@@ -26,6 +26,7 @@ Build narrow, deterministic, machine-purchasable decision tools for autonomous a
 | 014 | Treasury Average Rate Trend | live-source-verified staging | `/api/treasury-average-rate-trend` | $0.003 |
 | 015 | Treasury Average Rate Spread | live-source-verified staging | `/api/treasury-average-rate-spread` | $0.003 |
 | 016 | PA Entity OFAC Review Gate | live-source-verified staging | `/api/pa-entity-ofac-review` | $0.005 |
+| 017 | PA Vendor New-Domain Review | live-source-verified staging | `/api/pa-vendor-new-domain-review` | $0.005 |
 
 Product 001 has an independently verified third-party Base USDC settlement and remains the payment/distribution reference.
 
@@ -221,6 +222,20 @@ Live smoke for `OpenAI OpCo` resolved `Openai Opco, Llc`, screened that exact le
 
 This is candidate-name screening only. `candidate_found` is not a legal sanctions determination, `no_candidate` is not sanctions clearance, and OFAC 50 Percent Rule ownership analysis is not included.
 
+## Product 017
+
+Pennsylvania vendor legal-entity resolution plus authoritative domain registration-age review.
+
+Flow:
+- resolve the submitted company to one strong Pennsylvania legal entity,
+- align the supplied domain against the **resolved legal business name**,
+- read authoritative RDAP registration age,
+- return `established_domain_match`, `recent_domain_review`, `domain_mismatch`, `unregistered_domain`, `company_not_found`, or `human_review`.
+
+Live smoke for `OpenAI OpCo` resolved `Openai Opco, Llc`, matched `openai.com`, observed registration date `2007-01-19`, and returned `established_domain_match` at a 90-day minimum with zero source failures.
+
+Recent registration is a review signal, not proof of fraud. Domain-name alignment does not prove ownership or control, and an established domain is not proof a vendor is safe or trustworthy.
+
 ## Shared layers
 
 - `packages/x402/payment.js` — hardened Base USDC verify/settle flow
@@ -270,7 +285,7 @@ AppDeploy reported an account-wide Free tier pause with weekly reset at:
 
 `2026-10-05T00:00:00Z`
 
-No upgrade/payment has been authorized. Products 003–012 therefore remain staging candidates rather than production claims.
+No upgrade/payment has been authorized. Products 003–017 therefore remain staging candidates rather than production claims.
 
 ## Branch isolation
 
