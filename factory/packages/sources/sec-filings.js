@@ -138,8 +138,26 @@ function createSecFilingsAdapter({
       }
 
       const recent = data?.filings?.recent;
-      if (!recent || typeof recent !== "object" || !Array.isArray(recent.form)) {
+      const requiredArrays = [
+        "form",
+        "filingDate",
+        "accessionNumber",
+        "primaryDocument",
+      ];
+      if (
+        !recent ||
+        typeof recent !== "object" ||
+        requiredArrays.some((key) => !Array.isArray(recent[key]))
+      ) {
         const error = new Error("sec_recent_filings_invalid");
+        error.code = "SOURCE_CONTRACT_INVALID";
+        throw error;
+      }
+      const rowCount = recent.form.length;
+      if (
+        requiredArrays.some((key) => recent[key].length < rowCount)
+      ) {
+        const error = new Error("sec_recent_filings_misaligned");
         error.code = "SOURCE_CONTRACT_INVALID";
         throw error;
       }
