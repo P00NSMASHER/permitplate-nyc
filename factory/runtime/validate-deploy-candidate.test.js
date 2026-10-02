@@ -3,6 +3,7 @@
 const test=require("node:test");
 const assert=require("node:assert/strict");
 const {validateDeployCandidate}=require("./validate-deploy-candidate");
+const {managedProducts}=require("../packages/discovery/generator");
 
 test("candidate is blocked when required SEC identity is absent",()=>{
   const result=validateDeployCandidate({
@@ -20,10 +21,11 @@ test("candidate is structurally ready with a declared SEC contact",()=>{
     env:{SEC_USER_AGENT:"x402-product-factory-ci/1.0 ci@example.com"}
   });
   assert.equal(result.ready,true,JSON.stringify(result.problems));
-  assert.equal(result.productCount,10);
-  assert.equal(result.paidRouteCount,10);
-  assert.equal(result.optionsRouteCount,10);
-  assert.equal(result.appDeployRouteCount,result.staticRouteCount+20);
+  const count=managedProducts().length;
+  assert.equal(result.productCount,count);
+  assert.equal(result.paidRouteCount,count);
+  assert.equal(result.optionsRouteCount,count);
+  assert.equal(result.appDeployRouteCount,result.staticRouteCount+2*count);
   assert.deepEqual(result.problems,[]);
   assert.ok(result.releaseFiles.includes("x402-catalog.json"));
   assert.ok(result.releaseFiles.includes("openapi.json"));
