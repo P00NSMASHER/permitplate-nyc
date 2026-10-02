@@ -946,8 +946,7 @@ export async function runVendorIntakeGate(rawInput) {
     throw new Error('invalid_address');
   }
 
-  const registryEnvelope = await searchPennsylvaniaEntities(input.name, 3);
-  const registryMatches = registryEnvelope.results;
+  const registryMatches = await searchPennsylvaniaBase(input.name, 3);
   const registryMatch = registryMatches[0] ?? null;
   const registryNameScore =
     registryMatch?.businessName != null
