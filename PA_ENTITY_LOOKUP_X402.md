@@ -47,11 +47,11 @@ The existing $0.001 and $0.005 Pennsylvania lookup routes are unchanged.
 
 The gate is deliberately conservative. It never returns an automatic legal/compliance rejection. `proceed` only means the configured automated intake checks did not trigger review. It is not legal advice, sanctions clearance, fraud approval, credit approval, proof of good standing, or proof that a vendor owns an address or domain.
 
-Current automatic-review rules:
-- PA registry: no candidate or a weak best-name match -> human review
-- address: supplied address and registry address must both Census-geocode and fall within 0.25 miles -> otherwise human review
-- OFAC: any SDN name candidate at score 90 or above -> human review
-- RDAP: supplied domain must be confirmed registered -> otherwise human review
+Current fail-closed automatic-review rules:
+- PA registry: automatic continuation requires exactly one strong legal-entity candidate plus complete core identity evidence (business name, filing number, registration type, usable registered address); missing, ambiguous, weak, or incomplete registry evidence -> human review
+- Census: both submitted-address and registry-address responses must satisfy the evidence contract; matched addresses must include normalized address text and numeric coordinates; automatic continuation additionally requires matching primary street number + ZIP and <=0.25-mile coordinate distance
+- OFAC: the response must satisfy the expected query/threshold/count/candidate/source contract; incomplete evidence or any candidate at score 90 or above -> human review
+- RDAP: the response must echo the requested domain and include boolean registration status, authoritative RDAP endpoint, and source; unregistered, incomplete, or vendor/domain-name-misaligned evidence -> human review
 
 OFAC remains a first-pass candidate-name screen only. A no-candidate result is not sanctions clearance, and the tool does not perform OFAC 50 Percent Rule ownership analysis.
 
@@ -63,25 +63,30 @@ Unpaid vendor-gate requests return a real HTTP 402 `PAYMENT-REQUIRED` challenge 
 
 ### Working evidence
 
-Independent public verification on 2026-10-02 confirmed:
+Current production checks on 2026-10-02 confirm:
 - deployment status: ready
-- AppDeploy frontend/backend errors: none
-- live fixed sample decision: `proceed`
-- live fixed sample agent action: `continue_vendor_intake`
-- live fixed sample review triggers: 0
-- evidence checked: PA Registry, Census, OFAC, RDAP
+- AppDeploy frontend/backend/network QA errors: none
 - `/.well-known/x402` advertises `/api/vendor-intake-gate` at $0.020
-- OpenAPI exposes operationId `checkPennsylvaniaVendorIntakeGate`
-- an unpaid production call returns HTTP 402 at $0.020 USDC on Base
+- OpenAPI version 2.2.0 exposes operationId `checkPennsylvaniaVendorIntakeGate` plus typed PA registry/Census/OFAC/RDAP evidence-completeness fields
+- unpaid production calls use x402 v2 and return HTTP 402 with the $0.020 Base USDC payment requirement
+- successful paid responses are wired to return `PAYMENT-RESPONSE` plus `x402-settled: true`
 
-Fixed live sample:
+Three bounded free fixtures exercise the same decision engine without exposing arbitrary free vendor screening:
+
 ```text
-GET https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-demo
+GET https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-demo?case=proceed
+GET https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-demo?case=address_mismatch
+GET https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-demo?case=domain_mismatch
 ```
 
-The fixed demo exercises the same decision engine with a known sample and is not an arbitrary free-vendor-check bypass.
+Expected decision evidence:
+- `proceed` fixture -> `decision=proceed`, no review triggers, PA registry/Census/OFAC/RDAP evidence complete
+- `address_mismatch` fixture -> `decision=human_review` with `registered_address_differs`
+- `domain_mismatch` fixture -> `decision=human_review` with `domain_name_not_aligned`
 
-No Agentic.ai resubmission was made as part of this release.
+Full reviewer checklist: [docs/vendor-intake-gate-evidence.md](docs/vendor-intake-gate-evidence.md)
+
+No Agentic.ai resubmission has been made yet. The intended next external proof step is to add the gate to the working Floot bare-origin manifest after the Floot build quota resets, re-register that origin with Agent402, and only then resubmit the composed decision product.
 
 ## Buyer task examples
 
@@ -133,6 +138,7 @@ https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s
 
 Paid routes:
 
+- $0.020 vendor-intake decision gate: `GET /api/vendor-intake-gate?name=NAME&address=ADDRESS&domain=DOMAIN`
 - $0.001 best match: `GET /api/pa-entity-one?q=NAME`
 - $0.005 enriched search: `GET /api/pa-business?q=NAME&limit=N`
 
@@ -157,7 +163,11 @@ Independent checks on 2026-10-01:
 
 The remaining Agent402 dispatch gate is independent settlement history (`settlement_required`), not crawl health. No self-funded settlement is being used to manufacture that history.
 
-## External status — 2026-10-01
+## External status — historical raw-endpoint evidence from 2026-10-01
+
+The measurements below primarily describe the PA raw lookup routes before the hardened $0.020 vendor-intake gate was completed. They are retained as historical distribution evidence and **must not be read as independent verification of the composed gate**.
+
+The gate itself has been submitted to Market402 (instant self-test passed 11/11) and 402 Index (registration accepted but pending because the shared AppDeploy domain cannot be seller-claimed). It has not yet been added to the Floot bare-origin manifest, independently routed by Agent402, paid-verified, or attributed a third-party buyer/revenue event.
 
 ### Agent402
 
