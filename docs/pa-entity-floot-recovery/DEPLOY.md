@@ -124,8 +124,8 @@ Keep writes serialized and carry the returned project version forward when the w
    - current project version
    - existing endpoint/static paths
    - published metadata
-3. Use one batched `read_files` call for the four preserved PA files and compare them against the tested baseline; do not rewrite them.
-4. Follow `docs/pa-entity-floot-recovery/ROLLBACK.md`: identify every deployment target already present and capture its exact current content before mutation.
+3. Start the mandatory rollback snapshot from `docs/pa-entity-floot-recovery/ROLLBACK.md`. **Rollback Batch 1 is the single authoritative read of the four preserved PA files**; use those same returned bytes both for preservation verification and for the rollback snapshot. Do not perform a duplicate PA read.
+4. Continue rollback Batches 2–5, identify every deployment target already present, and capture any unexpectedly preexisting recovery endpoint/schema target before mutation.
 5. Re-read `verification/floot-deployment-queue-latest.json` and `deploy-map.json`.
 6. Run `scripts/verify-floot-deployment-lock.mjs`; abort before any write if the pinned branch moved, any of the 26 source blob hashes/sizes drifted, or current `main` modified a locked source.
 7. For each queue entry in order:
