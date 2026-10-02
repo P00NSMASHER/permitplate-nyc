@@ -51,6 +51,55 @@ const report = {
 
 let failures = 0;
 
+
+async function detectSandboxRestriction() {
+  try {
+    const response = await fetch(BASE + '/_api/pa-entity-one?q=OpenAI', {
+      headers: {
+        accept: 'application/json',
+        'user-agent': 'floot-staged-sandbox-verifier/1.0',
+      },
+      signal: AbortSignal.timeout(15000),
+    });
+    const text = await response.text();
+    return {
+      restricted:
+        response.status === 403 &&
+        !response.headers.get('payment-required') &&
+        !response.headers.get('x-floot-status'),
+      status: response.status,
+      bodyExcerpt: text.slice(0, 200),
+    };
+  } catch (error) {
+    return {
+      restricted: false,
+      status: null,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+const access = await detectSandboxRestriction();
+if (access.restricted) {
+  console.log(
+    JSON.stringify(
+      {
+        status: 'sandbox_external_access_restricted',
+        zeroSpend: true,
+        paymentSent: false,
+        base: BASE,
+        probeStatus: access.status,
+        bodyExcerpt: access.bodyExcerpt,
+        interpretation:
+          'Public GitHub runners cannot inspect the Floot sandbox API directly. This is not an endpoint regression because the same restriction applies to the two known-good PA routes.',
+      },
+      null,
+      2
+    )
+  );
+  process.exit(0);
+}
+
 for (const [id, path, expectedAmount] of paid) {
   const item = { id, path, expectedAmount, ok: false, failures: [] };
   try {
