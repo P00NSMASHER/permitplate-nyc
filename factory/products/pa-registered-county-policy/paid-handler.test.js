@@ -1,0 +1,12 @@
+"use strict";
+const test=require("node:test"),assert=require("node:assert/strict");
+const {encodeHeader}=require("../../packages/x402/payment");
+const {AMOUNT_ATOMIC,PRICE,RESOURCE_PATH,productPaymentDocument,createPaidCountyPolicyHandler}=require("./paid-handler");
+function response(body,status=200){return{status,ok:status>=200&&status<300,async json(){return body;}};}
+const sig=()=>encodeHeader({x402Version:2,payload:{signed:true}});
+const q=()=>({company:"OpenAI OpCo",allowedCounties:"Dauphin,Schuylkill"});
+test("Product 022 advertises 2000 atomic",()=>{const d=productPaymentDocument("https://example.test");assert.equal(AMOUNT_ATOMIC,"2000");assert.equal(PRICE,"$0.002");assert.equal(d.resource.url,"https://example.test"+RESOURCE_PATH);});
+test("unpaid request returns 402",async()=>{let c=0;const h=createPaidCountyPolicyHandler({publicApiBase:"https://example.test",service:{async check(){c++;}},fetchImpl:async()=>response({})});const r=await h({query:q(),event:{headers:{}}});assert.equal(r.statusCode,402);assert.equal(c,0);});
+test("invalid county list stops before verify",async()=>{let n=0;const h=createPaidCountyPolicyHandler({publicApiBase:"https://example.test",service:{async check(){throw new Error("should not run");}},fetchImpl:async()=>{n++;return response({});}});const r=await h({query:{company:"OpenAI",allowedCounties:""},event:{headers:{"payment-signature":sig()}}});assert.equal(r.statusCode,400);assert.equal(n,0);});
+test("valid result verifies then settles",async()=>{const urls=[];const h=createPaidCountyPolicyHandler({publicApiBase:"https://example.test",service:{async check(){return{decision:"policy_match",registeredCounty:"Dauphin",sourceFailures:[],chargeable:true};}},fetchImpl:async url=>{urls.push(url);return url.endsWith("/verify")?response({isValid:true}):response({success:true,transaction:"0x22"});}});const r=await h({query:q(),event:{headers:{"payment-signature":sig()}}});assert.equal(r.statusCode,200);assert.deepEqual(urls.map(x=>x.split("/").pop()),["verify","settle"]);});
+test("registry outage never settles",async()=>{const urls=[];const h=createPaidCountyPolicyHandler({publicApiBase:"https://example.test",service:{async check(){return{decision:"human_review",sourceFailures:[{source:"pa_registry",detail:"timeout"}],chargeable:false};}},fetchImpl:async url=>{urls.push(url);return response({isValid:true});}});const r=await h({query:q(),event:{headers:{"payment-signature":sig()}}});assert.equal(r.statusCode,502);assert.equal(urls.length,1);});
