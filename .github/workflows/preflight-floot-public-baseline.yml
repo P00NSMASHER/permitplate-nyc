@@ -1,0 +1,30 @@
+name: Preflight Floot public baseline
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verify current two-route production baseline
+        env:
+          REPORT_PATH: floot-preflight-public-baseline.json
+        run: node scripts/preflight-floot-public-baseline.mjs
+
+      - name: Upload preflight receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: floot-preflight-public-baseline
+          path: floot-preflight-public-baseline.json
+          if-no-files-found: warn
