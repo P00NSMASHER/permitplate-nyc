@@ -164,3 +164,5 @@ jobs:
         run: node factory/scripts/validate-product-012.js
       - name: Test portable factory runtime composition
         run: node --test factory/runtime/create-runtime.test.js
+      - name: Test deployment prerequisite preflight
+        run: node --test factory/runtime/deployment-preflight.test.js
