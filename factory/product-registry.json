@@ -219,6 +219,20 @@
         "unchanged",
         "human_review"
       ]
+    },
+    {
+      "id": "treasury-average-rate-spread",
+      "number": "015",
+      "status": "design",
+      "method": "GET",
+      "path": "/api/treasury-average-rate-spread",
+      "price_usdc": "0.003",
+      "decision_values": [
+        "left_higher",
+        "right_higher",
+        "within_tolerance",
+        "human_review"
+      ]
     }
   ]
 }
