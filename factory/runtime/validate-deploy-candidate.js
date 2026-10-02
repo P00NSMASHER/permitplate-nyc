@@ -18,7 +18,7 @@ function inertAdapters(){
     address:{compare:never},
     rdap:{lookup:never},
     sec:{lookup:never},
-    treasury:{lookup:never},
+    treasury:{lookup:never,history:never},
     ofac:{lookup:never}
   };
 }
