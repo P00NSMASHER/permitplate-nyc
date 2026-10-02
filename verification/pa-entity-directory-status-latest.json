@@ -5737,7 +5737,7 @@
               "l402_compliant": null,
               "l402_degrade_reason": null,
               "l402_format": null,
-              "last_checked": "2026-10-02 06:27:04",
+              "last_checked": "2026-10-02 12:27:36",
               "latency_p50_ms": 528,
               "lnget_compatible": null,
               "name": "https://philip-example-brighton-usd.trycloudflare.com/v1/company/:cn/finance",
@@ -7294,8 +7294,8 @@
               "l402_compliant": null,
               "l402_degrade_reason": null,
               "l402_format": null,
-              "last_checked": "2026-10-02 05:36:36",
-              "latency_p50_ms": 112,
+              "last_checked": "2026-10-02 12:28:51",
+              "latency_p50_ms": 113,
               "lnget_compatible": null,
               "name": "https://x402.fairseal.io/v1/veo/verify",
               "payment_asset": "USD Coin",
@@ -7906,7 +7906,7 @@
     }
   },
   "attribution_rule": "Do not count shared-wallet payer fields, probes, self-tests, registrations, or seller-funded activity as endpoint revenue.",
-  "checked_at": "2026-10-02T12:26:14.994836+00:00",
+  "checked_at": "2026-10-02T12:31:35.494840+00:00",
   "market402": {
     "index": {
       "matches": [],
@@ -8168,7 +8168,7 @@
         "transport": "header",
         "updated_at": 1790814061,
         "updated_at_iso": "2026-10-01T00:21:01Z",
-        "verdict_age_seconds": 205,
+        "verdict_age_seconds": 524,
         "verified_via": "GET",
         "x402_version": 2
       },
@@ -8440,7 +8440,7 @@
         "transport": "header",
         "updated_at": 1790761604,
         "updated_at_iso": "2026-09-30T09:46:44Z",
-        "verdict_age_seconds": 553,
+        "verdict_age_seconds": 872,
         "verified_via": "GET",
         "x402_version": 2
       },
@@ -8509,7 +8509,7 @@
             "status": "verified",
             "status_changed_at": 1790761604,
             "status_changed_at_iso": "2026-09-30T09:46:44Z",
-            "verdict_age_seconds": 555,
+            "verdict_age_seconds": 875,
             "x402_version": 2
           },
           {
@@ -8569,7 +8569,7 @@
             "status": "verified",
             "status_changed_at": 1790760169,
             "status_changed_at_iso": "2026-09-30T09:22:49Z",
-            "verdict_age_seconds": 202,
+            "verdict_age_seconds": 522,
             "x402_version": 2
           },
           {
@@ -8629,7 +8629,7 @@
             "status": "verified",
             "status_changed_at": 1790814061,
             "status_changed_at_iso": "2026-10-01T00:21:01Z",
-            "verdict_age_seconds": 206,
+            "verdict_age_seconds": 526,
             "x402_version": 2
           },
           {
@@ -8689,7 +8689,7 @@
             "status": "verified",
             "status_changed_at": 1789831009,
             "status_changed_at_iso": "2026-09-19T15:16:49Z",
-            "verdict_age_seconds": 3099,
+            "verdict_age_seconds": 3419,
             "x402_version": 2
           },
           {
@@ -8749,7 +8749,7 @@
             "status": "verified",
             "status_changed_at": 1790490193,
             "status_changed_at_iso": "2026-09-27T06:23:13Z",
-            "verdict_age_seconds": 212,
+            "verdict_age_seconds": 532,
             "x402_version": 2
           },
           {
@@ -8809,7 +8809,7 @@
             "status": "verified",
             "status_changed_at": 1790332613,
             "status_changed_at_iso": "2026-09-25T10:36:53Z",
-            "verdict_age_seconds": 6330,
+            "verdict_age_seconds": 6650,
             "x402_version": 2
           },
           {
@@ -8825,13 +8825,13 @@
             "has_sample": false,
             "id": "03625d9d-d92",
             "kind": "api",
-            "last_probed_at": 1790936810,
-            "last_probed_at_iso": "2026-10-02T10:26:50Z",
+            "last_probed_at": 1790944010,
+            "last_probed_at_iso": "2026-10-02T12:26:50Z",
             "mpp_methods": null,
             "name": "thevaultreport.com/api/x402/comex/warehouse",
             "next_check_basis": "stable tier, re-probed every 2 hours: verified with no failure in the last 24 h and no change of terms or status in 7 days, or failing 11 to 50 times in a row; any failure moves it to the watch tier on that probe; a record past next_check_by is stale by our own rule",
-            "next_check_by": 1790944010,
-            "next_check_by_iso": "2026-10-02T12:26:50Z",
+            "next_check_by": 1790951210,
+            "next_check_by_iso": "2026-10-02T14:26:50Z",
             "observed_network": "eip155:8453",
             "onchain_payto_checked": "0x74500ee8519da3b6bf43642bc06be5874a9ecc99",
             "onchain_payto_shared_listings": 5,
@@ -8857,11 +8857,11 @@
             ],
             "price_amount": 0.01,
             "price_currency": "USDC",
-            "probe_count": 1162,
+            "probe_count": 1163,
             "probe_interval_s": 7200,
             "probe_tier": "stable",
             "probes_failed": 0,
-            "probes_passed": 1162,
+            "probes_passed": 1163,
             "report_count": 0,
             "report_score": null,
             "response_mime": null,
@@ -8869,7 +8869,7 @@
             "status": "verified",
             "status_changed_at": 1788637413,
             "status_changed_at_iso": "2026-09-05T19:43:33Z",
-            "verdict_age_seconds": 7173,
+            "verdict_age_seconds": 293,
             "x402_version": 2
           },
           {
@@ -8929,7 +8929,7 @@
             "status": "verified",
             "status_changed_at": 1788636916,
             "status_changed_at_iso": "2026-09-05T19:35:16Z",
-            "verdict_age_seconds": 6815,
+            "verdict_age_seconds": 7135,
             "x402_version": 1
           },
           {
@@ -8945,13 +8945,13 @@
             "has_sample": false,
             "id": "d47b78cd-3de",
             "kind": "api",
-            "last_probed_at": 1790937070,
-            "last_probed_at_iso": "2026-10-02T10:31:10Z",
+            "last_probed_at": 1790944266,
+            "last_probed_at_iso": "2026-10-02T12:31:06Z",
             "mpp_methods": null,
             "name": "groover-hangar pin",
             "next_check_basis": "stable tier, re-probed every 2 hours: verified with no failure in the last 24 h and no change of terms or status in 7 days, or failing 11 to 50 times in a row; any failure moves it to the watch tier on that probe; a record past next_check_by is stale by our own rule",
-            "next_check_by": 1790944270,
-            "next_check_by_iso": "2026-10-02T12:31:10Z",
+            "next_check_by": 1790951466,
+            "next_check_by_iso": "2026-10-02T14:31:06Z",
             "observed_network": "eip155:8453",
             "onchain_payto_checked": "0xc9cd4e19e8ffabfc479352680295ba12e454462d",
             "onchain_payto_shared_listings": 3,
@@ -8977,11 +8977,11 @@
             ],
             "price_amount": 0.01,
             "price_currency": "USDC",
-            "probe_count": 744,
+            "probe_count": 745,
             "probe_interval_s": 7200,
             "probe_tier": "stable",
             "probes_failed": 1,
-            "probes_passed": 743,
+            "probes_passed": 744,
             "report_count": 0,
             "report_score": null,
             "response_mime": "application/json",
@@ -8989,7 +8989,7 @@
             "status": "verified",
             "status_changed_at": 1789335073,
             "status_changed_at_iso": "2026-09-13T21:31:13Z",
-            "verdict_age_seconds": 6913,
+            "verdict_age_seconds": 37,
             "x402_version": 2
           },
           {
@@ -9049,7 +9049,7 @@
             "status": "verified",
             "status_changed_at": 1788637386,
             "status_changed_at_iso": "2026-09-05T19:43:06Z",
-            "verdict_age_seconds": 326,
+            "verdict_age_seconds": 646,
             "x402_version": 1
           }
         ]
@@ -9058,6 +9058,23 @@
       "status": 200,
       "url": "https://api.nohumans.directory/v1/discover?q=Pennsylvania+Vendor+Intake"
     }
+  },
+  "onchain_base_usdc": {
+    "incoming": [
+      {
+        "amount_usdc": 0.001,
+        "confirmations": "10412",
+        "from": "0x7e6b6556322c4e26c567a867964ac793f5ee2b1c",
+        "hash": "0x17985b16137ff8aef95641be06424a5fa4e9edacc6ade5aaf0a58d523ad1cd73",
+        "timeStamp": "1790923473",
+        "to": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+        "tokenSymbol": "USDC"
+      }
+    ],
+    "note": "Wallet-level evidence only. Compare with resource-specific facilitator stats before attributing a settlement.",
+    "ok": true,
+    "status": 200,
+    "url": "https://base.blockscout.com/api?module=account&action=tokentx&address=0x708f7b52b56eafd7fc1de65fc7752ed732914021&contractaddress=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913&page=1&offset=50&sort=desc"
   },
   "payai": {
     "best_match": {
