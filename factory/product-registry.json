@@ -351,6 +351,19 @@
         "company_not_found",
         "human_review"
       ]
+    },
+    {
+      "id": "pa-local-vendor-policy-gate",
+      "number": "023",
+      "status": "design",
+      "method": "GET",
+      "path": "/api/pa-local-vendor-policy-gate",
+      "price_usdc": "0.004",
+      "decision_values": [
+        "proceed",
+        "human_review",
+        "company_not_found"
+      ]
     }
   ]
 }
