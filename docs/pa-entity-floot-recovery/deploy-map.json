@@ -1,6 +1,6 @@
 {
   "preparedAt": "2026-10-02",
-  "sourceHead": "201d2a5cabab4d93323a2fafa3a14e1c5bdcbcef",
+  "sourceHead": "bad018f9bc9f3d8ce9bc15368a88a8e5449f17c2",
   "projectId": "b69a3ee6-eb01-430d-aa51-da2fc7beeac4",
   "productionOrigin": "https://pa-entity-x402.floot.app",
   "preserveTargets": [
@@ -104,8 +104,8 @@
     {
       "source": "docs/pa-entity-floot-recovery/llms.txt",
       "target": "static/llms.txt",
-      "gitBlobSha": "414eec0e1ebdf4a67b4b41ef37e1b7dec15deab7",
-      "size": 3027
+      "gitBlobSha": "374a4fc63d123f6bc38ec53112a1a32128a54b1b",
+      "size": 3035
     },
     {
       "source": "docs/pa-entity-floot-recovery/llms-full.txt",
@@ -122,20 +122,20 @@
     {
       "source": "docs/pa-entity-floot-recovery/x402",
       "target": "static/.well-known/x402",
-      "gitBlobSha": "dd69e9eae96a87d4b46fdf187550bb24c1d0c4fc",
-      "size": 18371
+      "gitBlobSha": "02ced38868891823008a6fc1e2f52f5a5bd1f201",
+      "size": 24383
     },
     {
       "source": "docs/pa-entity-floot-recovery/x402.json",
       "target": "static/.well-known/x402.json",
-      "gitBlobSha": "dd69e9eae96a87d4b46fdf187550bb24c1d0c4fc",
-      "size": 18371
+      "gitBlobSha": "02ced38868891823008a6fc1e2f52f5a5bd1f201",
+      "size": 24383
     },
     {
       "source": "docs/pa-entity-floot-recovery/x402-services.json",
       "target": "static/.well-known/x402-services.json",
-      "gitBlobSha": "dd69e9eae96a87d4b46fdf187550bb24c1d0c4fc",
-      "size": 18371
+      "gitBlobSha": "02ced38868891823008a6fc1e2f52f5a5bd1f201",
+      "size": 24383
     },
     {
       "source": "docs/pa-entity-floot-recovery/x402-service.json",
@@ -146,8 +146,8 @@
     {
       "source": "docs/pa-entity-floot-recovery/x402-catalog.json",
       "target": "static/.well-known/x402-catalog.json",
-      "gitBlobSha": "dd69e9eae96a87d4b46fdf187550bb24c1d0c4fc",
-      "size": 18371
+      "gitBlobSha": "02ced38868891823008a6fc1e2f52f5a5bd1f201",
+      "size": 24383
     },
     {
       "source": "docs/pa-entity-floot-recovery/security.txt",
@@ -167,5 +167,6 @@
       "gitBlobSha": "04e2420a446067d88e32d971ed539f8046511638",
       "size": 77
     }
-  ]
+  ],
+  "refreshedAt": "2026-10-02"
 }
