@@ -6,6 +6,7 @@ on:
       - 'scripts/test-post-rehost-ops-safety.mjs'
       - 'scripts/test-marketplace-repair-agent402-guard.mjs'
       - 'scripts/test-agent402-registration-manifest-guard.mjs'
+      - 'scripts/test-agent402-route-field-readback.mjs'
       - 'scripts/verify-agent402-after-floot-rehost.mjs'
       - 'scripts/repair-marketplaces-after-floot-rehost.mjs'
       - 'scripts/postdeploy-floot-x402.mjs'
@@ -37,12 +38,16 @@ jobs:
           node --check scripts/test-post-rehost-ops-safety.mjs
           node --check scripts/test-marketplace-repair-agent402-guard.mjs
           node --check scripts/test-agent402-registration-manifest-guard.mjs
+          node --check scripts/test-agent402-route-field-readback.mjs
 
       - name: Verify post-rehost safety invariants
         run: node scripts/test-post-rehost-ops-safety.mjs
 
       - name: Prove Agent402 registration cannot outrun manifest acceptance
         run: node scripts/test-agent402-registration-manifest-guard.mjs
+
+      - name: Verify Agent402 route-field readback compatibility
+        run: node scripts/test-agent402-route-field-readback.mjs
 
       - name: Prove marketplace repair cannot outrun Agent402
         run: node scripts/test-marketplace-repair-agent402-guard.mjs
