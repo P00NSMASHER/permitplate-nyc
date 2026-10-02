@@ -168,6 +168,21 @@ async function verifyService(service) {
 
     result.status = response.status;
     result.latencyMs = Date.now() - started;
+    for (const key of [
+      'content-type',
+      'payment-required',
+      'payment-response',
+      'x402-price',
+      'x402-network',
+      'x402-asset',
+      'x402-pay-to',
+      'server',
+      'via',
+      'location',
+    ]) {
+      const value = response.headers.get(key);
+      if (value != null) result.diagnosticHeaders[key] = value;
+    }
 
     if (response.status !== 402) {
       result.failures.push(`HTTP ${response.status} (expected 402)`);
@@ -217,6 +232,7 @@ async function verifyService(service) {
     let body = null;
     try {
       body = await response.json();
+      result.bodyExcerpt = JSON.stringify(body).slice(0, 2000);
     } catch {
       result.failures.push('402 response body is not valid JSON');
     }
@@ -287,6 +303,8 @@ async function verifyVendorGateFixtures() {
       decision: null,
       agentAction: null,
       triggers: [],
+      diagnosticHeaders: {},
+      bodyExcerpt: null,
       failures: [],
     };
 
@@ -299,11 +317,27 @@ async function verifyVendorGateFixtures() {
         signal: AbortSignal.timeout(20000),
       });
       item.status = response.status;
+      for (const key of [
+        'content-type',
+        'payment-required',
+        'payment-response',
+        'x402-price',
+        'x402-network',
+        'x402-asset',
+        'x402-pay-to',
+        'server',
+        'via',
+        'location',
+      ]) {
+        const value = response.headers.get(key);
+        if (value != null) item.diagnosticHeaders[key] = value;
+      }
       if (response.status !== 200) {
         item.failures.push(`HTTP ${response.status} (expected 200)`);
       }
 
       const body = await response.json();
+      item.bodyExcerpt = JSON.stringify(body).slice(0, 2000);
       item.decision = body?.decision ?? null;
       item.agentAction = body?.agentAction ?? null;
       item.triggers = Array.isArray(body?.reviewTriggers)
@@ -382,6 +416,8 @@ async function verifyDiscovery() {
       ok: false,
       status: null,
       resourceCount: null,
+      diagnosticHeaders: {},
+      bodyExcerpt: null,
       failures: [],
     };
     try {
@@ -393,10 +429,26 @@ async function verifyDiscovery() {
         signal: AbortSignal.timeout(15000),
       });
       item.status = response.status;
+      for (const key of [
+        'content-type',
+        'payment-required',
+        'payment-response',
+        'x402-price',
+        'x402-network',
+        'x402-asset',
+        'x402-pay-to',
+        'server',
+        'via',
+        'location',
+      ]) {
+        const value = response.headers.get(key);
+        if (value != null) item.diagnosticHeaders[key] = value;
+      }
       if (response.status !== 200) {
         item.failures.push(`HTTP ${response.status} (expected 200)`);
       }
       const doc = await response.json();
+      item.bodyExcerpt = JSON.stringify(doc).slice(0, 2000);
       if (doc?.x402Version !== 2) {
         item.failures.push(`x402Version=${String(doc?.x402Version)} (expected 2)`);
       }
