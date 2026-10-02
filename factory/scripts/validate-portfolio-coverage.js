@@ -9,11 +9,9 @@ function validatePortfolioCoverage(root=path.resolve(__dirname,"../..")){
 
   const registry=JSON.parse(read("factory/product-registry.json"));
   const migration=JSON.parse(read("factory/MIGRATION_MANIFEST.json"));
-  const generator=read("factory/packages/discovery/generator.js");
-  const runtime=read("factory/runtime/create-runtime.js");
+  const modules=require(path.join(root,"factory/generated/product-modules.js"));
   const ci=read(".github/workflows/factory-pa-vendor-gate-ci.yml");
-  const smoke=read(".github/workflows/factory-product-003-live-smoke.yml");
-  const readme=read("factory/README.md");
+  const smokeWorkflow=read(".github/workflows/factory-product-003-live-smoke.yml");
 
   const products=registry.products.filter(p=>/staging$/.test(String(p.status)));
   const problems=[];
@@ -35,8 +33,7 @@ function validatePortfolioCoverage(root=path.resolve(__dirname,"../..")){
     const base="factory/products/"+product.id;
 
     for(const name of requiredProductFiles){
-      const relative=base+"/"+name;
-      if(!exists(relative))problems.push(product.id+":missing_file:"+name);
+      if(!exists(base+"/"+name)) problems.push(product.id+":missing_file:"+name);
     }
 
     if(!product.release_gate){
@@ -52,40 +49,36 @@ function validatePortfolioCoverage(root=path.resolve(__dirname,"../..")){
     if(!migration.products.includes(product.number)){
       problems.push(product.id+":missing_migration_manifest_number");
     }
-
-    if(!generator.includes('"'+product.id+'"')){
-      problems.push(product.id+":missing_discovery_wiring");
+    if(!migration.staging_products.includes(product.number)){
+      problems.push(product.id+":missing_migration_staging_classification");
     }
 
-    if(!runtime.includes('"'+product.id+'"')){
-      problems.push(product.id+":missing_runtime_wiring");
+    if(!modules.METADATA_MODULES[product.id]){
+      problems.push(product.id+":missing_generated_metadata_module");
     }
+    if(!modules.SERVICE_MODULES[product.id]){
+      problems.push(product.id+":missing_generated_service_module");
+    }
+    if(!modules.PAID_HANDLER_MODULES[product.id]){
+      problems.push(product.id+":missing_generated_paid_handler_module");
+    }
+  }
 
-    if(product.release_gate&&!ci.includes(path.basename(product.release_gate))){
-      problems.push(product.id+":missing_ci_release_gate");
-    }
-
-    if(!ci.includes("factory/products/"+product.id+"/")){
-      problems.push(product.id+":missing_ci_product_tests");
-    }
-
-    if(!smoke.includes("factory/products/"+product.id+"/")){
-      problems.push(product.id+":missing_live_smoke_trigger");
-    }
-
-    if(!smoke.includes("factory/products/"+product.id+"/live-smoke.js")){
-      problems.push(product.id+":missing_live_smoke_step");
-    }
-
-    if(!readme.includes("| "+product.number+" |")){
-      problems.push(product.id+":missing_readme_portfolio_row");
-    }
+  const architectureChecks=[
+    ["ci_dynamic_tests",ci.includes("factory/scripts/run-all-tests.js")],
+    ["ci_dynamic_release_gates",ci.includes("factory/scripts/run-release-gates.js")],
+    ["ci_generated_registry_check",ci.includes("generate-product-module-registry.js --check")],
+    ["smoke_dynamic_runner",smokeWorkflow.includes("factory/scripts/run-live-smokes.js")]
+  ];
+  for(const [name,ok] of architectureChecks){
+    if(!ok)problems.push("factory:"+name+":missing");
   }
 
   return {
     ok:problems.length===0,
     stagingProductCount:products.length,
     stagingProductIds:products.map(p=>p.id),
+    architecture:Object.fromEntries(architectureChecks),
     problems
   };
 }
