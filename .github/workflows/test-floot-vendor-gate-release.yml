@@ -5,6 +5,8 @@ on:
     paths:
       - 'docs/pa-entity-floot-release/vendor-intake-gate_GET.ts'
       - 'docs/pa-entity-floot-release/vendor-intake-gate_GET.schema.ts'
+      - 'docs/pa-entity-floot-release/vendor-intake-demo_GET.ts'
+      - 'docs/pa-entity-floot-release/vendor-intake-demo_GET.schema.ts'
       - 'recovery/vendor-intake-gate-core.mjs'
       - 'recovery/x402-rehost-core.mjs'
       - 'scripts/test-floot-vendor-gate-release.mts'
