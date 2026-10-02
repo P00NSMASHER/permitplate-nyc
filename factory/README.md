@@ -23,6 +23,7 @@ Build narrow, deterministic, machine-purchasable decision tools for autonomous a
 | 011 | Domain Expiration Horizon | live-source-verified staging | `/api/domain-expiration-horizon` | $0.002 |
 | 012 | Domain Last-Changed Recency | live-source-verified staging | `/api/domain-last-changed-recency` | $0.002 |
 | 013 | SEC Public Company Identity Match | source-contract-verified staging | `/api/sec-company-identity-match` | $0.003 |
+| 014 | Treasury Average Rate Trend | live-source-verified staging | `/api/treasury-average-rate-trend` | $0.003 |
 
 Product 001 has an independently verified third-party Base USDC settlement and remains the payment/distribution reference.
 
@@ -172,6 +173,24 @@ Returns:
 - `company_not_found`
 
 The deterministic/source-contract suite is green. Live SEC calls remain gated on a real deployment `SEC_USER_AGENT` containing a contact email; no fake contact identity is embedded.
+
+## Product 014
+
+Official Treasury Fiscal Data two-month rate direction.
+
+Inputs:
+- security description
+- optional minimum change in basis points
+
+Returns:
+- `rising`
+- `falling`
+- `unchanged`
+- `human_review`
+
+Live smoke for `Total Marketable` observed 3.475% on 2026-08-31 versus 3.443% on 2026-07-31: +3.2 bps, therefore `rising` at a 1-bp threshold.
+
+This is a two-point monthly direction signal, not a long-term trend determination, live market yield, forecast, monetary-policy prediction, or investment advice.
 
 ## Shared layers
 
