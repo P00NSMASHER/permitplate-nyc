@@ -3,9 +3,9 @@
   "sourceCommit": "ceb21b651764ffaa0c893f4e725eccce0c10ba5f",
   "projectId": "b69a3ee6-eb01-430d-aa51-da2fc7beeac4",
   "productionOrigin": "https://pa-entity-x402.floot.app",
-  "status": "awaiting-floot-reset",
-  "startedAt": null,
-  "currentFlootVersion": null,
+  "status": "prewrite-gates-green",
+  "startedAt": "2026-10-02T18:02:42.694Z",
+  "currentFlootVersion": 1790879167519,
   "writes": [
     {
       "order": 1,
@@ -255,15 +255,15 @@
     "postDeployMarketplaceRepair": "pending"
   },
   "preWriteSnapshot": {
-    "status": "pending-live-floot-reset",
-    "projectVersion": null,
-    "artifactPath": null,
-    "githubCommit": null,
-    "capturedFileCount": null,
-    "preexistingRecoveryTargets": null,
-    "absentRecoveryTargets": null,
-    "publicBaselineComparison": "pending",
-    "validator": "pending",
+    "status": "passed",
+    "projectVersion": 1790879167519,
+    "artifactPath": "verification/floot-pre-rehost-rollback-1790879167519.json",
+    "githubCommit": "c8de712ca87dfcc8c72429b9599744ef8cc8ba49",
+    "capturedFileCount": 16,
+    "preexistingRecoveryTargets": 12,
+    "absentRecoveryTargets": 14,
+    "publicBaselineComparison": "12/12 exact",
+    "validator": "passed",
     "capturePlan": "recovery/floot-snapshot-capture-plan.json",
     "capturePlanStatus": "validated",
     "requiredNormalBatches": 5,
@@ -279,7 +279,8 @@
       "paidRoutesTotal": 2,
       "manifestResourceCount": 2,
       "green": true
-    }
+    },
+    "sha256": "39820c1945fb3a411965bbf7ae2999958d51f0165beba216f2df2b951d748f28"
   },
   "stagingCheckpoint": {
     "status": "pending",
@@ -288,17 +289,18 @@
     "checkpointId": null,
     "description": null
   },
-  "lastUpdatedAt": "2026-10-02T17:56:33Z",
+  "lastUpdatedAt": "2026-10-02T18:11:57.418Z",
   "lastCompletedWriteOrder": 0,
   "resumeRule": "Never restart from write 1 after interruption. Refresh Floot list_files, verify boundary content against the locked deployment bundle, confirm the rollback snapshot/plan still match the captured pre-write project version, then resume at the next unfinished ordered write.",
   "rollbackPlan": {
-    "status": "pending",
-    "projectVersion": null,
-    "artifactPath": null,
-    "githubCommit": null,
-    "restoreWrites": null,
-    "deletes": null,
-    "validator": "pending"
+    "status": "passed",
+    "projectVersion": 1790879167519,
+    "artifactPath": "verification/floot-rollback-plan-1790879167519.json",
+    "githubCommit": "c1bfbcbd46bf7504894f81d05da9e295e7345c74",
+    "restoreWrites": 12,
+    "deletes": 14,
+    "validator": "passed",
+    "sha256": "c9de973396ad089507997a287c91cce3d4102b8aefce576cd2a8a2e02e925796"
   },
   "deploymentLock": {
     "status": "passed",
