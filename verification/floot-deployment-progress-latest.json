@@ -255,7 +255,7 @@
     "postDeployMarketplaceRepair": "pending"
   },
   "preWriteSnapshot": {
-    "status": "pending",
+    "status": "pending-live-floot-reset",
     "projectVersion": null,
     "artifactPath": null,
     "githubCommit": null,
@@ -263,7 +263,14 @@
     "preexistingRecoveryTargets": null,
     "absentRecoveryTargets": null,
     "publicBaselineComparison": "pending",
-    "validator": "pending"
+    "validator": "pending",
+    "capturePlan": "recovery/floot-snapshot-capture-plan.json",
+    "capturePlanStatus": "validated",
+    "requiredNormalBatches": 5,
+    "mandatoryFileCount": 16,
+    "maximumReadBatches": 19,
+    "snapshotBuilderStatus": "synthetic-round-trip-pass",
+    "publicBaselineComparatorStatus": "12-of-12 synthetic exact-match-pass"
   },
   "stagingCheckpoint": {
     "status": "pending",
@@ -272,7 +279,7 @@
     "checkpointId": null,
     "description": null
   },
-  "lastUpdatedAt": "2026-10-02T17:45:00Z",
+  "lastUpdatedAt": "2026-10-02T17:47:26Z",
   "lastCompletedWriteOrder": 0,
   "resumeRule": "Never restart from write 1 after interruption. Refresh Floot list_files, verify boundary content against the locked deployment bundle, confirm the rollback snapshot/plan still match the captured pre-write project version, then resume at the next unfinished ordered write.",
   "rollbackPlan": {
@@ -288,9 +295,9 @@
     "status": "passed",
     "sourceBranch": "floot-recovery-lock-2026-10-02",
     "sourceCommit": "ceb21b651764ffaa0c893f4e725eccce0c10ba5f",
-    "checkedMain": "29934f02e4d9e5b3fb3d892f42b1acceab504201",
+    "checkedMain": "ae6b13d37be726f2525148fe560b8367f9bfc733",
     "workflowRunId": 37037705191,
-    "result": "immutable 26-write bundle verified; pinned branch/deploy-map/source blobs intact; 0 locked source changes on current main",
+    "result": "immutable lock passed; 26/26 bundled writes pinned; locked source files changed on main = 0",
     "latestDirectCheckAt": "2026-10-02T17:45:00Z",
     "mainCommitsAheadOfLock": 152,
     "lockedSourcesChangedOnMain": 0
