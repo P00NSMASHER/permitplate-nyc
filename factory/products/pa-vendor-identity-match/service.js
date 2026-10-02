@@ -63,11 +63,15 @@ function createVendorIdentityService({ registry, address, rdap, now = () => new 
     const suppliedAddress = cleanRequired(input?.address, "address", 5, 240);
     const domain = cleanRequired(input?.domain, "domain", 3, 253).toLowerCase();
 
+    const sourceFailures = [];
+
     let registryEvidence;
     try {
       registryEvidence = normalizedEvidence("pa_registry", await registry.lookup({ company }));
     } catch (error) {
-      registryEvidence = sourceUnavailable("pa_registry", error?.code || error?.message || "lookup failed");
+      const detail = error?.code || error?.message || "lookup failed";
+      sourceFailures.push({ source: "pa_registry", detail });
+      registryEvidence = sourceUnavailable("pa_registry", detail);
     }
 
     const matchedEntity = registryEvidence?.entity ?? null;
@@ -79,7 +83,9 @@ function createVendorIdentityService({ registry, address, rdap, now = () => new 
       try {
         addressEvidence = normalizedEvidence("census_address", await address.compare({ suppliedAddress, registryAddress: registeredAddress }));
       } catch (error) {
-        addressEvidence = sourceUnavailable("census_address", error?.code || error?.message || "comparison failed");
+        const detail = error?.code || error?.message || "comparison failed";
+        sourceFailures.push({ source: "census_address", detail });
+        addressEvidence = sourceUnavailable("census_address", detail);
       }
     }
 
@@ -91,7 +97,9 @@ function createVendorIdentityService({ registry, address, rdap, now = () => new 
         rdapEvidence.registered === true &&
         domainNameAligned(domain, company);
     } catch (error) {
-      rdapEvidence = sourceUnavailable("rdap", error?.code || error?.message || "lookup failed");
+      const detail = error?.code || error?.message || "lookup failed";
+      sourceFailures.push({ source: "rdap", detail });
+      rdapEvidence = sourceUnavailable("rdap", detail);
     }
 
     const checkedAt = now();
@@ -99,6 +107,8 @@ function createVendorIdentityService({ registry, address, rdap, now = () => new 
     return {
       ...decision,
       input: { company, address: suppliedAddress, domain },
+      sourceFailures,
+      chargeable: sourceFailures.length === 0,
       evidence: { registry: registryEvidence, address: addressEvidence, rdap: rdapEvidence }
     };
   }
