@@ -242,3 +242,12 @@ jobs:
         run: node --test factory/products/pa-vendor-new-domain-review/metadata.test.js
       - name: Run Product 017 release gate
         run: node factory/scripts/validate-product-017.js
+
+      - name: Test Product 018 PA vendor counterparty decision
+        run: node --test factory/products/pa-vendor-counterparty-review/decision.test.js
+      - name: Test Product 018 PA vendor counterparty service
+        run: node --test factory/products/pa-vendor-counterparty-review/service.test.js
+      - name: Test Product 018 paid x402 handler
+        run: node --test factory/products/pa-vendor-counterparty-review/paid-handler.test.js
+      - name: Test Product 018 discovery metadata
+        run: node --test factory/products/pa-vendor-counterparty-review/metadata.test.js
