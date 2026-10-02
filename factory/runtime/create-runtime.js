@@ -1,6 +1,6 @@
 "use strict";
 
-const {managedProducts,buildCatalog,buildOpenApi,buildLlmsText}=require("../packages/discovery/generator");
+const {managedProducts,buildCatalog,buildOpenApi,buildProductIndex,buildLlmsText}=require("../packages/discovery/generator");
 const {createPaRegistryAdapter,createCensusAddressAdapter,createRdapAdapter}=require("../packages/sources/live-pa-identity");
 const {createSecFilingsAdapter}=require("../packages/sources/sec-filings");
 const {createTreasuryAverageRatesAdapter}=require("../packages/sources/treasury-average-rates");
@@ -145,6 +145,9 @@ function createFactoryRuntime({
     }
     if(verb==="GET"&&path==="/openapi.json"){
       return json(200,buildOpenApi(base),{"cache-control":"public, max-age=300"});
+    }
+    if(verb==="GET"&&path==="/product-index.json"){
+      return json(200,buildProductIndex(base),{"cache-control":"public, max-age=300"});
     }
     if(verb==="GET"&&path==="/llms.txt"){
       return plain(200,buildLlmsText(base));
