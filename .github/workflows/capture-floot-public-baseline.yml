@@ -6,6 +6,11 @@ on:
       - 'scripts/capture-floot-public-baseline.mjs'
       - '.github/workflows/capture-floot-public-baseline.yml'
   workflow_dispatch:
+    inputs:
+      require_two_route_baseline:
+        description: Fail unless Floot is exactly the original two-route public state
+        required: false
+        default: 'false'
 
 permissions:
   contents: read
@@ -23,6 +28,7 @@ jobs:
       - name: Capture current public Floot state
         env:
           REPORT_PATH: floot-public-baseline.json
+          REQUIRE_TWO_ROUTE_BASELINE: ${{ inputs.require_two_route_baseline == 'true' && '1' || '0' }}
         run: node scripts/capture-floot-public-baseline.mjs
 
       - name: Upload baseline
