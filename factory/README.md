@@ -18,6 +18,7 @@ Build narrow, deterministic, machine-purchasable decision tools for autonomous a
 | 006 | SEC Filing Freshness Check | source-contract-verified staging | `/api/sec-filing-freshness` | $0.005 |
 | 007 | Domain Registration Age | live-source-verified staging | `/api/domain-registration-age` | $0.002 |
 | 008 | Treasury Average Rate Threshold | live-source-verified staging | `/api/treasury-average-rate-threshold` | $0.003 |
+| 009 | OFAC Name Review Gate | live-source-verified staging | `/api/ofac-name-review-gate` | $0.003 |
 
 Product 001 has an independently verified third-party Base USDC settlement and remains the payment/distribution reference.
 
@@ -103,6 +104,18 @@ Returns:
 
 Live smoke: `Total Marketable` rate `3.475%` for record date `2026-08-31`.
 
+## Product 009
+
+Deterministic current OFAC SDN primary-name and alias screening.
+
+Returns:
+- `candidate_found`
+- `no_candidate`
+
+Live smoke: `VLADIMIR PUTIN` at threshold `90` returned one review candidate at score `99` from the current OFAC SDN/ALT files.
+
+A candidate is not a legal sanctions determination. A no-candidate result is not sanctions clearance. OFAC 50 Percent Rule ownership analysis is not included.
+
 ## Shared layers
 
 - `packages/x402/payment.js` — hardened Base USDC verify/settle flow
@@ -132,7 +145,7 @@ AppDeploy reported an account-wide Free tier pause with weekly reset at:
 
 `2026-10-05T00:00:00Z`
 
-No upgrade/payment has been authorized. Products 003–008 therefore remain staging candidates rather than production claims.
+No upgrade/payment has been authorized. Products 003–009 therefore remain staging candidates rather than production claims.
 
 ## Branch isolation
 
