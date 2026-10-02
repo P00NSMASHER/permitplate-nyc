@@ -5,7 +5,7 @@
     "name": "x402",
     "version": 2
   },
-  "name": "pa-entity-lookup-x402",
+  "name": "PA Entity + Vendor Intake x402",
   "capabilities": [
     "data",
     "business-registry",
@@ -15,7 +15,13 @@
     "company-identity",
     "legal-entity",
     "principal-officer-records",
-    "best-match"
+    "best-match",
+    "vendor-intake",
+    "agent-decision",
+    "human-review",
+    "ofac-screening",
+    "census-address",
+    "rdap"
   ],
   "pricing": {
     "currency": "USDC",
@@ -29,7 +35,17 @@
     "facilitator": "https://facilitator.payai.network"
   },
   "endpoint": "https://pa-entity-x402.floot.app/_api/pa-entity-one?q=OpenAI",
-  "description": "Low-cost Pennsylvania business registry best-match lookup for $0.001 USDC. Returns one ranked legal entity with filing, registration type, creation date, address, county, and published principal/officer records.",
+  "description": "Pennsylvania registry lookup plus a fail-closed vendor-intake decision gate for autonomous agents.",
   "documentation": "https://pa-entity-x402.floot.app/llms.txt",
-  "skill": "https://pa-entity-x402.floot.app/skill.txt"
+  "skill": "https://pa-entity-x402.floot.app/skill.txt",
+  "vendorGate": {
+    "endpoint": "https://pa-entity-x402.floot.app/_api/vendor-intake-gate",
+    "price": "0.020",
+    "currency": "USDC",
+    "network": "eip155:8453",
+    "decisions": [
+      "proceed",
+      "human_review"
+    ]
+  }
 }
