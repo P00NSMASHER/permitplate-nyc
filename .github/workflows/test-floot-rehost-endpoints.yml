@@ -15,6 +15,9 @@ on:
       - 'scripts/test-floot-recovery-discovery.mjs'
       - 'scripts/verify-pa-entity-floot-patches.mjs'
       - 'scripts/test-floot-release-payment-invariants.mjs'
+      - 'scripts/postdeploy-floot-x402.mjs'
+      - 'scripts/test-postdeploy-floot-guard.mjs'
+      - '.github/workflows/postdeploy-floot-x402.yml'
       - '.github/workflows/test-floot-rehost-endpoints.yml'
   workflow_dispatch:
 
@@ -52,6 +55,9 @@ jobs:
 
       - name: Verify payment-safety invariants across all paid routes
         run: node scripts/test-floot-release-payment-invariants.mjs
+
+      - name: Verify post-deploy zero-spend guard
+        run: node scripts/test-postdeploy-floot-guard.mjs
 
       - name: Publish success commit status
         if: success()
