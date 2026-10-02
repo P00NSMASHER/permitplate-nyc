@@ -14,6 +14,12 @@ const queue = JSON.parse(
     'utf8'
   )
 );
+const publicBaseline = JSON.parse(
+  await readFile(
+    new URL('../verification/floot-static-rollback-public-latest.json', import.meta.url),
+    'utf8'
+  )
+);
 
 assert.equal(plan.projectId, queue.projectId);
 assert.equal(plan.productionOrigin, queue.productionOrigin);
@@ -61,10 +67,29 @@ for (const target of recoveryEndpointTargets) {
   );
 }
 
+const plannedStatic = paths.filter((path) => path.startsWith('static/')).sort();
+const baselineStatic = (publicBaseline.files ?? [])
+  .map((entry) => entry.target)
+  .sort();
+assert.equal(publicBaseline.projectId, queue.projectId);
+assert.equal(publicBaseline.productionOrigin, queue.productionOrigin);
+assert.equal(
+  publicBaseline.canonicalManifestResourceCount,
+  2,
+  'public rollback receipt must represent the two-resource pre-rehost state'
+);
+assert.equal(baselineStatic.length, 12);
+assert.deepEqual(
+  plannedStatic,
+  baselineStatic,
+  'snapshot static paths must exactly match the public rollback baseline'
+);
+
 assert.equal(plan.actionBudget.normalReadBatches, 5);
 assert.equal(plan.actionBudget.conservativeMaximumAdditionalBatches, 14);
 assert.equal(plan.actionBudget.absoluteMaximumReadBatches, 19);
 
 console.log('PASS Floot snapshot capture plan: 5 bounded batches / 16 mandatory files');
+console.log('PASS 12 static snapshot paths exactly match the public two-route rollback baseline');
 console.log('PASS 14 recovery endpoint targets remain dynamically classified');
 console.log('PASS absolute snapshot read bound = 19 actions');
