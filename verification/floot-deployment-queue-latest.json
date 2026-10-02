@@ -13,7 +13,9 @@
   "preconditions": [
     "Fresh Floot list_files after quota reset.",
     "One batched read_files call verifies the four preserved PA files.",
+    "Capture all existing overwrite targets before mutation per docs/pa-entity-floot-recovery/ROLLBACK.md.",
     "Newest GitHub Floot release/recovery discovery gates are green.",
+    "scripts/verify-floot-deployment-lock.mjs passes against the pinned source branch/commit.",
     "No AppDeploy runtime dependency is present in staged endpoint/discovery sources."
   ],
   "writes": [
@@ -230,6 +232,7 @@
     "Run Floot typecheck.",
     "Run Floot tests.",
     "Abort before publish if either reports failures.",
+    "Create checkpoint: x402 eight-route rehost staged.",
     "Publish once to existing pa-entity-x402 subdomain.",
     "Check publish status.",
     "Run buyer-style zero-spend verification against the public origin.",
@@ -240,14 +243,18 @@
   "actionBudget": {
     "listFiles": 1,
     "preservedReadBatch": 1,
+    "rollbackSnapshotReadBatchesMax": 2,
     "guideReadMax": 1,
     "writes": 26,
     "typecheck": 1,
     "tests": 1,
+    "checkpoint": 1,
     "publish": 1,
     "publishStatus": 1,
-    "totalWithoutGuide": 32,
-    "totalWithOneGuide": 33,
+    "totalWithoutGuideMin": 34,
+    "totalWithoutGuideMax": 35,
+    "totalWithOneGuideMin": 35,
+    "totalWithOneGuideMax": 36,
     "dailyAllowance": 100
   },
   "sourceBranch": "floot-recovery-lock-2026-10-02",
