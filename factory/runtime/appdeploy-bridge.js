@@ -6,6 +6,7 @@ const STATIC_GET_PATHS=Object.freeze([
   "/.well-known/x402.json",
   "/.well-known/x402-catalog.json",
   "/openapi.json",
+  "/product-index.json",
   "/llms.txt"
 ]);
 
