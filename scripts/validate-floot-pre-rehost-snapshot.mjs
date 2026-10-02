@@ -41,8 +41,24 @@ const deployMap = JSON.parse(
   )
 );
 const deployTargets = deployMap.writes.map((entry) => entry.target);
+const queue = JSON.parse(
+  await readFile(
+    new URL('../verification/floot-deployment-queue-latest.json', import.meta.url),
+    'utf8'
+  )
+);
 
 assert.equal(snapshot.projectId, PROJECT_ID, 'wrong Floot project id');
+assert.equal(
+  snapshot.sourceBranch,
+  queue.sourceBranch,
+  'snapshot sourceBranch must match immutable deployment lock'
+);
+assert.equal(
+  snapshot.sourceCommit,
+  queue.sourceCommit,
+  'snapshot sourceCommit must match immutable deployment lock'
+);
 assert.equal(snapshot.productionOrigin, ORIGIN, 'wrong production origin');
 assert.ok(
   Number.isInteger(snapshot.projectVersion) && snapshot.projectVersion >= 0,
@@ -98,6 +114,7 @@ for (const path of mandatoryPaths) {
   const entry = byPath.get(path);
   assert(entry, 'missing snapshot path ' + path);
   assert.equal(typeof entry.exists, 'boolean', path + ': exists must be boolean');
+  assert.equal(entry.exists, true, path + ': mandatory baseline file must exist');
 
   if (entry.exists) {
     assert.equal(typeof entry.content, 'string', path + ': content must be a string');
