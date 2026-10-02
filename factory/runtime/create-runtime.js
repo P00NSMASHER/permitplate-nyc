@@ -14,6 +14,8 @@ const {createBusinessDomainService}=require("../products/pa-business-domain-matc
 const {createPaidBusinessDomainHandler}=require("../products/pa-business-domain-match/paid-handler");
 const {createSecFilingFreshnessService}=require("../products/sec-filing-freshness/service");
 const {createPaidSecFilingFreshnessHandler}=require("../products/sec-filing-freshness/paid-handler");
+const {createSecCompanyIdentityService}=require("../products/sec-company-identity-match/service");
+const {createPaidSecCompanyIdentityHandler}=require("../products/sec-company-identity-match/paid-handler");
 const {createDomainAgeService}=require("../products/domain-registration-age/service");
 const {createPaidDomainAgeHandler}=require("../products/domain-registration-age/paid-handler");
 const {createTreasuryRateThresholdService}=require("../products/treasury-average-rate-threshold/service");
@@ -90,6 +92,7 @@ function createFactoryRuntime({
     "pa-business-address-match":createBusinessAddressService({registry:a.registry,address:a.address,now}),
     "pa-business-domain-match":createBusinessDomainService({registry:a.registry,rdap:a.rdap,now}),
     "sec-filing-freshness":createSecFilingFreshnessService({sec:a.sec,now}),
+    "sec-company-identity-match":createSecCompanyIdentityService({sec:a.sec,now}),
     "domain-registration-age":createDomainAgeService({rdap:a.rdap,now}),
     "treasury-average-rate-threshold":createTreasuryRateThresholdService({treasury:a.treasury,now}),
     "ofac-name-review-gate":createOfacReviewService({ofac:a.ofac,now}),
@@ -103,6 +106,7 @@ function createFactoryRuntime({
     "pa-business-address-match":createPaidBusinessAddressHandler,
     "pa-business-domain-match":createPaidBusinessDomainHandler,
     "sec-filing-freshness":createPaidSecFilingFreshnessHandler,
+    "sec-company-identity-match":createPaidSecCompanyIdentityHandler,
     "domain-registration-age":createPaidDomainAgeHandler,
     "treasury-average-rate-threshold":createPaidTreasuryThresholdHandler,
     "ofac-name-review-gate":createPaidOfacReviewHandler,
