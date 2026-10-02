@@ -375,11 +375,26 @@ const publicGreen =
 
 let agent402 = null;
 let marketplaces = null;
+let marketplacesSkippedReason = null;
+let agent402Accepted = false;
 
 if (publicGreen && REGISTER) {
-  console.log('\nRegistering public directories after green release...');
+  console.log('\nRegistering Agent402 after green public release...');
   agent402 = await registerAgent402();
-  marketplaces = await refreshMarketplaces();
+  agent402Accepted =
+    agent402?.health === 1 &&
+    agent402?.routable === true &&
+    Number(agent402?.paidToolCount ?? 0) >= 8 &&
+    agent402?.vendorGateVisible === true;
+
+  if (agent402Accepted) {
+    console.log('Agent402 recognized the expanded portfolio; refreshing zero-spend marketplaces...');
+    marketplaces = await refreshMarketplaces();
+  } else {
+    marketplacesSkippedReason =
+      'Agent402 did not yet recognize all 8 paid tools including the vendor-intake gate.';
+    console.log('SKIP marketplace refresh: ' + marketplacesSkippedReason);
+  }
 } else if (!publicGreen) {
   console.log(
     '\nSKIP directory registration: public release verification is not green.'
@@ -402,7 +417,9 @@ const receipt = {
   fixtures,
   discovery,
   agent402,
+  agent402Accepted,
   marketplaces,
+  marketplacesSkippedReason,
   accountingNote:
     'Verification, directory registration, self-tests, probes, and seller-funded activity are not third-party revenue.',
 };
@@ -418,14 +435,7 @@ if (RECEIPT_PATH) {
 
 if (!publicGreen) {
   process.exitCode = 1;
-} else if (REGISTER) {
-  const agentOk =
-    agent402?.health === 1 &&
-    agent402?.routable === true &&
-    Number(agent402?.paidToolCount ?? 0) >= 8 &&
-    agent402?.vendorGateVisible === true;
-  if (!agentOk) {
-    console.error('Agent402 did not yet recognize the full expanded portfolio.');
-    process.exitCode = 2;
-  }
+} else if (REGISTER && !agent402Accepted) {
+  console.error('Agent402 did not yet recognize the full expanded portfolio.');
+  process.exitCode = 2;
 }
