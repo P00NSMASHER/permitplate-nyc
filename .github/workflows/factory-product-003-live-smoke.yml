@@ -14,6 +14,7 @@ on:
       - 'factory/products/ofac-name-review-gate/**'
       - 'factory/products/pa-entity-ofac-review/**'
       - 'factory/products/pa-vendor-new-domain-review/**'
+      - 'factory/products/pa-vendor-counterparty-review/**'
       - 'factory/packages/sources/ofac-name-screen.js'
       - 'factory/products/treasury-average-rate-threshold/**'
       - 'factory/products/treasury-average-rate-trend/**'
@@ -67,3 +68,5 @@ jobs:
         run: node factory/products/domain-last-changed-recency/live-smoke.js
       - name: Product 017 live PA vendor new-domain smoke
         run: node factory/products/pa-vendor-new-domain-review/live-smoke.js
+      - name: Product 018 live PA vendor counterparty smoke
+        run: node factory/products/pa-vendor-counterparty-review/live-smoke.js
