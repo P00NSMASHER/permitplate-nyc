@@ -22,6 +22,7 @@ Build narrow, deterministic, machine-purchasable decision tools for autonomous a
 | 010 | PA Business Formation Age | live-source-verified staging | `/api/pa-business-formation-age` | $0.002 |
 | 011 | Domain Expiration Horizon | live-source-verified staging | `/api/domain-expiration-horizon` | $0.002 |
 | 012 | Domain Last-Changed Recency | live-source-verified staging | `/api/domain-last-changed-recency` | $0.002 |
+| 013 | SEC Public Company Identity Match | source-contract-verified staging | `/api/sec-company-identity-match` | $0.003 |
 
 Product 001 has an independently verified third-party Base USDC settlement and remains the payment/distribution reference.
 
@@ -160,6 +161,17 @@ Returns:
 Live smoke for `openai.com` observed the true domain `lastChanged` event on `2024-10-17` and returned `recently_changed` for a 730-day window.
 
 The product deliberately does **not** treat RDAP's `lastUpdateOfRdapDatabase` event as a domain change. A recent metadata change is not by itself evidence of compromise, fraud, ownership transfer, malicious activity, security risk, or business risk.
+
+## Product 013
+
+SEC public-company identity consistency from exactly one ticker or CIK.
+
+Returns:
+- `match`
+- `human_review`
+- `company_not_found`
+
+The deterministic/source-contract suite is green. Live SEC calls remain gated on a real deployment `SEC_USER_AGENT` containing a contact email; no fake contact identity is embedded.
 
 ## Shared layers
 
