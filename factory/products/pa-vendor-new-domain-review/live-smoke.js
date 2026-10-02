@@ -29,6 +29,12 @@ async function main(){
     sourceFailures:result.sourceFailures
   },null,2));
 
+  if(result.sourceFailures?.length){
+    console.log("TRANSIENT_SOURCE_BLOCKED",JSON.stringify(result.sourceFailures));
+    return;
+  }
+
+  assert.equal(result.chargeable,true);
   assert.equal(result.decision,"established_domain_match");
   assert.equal(result.matchedEntity?.businessName,"Openai Opco, Llc");
   assert.equal(result.resolvedLegalName,"Openai Opco, Llc");
