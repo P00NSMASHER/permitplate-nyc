@@ -90,4 +90,59 @@ assert.ok(
   )
 );
 
+
+// Missing mandatory baseline must fail before any recovery write.
+const missingRaw = structuredClone(raw);
+missingRaw.projectPaths = missingRaw.projectPaths.filter(
+  (path) => path !== 'static/robots.txt'
+);
+missingRaw.files = missingRaw.files.filter(
+  (entry) => entry.path !== 'static/robots.txt'
+);
+await writeFile(input, JSON.stringify(missingRaw), 'utf8');
+const missingBuild = spawnSync(
+  process.execPath,
+  [
+    fileURLToPath(new URL('./build-floot-pre-rehost-snapshot.mjs', import.meta.url)),
+    input,
+    output,
+  ],
+  { encoding: 'utf8' }
+);
+assert.notEqual(missingBuild.status, 0, 'missing mandatory baseline must fail');
+assert.match(
+  missingBuild.stderr + missingBuild.stdout,
+  /mandatory_baseline_missing:static\/robots\.txt/
+);
+
+// Snapshot must remain bound to the immutable deployment source lock.
+await writeFile(input, JSON.stringify(raw), 'utf8');
+const rebuild = spawnSync(
+  process.execPath,
+  [
+    fileURLToPath(new URL('./build-floot-pre-rehost-snapshot.mjs', import.meta.url)),
+    input,
+    output,
+  ],
+  { encoding: 'utf8' }
+);
+assert.equal(rebuild.status, 0, rebuild.stderr || rebuild.stdout);
+const unlocked = JSON.parse(await readFile(output, 'utf8'));
+unlocked.sourceCommit = '0000000000000000000000000000000000000000';
+await writeFile(output, JSON.stringify(unlocked), 'utf8');
+const lockValidation = spawnSync(
+  process.execPath,
+  [
+    fileURLToPath(new URL('./validate-floot-pre-rehost-snapshot.mjs', import.meta.url)),
+    output,
+  ],
+  { encoding: 'utf8' }
+);
+assert.notEqual(lockValidation.status, 0, 'wrong source lock must fail');
+assert.match(
+  lockValidation.stderr + lockValidation.stdout,
+  /snapshot sourceCommit must match immutable deployment lock/
+);
+
 console.log('PASS pre-rehost snapshot builder + validator synthetic round trip');
+console.log('PASS missing mandatory baseline and source-lock mismatch fail closed');
