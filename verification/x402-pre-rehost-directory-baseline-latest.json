@@ -1,0 +1,83 @@
+{
+  "checkedAt": "2026-10-02T17:12:00Z",
+  "zeroSpend": true,
+  "paymentSent": false,
+  "origin": "https://pa-entity-x402.floot.app",
+  "agent402": {
+    "toolCount": 2,
+    "paidToolCount": 2,
+    "health": 1,
+    "routable": true,
+    "routerDispatchEligible": false,
+    "routerDispatchReason": "settlement_required",
+    "visibleTools": [
+      {
+        "name": "Pennsylvania business registry and company identity best-match lookup",
+        "price": 0.001
+      },
+      {
+        "name": "Pennsylvania business registry and company identity lookup",
+        "price": "$0.005000"
+      }
+    ]
+  },
+  "market402": {
+    "query": "Pennsylvania Vendor Intake",
+    "total": 0,
+    "showing": 0,
+    "vendorGateVisible": false
+  },
+  "index402": {
+    "totalCatalogServices": 46,
+    "flootMatches": [
+      {
+        "id": "2a92dcd4-206a-42ad-b6e5-e457635bb75a",
+        "name": "PA Business Registry Search",
+        "priceUsd": 0.005,
+        "health": "healthy",
+        "uptime30d": 1,
+        "reliabilityScore": 80,
+        "x402PaymentValid": 1
+      },
+      {
+        "id": "07c46db0-c899-4475-8a1b-2a789021eeff",
+        "name": "PA Business Registry Best Match",
+        "priceUsd": 0.001,
+        "health": "healthy",
+        "uptime30d": 1,
+        "reliabilityScore": 80,
+        "x402PaymentValid": 1
+      }
+    ],
+    "vendorGateVisible": false
+  },
+  "nohumans": {
+    "enriched": {
+      "id": "958fd262-287",
+      "status": "verified",
+      "probeCount": 123,
+      "probesPassed": 118,
+      "probesFailed": 5,
+      "paidVerified": false,
+      "distinctPayers": 0
+    },
+    "bestMatch": {
+      "id": "9f2f7a33-cb2",
+      "status": "verified",
+      "probeCount": 84,
+      "probesPassed": 84,
+      "probesFailed": 0,
+      "paidVerified": false,
+      "distinctPayers": 0
+    },
+    "vendorGateVisible": false,
+    "walletLevelUniquePayers30d": 1,
+    "walletLevelWarning": "Shared payout-wallet metric is not attributable to either endpoint and is not customer revenue."
+  },
+  "expectedPostRehostDelta": {
+    "flootManifestResources": "2 -> 8",
+    "agent402PaidTools": "2 -> expanded set including vendor gate",
+    "newSameOriginRoutes": 6,
+    "vendorGatePriceUsd": 0.02
+  }
+}
