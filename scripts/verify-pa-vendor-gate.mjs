@@ -40,6 +40,10 @@ async function check(name, fn) {
 async function assertChallenge(url) {
   const res = await fetch(url, { redirect: 'follow' })
   const text = await res.text()
+  const availability = res.headers.get('x-appdeploy-app-availability')
+  if (availability === 'temporarily-unavailable') {
+    throw new Error('appdeploy_hosting_temporarily_unavailable: public edge intercepted the app before its x402 handler')
+  }
   assert.equal(res.status, 402, 'expected unpaid HTTP 402')
   assert.match(res.headers.get('content-type') || '', /application\/json/i)
 
@@ -88,6 +92,9 @@ await check('executable vendor gate unpaid challenge', async () => {
 
 await check('canonical x402 discovery advertises vendor gate', async () => {
   const res = await fetch(origin + '/.well-known/x402')
+  if (res.headers.get('x-appdeploy-app-availability') === 'temporarily-unavailable') {
+    throw new Error('appdeploy_hosting_temporarily_unavailable: discovery endpoint intercepted by public edge')
+  }
   assert.equal(res.status, 200)
   const doc = await res.json()
   assert.equal(doc.x402Version, 2)
@@ -100,6 +107,9 @@ await check('canonical x402 discovery advertises vendor gate', async () => {
 
 await check('OpenAPI exposes typed vendor gate', async () => {
   const res = await fetch(origin + '/openapi.json')
+  if (res.headers.get('x-appdeploy-app-availability') === 'temporarily-unavailable') {
+    throw new Error('appdeploy_hosting_temporarily_unavailable: OpenAPI endpoint intercepted by public edge')
+  }
   assert.equal(res.status, 200)
   const doc = await res.json()
   assert.equal(
@@ -121,6 +131,9 @@ async function demo(sampleCase) {
   const res = await fetch(
     origin + '/api/vendor-intake-demo?case=' + encodeURIComponent(sampleCase),
   )
+  if (res.headers.get('x-appdeploy-app-availability') === 'temporarily-unavailable') {
+    throw new Error('appdeploy_hosting_temporarily_unavailable: demo endpoint intercepted by public edge')
+  }
   assert.equal(res.status, 200)
   return await res.json()
 }
