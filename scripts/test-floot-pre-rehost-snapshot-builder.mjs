@@ -4,6 +4,7 @@ import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 const root = await mkdtemp(join(tmpdir(), 'floot-snapshot-test-'));
 const input = join(root, 'raw.json');
@@ -58,7 +59,7 @@ await writeFile(input, JSON.stringify(raw), 'utf8');
 const build = spawnSync(
   process.execPath,
   [
-    new URL('./build-floot-pre-rehost-snapshot.mjs', import.meta.url).pathname,
+    fileURLToPath(new URL('./build-floot-pre-rehost-snapshot.mjs', import.meta.url)),
     input,
     output,
   ],
@@ -69,7 +70,7 @@ assert.equal(build.status, 0, build.stderr || build.stdout);
 const validate = spawnSync(
   process.execPath,
   [
-    new URL('./validate-floot-pre-rehost-snapshot.mjs', import.meta.url).pathname,
+    fileURLToPath(new URL('./validate-floot-pre-rehost-snapshot.mjs', import.meta.url)),
     output,
   ],
   { encoding: 'utf8' }
