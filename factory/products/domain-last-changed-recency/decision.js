@@ -21,7 +21,7 @@ function assessDomainLastChanged(evidence,{maxAgeDays=90,now=new Date().toISOStr
   if(evidence.registered===false)return{decision:"unregistered",reasonCodes:["DOMAIN_UNREGISTERED"],lastChangedDate:null,ageDays:null,maxAgeDays,cutoffDate,checkedAt};
   if(evidence.registered!==true)return{decision:"human_review",reasonCodes:["DOMAIN_REGISTRATION_STATUS_UNKNOWN"],lastChangedDate:null,ageDays:null,maxAgeDays,cutoffDate,checkedAt};
 
-  const raw=evidence?.events?.lastChanged??evidence?.events?.lastUpdate??evidence?.events?.lastUpdateOfRdapDatabase??null;
+  const raw=evidence?.events?.lastChanged??null;
   const changed=dateOnlyMs(raw);
   if(changed==null)return{decision:"human_review",reasonCodes:["LAST_CHANGED_DATE_UNAVAILABLE"],lastChangedDate:null,ageDays:null,maxAgeDays,cutoffDate,checkedAt};
 
