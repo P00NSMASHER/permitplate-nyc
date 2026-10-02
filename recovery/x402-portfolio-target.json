@@ -21,7 +21,8 @@
         "entity-resolution",
         "company-identity"
       ],
-      "sampleQuery": "?q=OpenAI"
+      "sampleQuery": "?q=OpenAI",
+      "serviceName": "PA Business Registry"
     },
     {
       "id": "pa-enriched-search",
@@ -37,7 +38,8 @@
         "company-data",
         "due-diligence"
       ],
-      "sampleQuery": "?q=OpenAI&limit=3"
+      "sampleQuery": "?q=OpenAI&limit=3",
+      "serviceName": "PA Business Registry"
     },
     {
       "id": "vendor-intake-gate",
@@ -51,11 +53,11 @@
         "vendor-intake",
         "agent-decision",
         "human-review",
-        "ofac",
-        "census",
-        "rdap"
+        "business-registry",
+        "compliance"
       ],
-      "sampleQuery": "?name=OpenAI%20OpCo&address=600%20North%20Second%20Street%2C%20Suite%20401%2C%20Harrisburg%2C%20PA%2017101&domain=openai.com"
+      "sampleQuery": "?name=OpenAI%20OpCo&address=600%20North%20Second%20Street%2C%20Suite%20401%2C%20Harrisburg%2C%20PA%2017101&domain=openai.com",
+      "serviceName": "PA Vendor Intake Gate"
     },
     {
       "id": "sec-recent-filings",
@@ -71,7 +73,8 @@
         "filings",
         "company-data"
       ],
-      "sampleQuery": "?ticker=AAPL&form=10-K&limit=3"
+      "sampleQuery": "?ticker=AAPL&form=10-K&limit=3",
+      "serviceName": "SEC Recent Filings"
     },
     {
       "id": "census-geocoder",
@@ -87,7 +90,8 @@
         "census",
         "reference-data"
       ],
-      "sampleQuery": "?address=4600%20Silver%20Hill%20Rd%2C%20Washington%2C%20DC%2020233"
+      "sampleQuery": "?address=4600%20Silver%20Hill%20Rd%2C%20Washington%2C%20DC%2020233",
+      "serviceName": "US Census Geocoder"
     },
     {
       "id": "ofac-sdn-screen",
@@ -103,7 +107,8 @@
         "sdn",
         "name-screening"
       ],
-      "sampleQuery": "?name=VLADIMIR%20PUTIN&limit=3&minScore=85"
+      "sampleQuery": "?name=VLADIMIR%20PUTIN&limit=3&minScore=85",
+      "serviceName": "OFAC SDN Name Screen"
     },
     {
       "id": "domain-rdap",
@@ -119,7 +124,8 @@
         "registration",
         "dns"
       ],
-      "sampleQuery": "?domain=example.com"
+      "sampleQuery": "?domain=example.com",
+      "serviceName": "Domain RDAP Lookup"
     },
     {
       "id": "treasury-average-rates",
@@ -135,7 +141,8 @@
         "macro",
         "fiscal-data"
       ],
-      "sampleQuery": "?security=Total%20Marketable"
+      "sampleQuery": "?security=Total%20Marketable",
+      "serviceName": "Treasury Average Rates"
     }
   ],
   "fixedFixtures": [
