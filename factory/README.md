@@ -15,6 +15,7 @@ Build narrow, deterministic, machine-purchasable decision tools for autonomous a
 | 003 | PA Vendor Identity Match | live-source-verified staging | `/api/pa-vendor-identity-match` | $0.005 |
 | 004 | PA Business Address Match | live-source-verified staging | `/api/pa-business-address-match` | $0.003 |
 | 005 | PA Business Domain Match | live-source-verified staging | `/api/pa-business-domain-match` | $0.003 |
+| 006 | SEC Filing Freshness Check | source-contract-verified staging | `/api/sec-filing-freshness` | $0.005 |
 
 Product 001 has an independently verified third-party Base USDC settlement and remains the payment/distribution reference.
 
@@ -60,6 +61,22 @@ Returns:
 - `human_review`
 
 No automatic rejection.
+
+## Product 006
+
+A filing-metadata freshness decision using SEC EDGAR.
+
+Inputs:
+- exactly one of ticker or CIK
+- optional exact form filter
+- freshness window 1–365 days
+
+Returns:
+- `recent_filing`
+- `no_recent_filing`
+- `company_not_found`
+
+GitHub Actions live SEC access is currently blocked by SEC/Akamai 403 policy; see the Product 006 deployment plan. Deterministic source-contract and payment tests pass.
 
 ## Shared layers
 
