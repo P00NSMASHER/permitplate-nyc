@@ -1,7 +1,7 @@
 {
   "checkedAt": "2026-10-02T14:22:51Z",
   "sourceHead": "7e2d2910667a2b1669e880d533fab4a59dcd5ea7",
-  "status": "tested-package-origin-404-auth-unconfirmed",
+  "status": "tested-package-authenticated-site-source-linkage-unresolved",
   "targetSite": {
     "name": "agent-data-tools-x402",
     "siteId": "963477ed-829f-4ae4-91dc-110e5607b83e",
@@ -30,10 +30,12 @@
   },
   "deploymentSafety": [
     "Package/core tests are green.",
+    "Netlify account is authenticated; team is Free and current user is Owner.",
+    "Existing project is claimed/public with no password or SSO gate.",
     "The public Netlify origin currently returns 404 and is not an active seller.",
-    "CLI/site authentication has not been confirmed in this session.",
-    "Do not trigger login, create a new site, or change plan without explicit user action.",
-    "If later used, draft deploy must pass zero-spend verification before production.",
+    "The connector's deploy action accepts only siteId and does not expose repository/build linkage, so deployment is not safe until source linkage is known.",
+    "Do not create a new site, change plan, or trigger an unknown-source production deploy.",
+    "If later used, draft/source-specific verification must precede production.",
     "No seller-funded settlement is permitted."
   ],
   "publicReadback": {
@@ -43,5 +45,34 @@
     "x402ManifestStatus": 404,
     "healthStatus": 404,
     "openapiStatus": 404
+  },
+  "netlifyConnector": {
+    "checkedAt": "2026-10-02T22:10:00Z",
+    "authenticated": true,
+    "team": {
+      "id": "6aa9bbfacf14195400307f86",
+      "slug": "jayp19386",
+      "type": "Free",
+      "currentUserRole": "Owner"
+    },
+    "project": {
+      "siteId": "963477ed-829f-4ae4-91dc-110e5607b83e",
+      "name": "agent-data-tools-x402",
+      "claimed": true,
+      "plan": "nf_team_dev",
+      "public": true,
+      "requiresPassword": false,
+      "requiresSSO": false,
+      "currentDeployMetadata": "empty"
+    },
+    "deploySafety": {
+      "connectorDeployActionAvailable": true,
+      "deployActionInputs": [
+        "siteId"
+      ],
+      "repositoryBuildLinkageExposed": false,
+      "safeToDeployNow": false,
+      "reason": "The connector does not expose which source/build the siteId-only deploy action would publish. Do not call it blindly."
+    }
   }
 }
