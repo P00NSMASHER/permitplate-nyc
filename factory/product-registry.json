@@ -78,7 +78,13 @@
       ],
       "release_gate": "factory/scripts/validate-product-006.js",
       "live_source_status": "transport_verified_with_production_style_user_agent; factory deployment requires SEC_USER_AGENT with contact email",
-      "deployment_blocker": "AppDeploy weekly credit reset 2026-10-05T00:00:00Z"
+      "deployment_blocker": "AppDeploy weekly credit reset 2026-10-05T00:00:00Z",
+      "required_env": [
+        "SEC_USER_AGENT"
+      ],
+      "deployment_requirements": [
+        "SEC_USER_AGENT must contain a declared client identity and contact email before enabling live SEC EDGAR calls"
+      ]
     },
     {
       "id": "domain-registration-age",
