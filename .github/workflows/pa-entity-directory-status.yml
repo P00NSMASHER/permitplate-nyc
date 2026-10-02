@@ -1,5 +1,5 @@
 name: PA Entity directory status
-# refresh-marker: nohumans-after-first-settlement-2026-10-02
+# refresh-marker: vendor-gate-readonly-snapshot-2026-10-02
 
 on:
   push:
@@ -7,68 +7,239 @@ on:
       - '.github/workflows/pa-entity-directory-status.yml'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 8
     steps:
-      - name: Check 402 Index, nohumans, and PayAI
+      - uses: actions/checkout@v4
+
+      - name: Capture zero-spend directory snapshot
         shell: bash
         run: |
           set -euo pipefail
-          FLOOT='https://pa-entity-x402.floot.app'
-          APP='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s'
-          PAYTO='0x708f7b52b56eafd7fc1de65fc7752ed732914021'
-
-          echo '=== 402 INDEX QUERIES ==='
-          for Q in             'pa-entity-x402.floot.app'             'Pennsylvania business registry'             'company identity Pennsylvania'             'vendor verification Pennsylvania'
-          do
-            echo "--- $Q ---"
-            curl -fsSL --get 'https://402index.io/api/v1/services'               --data-urlencode "q=$Q"               --data-urlencode 'protocol=x402'               --data-urlencode 'limit=50' > /tmp/idx.json
-            python3 - "$Q" "$FLOOT" "$APP" <<'PY'
-          import json,sys
-          q,floot,app=sys.argv[1:4]
-          d=json.load(open('/tmp/idx.json'))
-          rows=d.get('services') or d.get('results') or d.get('data') or []
-          out=[]
-          for i,r in enumerate(rows,1):
-              blob=json.dumps(r).lower()
-              if 'pa-entity-x402.floot.app' in blob or 'pa-entity-lookup-x402-4fbm4s' in blob:
-                  out.append({
-                      'rank':i,
-                      'id':r.get('id'),
-                      'name':r.get('name'),
-                      'url':r.get('url'),
-                      'price_usd':r.get('price_usd'),
-                      'health_status':r.get('health_status'),
-                      'verified':r.get('verified'),
-                      'domain_verified':r.get('domain_verified'),
-                      'x402_payment_valid':r.get('x402_payment_valid'),
-                      'reliability_score':r.get('reliability_score'),
-                      'source':r.get('source'),
-                  })
-          print(json.dumps({'query':q,'returned':len(rows),'ours':out},sort_keys=True))
-          PY
-          done
-
-          echo '=== NOHUMANS FLOOT LISTING ==='
-          curl -fsSL 'https://api.nohumans.directory/v1/listings/958fd262-287' |             jq '{id,name,status,score,probe_count,probes_passed,probes_failed,consecutive_failures,paid_verified,distinct_payers,evidence_tier,evidence_note,last_probed_at_iso,next_check_by_iso,onchain_unique_payers_30d,sample_query}'
-
-          echo '=== NOHUMANS CHEAP LISTING ==='
-          curl -fsSL 'https://api.nohumans.directory/v1/listings/9f2f7a33-cb2' |             jq '{id,name,status,score,probe_count,probes_passed,probes_failed,consecutive_failures,paid_verified,distinct_payers,evidence_tier,evidence_note,last_probed_at_iso,next_check_by_iso,onchain_unique_payers_30d,sample_query}'
-
-          echo '=== PAYAI MAIN STATS ==='
-          ENC_MAIN=$(python3 - <<'PY'
+          mkdir -p verification
+          python3 - <<'PY'
+          import json
           import urllib.parse
-          print(urllib.parse.quote('https://pa-entity-x402.floot.app/_api/pa-business',safe=''))
-          PY
-          )
-          curl -fsSL "https://facilitator.payai.network/discovery/resources/$ENC_MAIN/stats" |             jq '{resource,settlements,volume,buyers,reliability,uptime,networks,cachedAt}'
+          import urllib.request
+          from datetime import datetime, timezone
 
-          echo '=== PAYAI CHEAP STATS ==='
-          ENC_CHEAP=$(python3 - <<'PY'
-          import urllib.parse
-          print(urllib.parse.quote('https://pa-entity-x402.floot.app/_api/pa-entity-one',safe=''))
-          PY
+          APP = 'https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s'
+          FLOOT = 'https://pa-entity-x402.floot.app'
+          VENDOR = APP + '/api/vendor-intake-gate'
+          MAIN = FLOOT + '/_api/pa-business'
+          CHEAP = FLOOT + '/_api/pa-entity-one'
+
+          def fetch_json(url, timeout=25):
+              req = urllib.request.Request(
+                  url,
+                  headers={
+                      'accept': 'application/json',
+                      'user-agent': 'permitplate-x402-readonly-verifier/1.0',
+                  },
+              )
+              try:
+                  with urllib.request.urlopen(req, timeout=timeout) as res:
+                      raw = res.read().decode('utf-8', errors='replace')
+                      return {
+                          'ok': True,
+                          'status': res.status,
+                          'url': url,
+                          'data': json.loads(raw),
+                      }
+              except Exception as exc:
+                  status = getattr(exc, 'code', None)
+                  body = None
+                  try:
+                      body = exc.read().decode('utf-8', errors='replace')[:4000]
+                  except Exception:
+                      pass
+                  return {
+                      'ok': False,
+                      'status': status,
+                      'url': url,
+                      'error': str(exc),
+                      'body': body,
+                  }
+
+          def query_url(base, params):
+              return base + '?' + urllib.parse.urlencode(params)
+
+          def find_matching_dicts(value, needles, path=''):
+              hits = []
+              if isinstance(value, dict):
+                  blob = json.dumps(value, sort_keys=True).lower()
+                  if any(n.lower() in blob for n in needles):
+                      hits.append({'path': path or '/', 'record': value})
+                  for key, child in value.items():
+                      hits.extend(find_matching_dicts(child, needles, path + '/' + str(key)))
+              elif isinstance(value, list):
+                  for index, child in enumerate(value):
+                      hits.extend(find_matching_dicts(child, needles, path + '/' + str(index)))
+              return hits
+
+          checked_at = datetime.now(timezone.utc).isoformat()
+          snapshot = {
+              'checked_at': checked_at,
+              'mode': 'read_only_zero_spend',
+              'attribution_rule': (
+                  'Do not count shared-wallet payer fields, probes, self-tests, '
+                  'registrations, or seller-funded activity as endpoint revenue.'
+              ),
+              'targets': {
+                  'vendor_gate': VENDOR,
+                  'pa_best_match': CHEAP,
+                  'pa_enriched_search': MAIN,
+              },
+          }
+
+          # 402 Index: exact vendor record plus buyer-style searches.
+          vendor_402_id = '0d49cbe9-4a47-42fa-9654-1c79090035e4'
+          idx_queries = [
+              'Pennsylvania Vendor Intake Decision Gate',
+              'Pennsylvania vendor intake',
+              'Pennsylvania business registry',
+              'vendor verification Pennsylvania',
+              'company identity Pennsylvania',
+          ]
+          idx = {
+              'vendor_service': fetch_json(
+                  'https://402index.io/api/v1/services/' + vendor_402_id
+              ),
+              'queries': {},
+          }
+          for q in idx_queries:
+              result = fetch_json(
+                  query_url(
+                      'https://402index.io/api/v1/services',
+                      {'q': q, 'protocol': 'x402', 'limit': 50},
+                  )
+              )
+              if result.get('ok'):
+                  rows = (
+                      result['data'].get('services')
+                      or result['data'].get('results')
+                      or result['data'].get('data')
+                      or []
+                  )
+                  ours = []
+                  for rank, row in enumerate(rows, 1):
+                      blob = json.dumps(row).lower()
+                      if (
+                          'pa-entity-x402.floot.app' in blob
+                          or 'pa-entity-lookup-x402-4fbm4s' in blob
+                          or 'vendor-intake-gate' in blob
+                      ):
+                          ours.append({'rank': rank, 'record': row})
+                  result['ours'] = ours
+                  result['returned'] = len(rows)
+              idx['queries'][q] = result
+          snapshot['402index'] = idx
+
+          # nohumans: known raw listings + vendor-gate discovery query.
+          snapshot['nohumans'] = {
+              'enriched_listing': fetch_json(
+                  'https://api.nohumans.directory/v1/listings/958fd262-287'
+              ),
+              'best_match_listing': fetch_json(
+                  'https://api.nohumans.directory/v1/listings/9f2f7a33-cb2'
+              ),
+              'vendor_discovery': fetch_json(
+                  query_url(
+                      'https://api.nohumans.directory/v1/discover',
+                      {'q': 'Pennsylvania Vendor Intake'},
+                  )
+              ),
+          }
+
+          # PayAI resource statistics. Missing vendor record is informative and non-fatal.
+          snapshot['payai'] = {}
+          for key, resource in {
+              'enriched': MAIN,
+              'best_match': CHEAP,
+              'vendor_gate': VENDOR,
+          }.items():
+              encoded = urllib.parse.quote(resource, safe='')
+              snapshot['payai'][key] = fetch_json(
+                  'https://facilitator.payai.network/discovery/resources/'
+                  + encoded
+                  + '/stats'
+              )
+
+          # Market402 public measured index/search.
+          market_operators = fetch_json('https://market402.com/operators.json')
+          market_index = fetch_json('https://market402.com/index.json')
+          market_search = fetch_json(
+              query_url(
+                  'https://market402.com/search.json',
+                  {'q': 'Pennsylvania Vendor Intake'},
+              )
           )
-          curl -fsSL "https://facilitator.payai.network/discovery/resources/$ENC_CHEAP/stats" |             jq '{resource,settlements,volume,buyers,reliability,uptime,networks,cachedAt}'
+          snapshot['market402'] = {
+              'operators': {
+                  **{k: v for k, v in market_operators.items() if k != 'data'},
+                  'matches': find_matching_dicts(
+                      market_operators.get('data'),
+                      ['pa-entity-lookup-x402-4fbm4s', 'vendor-intake-gate'],
+                  )[:50]
+                  if market_operators.get('ok')
+                  else [],
+              },
+              'index': {
+                  **{k: v for k, v in market_index.items() if k != 'data'},
+                  'matches': find_matching_dicts(
+                      market_index.get('data'),
+                      ['pa-entity-lookup-x402-4fbm4s', 'vendor-intake-gate'],
+                  )[:50]
+                  if market_index.get('ok')
+                  else [],
+              },
+              'vendor_search': market_search,
+          }
+
+          # Agent402 current seller readback only. Do not re-register until Floot
+          # advertises the consolidated portfolio after its quota reset.
+          snapshot['agent402'] = {
+              'seller': fetch_json(
+                  query_url(
+                      'https://agent402.tools/api/index',
+                      {'seller': 'pa-entity-x402.floot.app'},
+                  )
+              )
+          }
+
+          with open(
+              'verification/pa-entity-directory-status-latest.json',
+              'w',
+              encoding='utf-8',
+          ) as handle:
+              json.dump(snapshot, handle, indent=2, sort_keys=True)
+              handle.write('\n')
+
+          print(json.dumps({
+              'checked_at': checked_at,
+              '402index_vendor_ok': idx['vendor_service'].get('ok'),
+              'nohumans_vendor_search_ok': snapshot['nohumans']['vendor_discovery'].get('ok'),
+              'market402_index_ok': market_index.get('ok'),
+              'market402_search_ok': market_search.get('ok'),
+              'agent402_seller_ok': snapshot['agent402']['seller'].get('ok'),
+          }, indent=2, sort_keys=True))
+          PY
+
+      - name: Commit refreshed receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add verification/pa-entity-directory-status-latest.json
+          if git diff --cached --quiet; then
+            echo 'Directory receipt unchanged.'
+            exit 0
+          fi
+          git commit -m 'chore: refresh PA x402 directory status'
+          git push
