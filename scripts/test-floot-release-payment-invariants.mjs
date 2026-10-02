@@ -49,6 +49,10 @@ for (const name of files) {
     'Floot release must not depend on AppDeploy'
   );
   require(
+    source.includes("'x-floot-status'") || source.includes('"x-floot-status"'),
+    'must use Floot gateway status-translation header for non-200 responses'
+  );
+  require(
     source.includes("'PAYMENT-REQUIRED'") || source.includes('"PAYMENT-REQUIRED"'),
     'must emit PAYMENT-REQUIRED challenge header'
   );
@@ -99,6 +103,7 @@ if (failures.length) {
   console.log('PASS strict isValid verification across 8 paid Floot routes');
   console.log('PASS 16 KiB payment-header bounds across 8 routes');
   console.log('PASS pending/duplicate same-payment retry semantics across 8 routes');
+  console.log('PASS Floot status-translation adapter across 8 routes');
   console.log('PASS seller challenge + settlement receipt headers across 8 routes');
   console.log('PASS source/evidence failure explicitly preserves unsettled payment');
   console.log('PASS zero AppDeploy runtime dependencies across 8 routes');
