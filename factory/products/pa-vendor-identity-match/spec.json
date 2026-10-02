@@ -1,6 +1,6 @@
 {
   "id": "pa-vendor-identity-match",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "purpose": "Check whether a supplied Pennsylvania vendor name, street address, and domain are mutually consistent with bounded public identity evidence.",
   "proposed_price_usdc": "0.005",
   "input": {
@@ -30,15 +30,18 @@
   "checks": [
     "pa_registry_identity",
     "census_address_consistency",
-    "domain_rdap_registration"
+    "domain_rdap_registration_and_name_alignment"
   ],
   "thresholds": {
     "registry_strong_match_required": true,
+    "census_same_primary_street_number_required": true,
+    "census_same_zip_required": true,
     "census_max_distance_miles": 0.25,
-    "rdap_registered_required": true
+    "rdap_registered_required": true,
+    "domain_vendor_name_alignment_required": true
   },
   "decision_policy": {
-    "consistent": "All three checks pass.",
+    "consistent": "All three identity checks pass, including address identity and vendor-name/domain alignment.",
     "human_review": "Any required check is failed, unavailable, uncertain, or contradictory.",
     "automatic_reject": false
   },
