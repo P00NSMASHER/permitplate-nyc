@@ -15,7 +15,6 @@ on:
       - 'factory/packages/sources/ofac-name-screen.js'
       - 'factory/products/treasury-average-rate-threshold/**'
       - 'factory/products/treasury-average-rate-trend/**'
-      - 'factory/products/treasury-average-rate-change/**'
       - 'factory/products/pa-business-formation-age/**'
       - 'factory/products/domain-expiration-horizon/**'
       - 'factory/products/domain-last-changed-recency/**'
@@ -47,8 +46,6 @@ jobs:
         run: node factory/products/ofac-name-review-gate/live-smoke.js
       - name: Product 008 live Treasury smoke
         run: node factory/products/treasury-average-rate-threshold/live-smoke.js
-      - name: Product 014 live Treasury change smoke
-        run: node factory/products/treasury-average-rate-change/live-smoke.js
       - name: Product 014 live Treasury trend smoke
         run: node factory/products/treasury-average-rate-trend/live-smoke.js
       - name: Product 010 live formation-age smoke
