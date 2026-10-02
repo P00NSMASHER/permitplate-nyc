@@ -1,0 +1,1064 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Agent Data Tools x402",
+    "version": "4.0.0",
+    "description": "Eight same-origin pay-per-call agent tools: Pennsylvania registry best-match and enriched search, a fail-closed Pennsylvania vendor-intake decision gate, SEC recent filings, U.S. Census address geocoding, OFAC SDN candidate-name screening, authoritative domain RDAP, and Treasury average interest rates.",
+    "contact": {
+      "name": "PA Entity Lookup x402",
+      "url": "https://pa-entity-x402.floot.app"
+    },
+    "x-guidance": "Use the vendor-intake gate for a bounded proceed/human_review workflow decision. Use the seven raw-data endpoints when an agent needs source facts directly. All routes use x402 v2 on Base USDC; a successful source result is produced before settlement."
+  },
+  "externalDocs": {
+    "description": "Agent usage guide",
+    "url": "https://pa-entity-x402.floot.app/skill.txt"
+  },
+  "paths": {
+    "/_api/pa-business": {
+      "get": {
+        "operationId": "pennsylvaniaBusinessRegistryCompanyIdentityLookup",
+        "summary": "Pennsylvania business registry and company identity lookup",
+        "description": "Search Pennsylvania Department of State business-registration records by company name. Returns filing number, registration type, creation date, registered address, county, and source-published principal/officer roles for entity resolution, vendor/customer verification, due diligence, and lead enrichment.",
+        "tags": [
+          "Pennsylvania Business Registry",
+          "Company Identity",
+          "Legal Entity",
+          "Vendor Verification",
+          "Due Diligence"
+        ],
+        "x-use-cases": [
+          "Pennsylvania business registry lookup",
+          "Company identity resolution",
+          "Legal-entity enrichment",
+          "Vendor or customer verification",
+          "Due diligence",
+          "Filing-number and registration-type lookup",
+          "Creation-date and registered-address lookup"
+        ],
+        "x-query-examples": [
+          {
+            "q": "OpenAI",
+            "limit": 1,
+            "purpose": "Resolve a distinctive company name"
+          },
+          {
+            "q": "Sheetz",
+            "limit": 5,
+            "purpose": "Resolve a Pennsylvania brand and nearby legal-name matches"
+          },
+          {
+            "q": "Wawa",
+            "limit": 5,
+            "purpose": "Compare multiple company-name matches"
+          }
+        ],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.005000"
+          },
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "network": "eip155:8453",
+          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021"
+        },
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "description": "Pennsylvania business name or distinctive name fragment. 2-120 characters.",
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 120
+            },
+            "examples": {
+              "company": {
+                "summary": "Company identity",
+                "value": "OpenAI"
+              },
+              "brand": {
+                "summary": "Known Pennsylvania brand",
+                "value": "Sheetz"
+              }
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum results. Integer 1-25; default 10.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 25,
+              "default": 10
+            },
+            "example": 5
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paid registry lookup result after successful x402 settlement.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "query": "OpenAI",
+                  "count": 1,
+                  "results": [
+                    {
+                      "businessName": "Openai, L.l.c.",
+                      "filingNumber": "0014371957",
+                      "registrationType": "Foreign Limited Liability Company",
+                      "creationDate": "2025-04-23",
+                      "address1": "600 North Second Street, Suite 401",
+                      "address2": null,
+                      "city": "Harrisburg",
+                      "state": "PA",
+                      "zip": "17101",
+                      "county": "Dauphin",
+                      "countyCode": "22",
+                      "principals": [
+                        {
+                          "role": "Governor",
+                          "firstName": null,
+                          "middleName": null,
+                          "lastName": null
+                        }
+                      ]
+                    }
+                  ],
+                  "enrichment": {
+                    "principals": "complete"
+                  },
+                  "source": "Pennsylvania Department of State via data.pa.gov",
+                  "paid": true
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "query": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "businessName": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "filingNumber": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "registrationType": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "creationDate": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "date"
+                          },
+                          "address1": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "address2": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "city": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "state": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "zip": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "county": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "countyCode": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "principals": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "role": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "firstName": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "middleName": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "lastName": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "role",
+                                "firstName",
+                                "middleName",
+                                "lastName"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "businessName",
+                          "filingNumber",
+                          "registrationType",
+                          "creationDate",
+                          "address1",
+                          "address2",
+                          "city",
+                          "state",
+                          "zip",
+                          "county",
+                          "countyCode",
+                          "principals"
+                        ]
+                      }
+                    },
+                    "enrichment": {
+                      "type": "object",
+                      "properties": {
+                        "principals": {
+                          "type": "string",
+                          "enum": [
+                            "complete",
+                            "unavailable"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "principals"
+                      ]
+                    },
+                    "source": {
+                      "type": "string"
+                    },
+                    "paid": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "query",
+                    "count",
+                    "results",
+                    "enrichment",
+                    "source",
+                    "paid"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query or limit after a payment signature is present."
+          },
+          "402": {
+            "description": "Payment required or payment authorization invalid/terminally unusable. Includes PAYMENT-REQUIRED."
+          },
+          "502": {
+            "description": "Pennsylvania public-data source unavailable; payment is not settled."
+          },
+          "503": {
+            "description": "Verifier/settlement temporarily unavailable or settlement outcome unresolved. Retry the same payment authorization; do not create a fresh authorization."
+          }
+        }
+      }
+    },
+    "/_api/pa-entity-one": {
+      "get": {
+        "operationId": "pennsylvaniaCompanyIdentityLegalEntityBestMatchLookup",
+        "summary": "Pennsylvania business registry and company identity best-match lookup",
+        "description": "Low-friction Pennsylvania business registry, company identity, and legal-entity lookup that returns the single highest-ranked legal-entity match for a company name. Use when an agent wants one likely Pennsylvania entity rather than a broader candidate list.",
+        "tags": [
+          "Pennsylvania Business Registry",
+          "Company Identity",
+          "Legal Entity",
+          "Entity Resolution",
+          "Best Match",
+          "Low Cost"
+        ],
+        "x-use-cases": [
+          "Pennsylvania business registry lookup",
+          "Pennsylvania company identity lookup",
+          "Pennsylvania legal-entity lookup",
+          "Resolve one company name to the most likely Pennsylvania legal entity",
+          "Low-cost vendor or customer identity check before deeper enrichment",
+          "Obtain one filing number, entity type, creation date, registered address, and source-published principal/officer set"
+        ],
+        "x-query-examples": [
+          {
+            "q": "OpenAI",
+            "purpose": "Resolve one distinctive company name"
+          },
+          {
+            "q": "Sheetz",
+            "purpose": "Return the best legal-name match"
+          }
+        ],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.001000"
+          },
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "network": "eip155:8453",
+          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021"
+        },
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "description": "Pennsylvania business name or distinctive name fragment. 2-120 characters.",
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 120
+            },
+            "examples": {
+              "company": {
+                "summary": "Company identity",
+                "value": "OpenAI"
+              },
+              "brand": {
+                "summary": "Known Pennsylvania brand",
+                "value": "Sheetz"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paid single-best-match result after successful x402 settlement.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "query": "OpenAI",
+                  "count": 1,
+                  "results": [
+                    {
+                      "businessName": "Openai, L.l.c.",
+                      "filingNumber": "0014371957",
+                      "registrationType": "Foreign Limited Liability Company",
+                      "creationDate": "2025-04-23",
+                      "address1": "600 North Second Street, Suite 401",
+                      "address2": null,
+                      "city": "Harrisburg",
+                      "state": "PA",
+                      "zip": "17101",
+                      "county": "Dauphin",
+                      "countyCode": "22",
+                      "principals": [
+                        {
+                          "role": "Governor",
+                          "firstName": null,
+                          "middleName": null,
+                          "lastName": null
+                        }
+                      ]
+                    }
+                  ],
+                  "enrichment": {
+                    "principals": "complete"
+                  },
+                  "source": "Pennsylvania Department of State via data.pa.gov",
+                  "paid": true,
+                  "found": true,
+                  "result": {
+                    "businessName": "Openai, L.l.c.",
+                    "filingNumber": "0014371957",
+                    "registrationType": "Foreign Limited Liability Company",
+                    "creationDate": "2025-04-23",
+                    "address1": "600 North Second Street, Suite 401",
+                    "address2": null,
+                    "city": "Harrisburg",
+                    "state": "PA",
+                    "zip": "17101",
+                    "county": "Dauphin",
+                    "countyCode": "22",
+                    "principals": [
+                      {
+                        "role": "Governor",
+                        "firstName": null,
+                        "middleName": null,
+                        "lastName": null
+                      }
+                    ]
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "query": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "businessName": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "filingNumber": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "registrationType": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "creationDate": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "date"
+                          },
+                          "address1": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "address2": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "city": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "state": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "zip": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "county": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "countyCode": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "principals": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "role": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "firstName": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "middleName": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "lastName": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "role",
+                                "firstName",
+                                "middleName",
+                                "lastName"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "businessName",
+                          "filingNumber",
+                          "registrationType",
+                          "creationDate",
+                          "address1",
+                          "address2",
+                          "city",
+                          "state",
+                          "zip",
+                          "county",
+                          "countyCode",
+                          "principals"
+                        ]
+                      }
+                    },
+                    "enrichment": {
+                      "type": "object",
+                      "properties": {
+                        "principals": {
+                          "type": "string",
+                          "enum": [
+                            "complete",
+                            "unavailable"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "principals"
+                      ]
+                    },
+                    "source": {
+                      "type": "string"
+                    },
+                    "paid": {
+                      "type": "boolean"
+                    },
+                    "found": {
+                      "type": "boolean"
+                    },
+                    "result": {
+                      "type": [
+                        "object",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "query",
+                    "count",
+                    "results",
+                    "enrichment",
+                    "source",
+                    "paid",
+                    "found",
+                    "result"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query or limit after a payment signature is present."
+          },
+          "402": {
+            "description": "Payment required or payment authorization invalid/terminally unusable. Price: $0.001 USDC on Base."
+          },
+          "502": {
+            "description": "Pennsylvania public-data source unavailable; payment is not settled."
+          },
+          "503": {
+            "description": "Verifier/settlement temporarily unavailable or settlement outcome unresolved. Retry the same payment authorization; do not create a fresh authorization."
+          }
+        }
+      }
+    },
+    "/_api/vendor-intake-gate": {
+      "get": {
+        "operationId": "checkPennsylvaniaVendorIntakeGate",
+        "summary": "Return proceed or human_review for a prospective Pennsylvania vendor",
+        "description": "Fail-closed composed check using PA registry identity, Census address consistency, OFAC SDN candidate-name screening, and authoritative RDAP domain evidence. Incomplete or conflicting evidence pauses for human review.",
+        "tags": [
+          "Vendor Intake",
+          "Agent Decision",
+          "Human Review"
+        ],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.020000"
+          },
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "network": "eip155:8453",
+          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021"
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 120
+            },
+            "example": "OpenAI OpCo"
+          },
+          {
+            "name": "address",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 6,
+              "maxLength": 240
+            },
+            "example": "600 North Second Street, Suite 401, Harrisburg, PA 17101"
+          },
+          {
+            "name": "domain",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 253
+            },
+            "example": "openai.com"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paid vendor-intake decision with evidence and explicit review triggers"
+          },
+          "400": {
+            "description": "Invalid vendor name, address, or domain after a payment signature is present"
+          },
+          "402": {
+            "description": "Payment Required: $0.020 USDC on Base"
+          },
+          "502": {
+            "description": "A required authoritative evidence source was unavailable; payment is not settled"
+          },
+          "503": {
+            "description": "Payment verifier/settlement unavailable or unresolved; retry the same payment authorization"
+          }
+        }
+      }
+    },
+    "/_api/sec-filings": {
+      "get": {
+        "operationId": "getRecentSecFilings",
+        "summary": "Get recent SEC EDGAR filings for one company",
+        "description": "Resolve a ticker or CIK and return authoritative recent SEC filing metadata, optionally filtered by exact form.",
+        "tags": [
+          "SEC",
+          "EDGAR",
+          "Company Data"
+        ],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.005000"
+          },
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "network": "eip155:8453",
+          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021"
+        },
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 12
+            },
+            "example": "AAPL"
+          },
+          {
+            "name": "cik",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 10
+            },
+            "example": "320193"
+          },
+          {
+            "name": "form",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 20
+            },
+            "example": "10-K"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 25,
+              "default": 10
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paid result after successful x402 settlement."
+          },
+          "400": {
+            "description": "Invalid input after a payment signature is present."
+          },
+          "402": {
+            "description": "Payment required or payment authorization invalid/terminally unusable. Includes PAYMENT-REQUIRED."
+          },
+          "502": {
+            "description": "Authoritative public-data source unavailable; payment is not settled."
+          },
+          "503": {
+            "description": "Verifier/settlement temporarily unavailable or settlement outcome unresolved. Retry the same payment authorization."
+          }
+        }
+      }
+    },
+    "/_api/us-address-geocode": {
+      "get": {
+        "operationId": "geocodeUsAddress",
+        "summary": "Geocode one U.S. address with Census geography",
+        "description": "Use the official Census Bureau geocoder to return standardized match text, coordinates, and Census geography identifiers.",
+        "tags": [
+          "Geocoding",
+          "Census",
+          "Reference Data"
+        ],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.005000"
+          },
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "network": "eip155:8453",
+          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021"
+        },
+        "parameters": [
+          {
+            "name": "address",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 6,
+              "maxLength": 240
+            },
+            "example": "4600 Silver Hill Rd, Washington, DC 20233"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paid result after successful x402 settlement."
+          },
+          "400": {
+            "description": "Invalid input after a payment signature is present."
+          },
+          "402": {
+            "description": "Payment required or payment authorization invalid/terminally unusable. Includes PAYMENT-REQUIRED."
+          },
+          "502": {
+            "description": "Authoritative public-data source unavailable; payment is not settled."
+          },
+          "503": {
+            "description": "Verifier/settlement temporarily unavailable or settlement outcome unresolved. Retry the same payment authorization."
+          }
+        }
+      }
+    },
+    "/_api/ofac-sdn-screen": {
+      "get": {
+        "operationId": "screenOfacSdnName",
+        "summary": "Screen one name against OFAC SDN names and aliases",
+        "description": "Candidate-name screening against current OFAC SDN primary names and aliases. A no-candidate result is not sanctions clearance and this route does not perform 50 Percent Rule ownership analysis.",
+        "tags": [
+          "OFAC",
+          "Sanctions",
+          "Name Screening"
+        ],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.005000"
+          },
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "network": "eip155:8453",
+          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021"
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 160
+            },
+            "example": "VLADIMIR PUTIN"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10,
+              "default": 5
+            },
+            "example": 3
+          },
+          {
+            "name": "minScore",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 70,
+              "maximum": 100,
+              "default": 85
+            },
+            "example": 90
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paid result after successful x402 settlement."
+          },
+          "400": {
+            "description": "Invalid input after a payment signature is present."
+          },
+          "402": {
+            "description": "Payment required or payment authorization invalid/terminally unusable. Includes PAYMENT-REQUIRED."
+          },
+          "502": {
+            "description": "Authoritative public-data source unavailable; payment is not settled."
+          },
+          "503": {
+            "description": "Verifier/settlement temporarily unavailable or settlement outcome unresolved. Retry the same payment authorization."
+          }
+        }
+      }
+    },
+    "/_api/domain-rdap": {
+      "get": {
+        "operationId": "lookupDomainRdap",
+        "summary": "Get live authoritative RDAP data for one domain",
+        "description": "Resolve a domain through IANA RDAP bootstrap to the authoritative registry and return registration status and public metadata.",
+        "tags": [
+          "Domains",
+          "RDAP",
+          "Registration Data"
+        ],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.005000"
+          },
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "network": "eip155:8453",
+          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021"
+        },
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 253
+            },
+            "example": "example.com"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paid result after successful x402 settlement."
+          },
+          "400": {
+            "description": "Invalid input after a payment signature is present."
+          },
+          "402": {
+            "description": "Payment required or payment authorization invalid/terminally unusable. Includes PAYMENT-REQUIRED."
+          },
+          "502": {
+            "description": "Authoritative public-data source unavailable; payment is not settled."
+          },
+          "503": {
+            "description": "Verifier/settlement temporarily unavailable or settlement outcome unresolved. Retry the same payment authorization."
+          }
+        }
+      }
+    },
+    "/_api/treasury-average-rates": {
+      "get": {
+        "operationId": "getTreasuryAverageInterestRates",
+        "summary": "Get latest average interest rates on U.S. Treasury securities",
+        "description": "Return the latest monthly average interest rates on outstanding U.S. Treasury securities from official Fiscal Data, optionally filtered by security description.",
+        "tags": [
+          "Treasury",
+          "Interest Rates",
+          "Macro"
+        ],
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USD",
+            "amount": "0.005000"
+          },
+          "protocols": [
+            {
+              "x402": {}
+            }
+          ],
+          "network": "eip155:8453",
+          "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021"
+        },
+        "parameters": [
+          {
+            "name": "security",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "example": "Total Marketable"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paid result after successful x402 settlement."
+          },
+          "400": {
+            "description": "Invalid input after a payment signature is present."
+          },
+          "402": {
+            "description": "Payment required or payment authorization invalid/terminally unusable. Includes PAYMENT-REQUIRED."
+          },
+          "502": {
+            "description": "Authoritative public-data source unavailable; payment is not settled."
+          },
+          "503": {
+            "description": "Verifier/settlement temporarily unavailable or settlement outcome unresolved. Retry the same payment authorization."
+          }
+        }
+      }
+    }
+  }
+}
