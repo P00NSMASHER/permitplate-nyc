@@ -19,7 +19,7 @@ jobs:
   verify:
     name: Zero-spend buyer-style verification
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -29,19 +29,29 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Verify host-independent rehost core
+      - name: Validate exact eight-resource target
+        run: node scripts/validate-floot-target-manifest.mjs
+
+      - name: Verify host-independent rehost data core
         run: node scripts/test-x402-rehost-core.mjs
 
-      - name: Verify host-independent vendor gate decision core
+      - name: Verify host-independent vendor gate core
         run: node scripts/test-vendor-intake-gate-core.mjs
+
+      - name: Compare live Floot manifest to target
+        env:
+          REQUIRE_COMPLETE: ${{ inputs.expected_floot_resources == '8' && '1' || '0' }}
+          REPORT_PATH: floot-manifest-comparison.json
+        run: node scripts/compare-floot-manifest-to-target.mjs
 
       - name: Verify unpaid x402 challenges, decision fixtures, and directory observations
         env:
           EXPECTED_FLOOT_RESOURCES: ${{ inputs.expected_floot_resources || '2' }}
+          X402_REHOST_BASE_URL: ${{ inputs.rehost_base_url }}
           REPORT_PATH: x402-verification-report.json
         run: node scripts/verify-x402-portfolio.mjs
 
-      - name: Upload verification report
+      - name: Upload verification reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
