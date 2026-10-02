@@ -39,14 +39,16 @@
     {
       "id": "pa-business-address-match",
       "number": "004",
-      "status": "design",
+      "status": "live-source-verified-staging",
       "method": "GET",
       "path": "/api/pa-business-address-match",
       "price_usdc": "0.003",
       "decision_values": [
         "match",
         "human_review"
-      ]
+      ],
+      "release_gate": "factory/scripts/validate-product-004.js",
+      "deployment_blocker": "AppDeploy weekly credit reset 2026-10-05T00:00:00Z"
     }
   ]
 }
