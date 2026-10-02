@@ -86,6 +86,8 @@ Persist the normalized result in one GitHub JSON artifact before the first Floot
 
 `verification/floot-pre-rehost-rollback-<projectVersion>.json`
 
+If that versioned artifact already exists from an interrupted attempt, do not overwrite it blindly. Compare project version, pinned source commit, every captured path/hash, and the preexisting/absent recovery-target sets. Reuse the existing artifact only when those rollback facts match exactly; otherwise abort before any Floot write and re-establish the current project state.
+
 The snapshot must include:
 
 - Floot project id
