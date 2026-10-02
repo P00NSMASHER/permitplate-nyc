@@ -47,6 +47,17 @@ const tree = Array.isArray(treeResponse.tree) ? treeResponse.tree : [];
 const byPath = new Map(tree.map((item) => [item.path, item]));
 
 for (const write of queue.writes) {
+  const expectedSourceUrl =
+    'https://raw.githubusercontent.com/P00NSMASHER/permitplate-nyc/' +
+    queue.sourceCommit +
+    '/' +
+    write.source;
+  assert.equal(
+    write.sourceUrl,
+    expectedSourceUrl,
+    'unpinned or incorrect sourceUrl: ' + write.source
+  );
+
   const item = byPath.get(write.source);
   assert(item, 'locked source missing: ' + write.source);
   assert.equal(item.type, 'blob', 'locked source is not a blob: ' + write.source);
