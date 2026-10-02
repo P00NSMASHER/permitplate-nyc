@@ -13,6 +13,7 @@ on:
       - 'factory/products/domain-registration-age/**'
       - 'factory/products/ofac-name-review-gate/**'
       - 'factory/products/pa-entity-ofac-review/**'
+      - 'factory/products/pa-vendor-new-domain-review/**'
       - 'factory/packages/sources/ofac-name-screen.js'
       - 'factory/products/treasury-average-rate-threshold/**'
       - 'factory/products/treasury-average-rate-trend/**'
@@ -64,3 +65,5 @@ jobs:
         run: node factory/products/domain-expiration-horizon/live-smoke.js
       - name: Product 012 live RDAP recency smoke
         run: node factory/products/domain-last-changed-recency/live-smoke.js
+      - name: Product 017 live PA vendor new-domain smoke
+        run: node factory/products/pa-vendor-new-domain-review/live-smoke.js
