@@ -246,6 +246,7 @@ Recent registration is a review signal, not proof of fraud. Domain-name alignmen
 - `runtime/create-runtime.js` — one portable runtime wiring every staged paid route and compiled discovery surface
 - `runtime/appdeploy-bridge.js` — AppDeploy-compatible GET/OPTIONS route map
 - `scripts/build-appdeploy-runtime-bundle.js` — deterministic self-contained ESM bundle for the CommonJS factory runtime
+- `scripts/build-appdeploy-entrypoint.js` — generates the thin AppDeploy `backend/index.ts` using the proven `@appdeploy/sdk` secrets API
 - `APPDEPLOY_HANDOFF.md` — reset-day provider integration boundary and secret-binding checklist
 - `runtime/deployment-preflight.js` — environment prerequisite checks such as Product 006's SEC identity requirement
 - `runtime/validate-deploy-candidate.js` — unified structural deploy-candidate gate
