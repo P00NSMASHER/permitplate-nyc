@@ -29,7 +29,7 @@ function createBusinessDomainService({registry,rdap,now=()=>new Date().toISOStri
         ...rdapEvidence,
         nameAligned:
           rdapEvidence.available===true&&rdapEvidence.registered===true
-            ? domainNameAligned(normalized.company,normalized.domain)
+            ? domainNameAligned(normalized.domain,normalized.company)
             : false
       };
     }catch(error){
