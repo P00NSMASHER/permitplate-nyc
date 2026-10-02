@@ -17,9 +17,15 @@ Source: Pennsylvania Department of State public data via data.pa.gov
 
 The Floot origin is the current working bare-origin x402 seller and is already machine-discoverable. The composed vendor-intake gate has **not yet** been added to this Floot manifest; that consolidation is the next distribution step after the Floot daily build-action quota resets.
 
+## AppDeploy availability note
+
+As of the independent zero-spend portfolio check at `2026-10-02T12:51:06Z`, every AppDeploy-hosted paid API in this portfolio is returning `APP_TEMPORARILY_UNAVAILABLE` without the seller's `PAYMENT-REQUIRED` header. The stored deployments remain present, but AppDeploy hosting is paused by account-wide usable-credit exhaustion.
+
+The two Floot PA routes remain healthy and sellable. Treat the AppDeploy URLs below as retained deployment locations, **not currently available paid routes**, until `verification/x402-portfolio-verification-latest.json` turns green again or the functionality is rehosted on Floot.
+
 ## Composed vendor-intake gate
 
-**AppDeploy production API:** https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s
+**AppDeploy retained API deployment (hosting currently paused):** https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s
 
 Paid endpoint:
 
