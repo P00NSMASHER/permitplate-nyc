@@ -8,6 +8,8 @@ test("input requires exactly one of ticker or cik",()=>{
  assert.throws(()=>validateFilingFreshnessInput({ticker:"AAPL",cik:"320193"}),/exactly one/);
  assert.equal(validateFilingFreshnessInput({ticker:"aapl"}).ticker,"AAPL");
  assert.equal(validateFilingFreshnessInput({cik:"320193"}).maxAgeDays,30);
+ assert.throws(()=>validateFilingFreshnessInput({cik:"CIK 320193"}),/invalid cik/);
+ assert.throws(()=>validateFilingFreshnessInput({cik:"320193abc"}),/invalid cik/);
 });
 
 test("service returns recent filing with chargeable completed evidence",async()=>{
