@@ -10,6 +10,27 @@ Project:
 Production origin:
 `https://pa-entity-x402.floot.app`
 
+## Incident override — 2026-10-02
+
+The PA-only minimum-action plan below predates AppDeploy hosting incident #38.
+
+**While issue #38 remains externally reproducible, this file is not the complete recovery plan.** The healthy two-route Floot seller must be preserved, but the active recovery objective is issue #39: rehost the AppDeploy-dependent products natively on the existing Floot origin after the 2:00 PM ET build-action reset.
+
+Authoritative incident-recovery inputs:
+
+- `docs/floot-rehost-implementation-map.md`
+- `docs/floot-x402-consolidation-plan.md`
+- `recovery/x402-rehost-core.mjs`
+- `recovery/vendor-intake-core.mjs`
+- staged Floot-native gate: `docs/pa-entity-floot-release/vendor-intake-gate_GET.ts`
+- gate schema: `docs/pa-entity-floot-release/vendor-intake-gate_GET.schema.ts`
+- `scripts/test-floot-vendor-gate-release.mts`
+- `scripts/verify-x402-portfolio.mjs`
+
+Do **not** stop after Patch 5 and call the hosting incident fixed. Do **not** proxy dead AppDeploy URLs. A recovery completion claim requires the public buyer-style verifier to pass the newly hosted Floot routes and Agent402 to recognize the expanded Floot origin.
+
+The PA-only instructions below remain valid only for preserving/repairing the two proven baseline routes and their legacy discovery aliases.
+
 ## Live production delta — 2026-10-02
 
 The previously hardened PA Entity release is already live and production-verified. The only new unpublished delta is a **Bazaar-ingestion compatibility addition** to the standard JSON aliases:
@@ -23,11 +44,9 @@ Both aliases keep their existing legacy top-level `resource` + `accepts[]` field
 
 This directly matches the resource-array shape used by CDP-style Bazaar ingestors such as Agent Bazaar. The canonical `/.well-known/x402` and `/.well-known/x402-catalog.json` already carried both resources and do not need another write.
 
-Therefore the next free Floot window should use **only**:
+For a **PA-only alias refresh**, the next free Floot window would use only `FLOOT_SAFE_PATCH_5_X402_ALIASES.txt`. During active incident recovery #39, however, that is only a baseline-preservation operation and is not sufficient to restore the eight-resource portfolio.
 
-1. `FLOOT_SAFE_PATCH_5_X402_ALIASES.txt`
-
-Do not reapply patches 1–4, 6, or 7 unless a fresh external audit shows an actual regression.
+Do not reapply PA baseline patches 1–4, 6, or 7 unless a fresh external audit shows an actual regression. Apply the incident-recovery endpoint/discovery changes separately, after reading the current Floot project state once the quota resets.
 
 After the Patch 5 write:
 1. create one checkpoint;
