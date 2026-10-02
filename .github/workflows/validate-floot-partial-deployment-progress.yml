@@ -7,6 +7,8 @@ on:
       - 'verification/floot-resume-write14-latest.json'
       - 'docs/pa-entity-floot-recovery/deploy-map.json'
       - 'scripts/validate-floot-partial-deployment-progress.mjs'
+      - 'scripts/verify-floot-deployment-lock.mjs'
+      - 'scripts/preflight-floot-public-baseline.mjs'
       - '.github/workflows/validate-floot-partial-deployment-progress.yml'
   workflow_dispatch:
 
@@ -16,10 +18,18 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: node scripts/validate-floot-partial-deployment-progress.mjs
+
+      - name: Validate contiguous partial deployment state
+        run: node scripts/validate-floot-partial-deployment-progress.mjs
+
+      - name: Verify immutable Floot deployment lock
+        run: node scripts/verify-floot-deployment-lock.mjs
+
+      - name: Verify published two-route rollback baseline remains healthy
+        run: node scripts/preflight-floot-public-baseline.mjs
