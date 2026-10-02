@@ -11,6 +11,7 @@ on:
       - 'factory/products/sec-filing-freshness/**'
       - 'factory/products/domain-registration-age/**'
       - 'factory/products/treasury-average-rate-threshold/**'
+      - 'factory/products/pa-business-formation-age/**'
       - 'factory/packages/sources/live-pa-identity.js'
       - 'factory/packages/sources/sec-filings.js'
       - 'factory/packages/sources/treasury-average-rates.js'
@@ -35,3 +36,5 @@ jobs:
         run: node factory/products/domain-registration-age/live-smoke.js
       - name: Product 008 live Treasury smoke
         run: node factory/products/treasury-average-rate-threshold/live-smoke.js
+      - name: Product 009 live formation-age smoke
+        run: node factory/products/pa-business-formation-age/live-smoke.js
