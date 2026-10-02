@@ -24,6 +24,7 @@ on:
       - 'factory/products/pa-business-formation-age/**'
       - 'factory/products/domain-expiration-horizon/**'
       - 'factory/products/domain-last-changed-recency/**'
+      - 'factory/products/pa-entity-type-policy/**'
       - 'factory/packages/sources/live-pa-identity.js'
       - 'factory/packages/sources/sec-filings.js'
       - 'factory/packages/sources/treasury-average-rates.js'
@@ -46,6 +47,8 @@ jobs:
         run: node factory/products/pa-business-address-match/live-smoke.js
       - name: Product 005 live source smoke
         run: node factory/products/pa-business-domain-match/live-smoke.js
+      - name: Product 021 live source smoke
+        run: node factory/products/pa-entity-type-policy/live-smoke.js
       - name: Product 006 live SEC smoke
         run: node factory/products/sec-filing-freshness/live-smoke.js
       - name: Product 013 SEC identity smoke
