@@ -13,6 +13,9 @@ const agentWorkflow = await read(
 const marketWorkflow = await read(
   '.github/workflows/repair-marketplaces-after-floot-rehost.yml'
 );
+const distributionWorkflow = await read(
+  '.github/workflows/post-floot-x402-distribution.yml'
+);
 const draft = await read('docs/agentic-ai-vendor-gate-resubmission-draft.md');
 
 for (const [name, text] of [
@@ -76,6 +79,24 @@ assert.ok(
   'market repair must refuse non-8-route Floot state'
 );
 assert.ok(
+  market.includes(
+    "'https://agent402.tools/api/index?seller=pa-entity-x402.floot.app'"
+  ),
+  'market repair must independently read Agent402 acceptance state'
+);
+assert.ok(
+  market.includes('paidToolCount ?? 0) >= 8'),
+  'market repair must require at least 8 Agent402 paid tools'
+);
+assert.ok(
+  market.includes("agentBlob.includes('vendor-intake-gate')"),
+  'market repair must require Agent402 vendor-gate visibility'
+);
+assert.ok(
+  market.includes('Refusing marketplace repair: Agent402 has not yet accepted'),
+  'market repair must fail closed before directory mutation when Agent402 is not accepted'
+);
+assert.ok(
   market.includes("'https://market402.com/submit'"),
   'Market402 submit endpoint missing'
 );
@@ -96,6 +117,19 @@ assert.equal(
   /payment-signature|x-payment/i.test(market),
   false,
   'marketplace repair must not send payment headers'
+);
+
+const agentStep = distributionWorkflow.indexOf(
+  '- name: Re-register and verify Agent402'
+);
+const marketStep = distributionWorkflow.indexOf(
+  '- name: Repair zero-spend marketplace listings'
+);
+assert.ok(agentStep >= 0, 'combined distribution workflow missing Agent402 step');
+assert.ok(marketStep >= 0, 'combined distribution workflow missing marketplace step');
+assert.ok(
+  agentStep < marketStep,
+  'combined distribution workflow must verify Agent402 before marketplace repair'
 );
 
 assert.ok(
@@ -120,6 +154,8 @@ assert.equal(
 
 console.log('PASS post-rehost workflows are manual-only');
 console.log('PASS Agent402 acceptance is zero-spend and requires 8-route Floot state');
+console.log('PASS marketplace mutation is gated on Agent402 acceptance');
+console.log('PASS combined distribution orders Agent402 before marketplace repair');
 console.log('PASS marketplace mutation scope is six changed routes');
 console.log('PASS NoHumans remains read-only');
 console.log('PASS Agentic.ai draft remains gated and targets Floot');
