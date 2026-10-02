@@ -3,12 +3,7 @@
 const fs=require("node:fs");
 const path=require("node:path");
 const registry=require("../product-registry.json");
-const {
-  MODULES,
-  managedProducts,
-  buildCatalog,
-  buildOpenApi,
-}=require("../packages/discovery/generator");
+const {buildDeploymentBundle}=require("../packages/discovery/bundle");
 
 const ROOT=path.resolve(__dirname,"..");
 const DEFAULT_BASE="https://candidate.example";
@@ -19,23 +14,27 @@ function expectedAtomic(priceUsdc){
   return String(Math.round(n*1_000_000));
 }
 
+function parseJsonFile(bundle,name){
+  return JSON.parse(bundle.files[name]);
+}
+
 function buildReleaseBundle(publicApiBase=DEFAULT_BASE){
   const base=String(publicApiBase).replace(/\/$/,"");
   if(!/^https:\/\//.test(base))throw new Error("publicApiBase must use https");
 
-  const products=managedProducts();
-  const catalog=buildCatalog(base);
-  const openapi=buildOpenApi(base);
+  const deployment=buildDeploymentBundle(base);
+  const catalog=parseJsonFile(deployment,"x402-catalog.json");
+  const openapi=parseJsonFile(deployment,"openapi.json");
+  const productIndex=parseJsonFile(deployment,"product-index.json");
+  const bundleManifest=parseJsonFile(deployment,"bundle-manifest.json");
 
-  if(catalog.resources.length!==products.length)throw new Error("catalog product-count drift");
-  if(Object.keys(openapi.paths).length!==products.length)throw new Error("OpenAPI product-count drift");
+  if(catalog.resources.length!==productIndex.products.length)throw new Error("catalog product-count drift");
+  if(Object.keys(openapi.paths).length!==productIndex.products.length)throw new Error("OpenAPI product-count drift");
+  if(bundleManifest.product_count!==productIndex.products.length)throw new Error("bundle manifest product-count drift");
 
-  const manifestProducts=[];
-  for(let i=0;i<products.length;i++){
-    const p=products[i];
+  for(let i=0;i<productIndex.products.length;i++){
+    const p=productIndex.products[i];
     const resource=catalog.resources[i];
-    const metadata=MODULES[p.id];
-    if(!metadata)throw new Error("missing metadata module "+p.id);
     if(resource.resource!==base+p.path)throw new Error(p.id+" resource path drift");
     if(resource.method!==p.method)throw new Error(p.id+" method drift");
     if(resource.price!=="$"+p.price_usdc)throw new Error(p.id+" price drift");
@@ -47,48 +46,42 @@ function buildReleaseBundle(publicApiBase=DEFAULT_BASE){
     if(String(accept.asset).toLowerCase()!=="0x833589fcd6edb6e08f4c7c32d4f71b54bda02913")throw new Error(p.id+" asset drift");
     if(String(accept.payTo).toLowerCase()!=="0x708f7b52b56eafd7fc1de65fc7752ed732914021")throw new Error(p.id+" payTo drift");
     if(!openapi.paths[p.path])throw new Error(p.id+" OpenAPI path missing");
-
-    manifestProducts.push({
-      id:p.id,
-      number:p.number,
-      path:p.path,
-      price_usdc:p.price_usdc,
-      status:p.status,
-      required_env:Array.isArray(p.required_env)?p.required_env:[],
-      deployment_requirements:Array.isArray(p.deployment_requirements)?p.deployment_requirements:[]
-    });
+    if(!Array.isArray(p.required_env))throw new Error(p.id+" required_env missing from product index");
+    if(!Array.isArray(p.deployment_requirements))throw new Error(p.id+" deployment_requirements missing from product index");
   }
 
+  const releaseManifest={
+    schema_version:2,
+    public_api_base:base,
+    registry_version:registry.version,
+    product_count:productIndex.products.length,
+    products:productIndex.products,
+    discovery_bundle_manifest:bundleManifest
+  };
+
   return {
-    catalog:{
-      ...catalog,
-      name:"x402 Product Factory staging catalog",
-      description:"Machine-generated catalog for every registry product that is both modular and currently in a staging status. Production references 001–002 are not replaced by this bundle."
-    },
-    openapi:{
-      ...openapi,
-      info:{
-        ...openapi.info,
-        title:"x402 Product Factory staging API",
-        description:"Machine-generated staging OpenAPI derived from the canonical product registry and metadata module map."
-      }
-    },
-    manifest:{
-      schema_version:1,
-      public_api_base:base,
-      registry_version:registry.version,
-      product_count:manifestProducts.length,
-      products:manifestProducts
-    }
+    catalog,
+    openapi,
+    llms:deployment.files["llms.txt"],
+    productIndex,
+    bundleManifest,
+    manifest:releaseManifest,
+    canonicalFiles:deployment.files
   };
 }
 
 function writeReleaseBundle(outDir,publicApiBase=DEFAULT_BASE){
   const bundle=buildReleaseBundle(publicApiBase);
   fs.mkdirSync(outDir,{recursive:true});
-  fs.writeFileSync(path.join(outDir,"x402-catalog.json"),JSON.stringify(bundle.catalog,null,2)+"\n");
-  fs.writeFileSync(path.join(outDir,"openapi.json"),JSON.stringify(bundle.openapi,null,2)+"\n");
-  fs.writeFileSync(path.join(outDir,"release-manifest.json"),JSON.stringify(bundle.manifest,null,2)+"\n");
+
+  for(const [name,content] of Object.entries(bundle.canonicalFiles)){
+    fs.writeFileSync(path.join(outDir,name),content,"utf8");
+  }
+  fs.writeFileSync(
+    path.join(outDir,"release-manifest.json"),
+    JSON.stringify(bundle.manifest,null,2)+"\n"
+  );
+
   return bundle;
 }
 
@@ -101,7 +94,8 @@ if(require.main===module){
     outDir,
     productCount:bundle.manifest.product_count,
     products:bundle.manifest.products.map(p=>p.number+" "+p.id),
-    paths:Object.keys(bundle.openapi.paths)
+    paths:Object.keys(bundle.openapi.paths),
+    files:[...Object.keys(bundle.canonicalFiles),"release-manifest.json"].sort()
   },null,2));
 }
 
