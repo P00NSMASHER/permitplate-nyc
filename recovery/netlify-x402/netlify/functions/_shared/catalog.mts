@@ -222,6 +222,8 @@ export function bazaarExtension(service) {
 export function resourceRecord(service) {
   return {
     resource: ORIGIN + service.path,
+    type: 'http',
+    x402Version: 2,
     method: 'GET',
     description: service.description,
     price: service.price,
