@@ -352,7 +352,7 @@ async function refreshMarketplaces() {
         '&protocol=x402&limit=50'
     ),
     nohumans: await request(
-      'https://nohumans.directory/v1/discover?q=' + vendorQuery
+      'https://api.nohumans.directory/v1/discover?q=' + vendorQuery
     ),
   };
 
