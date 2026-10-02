@@ -9,6 +9,10 @@ The detailed service map is maintained here:
 - [Floot bare-origin consolidation plan](floot-x402-consolidation-plan.md)
 - [Agentic.ai resubmission draft — do not send before Agent402 evidence](agentic-ai-vendor-gate-resubmission-draft.md)
 
+## Current availability
+
+As of October 2, 2026, the two Floot Pennsylvania raw routes are healthy. The AppDeploy-hosted vendor-intake gate and other AppDeploy x402 APIs are being intercepted by an AppDeploy `temporarily-unavailable` hosting state rather than reaching seller code. Track incident #38 and direct Floot rehost #39. Do not count the AppDeploy routes as currently buyer-available until the external zero-spend verifier is green again.
+
 ## Current paid products
 
 ### Pennsylvania best match
