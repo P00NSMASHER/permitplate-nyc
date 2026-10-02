@@ -24,13 +24,19 @@ function createLocalVendorPolicyService({registry,now=()=>new Date().toISOString
     const normalized=validateLocalVendorPolicyInput(input);
     const sourceFailures=[];
     let evidence;
-    try{evidence=normalizedEvidence("pa_registry",await registry.lookup({company:normalized.company}));}
-    catch(error){
+    try{
+      evidence=normalizedEvidence("pa_registry",await registry.lookup({company:normalized.company}));
+    }catch(error){
       const detail=error?.code||error?.message||"lookup failed";
       sourceFailures.push({source:"pa_registry",detail});
       evidence=sourceUnavailable("pa_registry",detail);
     }
-    const result=assessLocalVendorPolicy(evidence,normalized,now());
+    const result=assessLocalVendorPolicy(evidence,{
+      allowedKinds:normalized.allowedKinds,
+      allowedCounties:normalized.allowedCounties,
+      minAgeDays:normalized.minAgeDays,
+      now:now()
+    });
     return {...result,input:normalized,sourceFailures,chargeable:sourceFailures.length===0,evidence};
   }};
 }
