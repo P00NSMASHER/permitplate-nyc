@@ -280,3 +280,11 @@ jobs:
         run: node --test factory/products/pa-vendor-domain-continuity-review/metadata.test.js
       - name: Run Product 020 release gate
         run: node factory/scripts/validate-product-020.js
+      - name: Test Product 021 decision policy
+        run: node --test factory/products/pa-entity-type-policy/decision.test.js
+      - name: Test Product 021 service composition
+        run: node --test factory/products/pa-entity-type-policy/service.test.js
+      - name: Test Product 021 paid x402 handler
+        run: node --test factory/products/pa-entity-type-policy/paid-handler.test.js
+      - name: Test Product 021 discovery metadata
+        run: node --test factory/products/pa-entity-type-policy/metadata.test.js
