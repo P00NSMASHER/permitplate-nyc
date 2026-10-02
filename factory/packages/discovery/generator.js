@@ -13,7 +13,9 @@ const MODULES = Object.freeze({
 });
 
 function managedProducts() {
-  return registry.products.filter((product) => MODULES[product.id]);
+  return registry.products.filter(
+    (product) => MODULES[product.id] && /staging$/.test(product.status)
+  );
 }
 
 function normalizeBase(base) {
