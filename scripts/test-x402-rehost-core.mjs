@@ -4,6 +4,8 @@ import {
   screenOfacName,
   lookupSecFilings,
   latestTreasuryRates,
+  searchPennsylvaniaEntities,
+  runVendorGateFixture,
 } from '../recovery/x402-rehost-core.mjs';
 
 const checks = [];
@@ -76,6 +78,49 @@ await run(
     v.recordDate.length === 10 &&
     Array.isArray(v?.rates) &&
     v.rates.length >= 1
+);
+
+await run(
+  'PA registry',
+  () => searchPennsylvaniaEntities('OpenAI OpCo', 3),
+  (v) =>
+    Array.isArray(v?.results) &&
+    v.results.length >= 1 &&
+    v.results[0]?.businessName != null &&
+    v.results[0]?.filingNumber != null
+);
+
+await run(
+  'Vendor gate proceed',
+  () => runVendorGateFixture('proceed'),
+  (v) =>
+    v?.decision === 'proceed' &&
+    v?.agentAction === 'continue_vendor_intake' &&
+    Array.isArray(v?.reviewTriggers) &&
+    v.reviewTriggers.length === 0 &&
+    v?.evidence?.registry?.complete === true &&
+    v?.evidence?.address?.providedEvidenceComplete === true &&
+    v?.evidence?.address?.registryEvidenceComplete === true &&
+    v?.evidence?.ofac?.complete === true &&
+    v?.evidence?.domain?.complete === true
+);
+
+await run(
+  'Vendor gate address review',
+  () => runVendorGateFixture('address_mismatch'),
+  (v) =>
+    v?.decision === 'human_review' &&
+    v?.agentAction === 'pause_and_request_human_review' &&
+    v?.reviewTriggers?.some((trigger) => trigger?.code === 'registered_address_differs')
+);
+
+await run(
+  'Vendor gate domain review',
+  () => runVendorGateFixture('domain_mismatch'),
+  (v) =>
+    v?.decision === 'human_review' &&
+    v?.agentAction === 'pause_and_request_human_review' &&
+    v?.reviewTriggers?.some((trigger) => trigger?.code === 'domain_name_not_aligned')
 );
 
 const passed = checks.filter((x) => x.ok).length;
