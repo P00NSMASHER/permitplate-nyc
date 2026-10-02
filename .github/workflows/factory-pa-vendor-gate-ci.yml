@@ -251,3 +251,5 @@ jobs:
         run: node --test factory/products/pa-vendor-counterparty-review/paid-handler.test.js
       - name: Test Product 018 discovery metadata
         run: node --test factory/products/pa-vendor-counterparty-review/metadata.test.js
+      - name: Run Product 018 release gate
+        run: node factory/scripts/validate-product-018.js
