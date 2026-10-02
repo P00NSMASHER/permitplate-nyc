@@ -375,5 +375,26 @@
     "conclusion": "success",
     "result": "external_access_restricted",
     "note": "Public GitHub runner received the same 403 sandbox restriction on known-good PA routes, so staged endpoint health cannot be inferred from external sandbox access."
+  },
+  "resumeBudget": {
+    "meteredActionsToPublishFromWrite14": 19,
+    "breakdown": {
+      "listFiles": 1,
+      "boundaryReadFiles": 1,
+      "writes14Through26": 13,
+      "typecheck": 1,
+      "tests": 1,
+      "checkpoint": 1,
+      "publish": 1
+    },
+    "unmetered": [
+      "get_publish_status",
+      "get_job_status",
+      "list_projects",
+      "get_preview_url"
+    ],
+    "dailyAllowance": 100,
+    "expectedHeadroom": 81,
+    "note": "Do not recapture the original rollback snapshot; it is the authoritative pre-write baseline."
   }
 }
