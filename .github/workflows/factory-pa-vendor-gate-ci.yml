@@ -121,6 +121,15 @@ jobs:
       - name: Run Product 010 release gate
         run: node factory/scripts/validate-product-010.js
 
+      - name: Test Product 011 expiration decision
+        run: node --test factory/products/domain-expiration-horizon/decision.test.js
+      - name: Test Product 011 expiration service
+        run: node --test factory/products/domain-expiration-horizon/service.test.js
+      - name: Test Product 011 paid x402 handler
+        run: node --test factory/products/domain-expiration-horizon/paid-handler.test.js
+      - name: Test Product 011 discovery metadata
+        run: node --test factory/products/domain-expiration-horizon/metadata.test.js
+
       - name: Validate factory product registry
         run: node factory/scripts/validate-registry.js
       - name: Validate migration manifest classification
