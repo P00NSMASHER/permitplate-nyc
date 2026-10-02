@@ -24,6 +24,10 @@ async function main(){
       distanceMiles:result.evidence.address.distanceMiles
     }
   },null,2));
+  if (Array.isArray(result.sourceFailures) && result.sourceFailures.length > 0) {
+    console.log("TRANSIENT_SOURCE_BLOCKED", JSON.stringify(result.sourceFailures));
+    return;
+  }
   assert.equal(result.decision,"match");
   assert.deepEqual(result.reasonCodes,[]);
 }
