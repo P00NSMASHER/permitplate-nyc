@@ -1,0 +1,33 @@
+{
+  "checkedAt": "2026-10-02",
+  "payer": "0x7e6b6556322c4e26c567a867964ac793f5ee2b1c",
+  "sellerTransaction": {
+    "hash": "0x17985b16137ff8aef95641be06424a5fa4e9edacc6ade5aaf0a58d523ad1cd73",
+    "amountUsdc": 0.001,
+    "resource": "https://pa-entity-x402.floot.app/_api/pa-entity-one",
+    "observedByResourceStats": true
+  },
+  "publicEvidence": [
+    {
+      "source": "402radar",
+      "page": "https://402radar.io/toolshed.lemon-agent.dev",
+      "observation": "The same address appears as both payer and facilitator for an unrelated x402 service transaction."
+    },
+    {
+      "source": "402radar",
+      "page": "https://402radar.io/x402-agents-production.up.railway.app",
+      "observation": "The same address appears as both payer and facilitator for another unrelated x402 service transaction."
+    }
+  ],
+  "conclusion": {
+    "customerVerified": false,
+    "probeOrVerifierConfirmed": false,
+    "classification": "external_unattributed",
+    "rationale": "The wallet clearly participates in x402 activity across unrelated services, but public evidence does not establish a named customer or conclusively identify it as a marketplace probe/verifier. Under the strict attribution policy it must not count as customer revenue."
+  },
+  "accountingEffect": {
+    "settlementObserved": true,
+    "observedGrossUsdc": 0.001,
+    "confirmedCustomerRevenueUsdc": 0
+  }
+}
