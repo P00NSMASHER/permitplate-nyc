@@ -17,6 +17,7 @@ const MODULES = Object.freeze({
   "pa-business-formation-age": require("../../products/pa-business-formation-age/metadata"),
   "domain-expiration-horizon": require("../../products/domain-expiration-horizon/metadata"),
   "domain-last-changed-recency": require("../../products/domain-last-changed-recency/metadata"),
+  "pa-vendor-new-domain-review": require("../../products/pa-vendor-new-domain-review/metadata"),
 });
 
 function managedProducts() {
