@@ -1,0 +1,295 @@
+{
+  "sourceBranch": "floot-recovery-lock-2026-10-02",
+  "sourceCommit": "ceb21b651764ffaa0c893f4e725eccce0c10ba5f",
+  "projectId": "b69a3ee6-eb01-430d-aa51-da2fc7beeac4",
+  "productionOrigin": "https://pa-entity-x402.floot.app",
+  "status": "awaiting-floot-reset",
+  "startedAt": null,
+  "currentFlootVersion": null,
+  "writes": [
+    {
+      "order": 1,
+      "source": "docs/pa-entity-floot-release/vendor-intake-gate_GET.ts",
+      "target": "endpoints/vendor-intake-gate_GET.ts",
+      "expectedBlobSha": "f318feaaf197783c8460899d1d419026760496b5",
+      "expectedSize": 46016,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 2,
+      "source": "docs/pa-entity-floot-release/vendor-intake-gate_GET.schema.ts",
+      "target": "endpoints/vendor-intake-gate_GET.schema.ts",
+      "expectedBlobSha": "f13ed84460f72035f36cd69199c6d4e679676744",
+      "expectedSize": 207,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 3,
+      "source": "docs/pa-entity-floot-release/vendor-intake-demo_GET.ts",
+      "target": "endpoints/vendor-intake-demo_GET.ts",
+      "expectedBlobSha": "d9229747651bf66f2570f80bb038a17967318a19",
+      "expectedSize": 2355,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 4,
+      "source": "docs/pa-entity-floot-release/vendor-intake-demo_GET.schema.ts",
+      "target": "endpoints/vendor-intake-demo_GET.schema.ts",
+      "expectedBlobSha": "5bfd5cac39b3e1be48575cba43a11f918df5b8f5",
+      "expectedSize": 188,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 5,
+      "source": "docs/pa-entity-floot-release/sec-filings_GET.ts",
+      "target": "endpoints/sec-filings_GET.ts",
+      "expectedBlobSha": "de265acbc713348fcc321bed31d85349d660c97c",
+      "expectedSize": 14860,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 6,
+      "source": "docs/pa-entity-floot-release/sec-filings_GET.schema.ts",
+      "target": "endpoints/sec-filings_GET.schema.ts",
+      "expectedBlobSha": "65632d4dce5759d9d1f9b62ee2b6011a3eb9e43f",
+      "expectedSize": 235,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 7,
+      "source": "docs/pa-entity-floot-release/us-address-geocode_GET.ts",
+      "target": "endpoints/us-address-geocode_GET.ts",
+      "expectedBlobSha": "264f727ecc1a1eeb32eb8890a45c21a90ec4571b",
+      "expectedSize": 13368,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 8,
+      "source": "docs/pa-entity-floot-release/us-address-geocode_GET.schema.ts",
+      "target": "endpoints/us-address-geocode_GET.schema.ts",
+      "expectedBlobSha": "29f0ec0067b1cad1a54f9b577c347dd6bcdfe410",
+      "expectedSize": 143,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 9,
+      "source": "docs/pa-entity-floot-release/ofac-sdn-screen_GET.ts",
+      "target": "endpoints/ofac-sdn-screen_GET.ts",
+      "expectedBlobSha": "7a54e70bcace8bb8dcf8c5e13648edd81821e93c",
+      "expectedSize": 18478,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 10,
+      "source": "docs/pa-entity-floot-release/ofac-sdn-screen_GET.schema.ts",
+      "target": "endpoints/ofac-sdn-screen_GET.schema.ts",
+      "expectedBlobSha": "391e9c763619ae9674c91cb8d55b403840bb0057",
+      "expectedSize": 207,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 11,
+      "source": "docs/pa-entity-floot-release/domain-rdap_GET.ts",
+      "target": "endpoints/domain-rdap_GET.ts",
+      "expectedBlobSha": "3bf9001fe51dcc0a2b64e3881d361c7e946b3d84",
+      "expectedSize": 15139,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 12,
+      "source": "docs/pa-entity-floot-release/domain-rdap_GET.schema.ts",
+      "target": "endpoints/domain-rdap_GET.schema.ts",
+      "expectedBlobSha": "72d31c48dbfa2475e8d8abd137d04d492974a4b0",
+      "expectedSize": 142,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 13,
+      "source": "docs/pa-entity-floot-release/treasury-average-rates_GET.ts",
+      "target": "endpoints/treasury-average-rates_GET.ts",
+      "expectedBlobSha": "ba41708dd6524b0ab937f118cad6e204cccd9712",
+      "expectedSize": 12341,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 14,
+      "source": "docs/pa-entity-floot-release/treasury-average-rates_GET.schema.ts",
+      "target": "endpoints/treasury-average-rates_GET.schema.ts",
+      "expectedBlobSha": "bcac0bcd7145c949829e40c152b97014007ce9cf",
+      "expectedSize": 144,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 15,
+      "source": "docs/pa-entity-floot-recovery/openapi.json",
+      "target": "static/openapi.json",
+      "expectedBlobSha": "35bc5c1a3728c15fcae709d0028309c708ba032f",
+      "expectedSize": 37007,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 16,
+      "source": "docs/pa-entity-floot-recovery/llms.txt",
+      "target": "static/llms.txt",
+      "expectedBlobSha": "374a4fc63d123f6bc38ec53112a1a32128a54b1b",
+      "expectedSize": 3035,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 17,
+      "source": "docs/pa-entity-floot-recovery/llms-full.txt",
+      "target": "static/llms-full.txt",
+      "expectedBlobSha": "f97c4f2b5f7e070403eea8d7d6e04ef9e853c75f",
+      "expectedSize": 4636,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 18,
+      "source": "docs/pa-entity-floot-recovery/skill.txt",
+      "target": "static/skill.txt",
+      "expectedBlobSha": "58bab03ae5077076d086313e206aa3e170dda93a",
+      "expectedSize": 2222,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 19,
+      "source": "docs/pa-entity-floot-recovery/x402",
+      "target": "static/.well-known/x402",
+      "expectedBlobSha": "02ced38868891823008a6fc1e2f52f5a5bd1f201",
+      "expectedSize": 24383,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 20,
+      "source": "docs/pa-entity-floot-recovery/x402.json",
+      "target": "static/.well-known/x402.json",
+      "expectedBlobSha": "02ced38868891823008a6fc1e2f52f5a5bd1f201",
+      "expectedSize": 24383,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 21,
+      "source": "docs/pa-entity-floot-recovery/x402-services.json",
+      "target": "static/.well-known/x402-services.json",
+      "expectedBlobSha": "02ced38868891823008a6fc1e2f52f5a5bd1f201",
+      "expectedSize": 24383,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 22,
+      "source": "docs/pa-entity-floot-recovery/x402-service.json",
+      "target": "static/.well-known/x402-service.json",
+      "expectedBlobSha": "65cf6da88c8431b9e1a52d5eab05ad4d4533fa9c",
+      "expectedSize": 1062,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 23,
+      "source": "docs/pa-entity-floot-recovery/x402-catalog.json",
+      "target": "static/.well-known/x402-catalog.json",
+      "expectedBlobSha": "02ced38868891823008a6fc1e2f52f5a5bd1f201",
+      "expectedSize": 24383,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 24,
+      "source": "docs/pa-entity-floot-recovery/security.txt",
+      "target": "static/.well-known/security.txt",
+      "expectedBlobSha": "8633f76b16af225715c72c01517294bacc8029f8",
+      "expectedSize": 259,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 25,
+      "source": "docs/pa-entity-floot-recovery/sitemap.xml",
+      "target": "static/sitemap.xml",
+      "expectedBlobSha": "64b024d6149df67346de5c1fed697946bedd4843",
+      "expectedSize": 939,
+      "status": "pending",
+      "flootVersionAfter": null
+    },
+    {
+      "order": 26,
+      "source": "docs/pa-entity-floot-recovery/robots.txt",
+      "target": "static/robots.txt",
+      "expectedBlobSha": "04e2420a446067d88e32d971ed539f8046511638",
+      "expectedSize": 77,
+      "status": "pending",
+      "flootVersionAfter": null
+    }
+  ],
+  "validation": {
+    "rollbackSnapshot": "pending",
+    "deploymentLock": "pending",
+    "typecheck": "pending",
+    "tests": "pending",
+    "stagingCheckpoint": "pending",
+    "publish": "pending",
+    "publicBuyerVerification": "pending",
+    "agent402Reregistration": "pending",
+    "agent402ExpandedTools": "pending",
+    "postDeployMarketplaceRepair": "pending"
+  },
+  "preWriteSnapshot": {
+    "status": "pending",
+    "projectVersion": null,
+    "artifactPath": null,
+    "githubCommit": null,
+    "capturedFileCount": null,
+    "preexistingRecoveryTargets": null,
+    "absentRecoveryTargets": null,
+    "publicBaselineComparison": "pending",
+    "validator": "pending"
+  },
+  "stagingCheckpoint": {
+    "status": "pending",
+    "title": "x402 eight-route rehost staged",
+    "createdAfterTypecheckAndTests": true,
+    "checkpointId": null,
+    "description": null
+  },
+  "lastUpdatedAt": "2026-10-02T17:44:15Z",
+  "lastCompletedWriteOrder": 0,
+  "resumeRule": "Never restart from write 1 after interruption. Refresh Floot list_files, verify boundary content against the locked deployment bundle, confirm the rollback snapshot/plan still match the captured pre-write project version, then resume at the next unfinished ordered write.",
+  "rollbackPlan": {
+    "status": "pending",
+    "projectVersion": null,
+    "artifactPath": null,
+    "githubCommit": null,
+    "restoreWrites": null,
+    "deletes": null,
+    "validator": "pending"
+  },
+  "deploymentLock": {
+    "status": "passed",
+    "sourceBranch": "floot-recovery-lock-2026-10-02",
+    "sourceCommit": "ceb21b651764ffaa0c893f4e725eccce0c10ba5f",
+    "checkedMain": "b24a55bebc3a1e9651d08ae9e4095a47fb2a066a",
+    "workflowRunId": 37037705191,
+    "result": "immutable 26-write bundle verified; 0 locked source changes on main"
+  }
+}
