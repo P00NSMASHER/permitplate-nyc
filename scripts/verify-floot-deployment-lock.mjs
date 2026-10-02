@@ -39,7 +39,17 @@ assert.equal(queue.deploymentBundles.length, 2);
 const bundledItems = [];
 for (const bundle of queue.deploymentBundles) {
   assert.match(bundle.gitBlobSha, /^[0-9a-f]{40}$/);
-  const bytes = await readFile(new URL('../' + bundle.path, import.meta.url));
+
+  // Validate the repository blob, not post-checkout bytes. On Windows with
+  // core.autocrlf enabled, a working-tree JSON file can contain CRLF even
+  // though the committed Git blob is LF. Hashing the checkout therefore
+  // produces a false drift failure even when GitHub still holds the exact
+  // locked blob. Deployment sources are fetched from GitHub, so the Git blob
+  // is the authoritative byte identity.
+  const blob = await github('/git/blobs/' + bundle.gitBlobSha);
+  assert.equal(blob.sha, bundle.gitBlobSha, 'deployment bundle blob missing');
+  assert.equal(blob.encoding, 'base64', 'unexpected deployment bundle encoding');
+  const bytes = Buffer.from(blob.content.replace(/\\n/g, ''), 'base64');
   const header = Buffer.from('blob ' + bytes.length + '\0', 'utf8');
   const blobSha = crypto
     .createHash('sha1')
