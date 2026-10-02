@@ -25,6 +25,9 @@ function manifest() {
     name: 'Agent Data Tools x402',
     description:
       'Eight same-origin x402 tools for business identity, vendor intake decisions, SEC filings, Census geocoding, OFAC name screening, RDAP, and Treasury rates.',
+    openapi: ORIGIN + '/openapi.json',
+    llms: ORIGIN + '/llms.txt',
+    skill: ORIGIN + '/skill.txt',
     resources: SERVICES.map(resourceRecord),
   };
 }
