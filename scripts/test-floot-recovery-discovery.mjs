@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
+import crypto from 'node:crypto'
 
 const root = 'docs/pa-entity-floot-recovery'
 const manifest = JSON.parse(fs.readFileSync(root + '/x402.json', 'utf8'))
@@ -117,6 +118,14 @@ for (const entry of deployMap.writes) {
   )
   assert.match(entry.gitBlobSha, /^[0-9a-f]{40}$/)
   assert.ok(Number.isInteger(entry.size) && entry.size > 0)
+  const bytes = fs.readFileSync(entry.source)
+  assert.equal(bytes.length, entry.size, 'size drift for ' + entry.source)
+  const header = Buffer.from('blob ' + bytes.length + '\0', 'utf8')
+  const actualBlobSha = crypto
+    .createHash('sha1')
+    .update(Buffer.concat([header, bytes]))
+    .digest('hex')
+  assert.equal(actualBlobSha, entry.gitBlobSha, 'Git blob drift for ' + entry.source)
 }
 
 const recoveryText = [
