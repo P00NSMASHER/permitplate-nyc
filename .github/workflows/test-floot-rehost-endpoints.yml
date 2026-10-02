@@ -6,6 +6,8 @@ on:
       - 'docs/pa-entity-floot-release/*_GET.ts'
       - 'docs/pa-entity-floot-release/*_GET.schema.ts'
       - 'scripts/test-floot-rehost-raw-endpoints.mts'
+      - 'scripts/test-floot-vendor-gate-release.mts'
+      - 'scripts/test-floot-vendor-gate-demo-wrapper.mjs'
       - 'docs/pa-entity-floot-recovery/**'
       - 'recovery/floot-target-manifest.json'
       - 'recovery/x402-portfolio-target.json'
@@ -25,7 +27,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Run Floot rehost endpoint tests
+
+      - name: Run Floot raw rehost endpoint tests
         run: npx -y tsx scripts/test-floot-rehost-raw-endpoints.mts
+
+      - name: Run Floot vendor gate paid-flow tests
+        run: npx -y tsx scripts/test-floot-vendor-gate-release.mts
+
+      - name: Verify bounded free reviewer wrapper
+        run: node scripts/test-floot-vendor-gate-demo-wrapper.mjs
+
       - name: Validate eight-resource recovery discovery bundle
         run: node scripts/validate-floot-recovery-bundle.mjs
