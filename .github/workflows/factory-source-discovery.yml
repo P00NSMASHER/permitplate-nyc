@@ -1,0 +1,29 @@
+name: Factory live source discovery
+
+on:
+  push:
+    branches:
+      - x402-product-factory-bootstrap
+    paths:
+      - '.github/workflows/factory-source-discovery.yml'
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Inspect live AppDeploy OpenAPI
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/openapi.json'
+          curl -fsSL --max-time 30 "$URL" -o /tmp/openapi.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/openapi.json'))
+          for path,methods in sorted(d.get('paths',{}).items()):
+              print(path)
+              for method,op in methods.items():
+                  if isinstance(op,dict):
+                      print(' ',method.upper(),op.get('operationId'),'-',op.get('summary'))
+          PY
