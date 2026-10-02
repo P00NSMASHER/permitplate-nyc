@@ -23,8 +23,9 @@ jobs:
       - name: Syntax check recovery modules
         run: |
           node --check recovery/x402-rehost-core.mjs
-          node --check recovery/vendor-intake-core.mjs
-          node --check scripts/test-vendor-intake-decision-core.mjs
+          node --check recovery/vendor-intake-gate-core.mjs
+          node --check recovery/pa-registry-rehost-core.mjs
+          node --check scripts/test-vendor-intake-gate-core.mjs
           node --check scripts/test-x402-rehost-core.mjs
           node --check scripts/test-vendor-intake-live-core.mjs
           node --check scripts/validate-floot-target-manifest.mjs
@@ -32,8 +33,8 @@ jobs:
       - name: Validate exact Floot target manifest
         run: node scripts/validate-floot-target-manifest.mjs
 
-      - name: Run pure vendor-intake decision regressions
-        run: node scripts/test-vendor-intake-decision-core.mjs
+      - name: Run vendor-intake core regressions
+        run: node scripts/test-vendor-intake-gate-core.mjs
 
       - name: Probe official public data upstreams through recovery core
         run: node scripts/test-x402-rehost-core.mjs
