@@ -151,6 +151,15 @@ try {
     '0x708f7b52b56eafd7fc1de65fc7752ed732914021'
   )
   assert.equal(doc.accepts[0].extra.name, 'USD Coin')
+  assert.equal(typeof doc.resource.serviceName, 'string')
+  assert.ok(doc.resource.serviceName.length > 0 && doc.resource.serviceName.length <= 32)
+  assert.match(doc.resource.serviceName, /^[\x20-\x7E]+$/)
+  assert.ok(Array.isArray(doc.resource.tags))
+  assert.ok(doc.resource.tags.length <= 5)
+  for (const tag of doc.resource.tags) {
+    assert.ok(tag.length > 0 && tag.length <= 32)
+    assert.match(tag, /^[\x20-\x7E]+$/)
+  }
 
   const base =
     'https://pa-entity-x402.floot.app/_api/vendor-intake-gate'
