@@ -6,9 +6,21 @@ Do **not** use `docs/pa-entity-floot-release/*` as an automatic rollback source.
 
 Some checked-in release fixtures already contain staged recovery/vendor-gate discovery state, while the currently published Floot seller still exposes only two paid resources. A rollback must restore the exact pre-migration Floot project contents, not an inferred historical package.
 
+## Public static baseline already captured
+
+A pre-rehost public baseline exists at:
+
+`verification/floot-static-rollback-public-latest.json`
+
+It contains the exact public response bodies and SHA-256 hashes for the 12 static discovery files while the canonical production manifest still exposed 2 paid resources.
+
+This is a cross-check, **not** the authoritative rollback source. Public bytes can differ from Floot source bytes, so the post-reset Floot snapshot below still remains mandatory.
+
 ## Mandatory pre-write snapshot
 
-Immediately after the post-reset `list_files`, use **one** `read_files` call to capture these 16 current project files:
+Immediately after the post-reset `list_files`, first compare the 26 deployment targets against the current Floot file tree so new-vs-existing targets are known.
+
+Then use **one** `read_files` call to capture these 16 current project files:
 
 ### Four proven PA files
 
@@ -34,7 +46,7 @@ Immediately after the post-reset `list_files`, use **one** `read_files` call to 
 
 Persist those exact contents in one GitHub JSON artifact before the first Floot write:
 
-`verification/floot-pre-rehost-snapshot-<timestamp>.json`
+`verification/floot-pre-rehost-rollback-<projectVersion>.json`
 
 The snapshot must include:
 
@@ -45,10 +57,33 @@ The snapshot must include:
 - all 16 paths
 - exact UTF-8 contents
 - whether each file existed
-- source length
+- UTF-8 byte length
 - a SHA-256 digest for each content string
+- list of recovery targets that were absent before migration
 
-Do not begin recovery writes until the snapshot commit succeeds.
+For each of the 12 static files, compare the freshly read Floot-source SHA-256 to the matching public baseline entry. If the hashes differ, record the mismatch and **trust the freshly read Floot source** as rollback authority.
+
+Validate the snapshot with:
+
+`node scripts/validate-floot-pre-rehost-snapshot.mjs <snapshot.json>`
+
+Do not begin recovery writes until the snapshot commit succeeds and the snapshot validator passes.
+
+## Staging checkpoint before publish
+
+After all 26 recovery writes are complete and both Floot typecheck and project tests pass, create one named Floot checkpoint:
+
+**x402 eight-route rehost staged**
+
+Include in the checkpoint description:
+
+- pinned GitHub source commit
+- pre-write Floot project version
+- 8 paid resources
+- 3 fixed reviewer fixtures
+- zero AppDeploy runtime dependencies
+
+The checkpoint is an audit/recovery aid. It does not replace the durable pre-write GitHub snapshot.
 
 ## Normal failure before publish
 
@@ -107,5 +142,6 @@ Worst-case post-publish rollback:
 - publish
 - publish-status check
 - public verification
+- one staging checkpoint in the normal forward path
 
 This is still within a fresh 100-action Floot daily window if needed, but rollback should be treated as exceptional. The pre-publish typecheck/tests and exact-head CI gates are intended to prevent reaching this path.
