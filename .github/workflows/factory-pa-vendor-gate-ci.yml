@@ -170,3 +170,10 @@ jobs:
         run: node --test factory/runtime/appdeploy-bridge.test.js
       - name: Enforce no nested seller-owned AppDeploy calls
         run: node --test factory/scripts/validate-no-nested-seller-calls.test.js
+      - name: Test unified deploy-candidate validator
+        run: node --test factory/runtime/validate-deploy-candidate.test.js
+      - name: Run structural deploy-candidate preflight
+        env:
+          SEC_USER_AGENT: x402-product-factory-ci/1.0 ci@example.com
+          PUBLIC_API_BASE: https://candidate.example
+        run: node factory/runtime/validate-deploy-candidate.js
