@@ -226,4 +226,15 @@ assert.match(bestEndpoint, /retrySamePayment/)
 assert.ok(!bestEndpoint.includes('verified.success'))
 assert.match(bestEndpoint, /status === 402 \|\| status === 503 \? 'no-store'/)
 
+assert.match(vendorEndpoint, /const VENDOR_GATE_AMOUNT = '20000'/)
+assert.match(vendorEndpoint, /const VENDOR_GATE_PRICE = '\\$0\\.020'/)
+assert.match(vendorEndpoint, /\/vendor-intake-gate'/)
+assert.match(vendorEndpoint, /registered_address_differs/)
+assert.match(vendorEndpoint, /domain_name_not_aligned/)
+assert.match(vendorEndpoint, /payment-response/i)
+assert.ok(
+  !vendorEndpoint.includes('api-v2.appdeploy.ai'),
+  'Floot vendor gate must not depend on the unavailable AppDeploy API host',
+)
+
 console.log('PA Entity discovery fixture tests passed')
