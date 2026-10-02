@@ -15,6 +15,10 @@ import { writeFile } from 'node:fs/promises';
 const NETWORK = 'eip155:8453';
 const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'.toLowerCase();
 const PAY_TO = '0x708f7b52b56eafd7fc1de65fc7752ed732914021'.toLowerCase();
+const REHOST_BASE = (process.env.X402_REHOST_BASE_URL ?? '').trim().replace(/\/$/, '');
+const APPDEPLOY_PA_BASE = 'https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s';
+const targetUrl = (appDeployUrl, rehostPath) =>
+  REHOST_BASE ? REHOST_BASE + rehostPath : appDeployUrl;
 const EXPECTED_FLOOT_RESOURCES = Number(process.env.EXPECTED_FLOOT_RESOURCES ?? '2');
 if (!Number.isInteger(EXPECTED_FLOOT_RESOURCES) || EXPECTED_FLOOT_RESOURCES < 1) {
   throw new Error('EXPECTED_FLOOT_RESOURCES must be a positive integer');
@@ -40,55 +44,65 @@ const services = [
     name: 'Pennsylvania Vendor Intake Gate',
     price: '$0.020',
     amount: '20000',
-    url:
-      'https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-gate' +
-      '?name=OpenAI%20OpCo' +
-      '&address=600%20North%20Second%20Street%2C%20Suite%20401%2C%20Harrisburg%2C%20PA%2017101' +
-      '&domain=openai.com',
+    url: targetUrl(
+      APPDEPLOY_PA_BASE +
+        '/api/vendor-intake-gate?name=OpenAI%20OpCo' +
+        '&address=600%20North%20Second%20Street%2C%20Suite%20401%2C%20Harrisburg%2C%20PA%2017101' +
+        '&domain=openai.com',
+      '/_api/vendor-intake-gate?name=OpenAI%20OpCo' +
+        '&address=600%20North%20Second%20Street%2C%20Suite%20401%2C%20Harrisburg%2C%20PA%2017101' +
+        '&domain=openai.com'
+    ),
   },
   {
     id: 'sec-recent-filings',
     name: 'SEC Recent Filings',
     price: '$0.005',
     amount: '5000',
-    url:
-      'https://api-v2.appdeploy.ai/app/sec-recent-filings-x402-f9qatj/api/sec-filings' +
-      '?ticker=AAPL&form=10-K&limit=3',
+    url: targetUrl(
+      'https://api-v2.appdeploy.ai/app/sec-recent-filings-x402-f9qatj/api/sec-filings?ticker=AAPL&form=10-K&limit=3',
+      '/_api/sec-filings?ticker=AAPL&form=10-K&limit=3'
+    ),
   },
   {
     id: 'census-geocoder',
     name: 'US Census Address Geocoder',
     price: '$0.005',
     amount: '5000',
-    url:
-      'https://api-v2.appdeploy.ai/app/us-census-address-geocoder-x402-23mj4x/api/us-address-geocode' +
-      '?address=4600%20Silver%20Hill%20Rd%2C%20Washington%2C%20DC%2020233',
+    url: targetUrl(
+      'https://api-v2.appdeploy.ai/app/us-census-address-geocoder-x402-23mj4x/api/us-address-geocode?address=4600%20Silver%20Hill%20Rd%2C%20Washington%2C%20DC%2020233',
+      '/_api/us-address-geocode?address=4600%20Silver%20Hill%20Rd%2C%20Washington%2C%20DC%2020233'
+    ),
   },
   {
     id: 'ofac-sdn-screen',
     name: 'OFAC SDN Name Screen',
     price: '$0.005',
     amount: '5000',
-    url:
-      'https://api-v2.appdeploy.ai/app/ofac-sdn-name-screen-x402-m9ko96/api/ofac-sdn-screen' +
-      '?name=VLADIMIR%20PUTIN&limit=3&minScore=85',
+    url: targetUrl(
+      'https://api-v2.appdeploy.ai/app/ofac-sdn-name-screen-x402-m9ko96/api/ofac-sdn-screen?name=VLADIMIR%20PUTIN&limit=3&minScore=85',
+      '/_api/ofac-sdn-screen?name=VLADIMIR%20PUTIN&limit=3&minScore=85'
+    ),
   },
   {
     id: 'domain-rdap',
     name: 'Domain RDAP Lookup',
     price: '$0.005',
     amount: '5000',
-    url:
-      'https://api-v2.appdeploy.ai/app/domain-rdap-lookup-x402-spdfnq/api/domain-rdap' +
-      '?domain=example.com',
+    url: targetUrl(
+      'https://api-v2.appdeploy.ai/app/domain-rdap-lookup-x402-spdfnq/api/domain-rdap?domain=example.com',
+      '/_api/domain-rdap?domain=example.com'
+    ),
   },
   {
     id: 'treasury-average-rates',
     name: 'Treasury Average Interest Rates',
     price: '$0.005',
     amount: '5000',
-    url:
+    url: targetUrl(
       'https://api-v2.appdeploy.ai/app/treasury-average-interest-rates-x402-xeqftl/api/treasury-average-rates',
+      '/_api/treasury-average-rates'
+    ),
   },
 ];
 
@@ -269,8 +283,10 @@ async function verifyService(service) {
 }
 
 async function verifyVendorGateFixtures() {
-  const base =
-    'https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-demo';
+  const base = targetUrl(
+    APPDEPLOY_PA_BASE + '/api/vendor-intake-demo',
+    '/_api/vendor-intake-demo'
+  );
   const fixtures = [
     {
       id: 'gate-proceed',
@@ -405,12 +421,15 @@ async function verifyDiscovery() {
       url: 'https://pa-entity-x402.floot.app/.well-known/x402',
       expectedResources: EXPECTED_FLOOT_RESOURCES,
     },
-    {
-      id: 'appdeploy-pa-manifest',
-      url:
-        'https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/.well-known/x402',
-      expectedResources: 3,
-    },
+    ...(REHOST_BASE
+      ? []
+      : [
+          {
+            id: 'appdeploy-pa-manifest',
+            url: APPDEPLOY_PA_BASE + '/.well-known/x402',
+            expectedResources: 3,
+          },
+        ]),
   ];
 
   const results = [];
@@ -628,7 +647,8 @@ async function observePublicDirectories() {
 async function main() {
   console.log('x402 zero-spend buyer verification');
   console.log(`checkedAt=${new Date().toISOString()}`);
-  console.log('No payment signatures will be sent.\n');
+  console.log('No payment signatures will be sent.');
+  console.log(`targetMode=${REHOST_BASE ? 'rehost' : 'appdeploy'}${REHOST_BASE ? ' base=' + REHOST_BASE : ''}\n`);
 
   const serviceResults = [];
   for (const service of services) {
