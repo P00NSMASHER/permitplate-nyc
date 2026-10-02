@@ -15,10 +15,17 @@ Current U.S. Treasury OFAC SDN primary-name and alias CSV publications.
 This is deterministic first-pass name/alias screening only. A candidate is a review signal, not a legal sanctions determination. A `no_candidate` result is not sanctions clearance. OFAC 50 Percent Rule ownership analysis is not included.
 
 ## Live verification
-A neutral smoke query (`OpenAI OpCo`, threshold 90) successfully loaded the current OFAC source and returned a completed `no_candidate` result with zero candidates. This verifies source transport and decision execution; it is not a sanctions-clearance claim about the queried company.
 
-## x402 ordering
-`402 -> validate -> verify -> OFAC source work -> settle -> 200`. Source failure is HTTP 502 / non-chargeable / no settlement. Unresolved settlement is HTTP 503 and retries the same payment authorization.
+Coordinated GitHub Actions current-source smoke:
+- query: `OpenAI OpCo`
+- threshold: `90`
+- decision: `no_candidate`
+- candidate count: `0`
+- source: current U.S. Treasury OFAC SDN primary names and aliases
+
+The smoke proves current OFAC source transport, CSV parsing, deterministic scoring execution, and the no-candidate path. Candidate-match scoring is covered separately by deterministic unit tests.
+
+The result limitations explicitly state that `no_candidate` is not sanctions clearance, a candidate is not a legal sanctions determination, and OFAC 50 Percent Rule ownership analysis is not included.
 
 ## Deployment blocker
 AppDeploy weekly Free-tier reset reported as `2026-10-05T00:00:00Z`. No upgrade/spend authorized.
