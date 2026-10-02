@@ -270,7 +270,16 @@
     "mandatoryFileCount": 16,
     "maximumReadBatches": 19,
     "snapshotBuilderStatus": "synthetic-round-trip-pass",
-    "publicBaselineComparatorStatus": "12-of-12 synthetic exact-match-pass"
+    "publicBaselineComparatorStatus": "12-of-12 synthetic exact-match-pass",
+    "publicBaselinePreflight": {
+      "checkedAt": "2026-10-02T17:53:34.545Z",
+      "staticPassed": 12,
+      "staticTotal": 12,
+      "paidRoutesPassed": 2,
+      "paidRoutesTotal": 2,
+      "manifestResourceCount": 2,
+      "green": true
+    }
   },
   "stagingCheckpoint": {
     "status": "pending",
@@ -279,7 +288,7 @@
     "checkpointId": null,
     "description": null
   },
-  "lastUpdatedAt": "2026-10-02T17:52:30Z",
+  "lastUpdatedAt": "2026-10-02T17:53:34.545Z",
   "lastCompletedWriteOrder": 0,
   "resumeRule": "Never restart from write 1 after interruption. Refresh Floot list_files, verify boundary content against the locked deployment bundle, confirm the rollback snapshot/plan still match the captured pre-write project version, then resume at the next unfinished ordered write.",
   "rollbackPlan": {
