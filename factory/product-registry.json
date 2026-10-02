@@ -187,7 +187,7 @@
     {
       "id": "sec-company-identity-match",
       "number": "013",
-      "status": "design",
+      "status": "source-contract-verified-staging",
       "method": "GET",
       "path": "/api/sec-company-identity-match",
       "price_usdc": "0.003",
@@ -201,7 +201,10 @@
       ],
       "deployment_requirements": [
         "SEC_USER_AGENT must contain a declared client identity and contact email before enabling live SEC EDGAR calls"
-      ]
+      ],
+      "release_gate": "factory/scripts/validate-product-013.js",
+      "deployment_blocker": "AppDeploy weekly credit reset 2026-10-05T00:00:00Z",
+      "live_source_status": "SEC adapter/source contract shared with Product 006; truthful SEC_USER_AGENT contact required before live-source execution"
     }
   ]
 }
