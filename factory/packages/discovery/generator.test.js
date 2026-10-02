@@ -16,17 +16,21 @@ const {
 const BASE="https://candidate.example";
 
 function expectedManaged(){
-  return registry.products.filter(
-    product=>MODULES[product.id]&&/staging$/.test(product.status)
-  );
+  return registry.products.filter(product=>/staging$/.test(product.status));
 }
 
-test("compiler includes every modular staging product exactly once",()=>{
+test("compiler includes every staging product exactly once",()=>{
   const products=managedProducts();
   const expected=expectedManaged();
   assert.deepEqual(products.map(p=>p.id),expected.map(p=>p.id));
   assert.deepEqual(products.map(p=>p.number),expected.map(p=>p.number));
   assert.equal(new Set(products.map(p=>p.path)).size,products.length);
+});
+
+test("staging products must have a metadata module",()=>{
+  for(const product of expectedManaged()){
+    assert.ok(MODULES[product.id],product.id+" must expose metadata.js before staging publication");
+  }
 });
 
 test("compiled x402 catalog uses resource-level accepts for every product",()=>{
