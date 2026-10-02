@@ -244,7 +244,7 @@
   ],
   "validation": {
     "rollbackSnapshot": "pending",
-    "deploymentLock": "pending",
+    "deploymentLock": "passed",
     "typecheck": "pending",
     "tests": "pending",
     "stagingCheckpoint": "pending",
@@ -279,7 +279,7 @@
     "checkpointId": null,
     "description": null
   },
-  "lastUpdatedAt": "2026-10-02T17:47:26Z",
+  "lastUpdatedAt": "2026-10-02T17:51:00Z",
   "lastCompletedWriteOrder": 0,
   "resumeRule": "Never restart from write 1 after interruption. Refresh Floot list_files, verify boundary content against the locked deployment bundle, confirm the rollback snapshot/plan still match the captured pre-write project version, then resume at the next unfinished ordered write.",
   "rollbackPlan": {
