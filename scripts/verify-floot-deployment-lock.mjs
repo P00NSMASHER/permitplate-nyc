@@ -40,7 +40,14 @@ assert.equal(queue.deploymentBundles.length, 2);
 const bundledItems = [];
 for (const bundle of queue.deploymentBundles) {
   assert.match(bundle.gitBlobSha, /^[0-9a-f]{40}$/);
-  const bytes = await readFile(new URL('../' + bundle.path, import.meta.url));
+
+  // Deployment bytes are fetched from GitHub, so the committed Git blob is
+  // authoritative. A Windows checkout can rewrite LF to CRLF via core.autocrlf
+  // and must not create a false release-drift failure.
+  const blob = await github('/git/blobs/' + bundle.gitBlobSha);
+  assert.equal(blob.sha, bundle.gitBlobSha, 'deployment bundle blob missing');
+  assert.equal(blob.encoding, 'base64', 'unexpected deployment bundle encoding');
+  const bytes = Buffer.from(blob.content.replace(/\\n/g, ''), 'base64');
   const header = Buffer.from('blob ' + bytes.length + '\0', 'utf8');
   const blobSha = crypto
     .createHash('sha1')
