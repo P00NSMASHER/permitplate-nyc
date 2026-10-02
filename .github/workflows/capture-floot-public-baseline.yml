@@ -1,0 +1,34 @@
+name: Capture Floot public baseline
+
+on:
+  push:
+    paths:
+      - 'scripts/capture-floot-public-baseline.mjs'
+      - '.github/workflows/capture-floot-public-baseline.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Capture current public Floot state
+        env:
+          REPORT_PATH: floot-public-baseline.json
+        run: node scripts/capture-floot-public-baseline.mjs
+
+      - name: Upload baseline
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: floot-public-baseline
+          path: floot-public-baseline.json
+          if-no-files-found: warn
