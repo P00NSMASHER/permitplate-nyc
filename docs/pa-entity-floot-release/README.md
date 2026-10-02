@@ -38,13 +38,13 @@ Keep `x402.json` and `x402-services.json` as conservative compatibility aliases:
 
 ## Approved deployment payloads
 
-The seven `FLOOT_SAFE_PATCH_*.txt` files remain the approved **PA-baseline** patch set. They do not by themselves perform the AppDeploy-incident rehost. While incident #38 is active, use them only where the recovery plan explicitly calls for preserving or refreshing the two proven PA routes/discovery files.
+The eight `FLOOT_SAFE_PATCH_*.txt` files remain the approved **PA-baseline** patch set (seven standard patches plus one isolated extensionless-manifest patch). They do not by themselves perform the AppDeploy-incident rehost. While incident #38 is active, use them only where the recovery plan explicitly calls for preserving or refreshing the two proven PA routes/discovery files.
 
 The staged vendor-gate endpoint files above are pretested recovery inputs, not yet proof of a live Floot deployment. Full incident recovery is governed by issue #39 and `docs/floot-rehost-implementation-map.md`.
 
 The older `FLOOT_PATCH_CORE.txt` and `FLOOT_PATCH_DISCOVERY.txt` files are retained only as historical build artifacts. **Do not deploy them.** They are oversized for the conservative patch lane, and the old core payload contains explicit OPTIONS endpoint files that Floot does not support.
 
-Permanent CI verifies the seven safe patches reconstruct the current supported release bundle byte-for-byte and rejects any OPTIONS endpoint target.
+Permanent CI verifies the eight safe patches reconstruct the current supported release bundle byte-for-byte and rejects any OPTIONS endpoint target.
 
 ## Skill discovery
 
