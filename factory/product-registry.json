@@ -125,7 +125,7 @@
       ],
       "release_gate": "factory/scripts/validate-product-009.js",
       "deployment_blocker": "AppDeploy weekly credit reset 2026-10-05T00:00:00Z",
-      "live_source_status": "current OFAC SDN/ALT CSV smoke verified with neutral OpenAI OpCo query; decision no_candidate at minScore 90"
+      "live_source_status": "current OFAC SDN/ALT CSV smoke verified no_candidate for OpenAI OpCo at minScore 90"
     },
     {
       "id": "pa-business-formation-age",
