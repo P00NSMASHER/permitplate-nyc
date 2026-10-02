@@ -24,7 +24,8 @@
     "007",
     "008",
     "009",
-    "010"
+    "010",
+    "011"
   ],
   "deployment_blocker": {
     "provider": "AppDeploy",
