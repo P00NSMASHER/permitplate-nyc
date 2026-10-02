@@ -1,4 +1,5 @@
 name: Verify x402 portfolio
+# one-shot diagnostic rerun after verifier instrumentation fix
 
 on:
   workflow_dispatch:
