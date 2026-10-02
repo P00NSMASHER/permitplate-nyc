@@ -31,7 +31,7 @@ test("unpaid request returns 402 without OFAC work",async()=>{
     service:{async check(){calls++;}},
     fetchImpl:async()=>response({})
   });
-  const r=await h({query:{name:"VLADIMIR PUTIN"},event:{headers:{}}});
+  const r=await h({query:{name:"Example LLC"},event:{headers:{}}});
   assert.equal(r.statusCode,402);
   assert.equal(calls,0);
 });
@@ -56,9 +56,9 @@ test("valid payment verifies, screens, settles, then returns result",async()=>{
   const h=createPaidOfacReviewHandler({
     publicApiBase:"https://example.test",
     service:{async check(){return{
-      decision:"candidate_found",
-      candidateCount:1,
-      candidates:[{primaryName:"PUTIN, Vladimir Vladimirovich",score:99}],
+      decision:"no_candidate",
+      candidateCount:0,
+      candidates:[],
       sourceFailures:[],
       chargeable:true
     };}},
@@ -70,12 +70,12 @@ test("valid payment verifies, screens, settles, then returns result",async()=>{
     }
   });
   const r=await h({
-    query:{name:"VLADIMIR PUTIN",minScore:"90"},
+    query:{name:"Example LLC",minScore:"90"},
     event:{headers:{"payment-signature":sig()}}
   });
   assert.equal(r.statusCode,200);
   assert.deepEqual(urls.map(x=>x.split("/").pop()),["verify","settle"]);
-  assert.equal(JSON.parse(r.body).decision,"candidate_found");
+  assert.equal(JSON.parse(r.body).decision,"no_candidate");
   assert.equal(r.headers["x402-settled"],"true");
 });
 
@@ -84,7 +84,7 @@ test("OFAC source failure after verification never settles",async()=>{
   const h=createPaidOfacReviewHandler({
     publicApiBase:"https://example.test",
     service:{async check(){return{
-      decision:"no_candidate",
+      decision:"human_review",
       sourceFailures:[{source:"ofac_sdn",detail:"SOURCE_HTTP_ERROR"}],
       chargeable:false
     };}},
