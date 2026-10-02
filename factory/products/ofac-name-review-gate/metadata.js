@@ -28,7 +28,7 @@ function openApiPath(){
   return {get:{
     operationId:OPERATION_ID,
     summary:"Run an OFAC SDN name-review screen",
-    description:"Screen a person or organization name against current U.S. Treasury OFAC SDN primary names and aliases using deterministic similarity scoring. Returns candidate_found or no_candidate. A candidate is a review signal, not a legal sanctions determination. no_candidate is not sanctions clearance, and the endpoint does not perform OFAC 50 Percent Rule ownership analysis.",
+    description:"Screen a person or organization name against current U.S. Treasury OFAC SDN primary names and aliases using deterministic similarity scoring. Returns candidate_found, no_candidate, or human_review. A candidate is a review signal, not a legal sanctions determination. no_candidate is not sanctions clearance, and the endpoint does not perform OFAC 50 Percent Rule ownership analysis.",
     tags:["OFAC","SDN","Name Screening","Human Review"],
     parameters:[
       {
@@ -36,7 +36,7 @@ function openApiPath(){
         in:"query",
         required:true,
         schema:{type:"string",minLength:2,maxLength:160},
-        example:"VLADIMIR PUTIN"
+        example:"Example LLC"
       },
       {
         name:"minScore",
@@ -67,10 +67,10 @@ function llmsText(base){
   return [
     "# OFAC Name Review Gate x402",
     "",
-    "Endpoint: GET "+base+RESOURCE_PATH+"?name=VLADIMIR%20PUTIN&minScore=90",
+    "Endpoint: GET "+base+RESOURCE_PATH+"?name=Example%20LLC&minScore=90",
     "Price: $0.003 USDC on Base via x402.",
     "Source: current U.S. Treasury OFAC SDN.CSV and ALT.CSV.",
-    "Decisions: candidate_found or no_candidate.",
+    "Decisions: candidate_found, no_candidate, or human_review.",
     "A candidate is a review signal only, not a legal sanctions determination.",
     "A no_candidate result is not sanctions clearance.",
     "OFAC 50 Percent Rule ownership analysis is not included.",
