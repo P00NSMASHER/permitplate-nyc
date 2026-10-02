@@ -1,6 +1,10 @@
 name: Verify x402 portfolio
 
 on:
+  push:
+    paths:
+      - '.github/workflows/verify-x402-portfolio.yml'
+      - 'scripts/verify-x402-portfolio.mjs'
   workflow_dispatch:
     inputs:
       expected_floot_resources:
@@ -9,7 +13,7 @@ on:
         default: '2'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   verify:
@@ -26,15 +30,56 @@ jobs:
           node-version: '20'
 
       - name: Verify unpaid x402 challenges and fixed decision fixtures
+        id: verifier
+        continue-on-error: true
         env:
-          EXPECTED_FLOOT_RESOURCES: ${{ inputs.expected_floot_resources }}
-          REPORT_PATH: x402-verification-report.json
-        run: node scripts/verify-x402-portfolio.mjs
+          EXPECTED_FLOOT_RESOURCES: ${{ inputs.expected_floot_resources || '2' }}
+          REPORT_PATH: verification/x402-portfolio-verification-latest.json
+        run: |
+          mkdir -p verification
+          node scripts/verify-x402-portfolio.mjs
+
+      - name: Preserve verification report across concurrent bot commits
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          REPORT='verification/x402-portfolio-verification-latest.json'
+          if [ ! -f "$REPORT" ]; then
+            echo 'Verifier did not create a report.'
+            exit 1
+          fi
+          cp "$REPORT" /tmp/x402-portfolio-verification-latest.json
+
+          git fetch origin main
+          git reset --hard origin/main
+          cp /tmp/x402-portfolio-verification-latest.json "$REPORT"
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$REPORT"
+          if git diff --cached --quiet; then
+            echo 'Verification report unchanged.'
+          else
+            git commit -m 'chore: refresh x402 portfolio verification'
+            git push origin HEAD:main
+          fi
 
       - name: Upload verification report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: x402-verification-report
-          path: x402-verification-report.json
+          path: verification/x402-portfolio-verification-latest.json
           if-no-files-found: warn
+
+      - name: Enforce release result after receipt is saved
+        if: always()
+        shell: bash
+        env:
+          VERIFIER_OUTCOME: ${{ steps.verifier.outcome }}
+        run: |
+          if [ "$VERIFIER_OUTCOME" != 'success' ]; then
+            echo "Portfolio verification failed; durable report was preserved first."
+            exit 1
+          fi
