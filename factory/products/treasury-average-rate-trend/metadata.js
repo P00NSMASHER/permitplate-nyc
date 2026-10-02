@@ -21,7 +21,7 @@ function openApiPath(){
   return {get:{
     operationId:OPERATION_ID,
     summary:"Compare latest Treasury average rate with prior month",
-    description:"Select one official U.S. Treasury Fiscal Data monthly average-interest-rate category, compare the latest observation with the prior month, and return rising, falling, unchanged, or human_review using a caller minimum change in basis points. These are monthly averages on outstanding Treasury debt, not live market yields, forecasts, monetary-policy predictions, or investment recommendations.",
+    description:"Select one official U.S. Treasury Fiscal Data monthly average-interest-rate category, compare the latest observation with the prior month, and return rising, falling, unchanged, or human_review using a caller minimum change in basis points. This is a two-point monthly direction signal using averages on outstanding Treasury debt, not a long-term trend determination, live market yield, forecast, monetary-policy prediction, or investment recommendation.",
     tags:["Treasury","Interest Rates","Trend","Macro"],
     parameters:[
       {name:"security",in:"query",required:true,schema:{type:"string",minLength:2,maxLength:100},example:"Total Marketable"},
@@ -53,7 +53,7 @@ function llmsText(base){
     "Source: U.S. Treasury Fiscal Data — Average Interest Rates on U.S. Treasury Securities.",
     "Compares latest monthly rate with the previous month.",
     "Decisions: rising, falling, unchanged, human_review.",
-    "This is not a live market yield, forecast, monetary-policy prediction, or investment advice.",
+    "This is a two-point monthly direction signal, not a long-term trend determination, live market yield, forecast, monetary-policy prediction, or investment advice.",
     "On HTTP 503 retry the same PAYMENT-SIGNATURE."
   ].join("\n");
 }
