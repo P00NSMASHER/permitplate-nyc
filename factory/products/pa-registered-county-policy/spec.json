@@ -1,0 +1,33 @@
+{
+  "id": "pa-registered-county-policy",
+  "version": "0.1.0",
+  "purpose": "Resolve a Pennsylvania business to one strong registry entity and compare its source-published registered county with a caller-supplied allowed county set.",
+  "proposed_price_usdc": "0.002",
+  "input": {
+    "required": [
+      "company",
+      "allowedCounties"
+    ],
+    "properties": {
+      "company": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 120
+      },
+      "allowedCounties": {
+        "type": "string",
+        "description": "Comma-separated Pennsylvania county names, e.g. Schuylkill,Dauphin"
+      }
+    }
+  },
+  "decision_policy": {
+    "policy_match": "A unique strong PA registry entity was found and its registered county is in allowedCounties.",
+    "policy_mismatch": "A unique strong PA registry entity was found and its registered county is not in allowedCounties.",
+    "company_not_found": "No Pennsylvania registry entity candidate was found.",
+    "human_review": "Registry evidence is unavailable, ambiguous, incomplete, or the registry county is missing."
+  },
+  "claim_boundaries": [
+    "policy_match evaluates only the source-published registered county against the caller's allowed list",
+    "it does not prove physical operations, headquarters location, service area, residency, local ownership, tax situs, good standing, authority, or legal compliance"
+  ]
+}
