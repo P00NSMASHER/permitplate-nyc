@@ -41,15 +41,19 @@ function validateDeployCandidate({
   const productIds=products.map(p=>p.id);
   const bundleIds=bundle.manifest.products.map(p=>p.id);
   const runtimeIds=runtime.stagingProducts.map(p=>p.id);
+  const entrypointIds=bundle.appDeployEntrypoint.productIds;
 
   const problems=[];
   if(!prerequisites.ready)problems.push("deployment_prerequisites_missing");
   if(!nested.ok)problems.push("nested_seller_calls_present");
   if(JSON.stringify(productIds)!==JSON.stringify(bundleIds))problems.push("bundle_product_drift");
   if(JSON.stringify(productIds)!==JSON.stringify(runtimeIds))problems.push("runtime_product_drift");
+  if(JSON.stringify(productIds)!==JSON.stringify(entrypointIds))problems.push("entrypoint_product_drift");
 
   const expectedRouteCount=STATIC_GET_PATHS.length+2*products.length;
   if(Object.keys(routes).length!==expectedRouteCount)problems.push("appdeploy_route_count_drift");
+  if(bundle.appDeployEntrypoint.totalRouteCount!==expectedRouteCount)problems.push("entrypoint_route_count_drift");
+  if(bundle.manifest.appdeploy_entrypoint?.total_route_count!==expectedRouteCount)problems.push("entrypoint_manifest_route_count_drift");
 
   for(const product of products){
     if(!routes[product.method+" "+product.path])problems.push("missing_paid_route:"+product.id);
@@ -66,6 +70,7 @@ function validateDeployCandidate({
     productCount:products.length,
     productIds,
     appDeployRouteCount:Object.keys(routes).length,
+    generatedEntrypointRouteCount:bundle.appDeployEntrypoint.totalRouteCount,
     staticRouteCount:STATIC_GET_PATHS.length,
     paidRouteCount:products.length,
     optionsRouteCount:products.length,
