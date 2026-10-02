@@ -1,0 +1,23 @@
+name: Verify staged Floot sandbox
+
+on:
+  push:
+    paths:
+      - 'scripts/verify-floot-staged-sandbox.mjs'
+      - '.github/workflows/verify-floot-staged-sandbox.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Verify staged Floot endpoints without payment
+        run: node scripts/verify-floot-staged-sandbox.mjs
