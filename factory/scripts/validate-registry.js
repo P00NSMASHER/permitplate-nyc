@@ -33,7 +33,7 @@ function main(){
     assert.ok(Array.isArray(p.decision_values)||p.id==="pa-entity-lookup");
   }
 
-  const staging=registry.products.filter(p=>p.status==="live-source-verified-staging");
+  const staging=registry.products.filter(p=>/staging$/.test(p.status));
   for(const p of staging){
     assert.ok(p.release_gate, `${p.id} staging product must name a release gate`);
     assert.ok(p.deployment_blocker, `${p.id} staging product must record its current deploy blocker`);
