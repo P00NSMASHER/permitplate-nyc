@@ -79,7 +79,7 @@ export function paymentDocument() {
       description:
         'Latest monthly average interest rates on outstanding U.S. Treasury securities from official Treasury Fiscal Data, optionally filtered by security description.',
       mimeType: 'application/json',
-      serviceName: 'Treasury Average Interest Rates x402',
+      serviceName: 'Treasury Average Rates',
       tags: ['treasury', 'interest-rates', 'macro', 'fiscal-data'],
     },
     accepts: [requirements()],
