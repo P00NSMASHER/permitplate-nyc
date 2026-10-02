@@ -82,3 +82,7 @@ jobs:
         run: node --test factory/products/domain-registration-age/decision.test.js
       - name: Test Product 007 domain-age service
         run: node --test factory/products/domain-registration-age/service.test.js
+      - name: Test compiled discovery surfaces
+        run: node --test factory/packages/discovery/generator.test.js
+      - name: Validate compiled discovery surfaces
+        run: node factory/scripts/validate-discovery.js
