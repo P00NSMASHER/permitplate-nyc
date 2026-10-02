@@ -15,7 +15,9 @@ Build narrow, deterministic, machine-purchasable decision tools for autonomous a
 | 003 | PA Vendor Identity Match | live-source-verified staging | `/api/pa-vendor-identity-match` | $0.005 |
 | 004 | PA Business Address Match | live-source-verified staging | `/api/pa-business-address-match` | $0.003 |
 | 005 | PA Business Domain Match | live-source-verified staging | `/api/pa-business-domain-match` | $0.003 |
-| 006 | SEC Filing Freshness Check | live-source-verified staging | `/api/sec-filing-freshness` | $0.005 |
+| 006 | SEC Filing Freshness Check | source-contract-verified staging | `/api/sec-filing-freshness` | $0.005 |
+| 007 | Domain Registration Age | live-source-verified staging | `/api/domain-registration-age` | $0.002 |
+| 008 | Treasury Average Rate Threshold | live-source-verified staging | `/api/treasury-average-rate-threshold` | $0.003 |
 
 Product 001 has an independently verified third-party Base USDC settlement and remains the payment/distribution reference.
 
@@ -76,7 +78,30 @@ Returns:
 - `no_recent_filing`
 - `company_not_found`
 
-Live SEC access is verified in GitHub Actions using the declared SEC client identity. The AAPL smoke resolved CIK `0000320193` and returned `recent_filing`.
+SEC transport was proven with the existing production-style declared client identity, but the factory adapter now requires a contact-email `SEC_USER_AGENT` before live calls. Deterministic/source-contract tests pass; no contact email is invented or embedded.
+
+## Product 007
+
+Authoritative domain registration age via IANA bootstrap + registry RDAP.
+
+Returns:
+- `established`
+- `recent_registration`
+- `unregistered`
+- `human_review`
+
+Live smoke for `openai.com`: registration date `2007-01-19`, decision `established`.
+
+## Product 008
+
+Official U.S. Treasury monthly average-rate threshold decision.
+
+Returns:
+- `threshold_met`
+- `threshold_not_met`
+- `human_review`
+
+Live smoke: `Total Marketable` rate `3.475%` for record date `2026-08-31`.
 
 ## Shared layers
 
@@ -107,7 +132,7 @@ AppDeploy reported an account-wide Free tier pause with weekly reset at:
 
 `2026-10-05T00:00:00Z`
 
-No upgrade/payment has been authorized. Products 003–006 therefore remain staging candidates rather than production claims.
+No upgrade/payment has been authorized. Products 003–008 therefore remain staging candidates rather than production claims.
 
 ## Branch isolation
 
