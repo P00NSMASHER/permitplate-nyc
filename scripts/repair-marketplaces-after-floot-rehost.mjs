@@ -259,7 +259,7 @@ receipt.nohumans = {
   note:
     'No listing mutation is attempted because the free listing allowance may already be exhausted and additional listings can require USDC.',
   vendorSearch: await jsonFetch(
-    'https://nohumans.directory/v1/discover?q=' + query
+    'https://api.nohumans.directory/v1/discover?q=' + query
   ),
 };
 
