@@ -22,6 +22,22 @@ const publicBaseline = JSON.parse(
   )
 );
 
+assert.equal(
+  snapshot.projectId,
+  publicBaseline.projectId,
+  'snapshot/public baseline project id mismatch'
+);
+assert.equal(
+  snapshot.productionOrigin,
+  publicBaseline.productionOrigin,
+  'snapshot/public baseline origin mismatch'
+);
+assert.equal(
+  publicBaseline.canonicalManifestResourceCount,
+  2,
+  'public baseline must represent the two-resource pre-rehost state'
+);
+
 const publicByTarget = new Map(
   (publicBaseline.files ?? []).map((entry) => [entry.target, entry])
 );
@@ -94,6 +110,6 @@ const report = {
 
 console.log(JSON.stringify(report, null, 2));
 
-if (missingSnapshot.length > 0) {
+if (missingSnapshot.length > 0 || missingPublic.length > 0) {
   process.exitCode = 1;
 }
