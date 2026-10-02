@@ -1,14 +1,11 @@
 "use strict";
 
-const fs=require("node:fs");
-const path=require("node:path");
 const {managedProducts,buildCatalog,buildOpenApi,buildProductIndex,buildLlmsText}=require("../packages/discovery/generator");
 const {createPaRegistryAdapter,createCensusAddressAdapter,createRdapAdapter}=require("../packages/sources/live-pa-identity");
 const {createSecFilingsAdapter}=require("../packages/sources/sec-filings");
 const {createTreasuryAverageRatesAdapter}=require("../packages/sources/treasury-average-rates");
 const {createOfacNameAdapter}=require("../packages/sources/ofac-name-screen");
-
-const PRODUCTS_ROOT=path.resolve(__dirname,"..","products");
+const {SERVICE_MODULES,PAID_HANDLER_MODULES}=require("../generated/product-modules");
 
 const PREFLIGHT_HEADERS=Object.freeze({
   "access-control-allow-origin":"*",
@@ -56,7 +53,7 @@ function defaultAdapters({fetchImpl=fetch,secUserAgent}={}){
 }
 
 function chooseFactory(moduleExports,{kind,productId}){
-  const entries=Object.entries(moduleExports).filter(([,value])=>typeof value==="function");
+  const entries=Object.entries(moduleExports||{}).filter(([,value])=>typeof value==="function");
   const matches=entries.filter(([name])=>
     kind==="service"
       ? /^create.*Service$/.test(name)
@@ -73,18 +70,13 @@ function chooseFactory(moduleExports,{kind,productId}){
 function discoverRuntimeWiring(products=managedProducts()){
   const wiring={};
   for(const product of products){
-    const dir=path.join(PRODUCTS_ROOT,product.id);
-    const serviceFile=path.join(dir,"service.js");
-    const handlerFile=path.join(dir,"paid-handler.js");
-    if(!fs.existsSync(serviceFile)) throw new Error(product.id+" runtime service.js missing");
-    if(!fs.existsSync(handlerFile)) throw new Error(product.id+" runtime paid-handler.js missing");
-    const serviceModule=require(serviceFile);
-    const handlerModule=require(handlerFile);
+    const serviceModule=SERVICE_MODULES[product.id];
+    const handlerModule=PAID_HANDLER_MODULES[product.id];
+    if(!serviceModule) throw new Error(product.id+" runtime service module missing");
+    if(!handlerModule) throw new Error(product.id+" runtime paid-handler module missing");
     wiring[product.id]={
       createService:chooseFactory(serviceModule,{kind:"service",productId:product.id}),
-      createPaidHandler:chooseFactory(handlerModule,{kind:"handler",productId:product.id}),
-      serviceFile,
-      handlerFile
+      createPaidHandler:chooseFactory(handlerModule,{kind:"handler",productId:product.id})
     };
   }
   return wiring;
@@ -175,7 +167,6 @@ function createFactoryRuntime({
 }
 
 module.exports={
-  PRODUCTS_ROOT,
   PREFLIGHT_HEADERS,
   defaultAdapters,
   chooseFactory,
