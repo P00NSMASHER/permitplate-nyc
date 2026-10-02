@@ -152,6 +152,8 @@ async function verifyService(service) {
     appdeployAvailability: null,
     responseBodyCode: null,
     responseBodyMessage: null,
+    diagnosticHeaders: {},
+    bodyExcerpt: null,
     failures: [],
   };
 
@@ -242,6 +244,9 @@ async function verifyService(service) {
         typeof body.code === 'string' ? body.code : null;
       result.responseBodyMessage =
         typeof body.message === 'string' ? body.message : null;
+      if (body.code === 'APP_TEMPORARILY_UNAVAILABLE') {
+        result.failures.push('AppDeploy serving layer reported APP_TEMPORARILY_UNAVAILABLE');
+      }
     }
 
     if (body && headerDoc) {
