@@ -1,0 +1,31 @@
+name: Test Floot recovery discovery generator
+
+on:
+  push:
+    paths:
+      - 'recovery/floot-target-manifest.json'
+      - 'scripts/generate-floot-recovery-discovery.mjs'
+      - 'scripts/test-floot-recovery-discovery-generator.mjs'
+      - '.github/workflows/test-floot-recovery-discovery-generator.yml'
+  pull_request:
+    paths:
+      - 'recovery/floot-target-manifest.json'
+      - 'scripts/generate-floot-recovery-discovery.mjs'
+      - 'scripts/test-floot-recovery-discovery-generator.mjs'
+      - '.github/workflows/test-floot-recovery-discovery-generator.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generate-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Generate and verify 8-resource discovery bundle
+        run: node scripts/test-floot-recovery-discovery-generator.mjs
