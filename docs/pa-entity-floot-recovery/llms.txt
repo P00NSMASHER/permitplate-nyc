@@ -1,0 +1,66 @@
+# Agent Data Tools x402
+
+> Eight same-origin pay-per-call tools for autonomous agents.
+
+Canonical origin: https://pa-entity-x402.floot.app
+Protocol: x402 v2
+Network: Base mainnet (eip155:8453)
+Asset: Base USDC
+Payout: 0x708f7b52b56eafd7fc1de65fc7752ed732914021
+OpenAPI: https://pa-entity-x402.floot.app/openapi.json
+Canonical x402 discovery: https://pa-entity-x402.floot.app/.well-known/x402
+
+## Paid tools
+
+1. GET /_api/pa-entity-one?q=NAME — $0.001
+   One highest-ranked Pennsylvania legal-entity match.
+
+2. GET /_api/pa-business?q=NAME&limit=N — $0.005
+   Up to 25 enriched Pennsylvania registry candidates.
+
+3. GET /_api/vendor-intake-gate?name=NAME&address=ADDRESS&domain=DOMAIN — $0.020
+   Fail-closed workflow decision returning proceed or human_review using PA registry identity, Census address consistency, OFAC candidate-name screening, and authoritative RDAP evidence.
+
+4. GET /_api/sec-filings?ticker=AAPL&form=10-K&limit=1 — $0.005
+   Authoritative recent SEC EDGAR filing metadata by ticker or CIK.
+
+5. GET /_api/us-address-geocode?address=ADDRESS — $0.005
+   Official U.S. Census address match, coordinates, and geography identifiers.
+
+6. GET /_api/ofac-sdn-screen?name=NAME&limit=3&minScore=90 — $0.005
+   OFAC SDN candidate-name screening. No-match is not sanctions clearance; no 50 Percent Rule ownership analysis.
+
+7. GET /_api/domain-rdap?domain=DOMAIN — $0.005
+   Authoritative domain-registration metadata discovered through IANA RDAP bootstrap.
+
+8. GET /_api/treasury-average-rates?security=FILTER — $0.005
+   Latest monthly average interest rates on outstanding U.S. Treasury securities from Fiscal Data.
+
+## Payment behavior
+
+An unpaid request returns an x402 v2 PAYMENT-REQUIRED challenge.
+
+After a payment signature is supplied, input is validated before verifier work. Payment is verified, the authoritative source is queried, and settlement occurs only after a usable result exists.
+
+If the authoritative source fails, the request returns an upstream error and is not settled.
+
+If verification or settlement is temporarily unresolved, retry the same authorization. Do not create a new payment merely because of a transient retry response.
+
+## Vendor-intake gate
+
+The gate returns:
+- decision=proceed + agentAction=continue_vendor_intake, or
+- decision=human_review + agentAction=pause_and_request_human_review.
+
+It fails closed for missing/ambiguous/incomplete PA registry evidence, incomplete Census/OFAC/RDAP evidence, address mismatch, OFAC candidate names, unregistered domains, or vendor/domain name misalignment.
+
+Proceed is only a workflow signal. It is not legal/compliance approval, sanctions clearance, fraud/credit approval, proof of current good standing, or proof of address/domain ownership.
+
+## Sources
+
+- Pennsylvania Department of State via data.pa.gov
+- U.S. Census Bureau Geocoding Services
+- U.S. Treasury OFAC Sanctions List Service
+- IANA RDAP bootstrap + authoritative registry RDAP
+- U.S. Securities and Exchange Commission EDGAR
+- U.S. Treasury Fiscal Data
