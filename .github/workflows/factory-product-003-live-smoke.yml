@@ -9,15 +9,17 @@ on:
       - 'factory/products/pa-business-address-match/**'
       - 'factory/products/pa-business-domain-match/**'
       - 'factory/products/sec-filing-freshness/**'
+      - 'factory/products/treasury-average-rate-threshold/**'
       - 'factory/packages/sources/live-pa-identity.js'
       - 'factory/packages/sources/sec-filings.js'
+      - 'factory/packages/sources/treasury-average-rates.js'
       - '.github/workflows/factory-product-003-live-smoke.yml'
   workflow_dispatch:
 
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 7
     steps:
       - uses: actions/checkout@v4
       - name: Product 003 live source smoke
@@ -28,3 +30,5 @@ jobs:
         run: node factory/products/pa-business-domain-match/live-smoke.js
       - name: Product 006 live SEC smoke
         run: node factory/products/sec-filing-freshness/live-smoke.js
+      - name: Product 007 live Treasury smoke
+        run: node factory/products/treasury-average-rate-threshold/live-smoke.js
