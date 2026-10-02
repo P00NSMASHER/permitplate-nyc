@@ -49,6 +49,11 @@ if (!Array.isArray(raw.projectPaths)) throw new Error('projectPaths_required');
 if (!Array.isArray(raw.files)) throw new Error('files_required');
 
 const projectPaths = new Set(raw.projectPaths);
+for (const path of mandatoryPaths) {
+  if (!projectPaths.has(path)) {
+    throw new Error('mandatory_baseline_missing:' + path);
+  }
+}
 const captured = new Map();
 
 for (const entry of raw.files) {
