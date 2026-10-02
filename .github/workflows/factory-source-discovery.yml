@@ -12,18 +12,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Inspect live AppDeploy OpenAPI
+      - name: Inspect live component payloads
         shell: bash
         run: |
           set -euo pipefail
-          URL='https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/openapi.json'
-          curl -fsSL --max-time 30 "$URL" -o /tmp/openapi.json
-          python3 - <<'PY'
-          import json
-          d=json.load(open('/tmp/openapi.json'))
-          for path,methods in sorted(d.get('paths',{}).items()):
-              print(path)
-              for method,op in methods.items():
-                  if isinstance(op,dict):
-                      print(' ',method.upper(),op.get('operationId'),'-',op.get('summary'))
-          PY
+          echo '=== CENSUS SUPPLIED ==='
+          curl -fsSL --get 'https://api-v2.appdeploy.ai/app/us-census-address-geocoder-x402-23mj4x/api/demo'             --data-urlencode 'address=600 North Second Street, Suite 401, Harrisburg, PA 17101' | jq .
+          echo '=== CENSUS REGISTRY ==='
+          curl -fsSL --get 'https://api-v2.appdeploy.ai/app/us-census-address-geocoder-x402-23mj4x/api/demo'             --data-urlencode 'address=600 North Second Street, Suite 401, Harrisburg, PA, 17101' | jq .
+          echo '=== RDAP ==='
+          curl -fsSL --get 'https://api-v2.appdeploy.ai/app/domain-rdap-lookup-x402-spdfnq/api/demo'             --data-urlencode 'domain=openai.com' | jq .
