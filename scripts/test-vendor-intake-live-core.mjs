@@ -1,4 +1,5 @@
-import { runVendorIntakeGate } from '../recovery/vendor-intake-core.mjs';
+import { runVendorIntakeGateCore } from '../recovery/vendor-intake-gate-core.mjs';
+import { searchPennsylvaniaEntities } from '../recovery/pa-registry-rehost-core.mjs';
 
 const cases = [
   {
@@ -38,7 +39,9 @@ let passed = 0;
 for (const fixture of cases) {
   const started = Date.now();
   try {
-    const result = await runVendorIntakeGate(fixture.input);
+    const result = await runVendorIntakeGateCore(fixture.input, {
+      searchRegistry: searchPennsylvaniaEntities,
+    });
     const codes = result.reviewTriggers.map((item) => item.code);
     const decisionOk = result.decision === fixture.decision;
     const triggerOk = fixture.trigger
