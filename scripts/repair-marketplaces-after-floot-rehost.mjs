@@ -115,6 +115,39 @@ if (receipt.failures.length) {
   );
 }
 
+const agent402Readback = await jsonFetch(
+  'https://agent402.tools/api/index?seller=pa-entity-x402.floot.app'
+);
+const agentTools = Array.isArray(agent402Readback.body?.tools)
+  ? agent402Readback.body.tools
+  : [];
+const agentBlob = JSON.stringify(agentTools).toLowerCase();
+const agent402Accepted =
+  agent402Readback.status === 200 &&
+  agent402Readback.body?.health === 1 &&
+  agent402Readback.body?.routable === true &&
+  Number(agent402Readback.body?.paidToolCount ?? 0) >= 8 &&
+  (agentBlob.includes('vendor-intake-gate') ||
+    agentBlob.includes('vendor intake decision gate'));
+
+receipt.agent402Precondition = {
+  status: agent402Readback.status,
+  health: agent402Readback.body?.health ?? null,
+  routable: agent402Readback.body?.routable ?? null,
+  toolCount: agent402Readback.body?.toolCount ?? null,
+  paidToolCount: agent402Readback.body?.paidToolCount ?? null,
+  vendorGateVisible:
+    agentBlob.includes('vendor-intake-gate') ||
+    agentBlob.includes('vendor intake decision gate'),
+  accepted: agent402Accepted,
+};
+
+if (!agent402Accepted) {
+  throw new Error(
+    'Refusing marketplace repair: Agent402 has not yet accepted the expanded 8-tool Floot portfolio including the vendor-intake gate'
+  );
+}
+
 const descriptions = {
   'pa-best-match':
     'Resolve one best Pennsylvania business-registry match by company name.',
