@@ -40,7 +40,8 @@
             "version": "2"
           }
         }
-      ]
+      ],
+      "serviceName": "PA Business Registry"
     },
     {
       "resource": "https://pa-entity-x402.floot.app/_api/pa-business",
@@ -84,7 +85,8 @@
             "version": "2"
           }
         }
-      ]
+      ],
+      "serviceName": "PA Business Registry"
     },
     {
       "resource": "https://pa-entity-x402.floot.app/_api/vendor-intake-gate",
@@ -95,9 +97,8 @@
         "vendor-intake",
         "agent-decision",
         "human-review",
-        "ofac",
-        "census",
-        "rdap"
+        "business-registry",
+        "compliance"
       ],
       "inputSchema": {
         "type": "object",
@@ -172,7 +173,8 @@
             "version": "2"
           }
         }
-      ]
+      ],
+      "serviceName": "PA Vendor Intake Gate"
     },
     {
       "resource": "https://pa-entity-x402.floot.app/_api/sec-filings",
@@ -221,7 +223,8 @@
             "version": "2"
           }
         }
-      ]
+      ],
+      "serviceName": "SEC Recent Filings"
     },
     {
       "resource": "https://pa-entity-x402.floot.app/_api/us-address-geocode",
@@ -260,7 +263,8 @@
             "version": "2"
           }
         }
-      ]
+      ],
+      "serviceName": "US Census Geocoder"
     },
     {
       "resource": "https://pa-entity-x402.floot.app/_api/ofac-sdn-screen",
@@ -311,7 +315,8 @@
             "version": "2"
           }
         }
-      ]
+      ],
+      "serviceName": "OFAC SDN Name Screen"
     },
     {
       "resource": "https://pa-entity-x402.floot.app/_api/domain-rdap",
@@ -350,7 +355,8 @@
             "version": "2"
           }
         }
-      ]
+      ],
+      "serviceName": "Domain RDAP Lookup"
     },
     {
       "resource": "https://pa-entity-x402.floot.app/_api/treasury-average-rates",
@@ -385,7 +391,8 @@
             "version": "2"
           }
         }
-      ]
+      ],
+      "serviceName": "Treasury Average Rates"
     }
   ]
 }
