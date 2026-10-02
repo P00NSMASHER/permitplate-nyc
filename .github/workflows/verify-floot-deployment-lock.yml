@@ -6,6 +6,8 @@ on:
       - 'verification/floot-deployment-queue-latest.json'
       - 'docs/pa-entity-floot-recovery/deploy-map.json'
       - 'scripts/verify-floot-deployment-lock.mjs'
+      - 'verification/floot-static-rollback-public-latest.json'
+      - 'scripts/validate-floot-static-rollback-public.mjs'
       - '.github/workflows/verify-floot-deployment-lock.yml'
   workflow_dispatch:
 
@@ -23,3 +25,6 @@ jobs:
           node-version: '20'
       - name: Verify immutable Floot deployment source lock
         run: node scripts/verify-floot-deployment-lock.mjs
+
+      - name: Verify public static rollback receipt
+        run: node scripts/validate-floot-static-rollback-public.mjs
