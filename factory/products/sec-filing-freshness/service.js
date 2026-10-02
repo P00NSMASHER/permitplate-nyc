@@ -33,7 +33,7 @@ function validateFilingFreshnessInput(input){
     e.code="INVALID_INPUT";
     throw e;
   }
-  if(cik&&!/^\D*\d{1,10}\D*$/.test(cik)){
+  if(cik&&!/^\d{1,10}$/.test(cik)){
     const e=new Error("invalid cik");
     e.code="INVALID_INPUT";
     throw e;
