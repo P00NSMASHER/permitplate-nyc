@@ -284,5 +284,31 @@
     "paidRoutesTotal": 2,
     "canonicalManifestResourceCount": 2,
     "green": true
+  },
+  "checkpoint": {
+    "title": "x402 eight-route rehost staged",
+    "descriptionTemplate": "Pinned source {sourceCommit}; pre-write Floot version {preWriteVersion}; 8 paid resources; 3 fixed reviewer fixtures; zero AppDeploy runtime dependencies."
+  },
+  "postPublishVerification": {
+    "script": "scripts/postdeploy-floot-x402.mjs",
+    "verifyOnlyEnv": {
+      "REGISTER_DIRECTORIES": "0",
+      "POSTDEPLOY_RECEIPT_PATH": "floot-postdeploy-receipt.json"
+    },
+    "directoryRefreshEnv": {
+      "REGISTER_DIRECTORIES": "1",
+      "POSTDEPLOY_RECEIPT_PATH": "floot-postdeploy-receipt.json"
+    },
+    "rule": "Run verify-only first. Directory refresh is permitted only after publicGreen=true; never send a payment signature."
+  },
+  "lockEvidence": {
+    "workflow": "Verify Floot deployment lock",
+    "runId": 37028588667,
+    "conclusion": "success",
+    "checks": [
+      "immutable source branch/blob lock",
+      "public static rollback receipt",
+      "pre-rehost snapshot builder round trip"
+    ]
   }
 }
