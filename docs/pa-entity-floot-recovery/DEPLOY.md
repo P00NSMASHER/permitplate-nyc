@@ -16,6 +16,12 @@ Locked deployment map:
 
 `docs/pa-entity-floot-recovery/deploy-map.json`
 
+Machine-readable pre-write snapshot batches:
+
+`recovery/floot-snapshot-capture-plan.json`
+
+Validate that capture plan with `node scripts/validate-floot-snapshot-capture-plan.mjs` before using it.
+
 Immutable execution queue:
 
 `verification/floot-deployment-queue-latest.json`
