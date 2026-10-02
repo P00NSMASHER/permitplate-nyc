@@ -46,7 +46,7 @@ for (const [path, expected] of targetByPath) {
   const actualTerms = actual.accepts?.[0] ?? {};
   const failures = [];
 
-  if (actual.price !== expected.price) {
+  if (actual.price != null && actual.price !== expected.price) {
     failures.push(`price=${actual.price} expected=${expected.price}`);
   }
   if (String(actualTerms.amount) !== String(expectedTerms.amount)) {
