@@ -1,0 +1,25 @@
+name: Test Floot rehost endpoints
+
+on:
+  push:
+    paths:
+      - 'docs/pa-entity-floot-release/*_GET.ts'
+      - 'docs/pa-entity-floot-release/*_GET.schema.ts'
+      - 'scripts/test-floot-rehost-raw-endpoints.mts'
+      - '.github/workflows/test-floot-rehost-endpoints.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run Floot rehost endpoint tests
+        run: npx -y tsx scripts/test-floot-rehost-raw-endpoints.mts
