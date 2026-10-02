@@ -1,0 +1,27 @@
+name: Test post-rehost ops safety
+
+on:
+  push:
+    paths:
+      - 'scripts/test-post-rehost-ops-safety.mjs'
+      - 'scripts/verify-agent402-after-floot-rehost.mjs'
+      - 'scripts/repair-marketplaces-after-floot-rehost.mjs'
+      - '.github/workflows/verify-agent402-after-floot-rehost.yml'
+      - '.github/workflows/repair-marketplaces-after-floot-rehost.yml'
+      - 'docs/agentic-ai-vendor-gate-resubmission-draft.md'
+      - '.github/workflows/test-post-rehost-ops-safety.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node scripts/test-post-rehost-ops-safety.mjs
