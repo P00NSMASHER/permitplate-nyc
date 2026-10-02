@@ -159,3 +159,5 @@ jobs:
         run: node --test factory/products/domain-last-changed-recency/paid-handler.test.js
       - name: Test Product 012 discovery metadata
         run: node --test factory/products/domain-last-changed-recency/metadata.test.js
+      - name: Run Product 012 release gate
+        run: node factory/scripts/validate-product-012.js
