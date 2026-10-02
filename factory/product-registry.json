@@ -219,20 +219,6 @@
         "unchanged",
         "human_review"
       ]
-    },
-    {
-      "id": "treasury-average-rate-change",
-      "number": "014",
-      "status": "design",
-      "method": "GET",
-      "path": "/api/treasury-average-rate-change",
-      "price_usdc": "0.003",
-      "decision_values": [
-        "increased",
-        "decreased",
-        "within_tolerance",
-        "human_review"
-      ]
     }
   ]
 }
