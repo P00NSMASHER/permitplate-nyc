@@ -13,6 +13,10 @@
 const NETWORK = 'eip155:8453';
 const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'.toLowerCase();
 const PAY_TO = '0x708f7b52b56eafd7fc1de65fc7752ed732914021'.toLowerCase();
+const EXPECTED_FLOOT_RESOURCES = Number(process.env.EXPECTED_FLOOT_RESOURCES ?? '2');
+if (!Number.isInteger(EXPECTED_FLOOT_RESOURCES) || EXPECTED_FLOOT_RESOURCES < 1) {
+  throw new Error('EXPECTED_FLOOT_RESOURCES must be a positive integer');
+}
 
 const services = [
   {
@@ -227,12 +231,124 @@ async function verifyService(service) {
   return result;
 }
 
+async function verifyVendorGateFixtures() {
+  const base =
+    'https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-demo';
+  const fixtures = [
+    {
+      id: 'gate-proceed',
+      url: base + '?case=proceed',
+      decision: 'proceed',
+      action: 'continue_vendor_intake',
+      trigger: null,
+      requireCompleteEvidence: true,
+    },
+    {
+      id: 'gate-address-review',
+      url: base + '?case=address_mismatch',
+      decision: 'human_review',
+      action: 'pause_and_request_human_review',
+      trigger: 'registered_address_differs',
+      requireCompleteEvidence: false,
+    },
+    {
+      id: 'gate-domain-review',
+      url: base + '?case=domain_mismatch',
+      decision: 'human_review',
+      action: 'pause_and_request_human_review',
+      trigger: 'domain_name_not_aligned',
+      requireCompleteEvidence: false,
+    },
+  ];
+
+  const results = [];
+  for (const fixture of fixtures) {
+    const item = {
+      id: fixture.id,
+      url: fixture.url,
+      ok: false,
+      status: null,
+      decision: null,
+      agentAction: null,
+      triggers: [],
+      failures: [],
+    };
+
+    try {
+      const response = await fetch(fixture.url, {
+        headers: {
+          accept: 'application/json',
+          'user-agent': 'x402-zero-spend-buyer-verifier/1.0',
+        },
+        signal: AbortSignal.timeout(20000),
+      });
+      item.status = response.status;
+      if (response.status !== 200) {
+        item.failures.push(`HTTP ${response.status} (expected 200)`);
+      }
+
+      const body = await response.json();
+      item.decision = body?.decision ?? null;
+      item.agentAction = body?.agentAction ?? null;
+      item.triggers = Array.isArray(body?.reviewTriggers)
+        ? body.reviewTriggers.map((entry) => entry?.code).filter(Boolean)
+        : [];
+
+      if (item.decision !== fixture.decision) {
+        item.failures.push(
+          `decision=${String(item.decision)} (expected ${fixture.decision})`
+        );
+      }
+      if (item.agentAction !== fixture.action) {
+        item.failures.push(
+          `agentAction=${String(item.agentAction)} (expected ${fixture.action})`
+        );
+      }
+      if (fixture.trigger && !item.triggers.includes(fixture.trigger)) {
+        item.failures.push(`missing expected review trigger ${fixture.trigger}`);
+      }
+      if (!fixture.trigger && item.triggers.length !== 0) {
+        item.failures.push(
+          `unexpected review triggers: ${item.triggers.join(', ')}`
+        );
+      }
+
+      if (fixture.requireCompleteEvidence) {
+        const registryComplete = body?.evidence?.registry?.complete === true;
+        const providedCensusComplete =
+          body?.evidence?.address?.providedEvidenceComplete === true;
+        const registryCensusComplete =
+          body?.evidence?.address?.registryEvidenceComplete === true;
+        const ofacComplete = body?.evidence?.ofac?.complete === true;
+        const rdapComplete = body?.evidence?.domain?.complete === true;
+
+        if (!registryComplete) item.failures.push('registry evidence is not complete');
+        if (!providedCensusComplete) {
+          item.failures.push('provided-address Census evidence is not complete');
+        }
+        if (!registryCensusComplete) {
+          item.failures.push('registry-address Census evidence is not complete');
+        }
+        if (!ofacComplete) item.failures.push('OFAC evidence is not complete');
+        if (!rdapComplete) item.failures.push('RDAP evidence is not complete');
+      }
+    } catch (error) {
+      item.failures.push(error instanceof Error ? error.message : String(error));
+    }
+
+    item.ok = item.failures.length === 0;
+    results.push(item);
+  }
+
+  return results;
+}
+
 async function verifyDiscovery() {
   const checks = [
     {
       id: 'floot-manifest',
       url: 'https://pa-entity-x402.floot.app/.well-known/x402',
-      expectedResources: 2,
+      expectedResources: EXPECTED_FLOOT_RESOURCES,
     },
     {
       id: 'appdeploy-pa-manifest',
@@ -300,6 +416,17 @@ async function main() {
     }
   }
 
+  console.log('\nVendor gate fixtures:');
+  const fixtureResults = await verifyVendorGateFixtures();
+  for (const result of fixtureResults) {
+    console.log(
+      `${result.ok ? 'PASS' : 'FAIL'} ${result.id} | status=${result.status} | decision=${result.decision} | triggers=${result.triggers.join(',') || 'none'}`
+    );
+    for (const failure of result.failures) {
+      console.log(`  - ${failure}`);
+    }
+  }
+
   console.log('\nDiscovery:');
   const discoveryResults = await verifyDiscovery();
   for (const result of discoveryResults) {
@@ -312,6 +439,7 @@ async function main() {
   }
 
   const passedServices = serviceResults.filter((x) => x.ok).length;
+  const passedFixtures = fixtureResults.filter((x) => x.ok).length;
   const passedDiscovery = discoveryResults.filter((x) => x.ok).length;
 
   const report = {
@@ -323,12 +451,17 @@ async function main() {
         passed: passedServices,
         total: serviceResults.length,
       },
+      fixtures: {
+        passed: passedFixtures,
+        total: fixtureResults.length,
+      },
       discovery: {
         passed: passedDiscovery,
         total: discoveryResults.length,
       },
     },
     services: serviceResults,
+    fixtures: fixtureResults,
     discovery: discoveryResults,
   };
 
@@ -337,6 +470,7 @@ async function main() {
 
   if (
     passedServices !== serviceResults.length ||
+    passedFixtures !== fixtureResults.length ||
     passedDiscovery !== discoveryResults.length
   ) {
     process.exitCode = 1;
