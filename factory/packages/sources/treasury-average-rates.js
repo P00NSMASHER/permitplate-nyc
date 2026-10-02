@@ -23,18 +23,11 @@ function normalizeSecurity(value){
 }
 
 function createTreasuryAverageRatesAdapter({fetchImpl=fetch,timeoutMs=SOURCE_TIMEOUT_MS}={}){
-  return {async lookup({security}){
-    const wanted=normalizeSecurity(security);
-    if(wanted.length<2||wanted.length>100){
-      const error=new Error("invalid_security");
-      error.code="INVALID_INPUT";
-      throw error;
-    }
-
+  async function rows(){
     const url=new URL(TREASURY_API);
     url.searchParams.set("fields","record_date,security_type_desc,security_desc,avg_interest_rate_amt");
     url.searchParams.set("sort","-record_date");
-    url.searchParams.set("page[size]","100");
+    url.searchParams.set("page[size]","300");
 
     const payload=await fetchJson(fetchImpl,url.toString(),{
       headers:{
@@ -43,56 +36,156 @@ function createTreasuryAverageRatesAdapter({fetchImpl=fetch,timeoutMs=SOURCE_TIM
       }
     },timeoutMs);
 
-    const rows=Array.isArray(payload?.data)?payload.data:null;
-    if(!rows||rows.length===0){
+    const data=Array.isArray(payload?.data)?payload.data:null;
+    if(!data||data.length===0){
       const error=new Error("treasury_no_data");
       error.code="SOURCE_CONTRACT_INVALID";
       throw error;
     }
+    return data;
+  }
 
-    const recordDate=String(rows[0]?.record_date??"");
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(recordDate)){
-      const error=new Error("treasury_record_date_invalid");
-      error.code="SOURCE_CONTRACT_INVALID";
-      throw error;
+  function chooseDescription(data,wanted){
+    const needle=wanted.toLowerCase();
+    const exactDescriptions=[...new Set(data
+      .map(row=>String(row?.security_desc??"").trim())
+      .filter(desc=>desc&&desc.toLowerCase()===needle)
+    )];
+    if(exactDescriptions.length>0){
+      return {
+        found:true,
+        ambiguous:exactDescriptions.length>1,
+        descriptions:exactDescriptions,
+        selected:exactDescriptions.length===1?exactDescriptions[0]:null
+      };
     }
 
-    const latest=rows.filter(row=>String(row?.record_date??"")===recordDate);
-    const needle=wanted.toLowerCase();
-
-    const exact=latest.filter(row=>
-      String(row?.security_desc??"").trim().toLowerCase()===needle
-    );
-    const candidates=exact.length>0?exact:latest.filter(row=>
-      String(row?.security_desc??"").toLowerCase().includes(needle)
-    );
-
-    const normalized=candidates.map(row=>{
-      const raw=row?.avg_interest_rate_amt;
-      const rate=raw==null||raw===""?null:Number(raw);
-      return {
-        securityDescription:row?.security_desc??null,
-        securityType:row?.security_type_desc??null,
-        averageInterestRatePercent:Number.isFinite(rate)?rate:null
-      };
-    });
-
+    const containsDescriptions=[...new Set(data
+      .map(row=>String(row?.security_desc??"").trim())
+      .filter(desc=>desc&&desc.toLowerCase().includes(needle))
+    )];
     return {
-      available:true,
-      recordDate,
-      query:wanted,
-      matchCount:normalized.length,
-      ambiguous:normalized.length>1,
-      found:normalized.length>0,
-      selected:normalized.length===1?normalized[0]:null,
-      matches:normalized,
-      provenance:{
-        source:"U.S. Treasury Fiscal Data — Average Interest Rates on U.S. Treasury Securities",
-        url:TREASURY_API,
-        frequency:"monthly"
-      }
+      found:containsDescriptions.length>0,
+      ambiguous:containsDescriptions.length>1,
+      descriptions:containsDescriptions,
+      selected:containsDescriptions.length===1?containsDescriptions[0]:null
     };
-  }};
+  }
+
+  function normalizeRow(row){
+    const raw=row?.avg_interest_rate_amt;
+    const rate=raw==null||raw===""?null:Number(raw);
+    return {
+      recordDate:String(row?.record_date??""),
+      securityDescription:row?.security_desc??null,
+      securityType:row?.security_type_desc??null,
+      averageInterestRatePercent:Number.isFinite(rate)?rate:null
+    };
+  }
+
+  return {
+    async lookup({security}){
+      const wanted=normalizeSecurity(security);
+      if(wanted.length<2||wanted.length>100){
+        const error=new Error("invalid_security");
+        error.code="INVALID_INPUT";
+        throw error;
+      }
+
+      const data=await rows();
+      const recordDate=String(data[0]?.record_date??"");
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(recordDate)){
+        const error=new Error("treasury_record_date_invalid");
+        error.code="SOURCE_CONTRACT_INVALID";
+        throw error;
+      }
+
+      const latest=data.filter(row=>String(row?.record_date??"")===recordDate);
+      const choice=chooseDescription(latest,wanted);
+      const matches=choice.descriptions.map(description=>{
+        const row=latest.find(item=>String(item?.security_desc??"").trim()===description);
+        return normalizeRow(row);
+      });
+
+      return {
+        available:true,
+        recordDate,
+        query:wanted,
+        matchCount:matches.length,
+        ambiguous:choice.ambiguous,
+        found:choice.found,
+        selected:matches.length===1?matches[0]:null,
+        matches,
+        provenance:{
+          source:"U.S. Treasury Fiscal Data — Average Interest Rates on U.S. Treasury Securities",
+          url:TREASURY_API,
+          frequency:"monthly"
+        }
+      };
+    },
+
+    async history({security,points=2}){
+      const wanted=normalizeSecurity(security);
+      if(wanted.length<2||wanted.length>100){
+        const error=new Error("invalid_security");
+        error.code="INVALID_INPUT";
+        throw error;
+      }
+      const count=Number(points);
+      if(!Number.isSafeInteger(count)||count<2||count>24){
+        const error=new Error("invalid_history_points");
+        error.code="INVALID_INPUT";
+        throw error;
+      }
+
+      const data=await rows();
+      const choice=chooseDescription(data,wanted);
+      if(!choice.found||choice.ambiguous||!choice.selected){
+        return {
+          available:true,
+          query:wanted,
+          found:choice.found,
+          ambiguous:choice.ambiguous,
+          matchDescriptions:choice.descriptions,
+          points:[],
+          provenance:{
+            source:"U.S. Treasury Fiscal Data — Average Interest Rates on U.S. Treasury Securities",
+            url:TREASURY_API,
+            frequency:"monthly"
+          }
+        };
+      }
+
+      const selectedRows=data
+        .filter(row=>String(row?.security_desc??"").trim()===choice.selected)
+        .map(normalizeRow)
+        .filter(row=>/^\d{4}-\d{2}-\d{2}$/.test(row.recordDate))
+        .sort((a,b)=>b.recordDate.localeCompare(a.recordDate));
+
+      const distinct=[];
+      const seen=new Set();
+      for(const row of selectedRows){
+        if(seen.has(row.recordDate))continue;
+        seen.add(row.recordDate);
+        distinct.push(row);
+        if(distinct.length>=count)break;
+      }
+
+      return {
+        available:true,
+        query:wanted,
+        found:true,
+        ambiguous:false,
+        matchDescriptions:[choice.selected],
+        points:distinct,
+        provenance:{
+          source:"U.S. Treasury Fiscal Data — Average Interest Rates on U.S. Treasury Securities",
+          url:TREASURY_API,
+          frequency:"monthly"
+        }
+      };
+    }
+  };
 }
 
 module.exports={TREASURY_API,normalizeSecurity,createTreasuryAverageRatesAdapter};
