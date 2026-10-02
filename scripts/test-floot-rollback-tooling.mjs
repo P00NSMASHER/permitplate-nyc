@@ -13,6 +13,12 @@ const deployMap = JSON.parse(
     'utf8'
   )
 );
+const queue = JSON.parse(
+  await readFile(
+    new URL('../verification/floot-deployment-queue-latest.json', import.meta.url),
+    'utf8'
+  )
+);
 
 const mandatory = [
   'endpoints/pa-business_GET.ts',
@@ -60,6 +66,8 @@ const snapshot = {
   productionOrigin: deployMap.productionOrigin,
   projectVersion: 12345,
   capturedAt: '2026-10-02T15:00:00.000Z',
+  sourceBranch: queue.sourceBranch,
+  sourceCommit: queue.sourceCommit,
   preexistingRecoveryTargets: staticTargets,
   absentRecoveryTargets: endpointTargets,
   files,
