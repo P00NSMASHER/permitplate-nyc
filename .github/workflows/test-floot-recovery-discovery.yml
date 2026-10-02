@@ -6,6 +6,8 @@ on:
       - 'docs/pa-entity-floot-recovery/**'
       - 'verification/floot-static-rollback-public-latest.json'
       - 'verification/floot-deployment-queue-latest.json'
+      - 'recovery/floot-snapshot-capture-plan.json'
+      - 'scripts/validate-floot-snapshot-capture-plan.mjs'
       - 'scripts/test-floot-recovery-discovery.mjs'
       - 'scripts/build-floot-pre-rehost-snapshot.mjs'
       - 'scripts/test-floot-pre-rehost-snapshot-builder.mjs'
@@ -40,6 +42,10 @@ jobs:
           node --check scripts/compare-floot-snapshot-to-public-baseline.mjs
           node --check scripts/build-floot-rollback-plan.mjs
           node --check scripts/test-floot-rollback-tooling.mjs
+          node --check scripts/validate-floot-snapshot-capture-plan.mjs
+
+      - name: Validate snapshot capture plan
+        run: node scripts/validate-floot-snapshot-capture-plan.mjs
 
       - name: Verify snapshot builder round trip
         run: node scripts/test-floot-pre-rehost-snapshot-builder.mjs
