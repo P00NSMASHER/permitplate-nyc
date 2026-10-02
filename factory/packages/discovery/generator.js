@@ -20,6 +20,7 @@ const MODULES = Object.freeze({
   "pa-vendor-new-domain-review": require("../../products/pa-vendor-new-domain-review/metadata"),
   "pa-vendor-counterparty-review": require("../../products/pa-vendor-counterparty-review/metadata"),
   "pa-vendor-maturity-review": require("../../products/pa-vendor-maturity-review/metadata"),
+  "pa-vendor-domain-continuity-review": require("../../products/pa-vendor-domain-continuity-review/metadata"),
 });
 
 function managedProducts() {
