@@ -21,6 +21,22 @@ The most action-efficient layout is:
 
 This removes AppDeploy from the runtime dependency graph.
 
+## Prepared code assets
+
+Use these as the migration source of truth rather than re-copying AppDeploy code by hand:
+
+- `recovery/x402-rehost-core.mjs` — Census, OFAC, RDAP, SEC, Treasury public-data logic
+- `recovery/vendor-intake-gate-core.mjs` — authoritative fail-closed decision engine with injectable PA registry search
+- `recovery/pa-registry-rehost-core.mjs` — standalone PA registry search/ranking helper for smoke/rehost use
+- `recovery/floot-target-manifest.json` — exact eight-resource same-origin target
+- `scripts/test-x402-rehost-core.mjs` — official-upstream smoke
+- `scripts/test-vendor-intake-gate-core.mjs` — decision/core regression suite
+- `scripts/test-vendor-intake-live-core.mjs` — live composed-gate smoke without AppDeploy
+- `scripts/validate-floot-target-manifest.mjs` — target-manifest invariant test
+- `scripts/compare-floot-manifest-to-target.mjs` — live Floot-vs-target comparator
+
+The gate core intentionally takes a `searchRegistry` callback so the Floot implementation can reuse its already-proven PA registry code instead of maintaining a second registry implementation.
+
 ## Shared x402 terms
 
 Reuse the existing Floot payment machinery already proven on the PA routes.
