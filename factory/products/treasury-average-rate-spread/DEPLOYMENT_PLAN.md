@@ -1,6 +1,6 @@
 # Product 015 deployment plan — Treasury Average Rate Spread x402
 
-Status: design candidate pending live-source and release-gate verification.
+Status: live-source-verified staging candidate.
 
 ## Contract
 
@@ -78,3 +78,12 @@ AppDeploy weekly Free-tier reset remains recorded as `2026-10-05T00:00:00Z`. No 
 6. Resource-level `accepts[]` is present.
 7. Products 001–014 remain unchanged.
 8. Official Fiscal Data live smoke returns a non-review decision with finite spreadBps.
+
+## Verified live-source evidence
+
+- source record date: 2026-08-31
+- Treasury Bills: 3.788%
+- Treasury Notes: 3.345%
+- spread: +44.3 basis points
+- tolerance: 2 basis points
+- decision: `left_higher`
