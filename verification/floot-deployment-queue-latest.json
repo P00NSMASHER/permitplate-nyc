@@ -330,12 +330,13 @@
   },
   "lockEvidence": {
     "workflow": "Verify Floot deployment lock",
-    "runId": 37028588667,
+    "runId": 37030007761,
     "conclusion": "success",
     "checks": [
-      "immutable source branch/blob lock",
+      "immutable source branch/blob/raw-URL lock",
       "public static rollback receipt",
-      "pre-rehost snapshot builder round trip"
+      "pre-rehost snapshot builder round trip",
+      "deterministic rollback plan generator"
     ]
   },
   "liveReleaseUpstreamEvidence": {
