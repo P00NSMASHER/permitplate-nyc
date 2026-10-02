@@ -98,3 +98,43 @@ test("history validates requested point count", async () => {
     error=>error.code==="INVALID_INPUT"
   );
 });
+
+test("compare resolves two categories from one latest-month response", async () => {
+  let calls=0;
+  const adapter=createTreasuryAverageRatesAdapter({
+    fetchImpl:async()=>{calls++;return response({data:rows});}
+  });
+  const result=await adapter.compare({
+    leftSecurity:"Treasury Bills",
+    rightSecurity:"Treasury Notes"
+  });
+  assert.equal(calls,1);
+  assert.equal(result.recordDate,"2026-09-30");
+  assert.equal(result.left.found,true);
+  assert.equal(result.left.ambiguous,false);
+  assert.equal(result.left.selected.averageInterestRatePercent,4.123);
+  assert.equal(result.right.selected.averageInterestRatePercent,3.456);
+});
+
+test("compare reports ambiguous category without fabricating a selected row", async () => {
+  const adapter=createTreasuryAverageRatesAdapter({
+    fetchImpl:async()=>response({data:rows})
+  });
+  const result=await adapter.compare({
+    leftSecurity:"Treasury",
+    rightSecurity:"Total Marketable"
+  });
+  assert.equal(result.left.ambiguous,true);
+  assert.equal(result.left.selected,null);
+  assert.equal(result.right.selected.averageInterestRatePercent,3.789);
+});
+
+test("compare rejects identical categories", async () => {
+  const adapter=createTreasuryAverageRatesAdapter({
+    fetchImpl:async()=>response({data:rows})
+  });
+  await assert.rejects(
+    ()=>adapter.compare({leftSecurity:"Treasury Bills",rightSecurity:"Treasury Bills"}),
+    error=>error.code==="INVALID_INPUT"
+  );
+});
