@@ -46,3 +46,11 @@ jobs:
         run: node factory/scripts/validate-product-004.js
       - name: Validate factory product registry
         run: node factory/scripts/validate-registry.js
+      - name: Test Product 005 decision policy
+        run: node --test factory/products/pa-business-domain-match/decision.test.js
+      - name: Test Product 005 service composition
+        run: node --test factory/products/pa-business-domain-match/service.test.js
+      - name: Test Product 005 paid x402 handler
+        run: node --test factory/products/pa-business-domain-match/paid-handler.test.js
+      - name: Test Product 005 discovery metadata
+        run: node --test factory/products/pa-business-domain-match/metadata.test.js
