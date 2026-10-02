@@ -47,6 +47,10 @@ Full reviewer checklist, x402 behavior, fail-closed trigger catalog, and live bo
 
 https://github.com/P00NSMASHER/permitplate-nyc/blob/main/docs/vendor-intake-gate-evidence.md
 
+Zero-spend buyer-style verification runbook:
+
+https://github.com/P00NSMASHER/permitplate-nyc/blob/main/docs/x402-zero-spend-verification.md
+
 Fixed live fixtures:
 
 - expected proceed: `GET https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-demo?case=proceed`
