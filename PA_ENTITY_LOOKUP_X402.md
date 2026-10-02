@@ -128,9 +128,36 @@ The service does not claim current good standing, sanctions status, a legitimacy
 - service manifest: https://pa-entity-x402.floot.app/.well-known/x402-service.json
 - catalog: https://pa-entity-x402.floot.app/.well-known/x402-catalog.json
 
+## Current AppDeploy hosting availability — 2026-10-02
+
+Independent GitHub cloud verification at `2026-10-02T12:51:06Z` found that all six AppDeploy-hosted paid APIs are currently paused by the platform edge:
+
+- vendor-intake gate
+- SEC recent filings
+- Census geocoder
+- OFAC SDN screen
+- RDAP lookup
+- Treasury average rates
+
+Each returned:
+
+- HTTP 402
+- `x-appdeploy-app-availability: temporarily-unavailable`
+- body code `APP_TEMPORARILY_UNAVAILABLE`
+- **no** seller `PAYMENT-REQUIRED` header
+
+The same check confirmed both Floot PA routes remain fully healthy x402 sellers with real `PAYMENT-REQUIRED` challenges.
+
+AppDeploy's own public documentation states that hosted apps stop running when no usable account credits remain and automatically resume when usable credits return. The control plane can still report the stored deployment as `ready` while public hosting is unavailable.
+
+Durable outage receipt:
+`verification/x402-portfolio-verification-latest.json`
+
+Until that receipt returns green again, AppDeploy routes must not be counted as currently sellable or independently verifiable. Floot remains the live production seller.
+
 ## Zero-cost live mirror
 
-A second production origin is live on AppDeploy so the service can keep improving while Floot's daily build quota is unavailable:
+An AppDeploy mirror is retained with the deployed source below. **Its public hosting is currently paused by AppDeploy account-credit exhaustion, so these routes are not currently sellable even though the stored deployment reports ready:**
 
 ```text
 https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s
