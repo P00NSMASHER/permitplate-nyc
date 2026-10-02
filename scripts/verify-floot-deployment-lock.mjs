@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 
 const REPO = 'P00NSMASHER/permitplate-nyc';
@@ -32,6 +33,39 @@ assert.equal(queue.preserveTargets.length, 4);
 assert.equal(queue.expectedPaidResourceCount, 8);
 assert.match(queue.sourceBranch, /^floot-recovery-lock-/);
 assert.match(queue.sourceCommit, /^[0-9a-f]{40}$/);
+assert.ok(Array.isArray(queue.deploymentBundles));
+assert.equal(queue.deploymentBundles.length, 2);
+
+const bundledItems = [];
+for (const bundle of queue.deploymentBundles) {
+  assert.match(bundle.gitBlobSha, /^[0-9a-f]{40}$/);
+  const bytes = await readFile(new URL('../' + bundle.path, import.meta.url));
+  const header = Buffer.from('blob ' + bytes.length + '\0', 'utf8');
+  const blobSha = crypto
+    .createHash('sha1')
+    .update(Buffer.concat([header, bytes]))
+    .digest('hex');
+  assert.equal(
+    blobSha,
+    bundle.gitBlobSha,
+    'deployment bundle blob drift: ' + bundle.path
+  );
+
+  const parsed = JSON.parse(bytes.toString('utf8'));
+  assert.deepEqual(parsed.range, bundle.range);
+  assert.equal(parsed.items?.length, bundle.itemCount);
+  bundledItems.push(...parsed.items);
+}
+assert.equal(bundledItems.length, queue.writes.length);
+for (let i = 0; i < bundledItems.length; i += 1) {
+  const item = bundledItems[i];
+  const write = queue.writes[i];
+  assert.equal(item.order, i + 1);
+  assert.equal(item.source, write.source);
+  assert.equal(item.target, write.target);
+  assert.equal(item.gitBlobSha, write.gitBlobSha);
+  assert.equal(item.size, write.size);
+}
 
 const branch = await github('/branches/' + encodeURIComponent(queue.sourceBranch));
 assert.equal(
@@ -117,6 +151,8 @@ console.log(
       currentMain: mainSha,
       mainCommitsAheadOfLock: comparison.ahead_by ?? null,
       lockedWrites: queue.writes.length,
+      deploymentBundles: queue.deploymentBundles.length,
+      bundledWrites: bundledItems.length,
       lockedSourcesChangedOnMain: mutatedLockedSources.length,
       endpointWrites: 14,
       staticWrites: 12,
