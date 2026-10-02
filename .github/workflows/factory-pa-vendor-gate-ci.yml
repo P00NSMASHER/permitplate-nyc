@@ -34,3 +34,11 @@ jobs:
         run: node --test factory/products/pa-vendor-identity-match/metadata.test.js
       - name: Run Product 003 release gate
         run: node factory/scripts/validate-product-003.js
+      - name: Test Product 004 decision policy
+        run: node --test factory/products/pa-business-address-match/decision.test.js
+      - name: Test Product 004 service composition
+        run: node --test factory/products/pa-business-address-match/service.test.js
+      - name: Test Product 004 paid x402 handler
+        run: node --test factory/products/pa-business-address-match/paid-handler.test.js
+      - name: Test Product 004 discovery metadata
+        run: node --test factory/products/pa-business-address-match/metadata.test.js
