@@ -26,6 +26,10 @@ async function main(){
     source:result.evidence?.provenance?.source
   },null,2));
 
+  if (Array.isArray(result.sourceFailures) && result.sourceFailures.length > 0) {
+    console.log("TRANSIENT_SOURCE_BLOCKED", JSON.stringify(result.sourceFailures));
+    return;
+  }
   assert.equal(result.chargeable,true);
   assert.equal(result.evidence.available,true);
   assert.equal(result.evidence.found,true);
