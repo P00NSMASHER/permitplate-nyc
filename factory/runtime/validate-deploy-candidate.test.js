@@ -33,4 +33,5 @@ test("candidate is structurally ready with a declared SEC contact",()=>{
   assert.ok(result.releaseFiles.includes("product-index.json"));
   assert.ok(result.releaseFiles.includes("bundle-manifest.json"));
   assert.ok(result.releaseFiles.includes("release-manifest.json"));
+  assert.ok(result.releaseFiles.includes("factory-runtime-bundle.js"));
 });
