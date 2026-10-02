@@ -35,7 +35,3 @@ jobs:
         run: node factory/products/domain-registration-age/live-smoke.js
       - name: Product 008 live Treasury smoke
         run: node factory/products/treasury-average-rate-threshold/live-smoke.js
-      - name: Product 007 live domain-age smoke
-        run: node factory/products/domain-registration-age/live-smoke.js
-      - name: Product 008 live Treasury-rate smoke
-        run: node factory/products/treasury-average-rate-threshold/live-smoke.js
