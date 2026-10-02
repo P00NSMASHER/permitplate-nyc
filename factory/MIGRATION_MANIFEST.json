@@ -18,7 +18,8 @@
     "001",
     "002",
     "003",
-    "004"
+    "004",
+    "005"
   ],
   "production_products": [
     "001",
@@ -26,7 +27,8 @@
   ],
   "staging_products": [
     "003",
-    "004"
+    "004",
+    "005"
   ],
   "deployment_blocker": {
     "provider": "AppDeploy",
