@@ -1,0 +1,41 @@
+name: Verify Floot post-deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      register_directories:
+        description: After public verification is green, refresh Agent402, Market402, and 402 Index
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Zero-spend Floot post-deploy verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verify public Floot release
+        env:
+          REGISTER_DIRECTORIES: ${{ inputs.register_directories && '1' || '0' }}
+          POSTDEPLOY_RECEIPT_PATH: floot-postdeploy-receipt.json
+        run: node scripts/postdeploy-floot-x402.mjs
+
+      - name: Upload post-deploy receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: floot-postdeploy-receipt
+          path: floot-postdeploy-receipt.json
+          if-no-files-found: warn
