@@ -1,0 +1,329 @@
+{
+  "checkedAt": "2026-10-02T12:51:06.103Z",
+  "zeroSpend": true,
+  "paymentSent": false,
+  "summary": {
+    "services": {
+      "passed": 2,
+      "total": 8
+    },
+    "fixtures": {
+      "passed": 0,
+      "total": 3
+    },
+    "discovery": {
+      "passed": 1,
+      "total": 2
+    }
+  },
+  "services": [
+    {
+      "id": "pa-best-match",
+      "name": "PA Entity Best Match",
+      "url": "https://pa-entity-x402.floot.app/_api/pa-entity-one?q=OpenAI",
+      "expectedPrice": "$0.001",
+      "expectedAmount": "1000",
+      "ok": true,
+      "status": 402,
+      "latencyMs": 263,
+      "paymentRequiredPresent": true,
+      "appdeployAvailability": null,
+      "responseBodyCode": null,
+      "responseBodyMessage": null,
+      "failures": []
+    },
+    {
+      "id": "pa-enriched-search",
+      "name": "PA Entity Enriched Search",
+      "url": "https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=3",
+      "expectedPrice": "$0.005",
+      "expectedAmount": "5000",
+      "ok": true,
+      "status": 402,
+      "latencyMs": 214,
+      "paymentRequiredPresent": true,
+      "appdeployAvailability": null,
+      "responseBodyCode": null,
+      "responseBodyMessage": null,
+      "failures": []
+    },
+    {
+      "id": "vendor-intake-gate",
+      "name": "Pennsylvania Vendor Intake Gate",
+      "url": "https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-gate?name=OpenAI%20OpCo&address=600%20North%20Second%20Street%2C%20Suite%20401%2C%20Harrisburg%2C%20PA%2017101&domain=openai.com",
+      "expectedPrice": "$0.020",
+      "expectedAmount": "20000",
+      "ok": false,
+      "status": 402,
+      "latencyMs": 109,
+      "paymentRequiredPresent": false,
+      "appdeployAvailability": "temporarily-unavailable",
+      "responseBodyCode": "APP_TEMPORARILY_UNAVAILABLE",
+      "responseBodyMessage": "This app is temporarily unavailable. Please try again later. If the problem continues, contact the app’s support team.",
+      "failures": [
+        "PAYMENT-REQUIRED decode failed: missing PAYMENT-REQUIRED header"
+      ]
+    },
+    {
+      "id": "sec-recent-filings",
+      "name": "SEC Recent Filings",
+      "url": "https://api-v2.appdeploy.ai/app/sec-recent-filings-x402-f9qatj/api/sec-filings?ticker=AAPL&form=10-K&limit=3",
+      "expectedPrice": "$0.005",
+      "expectedAmount": "5000",
+      "ok": false,
+      "status": 402,
+      "latencyMs": 82,
+      "paymentRequiredPresent": false,
+      "appdeployAvailability": "temporarily-unavailable",
+      "responseBodyCode": "APP_TEMPORARILY_UNAVAILABLE",
+      "responseBodyMessage": "This app is temporarily unavailable. Please try again later. If the problem continues, contact the app’s support team.",
+      "failures": [
+        "PAYMENT-REQUIRED decode failed: missing PAYMENT-REQUIRED header"
+      ]
+    },
+    {
+      "id": "census-geocoder",
+      "name": "US Census Address Geocoder",
+      "url": "https://api-v2.appdeploy.ai/app/us-census-address-geocoder-x402-23mj4x/api/us-address-geocode?address=4600%20Silver%20Hill%20Rd%2C%20Washington%2C%20DC%2020233",
+      "expectedPrice": "$0.005",
+      "expectedAmount": "5000",
+      "ok": false,
+      "status": 402,
+      "latencyMs": 108,
+      "paymentRequiredPresent": false,
+      "appdeployAvailability": "temporarily-unavailable",
+      "responseBodyCode": "APP_TEMPORARILY_UNAVAILABLE",
+      "responseBodyMessage": "This app is temporarily unavailable. Please try again later. If the problem continues, contact the app’s support team.",
+      "failures": [
+        "PAYMENT-REQUIRED decode failed: missing PAYMENT-REQUIRED header"
+      ]
+    },
+    {
+      "id": "ofac-sdn-screen",
+      "name": "OFAC SDN Name Screen",
+      "url": "https://api-v2.appdeploy.ai/app/ofac-sdn-name-screen-x402-m9ko96/api/ofac-sdn-screen?name=VLADIMIR%20PUTIN&limit=3&minScore=85",
+      "expectedPrice": "$0.005",
+      "expectedAmount": "5000",
+      "ok": false,
+      "status": 402,
+      "latencyMs": 44,
+      "paymentRequiredPresent": false,
+      "appdeployAvailability": "temporarily-unavailable",
+      "responseBodyCode": "APP_TEMPORARILY_UNAVAILABLE",
+      "responseBodyMessage": "This app is temporarily unavailable. Please try again later. If the problem continues, contact the app’s support team.",
+      "failures": [
+        "PAYMENT-REQUIRED decode failed: missing PAYMENT-REQUIRED header"
+      ]
+    },
+    {
+      "id": "domain-rdap",
+      "name": "Domain RDAP Lookup",
+      "url": "https://api-v2.appdeploy.ai/app/domain-rdap-lookup-x402-spdfnq/api/domain-rdap?domain=example.com",
+      "expectedPrice": "$0.005",
+      "expectedAmount": "5000",
+      "ok": false,
+      "status": 402,
+      "latencyMs": 47,
+      "paymentRequiredPresent": false,
+      "appdeployAvailability": "temporarily-unavailable",
+      "responseBodyCode": "APP_TEMPORARILY_UNAVAILABLE",
+      "responseBodyMessage": "This app is temporarily unavailable. Please try again later. If the problem continues, contact the app’s support team.",
+      "failures": [
+        "PAYMENT-REQUIRED decode failed: missing PAYMENT-REQUIRED header"
+      ]
+    },
+    {
+      "id": "treasury-average-rates",
+      "name": "Treasury Average Interest Rates",
+      "url": "https://api-v2.appdeploy.ai/app/treasury-average-interest-rates-x402-xeqftl/api/treasury-average-rates",
+      "expectedPrice": "$0.005",
+      "expectedAmount": "5000",
+      "ok": false,
+      "status": 402,
+      "latencyMs": 45,
+      "paymentRequiredPresent": false,
+      "appdeployAvailability": "temporarily-unavailable",
+      "responseBodyCode": "APP_TEMPORARILY_UNAVAILABLE",
+      "responseBodyMessage": "This app is temporarily unavailable. Please try again later. If the problem continues, contact the app’s support team.",
+      "failures": [
+        "PAYMENT-REQUIRED decode failed: missing PAYMENT-REQUIRED header"
+      ]
+    }
+  ],
+  "fixtures": [
+    {
+      "id": "gate-proceed",
+      "url": "https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-demo?case=proceed",
+      "ok": false,
+      "status": 402,
+      "decision": null,
+      "agentAction": null,
+      "triggers": [],
+      "failures": [
+        "HTTP 402 (expected 200)",
+        "decision=null (expected proceed)",
+        "agentAction=null (expected continue_vendor_intake)",
+        "registry evidence is not complete",
+        "provided-address Census evidence is not complete",
+        "registry-address Census evidence is not complete",
+        "OFAC evidence is not complete",
+        "RDAP evidence is not complete"
+      ]
+    },
+    {
+      "id": "gate-address-review",
+      "url": "https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-demo?case=address_mismatch",
+      "ok": false,
+      "status": 402,
+      "decision": null,
+      "agentAction": null,
+      "triggers": [],
+      "failures": [
+        "HTTP 402 (expected 200)",
+        "decision=null (expected human_review)",
+        "agentAction=null (expected pause_and_request_human_review)",
+        "missing expected review trigger registered_address_differs"
+      ]
+    },
+    {
+      "id": "gate-domain-review",
+      "url": "https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-demo?case=domain_mismatch",
+      "ok": false,
+      "status": 402,
+      "decision": null,
+      "agentAction": null,
+      "triggers": [],
+      "failures": [
+        "HTTP 402 (expected 200)",
+        "decision=null (expected human_review)",
+        "agentAction=null (expected pause_and_request_human_review)",
+        "missing expected review trigger domain_name_not_aligned"
+      ]
+    }
+  ],
+  "discovery": [
+    {
+      "id": "floot-manifest",
+      "url": "https://pa-entity-x402.floot.app/.well-known/x402",
+      "ok": true,
+      "status": 200,
+      "resourceCount": 2,
+      "failures": []
+    },
+    {
+      "id": "appdeploy-pa-manifest",
+      "url": "https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/.well-known/x402",
+      "ok": false,
+      "status": 402,
+      "resourceCount": null,
+      "failures": [
+        "HTTP 402 (expected 200)",
+        "x402Version=undefined (expected 2)",
+        "resourceCount=null (expected 3)"
+      ]
+    }
+  ],
+  "directories": [
+    {
+      "id": "agent402",
+      "url": "https://agent402.tools/api/index?seller=pa-entity-x402.floot.app",
+      "reachable": true,
+      "status": 200,
+      "json": true,
+      "containsVendorGate": false,
+      "topLevelKeys": [
+        "origin",
+        "displayName",
+        "homepage",
+        "toolCount",
+        "paidToolCount",
+        "fetchedAt",
+        "error",
+        "health",
+        "routable",
+        "networks",
+        "paywall",
+        "mpp",
+        "originResponded",
+        "discoveryPath",
+        "payToByNetwork",
+        "payTosByNetwork",
+        "evmDomainByNetwork",
+        "history",
+        "healthWindow",
+        "listingLegend",
+        "historyLegend",
+        "toolsReturned",
+        "toolsTruncated",
+        "toolsCap",
+        "tools",
+        "paymentNetworksKnown",
+        "routerDispatchEligible",
+        "routerDispatchReason",
+        "routerDispatchByChain",
+        "legend"
+      ],
+      "summary": {
+        "listed": null,
+        "routable": true,
+        "health": 1,
+        "toolCount": 2,
+        "paidToolCount": 2
+      },
+      "error": null
+    },
+    {
+      "id": "402index",
+      "url": "https://402index.io/api/v1/services?q=Pennsylvania%20Vendor%20Intake%20Decision%20Gate&protocol=x402",
+      "reachable": true,
+      "status": 200,
+      "json": true,
+      "containsVendorGate": false,
+      "topLevelKeys": [
+        "services",
+        "total",
+        "limit",
+        "offset"
+      ],
+      "summary": {
+        "total": 46,
+        "returned": 46,
+        "matchingNames": []
+      },
+      "error": null
+    },
+    {
+      "id": "market402",
+      "url": "https://market402.com/search.json?q=Pennsylvania%20Vendor%20Intake%20Decision%20Gate",
+      "reachable": true,
+      "status": 200,
+      "json": true,
+      "containsVendorGate": true,
+      "topLevelKeys": [
+        "query",
+        "total",
+        "showing",
+        "ranking",
+        "note",
+        "results",
+        "available_tags"
+      ],
+      "summary": {},
+      "error": null
+    },
+    {
+      "id": "nohumans",
+      "url": "https://nohumans.directory/v1/discover?q=Pennsylvania%20Vendor%20Intake%20Decision%20Gate",
+      "reachable": true,
+      "status": 200,
+      "json": true,
+      "containsVendorGate": false,
+      "topLevelKeys": [
+        "count",
+        "results"
+      ],
+      "summary": {},
+      "error": null
+    }
+  ]
+}
