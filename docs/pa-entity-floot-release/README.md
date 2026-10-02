@@ -30,7 +30,7 @@ The canonical extensionless path is intentionally a **two-resource** manifest:
 
 The staged `x402` file has been parsed successfully by Agent402's current `normaliseManifestTools` implementation with both prices, Base network, and seller wallet preserved.
 
-Keep `x402.json` and `x402-services.json` as conservative single-resource compatibility aliases. If Floot cannot serve the extensionless static file as HTTP 200 `application/json`, record that platform limitation and do not claim Agent402 canonical discovery is fixed.
+Keep `x402.json` and `x402-services.json` as conservative compatibility aliases: preserve the legacy top-level resource/accepts fields and also expose a minimal two-entry `resources[]` view so CDP-style Bazaar ingestors can discover both paid routes. If Floot cannot serve the extensionless static file as HTTP 200 `application/json`, record that platform limitation and do not claim Agent402 canonical discovery is fixed.
 
 ## Approved deployment payloads
 
