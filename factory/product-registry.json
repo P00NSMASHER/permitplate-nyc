@@ -226,7 +226,7 @@
     {
       "id": "treasury-average-rate-spread",
       "number": "015",
-      "status": "design",
+      "status": "live-source-verified-staging",
       "method": "GET",
       "path": "/api/treasury-average-rate-spread",
       "price_usdc": "0.003",
@@ -235,7 +235,10 @@
         "right_higher",
         "within_tolerance",
         "human_review"
-      ]
+      ],
+      "release_gate": "factory/scripts/validate-product-015.js",
+      "deployment_blocker": "AppDeploy weekly credit reset 2026-10-05T00:00:00Z",
+      "live_source_status": "Treasury Fiscal Data smoke verified Treasury Bills 3.788% vs Treasury Notes 3.345% on 2026-08-31; +44.3 bps => left_higher at toleranceBps 2"
     }
   ]
 }
