@@ -110,6 +110,18 @@
       ],
       "release_gate": "factory/scripts/validate-product-008.js",
       "deployment_blocker": "AppDeploy weekly credit reset 2026-10-05T00:00:00Z"
+    },
+    {
+      "id": "ofac-name-review-gate",
+      "number": "009",
+      "status": "design",
+      "method": "GET",
+      "path": "/api/ofac-name-review-gate",
+      "price_usdc": "0.003",
+      "decision_values": [
+        "candidate_found",
+        "no_candidate"
+      ]
     }
   ]
 }
