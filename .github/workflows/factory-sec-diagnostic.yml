@@ -1,0 +1,15 @@
+name: Factory SEC source diagnostic
+on:
+  push:
+    branches:
+      - x402-product-factory-bootstrap
+    paths:
+      - 'factory/products/sec-filing-freshness/sec-source-diagnostic.js'
+      - '.github/workflows/factory-sec-diagnostic.yml'
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - run: node factory/products/sec-filing-freshness/sec-source-diagnostic.js
