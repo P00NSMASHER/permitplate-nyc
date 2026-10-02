@@ -73,9 +73,11 @@ for (const [label, value, expected] of [
 const receipt = { success: true, transaction: '0xtest' };
 const receiptHeaders = successReceiptHeaders(receipt);
 expect(receiptHeaders['x402-settled'] === 'true', 'settled header missing');
+const decodedReceipt = JSON.parse(
+  Buffer.from(receiptHeaders['PAYMENT-RESPONSE'], 'base64').toString('utf8')
+);
 expect(
-  JSON.stringify(decodePaymentHeader(receiptHeaders['PAYMENT-RESPONSE'])) ===
-    JSON.stringify(receipt),
+  JSON.stringify(decodedReceipt) === JSON.stringify(receipt),
   'receipt header round-trip failed'
 );
 
