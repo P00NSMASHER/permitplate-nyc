@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-02T12:51:06.103Z",
+  "checkedAt": "2026-10-02T13:02:23.301Z",
   "zeroSpend": true,
   "paymentSent": false,
   "summary": {
@@ -25,7 +25,7 @@
       "expectedAmount": "1000",
       "ok": true,
       "status": 402,
-      "latencyMs": 263,
+      "latencyMs": 320,
       "paymentRequiredPresent": true,
       "appdeployAvailability": null,
       "responseBodyCode": null,
@@ -40,7 +40,7 @@
       "expectedAmount": "5000",
       "ok": true,
       "status": 402,
-      "latencyMs": 214,
+      "latencyMs": 352,
       "paymentRequiredPresent": true,
       "appdeployAvailability": null,
       "responseBodyCode": null,
@@ -55,7 +55,7 @@
       "expectedAmount": "20000",
       "ok": false,
       "status": 402,
-      "latencyMs": 109,
+      "latencyMs": 105,
       "paymentRequiredPresent": false,
       "appdeployAvailability": "temporarily-unavailable",
       "responseBodyCode": "APP_TEMPORARILY_UNAVAILABLE",
@@ -72,7 +72,7 @@
       "expectedAmount": "5000",
       "ok": false,
       "status": 402,
-      "latencyMs": 82,
+      "latencyMs": 98,
       "paymentRequiredPresent": false,
       "appdeployAvailability": "temporarily-unavailable",
       "responseBodyCode": "APP_TEMPORARILY_UNAVAILABLE",
@@ -89,7 +89,7 @@
       "expectedAmount": "5000",
       "ok": false,
       "status": 402,
-      "latencyMs": 108,
+      "latencyMs": 92,
       "paymentRequiredPresent": false,
       "appdeployAvailability": "temporarily-unavailable",
       "responseBodyCode": "APP_TEMPORARILY_UNAVAILABLE",
@@ -106,7 +106,7 @@
       "expectedAmount": "5000",
       "ok": false,
       "status": 402,
-      "latencyMs": 44,
+      "latencyMs": 79,
       "paymentRequiredPresent": false,
       "appdeployAvailability": "temporarily-unavailable",
       "responseBodyCode": "APP_TEMPORARILY_UNAVAILABLE",
@@ -123,7 +123,7 @@
       "expectedAmount": "5000",
       "ok": false,
       "status": 402,
-      "latencyMs": 47,
+      "latencyMs": 128,
       "paymentRequiredPresent": false,
       "appdeployAvailability": "temporarily-unavailable",
       "responseBodyCode": "APP_TEMPORARILY_UNAVAILABLE",
@@ -140,7 +140,7 @@
       "expectedAmount": "5000",
       "ok": false,
       "status": 402,
-      "latencyMs": 45,
+      "latencyMs": 121,
       "paymentRequiredPresent": false,
       "appdeployAvailability": "temporarily-unavailable",
       "responseBodyCode": "APP_TEMPORARILY_UNAVAILABLE",
@@ -268,7 +268,8 @@
         "routable": true,
         "health": 1,
         "toolCount": 2,
-        "paidToolCount": 2
+        "paidToolCount": 2,
+        "matchingTools": []
       },
       "error": null
     },
@@ -288,7 +289,7 @@
       "summary": {
         "total": 46,
         "returned": 46,
-        "matchingNames": []
+        "matchingServices": []
       },
       "error": null
     },
@@ -298,7 +299,7 @@
       "reachable": true,
       "status": 200,
       "json": true,
-      "containsVendorGate": true,
+      "containsVendorGate": false,
       "topLevelKeys": [
         "query",
         "total",
@@ -308,7 +309,11 @@
         "results",
         "available_tags"
       ],
-      "summary": {},
+      "summary": {
+        "total": 0,
+        "returned": 0,
+        "matchingResults": []
+      },
       "error": null
     },
     {
@@ -322,7 +327,11 @@
         "count",
         "results"
       ],
-      "summary": {},
+      "summary": {
+        "total": 10,
+        "returned": 10,
+        "matchingResults": []
+      },
       "error": null
     }
   ]
