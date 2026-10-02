@@ -1,0 +1,25 @@
+name: Test Floot release live upstreams
+
+on:
+  push:
+    paths:
+      - 'scripts/test-floot-release-live-upstreams.mts'
+      - '.github/workflows/test-floot-release-live-upstreams.yml'
+      - 'docs/pa-entity-floot-release/*_GET.ts'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Exercise exact staged endpoints against official public sources
+        run: npx -y tsx scripts/test-floot-release-live-upstreams.mts
