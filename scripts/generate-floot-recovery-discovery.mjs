@@ -267,6 +267,47 @@ const alias = {
   resources,
 }
 
+const catalog = {
+  ...canonical,
+  generated_for: 'floot-recovery',
+}
+
+const serviceSummary = {
+  x402: '1.0',
+  x402Version: 2,
+  protocol: { name: 'x402', version: 2 },
+  name: canonical.name,
+  description: canonical.description,
+  capabilities: [
+    'data',
+    'business-registry',
+    'entity-resolution',
+    'vendor-intake',
+    'agent-decision',
+    'sec-filings',
+    'census-geocoding',
+    'ofac-screening',
+    'domain-rdap',
+    'treasury-rates',
+  ],
+  pricing: {
+    currency: 'USDC',
+    minimum: '0.001',
+    maximum: '0.020',
+    unit: 'request',
+  },
+  payment: {
+    address: '0x708f7b52b56eafd7fc1de65fc7752ed732914021',
+    chain: 'base',
+    network: 'eip155:8453',
+    facilitator: 'https://facilitator.payai.network',
+  },
+  endpoint: ORIGIN + '/_api/pa-entity-one?q=OpenAI',
+  documentation: ORIGIN + '/llms.txt',
+  skill: ORIGIN + '/skill.txt',
+  resources,
+}
+
 const openapi = {
   openapi: '3.1.0',
   info: {
@@ -294,6 +335,8 @@ const files = {
   '.well-known/x402': JSON.stringify(canonical, null, 2) + '\n',
   '.well-known/x402.json': JSON.stringify(alias, null, 2) + '\n',
   '.well-known/x402-services.json': JSON.stringify(alias, null, 2) + '\n',
+  '.well-known/x402-catalog.json': JSON.stringify(catalog, null, 2) + '\n',
+  '.well-known/x402-service.json': JSON.stringify(serviceSummary, null, 2) + '\n',
   'openapi.json': JSON.stringify(openapi, null, 2) + '\n',
   'llms.txt': renderLlms(target.resources, false),
   'llms-full.txt': renderLlms(target.resources, true),
