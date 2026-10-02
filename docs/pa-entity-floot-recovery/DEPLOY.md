@@ -103,7 +103,7 @@ The locked map contains 26 writes.
 Expected actions after the free-plan reset:
 
 - 1 `list_files`
-- 1 batched `read_files` for the four preserved PA endpoint/schema files
+- 1 expected batched `read_files` snapshot call (2 only if unexpected preexisting recovery files exceed the 20-path batch limit)
 - 1–2 batched `read_files` calls to capture all existing overwrite targets for rollback
 - 1 guide read if required
 - 26 sequential file writes
