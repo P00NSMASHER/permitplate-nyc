@@ -46,7 +46,7 @@
     "spend_authorized": false
   },
   "classification_source": "factory/product-registry.json",
-  "classification_rule": "The explicit product-number classification lists are synchronized from current registry statuses and validated in CI.",
+  "classification_rule": "Derive the explicit production/staging/design product-number lists from current factory/product-registry.json statuses and validate synchronization in CI.",
   "staging_products": [
     "003",
     "004",
