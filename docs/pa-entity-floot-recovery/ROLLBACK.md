@@ -10,6 +10,12 @@ Before the first recovery write, capture the current state of every deployment t
 
 ## Pre-write snapshot
 
+A public static baseline is captured ahead of the reset at:
+
+`verification/floot-static-rollback-public-latest.json`
+
+It contains the exact response bodies and SHA-256 hashes for the 12 static discovery files that will be overwritten. **Do not assume public bytes equal Floot source bytes without checking.**
+
 After the post-reset `list_files` call:
 
 1. Record the current Floot project version.
@@ -17,8 +23,9 @@ After the post-reset `list_files` call:
 3. Separate targets into:
    - existing files that will be overwritten;
    - new files that do not yet exist.
-4. Use batched `read_files` calls (maximum 20 paths each) to read every existing overwrite target with diagnostics off.
-5. Save a rollback receipt in GitHub under:
+4. Use batched `read_files` calls (maximum 20 paths each) to read every existing overwrite target with diagnostics off. The current expected set fits in one batch together with the four preserved PA files.
+5. For each of the 12 static targets, compare the Floot source content SHA-256 against `verification/floot-static-rollback-public-latest.json`. If a hash differs, trust the freshly read Floot source and record the mismatch; do not silently overwrite the rollback source with the public copy.
+6. Save a rollback receipt in GitHub under:
    `verification/floot-pre-rehost-rollback-<projectVersion>.json`
 
 The receipt must contain:
