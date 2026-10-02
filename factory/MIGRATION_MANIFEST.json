@@ -34,7 +34,8 @@
     "017",
     "018",
     "019",
-    "020"
+    "020",
+    "021"
   ],
   "deployment_blocker": {
     "provider": "AppDeploy",
@@ -43,5 +44,8 @@
     "spend_authorized": false
   },
   "classification_source": "factory/product-registry.json",
-  "classification_rule": "Derive production/staging/design from each product's current registry status; do not duplicate status lists in this manifest."
+  "classification_rule": "Derive production/staging/design from each product's current registry status; do not duplicate status lists in this manifest.",
+  "staging_products": [
+    "021"
+  ]
 }
