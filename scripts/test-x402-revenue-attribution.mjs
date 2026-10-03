@@ -4,12 +4,14 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const classifier = new URL('./classify-x402-revenue.mjs', import.meta.url).pathname;
-const targetPath = new URL(
-  '../recovery/x402-portfolio-target.json',
-  import.meta.url
-).pathname;
+const classifier = fileURLToPath(
+  new URL('./classify-x402-revenue.mjs', import.meta.url)
+);
+const targetPath = fileURLToPath(
+  new URL('../recovery/x402-portfolio-target.json', import.meta.url)
+);
 
 function baseRules(verifiedCustomers = []) {
   return {

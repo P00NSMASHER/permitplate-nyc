@@ -1,0 +1,263 @@
+{
+  "checked_at": "2026-10-03T16:37:34.309Z",
+  "mode": "post_floot_rehost_zero_spend_revenue_snapshot",
+  "origin": "https://pa-entity-x402.floot.app",
+  "manifest": {
+    "status": 200,
+    "resourceCount": 8
+  },
+  "payai": {
+    "best_match": {
+      "ok": true,
+      "status": 200,
+      "url": "https://facilitator.payai.network/discovery/resources/https%3A%2F%2Fpa-entity-x402.floot.app%2F_api%2Fpa-entity-one/stats",
+      "data": {
+        "resource": "https://pa-entity-x402.floot.app/_api/pa-entity-one",
+        "settlements": {
+          "total": "1-9",
+          "last24h": 0,
+          "last7d": 1,
+          "last30d": 1
+        },
+        "volume": {
+          "totalUsd": "<$10"
+        },
+        "buyers": {
+          "unique": "1-9"
+        },
+        "reliability": 100,
+        "uptime": {
+          "24h": 100,
+          "7d": 100,
+          "30d": 100,
+          "avgResponseMs": 320
+        },
+        "networks": {
+          "eip155:8453": 1
+        },
+        "cachedAt": "2026-10-03T16:37:24.537Z"
+      }
+    },
+    "enriched": {
+      "ok": true,
+      "status": 200,
+      "url": "https://facilitator.payai.network/discovery/resources/https%3A%2F%2Fpa-entity-x402.floot.app%2F_api%2Fpa-business/stats",
+      "data": {
+        "resource": "https://pa-entity-x402.floot.app/_api/pa-business",
+        "settlements": {
+          "total": "0",
+          "last24h": 0,
+          "last7d": 0,
+          "last30d": 0
+        },
+        "volume": {
+          "totalUsd": "$0"
+        },
+        "buyers": {
+          "unique": "0"
+        },
+        "reliability": 100,
+        "uptime": {
+          "24h": null,
+          "7d": null,
+          "30d": null,
+          "avgResponseMs": null
+        },
+        "networks": {},
+        "cachedAt": "2026-10-03T16:37:24.722Z"
+      }
+    },
+    "vendor_gate": {
+      "ok": true,
+      "status": 200,
+      "url": "https://facilitator.payai.network/discovery/resources/https%3A%2F%2Fpa-entity-x402.floot.app%2F_api%2Fvendor-intake-gate/stats",
+      "data": {
+        "resource": "https://pa-entity-x402.floot.app/_api/vendor-intake-gate",
+        "settlements": {
+          "total": "0",
+          "last24h": 0,
+          "last7d": 0,
+          "last30d": 0
+        },
+        "volume": {
+          "totalUsd": "$0"
+        },
+        "buyers": {
+          "unique": "0"
+        },
+        "reliability": 100,
+        "uptime": {
+          "24h": null,
+          "7d": null,
+          "30d": null,
+          "avgResponseMs": null
+        },
+        "networks": {},
+        "cachedAt": "2026-10-03T16:37:24.759Z"
+      }
+    },
+    "sec": {
+      "ok": true,
+      "status": 200,
+      "url": "https://facilitator.payai.network/discovery/resources/https%3A%2F%2Fpa-entity-x402.floot.app%2F_api%2Fsec-filings/stats",
+      "data": {
+        "resource": "https://pa-entity-x402.floot.app/_api/sec-filings",
+        "settlements": {
+          "total": "0",
+          "last24h": 0,
+          "last7d": 0,
+          "last30d": 0
+        },
+        "volume": {
+          "totalUsd": "$0"
+        },
+        "buyers": {
+          "unique": "0"
+        },
+        "reliability": 100,
+        "uptime": {
+          "24h": null,
+          "7d": null,
+          "30d": null,
+          "avgResponseMs": null
+        },
+        "networks": {},
+        "cachedAt": "2026-10-03T16:37:24.792Z"
+      }
+    },
+    "census": {
+      "ok": true,
+      "status": 200,
+      "url": "https://facilitator.payai.network/discovery/resources/https%3A%2F%2Fpa-entity-x402.floot.app%2F_api%2Fus-address-geocode/stats",
+      "data": {
+        "resource": "https://pa-entity-x402.floot.app/_api/us-address-geocode",
+        "settlements": {
+          "total": "0",
+          "last24h": 0,
+          "last7d": 0,
+          "last30d": 0
+        },
+        "volume": {
+          "totalUsd": "$0"
+        },
+        "buyers": {
+          "unique": "0"
+        },
+        "reliability": 100,
+        "uptime": {
+          "24h": null,
+          "7d": null,
+          "30d": null,
+          "avgResponseMs": null
+        },
+        "networks": {},
+        "cachedAt": "2026-10-03T16:37:24.833Z"
+      }
+    },
+    "ofac": {
+      "ok": true,
+      "status": 200,
+      "url": "https://facilitator.payai.network/discovery/resources/https%3A%2F%2Fpa-entity-x402.floot.app%2F_api%2Fofac-sdn-screen/stats",
+      "data": {
+        "resource": "https://pa-entity-x402.floot.app/_api/ofac-sdn-screen",
+        "settlements": {
+          "total": "0",
+          "last24h": 0,
+          "last7d": 0,
+          "last30d": 0
+        },
+        "volume": {
+          "totalUsd": "$0"
+        },
+        "buyers": {
+          "unique": "0"
+        },
+        "reliability": 100,
+        "uptime": {
+          "24h": null,
+          "7d": null,
+          "30d": null,
+          "avgResponseMs": null
+        },
+        "networks": {},
+        "cachedAt": "2026-10-03T16:37:24.864Z"
+      }
+    },
+    "rdap": {
+      "ok": true,
+      "status": 200,
+      "url": "https://facilitator.payai.network/discovery/resources/https%3A%2F%2Fpa-entity-x402.floot.app%2F_api%2Fdomain-rdap/stats",
+      "data": {
+        "resource": "https://pa-entity-x402.floot.app/_api/domain-rdap",
+        "settlements": {
+          "total": "0",
+          "last24h": 0,
+          "last7d": 0,
+          "last30d": 0
+        },
+        "volume": {
+          "totalUsd": "$0"
+        },
+        "buyers": {
+          "unique": "0"
+        },
+        "reliability": 100,
+        "uptime": {
+          "24h": null,
+          "7d": null,
+          "30d": null,
+          "avgResponseMs": null
+        },
+        "networks": {},
+        "cachedAt": "2026-10-03T16:37:24.890Z"
+      }
+    },
+    "treasury": {
+      "ok": true,
+      "status": 200,
+      "url": "https://facilitator.payai.network/discovery/resources/https%3A%2F%2Fpa-entity-x402.floot.app%2F_api%2Ftreasury-average-rates/stats",
+      "data": {
+        "resource": "https://pa-entity-x402.floot.app/_api/treasury-average-rates",
+        "settlements": {
+          "total": "0",
+          "last24h": 0,
+          "last7d": 0,
+          "last30d": 0
+        },
+        "volume": {
+          "totalUsd": "$0"
+        },
+        "buyers": {
+          "unique": "0"
+        },
+        "reliability": 100,
+        "uptime": {
+          "24h": null,
+          "7d": null,
+          "30d": null,
+          "avgResponseMs": null
+        },
+        "networks": {},
+        "cachedAt": "2026-10-03T16:37:24.918Z"
+      }
+    }
+  },
+  "onchain_base_usdc": {
+    "ok": true,
+    "status": 200,
+    "url": "https://base.blockscout.com/api?module=account&action=tokentx&address=0x708f7b52b56eafd7fc1de65fc7752ed732914021&contractaddress=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913&page=1&offset=100&sort=desc",
+    "incoming": [
+      {
+        "hash": "0x17985b16137ff8aef95641be06424a5fa4e9edacc6ade5aaf0a58d523ad1cd73",
+        "from": "0x7e6b6556322c4e26c567a867964ac793f5ee2b1c",
+        "to": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+        "amount_usdc": 0.001,
+        "timeStamp": "1790923473",
+        "confirmations": "60983",
+        "tokenSymbol": "USDC"
+      }
+    ],
+    "note": "Wallet-level evidence only. Resource attribution requires exact resource-specific facilitator stats plus payer provenance rules."
+  },
+  "accounting_note": "This snapshot does not classify revenue. Unknown external payers, marketplace probes, tests, self-payments and seller-funded activity remain excluded until classification."
+}

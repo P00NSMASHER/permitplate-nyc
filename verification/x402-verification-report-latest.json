@@ -1,0 +1,428 @@
+{
+  "checkedAt": "2026-10-03T16:38:27.165Z",
+  "zeroSpend": true,
+  "paymentSent": false,
+  "summary": {
+    "services": {
+      "passed": 8,
+      "total": 8,
+      "hostingAvailabilityFailures": 0
+    },
+    "fixtures": {
+      "passed": 3,
+      "total": 3
+    },
+    "discovery": {
+      "passed": 1,
+      "total": 1
+    }
+  },
+  "services": [
+    {
+      "id": "pa-best-match",
+      "name": "PA Entity Best Match",
+      "url": "https://pa-entity-x402.floot.app/_api/pa-entity-one?q=OpenAI",
+      "expectedPrice": "$0.001",
+      "expectedAmount": "1000",
+      "ok": true,
+      "status": 402,
+      "latencyMs": 1019,
+      "paymentRequiredPresent": true,
+      "appdeployAvailability": null,
+      "responseBodyCode": null,
+      "responseBodyMessage": null,
+      "diagnosticHeaders": {
+        "content-type": "application/json",
+        "payment-required": "eyJ4NDAyVmVyc2lvbiI6MiwicmVzb3VyY2UiOnsidXJsIjoiaHR0cHM6Ly9wYS1lbnRpdHkteDQwMi5mbG9vdC5hcHAvX2FwaS9wYS1lbnRpdHktb25lIiwiZGVzY3JpcHRpb24iOiJQZW5uc3lsdmFuaWEgYnVzaW5lc3MgcmVnaXN0cnkgYmVzdCBtYXRjaCBieSBjb21wYW55IG5hbWUuIFJldHVybnMgb25lIHJhbmtlZCBsZWdhbCBlbnRpdHkgd2l0aCBmaWxpbmcgYW5kIHJlZ2lzdHJhdGlvbiBmYWN0cy4iLCJtaW1lVHlwZSI6ImFwcGxpY2F0aW9uL2pzb24iLCJzZXJ2aWNlTmFtZSI6IlBlbm5zeWx2YW5pYSBCdXNpbmVzcyBSZWdpc3RyeSDigJQgQmVzdCBFbnRpdHkgTWF0Y2giLCJ0YWdzIjpbInBlbm5zeWx2YW5pYS1idXNpbmVzcy1yZWdpc3RyeSIsImNvbXBhbnktaWRlbnRpdHkiLCJsZWdhbC1lbnRpdHkiLCJ2ZW5kb3ItdmVyaWZpY2F0aW9uIiwiZHVlLWRpbGlnZW5jZSIsImxlYWQtZW5yaWNobWVudCIsImJlc3QtbWF0Y2giLCJsb3ctY29zdCJdfSwiYWNjZXB0cyI6W3sic2NoZW1lIjoiZXhhY3QiLCJuZXR3b3JrIjoiZWlwMTU1Ojg0NTMiLCJhbW91bnQiOiIxMDAwIiwiYXNzZXQiOiIweDgzMzU4OWZDRDZlRGI2RTA4ZjRjN0MzMkQ0ZjcxYjU0YmRBMDI5MTMiLCJwYXlUbyI6IjB4NzA4ZjdiNTJiNTZlYWZkN2ZjMWRlNjVmYzc3NTJlZDczMjkxNDAyMSIsIm1heFRpbWVvdXRTZWNvbmRzIjo2MCwiZXh0cmEiOnsibmFtZSI6IlVTRCBDb2luIiwidmVyc2lvbiI6IjIifX1dLCJleHRlbnNpb25zIjp7ImJhemFhciI6eyJpbmZvIjp7ImlucHV0Ijp7InR5cGUiOiJodHRwIiwibWV0aG9kIjoiR0VUIiwicXVlcnlQYXJhbXMiOnsicSI6Ik9wZW5BSSJ9fSwib3V0cHV0Ijp7InR5cGUiOiJqc29uIiwiZXhhbXBsZSI6eyJxdWVyeSI6Ik9wZW5BSSIsImNvdW50IjoxLCJyZXN1bHRzIjpbeyJidXNpbmVzc05hbWUiOiJPcGVuYWksIEwubC5jLiIsImZpbGluZ051bWJlciI6IjAwMTQzNzE5NTciLCJyZWdpc3RyYXRpb25UeXBlIjoiRm9yZWlnbiBMaW1pdGVkIExpYWJpbGl0eSBDb21wYW55In1dLCJzb3VyY2UiOiJQZW5uc3lsdmFuaWEgRGVwYXJ0bWVudCBvZiBTdGF0ZSB2aWEgZGF0YS5wYS5nb3YiLCJwYWlkIjp0cnVlfX19LCJzY2hlbWEiOnsidHlwZSI6Im9iamVjdCIsInByb3BlcnRpZXMiOnsiaW5wdXQiOnsidHlwZSI6Im9iamVjdCIsInByb3BlcnRpZXMiOnsidHlwZSI6eyJjb25zdCI6Imh0dHAifSwibWV0aG9kIjp7ImNvbnN0IjoiR0VUIn0sInF1ZXJ5UGFyYW1zIjp7InR5cGUiOiJvYmplY3QiLCJwcm9wZXJ0aWVzIjp7InEiOnsidHlwZSI6InN0cmluZyIsIm1pbkxlbmd0aCI6MiwibWF4TGVuZ3RoIjoxMjB9fSwicmVxdWlyZWQiOlsicSJdLCJhZGRpdGlvbmFsUHJvcGVydGllcyI6ZmFsc2V9fSwicmVxdWlyZWQiOlsidHlwZSIsIm1ldGhvZCIsInF1ZXJ5UGFyYW1zIl0sImFkZGl0aW9uYWxQcm9wZXJ0aWVzIjpmYWxzZX0sIm91dHB1dCI6eyJ0eXBlIjoib2JqZWN0IiwicHJvcGVydGllcyI6eyJ0eXBlIjp7ImNvbnN0IjoianNvbiJ9LCJleGFtcGxlIjp7InR5cGUiOiJvYmplY3QifX0sInJlcXVpcmVkIjpbInR5cGUiLCJleGFtcGxlIl0sImFkZGl0aW9uYWxQcm9wZXJ0aWVzIjpmYWxzZX19LCJyZXF1aXJlZCI6WyJpbnB1dCIsIm91dHB1dCJdLCJhZGRpdGlvbmFsUHJvcGVydGllcyI6ZmFsc2V9fX19",
+        "x402-price": "$0.001",
+        "x402-network": "eip155:8453",
+        "x402-asset": "USDC",
+        "x402-pay-to": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+        "server": "CloudFront",
+        "via": "1.1 6aa8d2883437a2897f326bfc58beed3c.cloudfront.net (CloudFront)"
+      },
+      "bodyExcerpt": "{\"error\":\"payment_required\",\"x402Version\":2,\"resource\":{\"url\":\"https://pa-entity-x402.floot.app/_api/pa-entity-one\",\"description\":\"Pennsylvania business registry best match by company name. Returns one ranked legal entity with filing and registration facts.\",\"mimeType\":\"application/json\",\"serviceName\":\"Pennsylvania Business Registry — Best Entity Match\",\"tags\":[\"pennsylvania-business-registry\",\"company-identity\",\"legal-entity\",\"vendor-verification\",\"due-diligence\",\"lead-enrichment\",\"best-match\",\"low-cost\"]},\"accepts\":[{\"scheme\":\"exact\",\"network\":\"eip155:8453\",\"amount\":\"1000\",\"asset\":\"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913\",\"payTo\":\"0x708f7b52b56eafd7fc1de65fc7752ed732914021\",\"maxTimeoutSeconds\":60,\"extra\":{\"name\":\"USD Coin\",\"version\":\"2\"}}],\"extensions\":{\"bazaar\":{\"info\":{\"input\":{\"type\":\"http\",\"method\":\"GET\",\"queryParams\":{\"q\":\"OpenAI\"}},\"output\":{\"type\":\"json\",\"example\":{\"query\":\"OpenAI\",\"count\":1,\"results\":[{\"businessName\":\"Openai, L.l.c.\",\"filingNumber\":\"0014371957\",\"registrationType\":\"Foreign Limited Liability Company\"}],\"source\":\"Pennsylvania Department of State via data.pa.gov\",\"paid\":true}}},\"schema\":{\"type\":\"object\",\"properties\":{\"input\":{\"type\":\"object\",\"properties\":{\"type\":{\"const\":\"http\"},\"method\":{\"const\":\"GET\"},\"queryParams\":{\"type\":\"object\",\"properties\":{\"q\":{\"type\":\"string\",\"minLength\":2,\"maxLength\":120}},\"required\":[\"q\"],\"additionalProperties\":false}},\"required\":[\"type\",\"method\",\"queryParams\"],\"additionalProperties\":false},\"output\":{\"type\":\"object\",\"properties\":{\"type\":{\"const\":\"json\"},\"example\":{\"type\":\"object\"}},\"required\":[\"type\",\"example\"],\"additionalProperties\":false}},\"required\":[\"input\",\"output\"],\"additionalProperties\":false}}},\"price\":\"$0.001\",\"currency\":\"USDC\",\"network\":\"eip155:8453\",\"payTo\":\"0x708f7b52b56eafd7fc1de65fc7752ed732914021\"}",
+      "failures": []
+    },
+    {
+      "id": "pa-enriched-search",
+      "name": "PA Entity Enriched Search",
+      "url": "https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=3",
+      "expectedPrice": "$0.005",
+      "expectedAmount": "5000",
+      "ok": true,
+      "status": 402,
+      "latencyMs": 154,
+      "paymentRequiredPresent": true,
+      "appdeployAvailability": null,
+      "responseBodyCode": null,
+      "responseBodyMessage": null,
+      "diagnosticHeaders": {
+        "content-type": "application/json",
+        "payment-required": "eyJ4NDAyVmVyc2lvbiI6MiwicmVzb3VyY2UiOnsidXJsIjoiaHR0cHM6Ly9wYS1lbnRpdHkteDQwMi5mbG9vdC5hcHAvX2FwaS9wYS1idXNpbmVzcyIsImRlc2NyaXB0aW9uIjoiUGVubnN5bHZhbmlhIGJ1c2luZXNzIHJlZ2lzdHJ5IGFuZCBjb21wYW55IGlkZW50aXR5IGxvb2t1cCBieSBidXNpbmVzcyBuYW1lLiBSZXR1cm5zIGZpbGluZyBudW1iZXIsIHJlZ2lzdHJhdGlvbiB0eXBlLCBjcmVhdGlvbiBkYXRlLCByZWdpc3RlcmVkIGFkZHJlc3MsIGNvdW50eSwgYW5kIHNvdXJjZS1wdWJsaXNoZWQgcHJpbmNpcGFsL29mZmljZXIgcm9sZXMuIiwibWltZVR5cGUiOiJhcHBsaWNhdGlvbi9qc29uIiwic2VydmljZU5hbWUiOiJQZW5uc3lsdmFuaWEgQnVzaW5lc3MgUmVnaXN0cnkg4oCUIENvbXBhbnkgSWRlbnRpdHkgTG9va3VwIiwidGFncyI6WyJwZW5uc3lsdmFuaWEtYnVzaW5lc3MtcmVnaXN0cnkiLCJjb21wYW55LWlkZW50aXR5IiwibGVnYWwtZW50aXR5IiwidmVuZG9yLXZlcmlmaWNhdGlvbiIsImR1ZS1kaWxpZ2VuY2UiLCJsZWFkLWVucmljaG1lbnQiXX0sImFjY2VwdHMiOlt7InNjaGVtZSI6ImV4YWN0IiwibmV0d29yayI6ImVpcDE1NTo4NDUzIiwiYW1vdW50IjoiNTAwMCIsImFzc2V0IjoiMHg4MzM1ODlmQ0Q2ZURiNkUwOGY0YzdDMzJENGY3MWI1NGJkQTAyOTEzIiwicGF5VG8iOiIweDcwOGY3YjUyYjU2ZWFmZDdmYzFkZTY1ZmM3NzUyZWQ3MzI5MTQwMjEiLCJtYXhUaW1lb3V0U2Vjb25kcyI6NjAsImV4dHJhIjp7Im5hbWUiOiJVU0QgQ29pbiIsInZlcnNpb24iOiIyIn19XSwiZXh0ZW5zaW9ucyI6eyJiYXphYXIiOnsiaW5mbyI6eyJpbnB1dCI6eyJ0eXBlIjoiaHR0cCIsIm1ldGhvZCI6IkdFVCIsInF1ZXJ5UGFyYW1zIjp7InEiOiJPcGVuQUkiLCJsaW1pdCI6MX19LCJvdXRwdXQiOnsidHlwZSI6Impzb24iLCJleGFtcGxlIjp7InF1ZXJ5IjoiT3BlbkFJIiwiY291bnQiOjEsInJlc3VsdHMiOlt7ImJ1c2luZXNzTmFtZSI6Ik9wZW5haSwgTC5sLmMuIiwiZmlsaW5nTnVtYmVyIjoiMDAxNDM3MTk1NyIsInJlZ2lzdHJhdGlvblR5cGUiOiJGb3JlaWduIExpbWl0ZWQgTGlhYmlsaXR5IENvbXBhbnkiLCJjcmVhdGlvbkRhdGUiOiIyMDI1LTA0LTIzIiwiYWRkcmVzczEiOiI2MDAgTm9ydGggU2Vjb25kIFN0cmVldCwgU3VpdGUgNDAxIiwiYWRkcmVzczIiOm51bGwsImNpdHkiOiJIYXJyaXNidXJnIiwic3RhdGUiOiJQQSIsInppcCI6IjE3MTAxIiwiY291bnR5IjoiRGF1cGhpbiIsImNvdW50eUNvZGUiOiIyMiIsInByaW5jaXBhbHMiOlt7InJvbGUiOiJHb3Zlcm5vciIsImZpcnN0TmFtZSI6bnVsbCwibWlkZGxlTmFtZSI6bnVsbCwibGFzdE5hbWUiOm51bGx9XX1dLCJlbnJpY2htZW50Ijp7InByaW5jaXBhbHMiOiJjb21wbGV0ZSJ9LCJzb3VyY2UiOiJQZW5uc3lsdmFuaWEgRGVwYXJ0bWVudCBvZiBTdGF0ZSB2aWEgZGF0YS5wYS5nb3YiLCJwYWlkIjp0cnVlfX19LCJzY2hlbWEiOnsidHlwZSI6Im9iamVjdCIsInByb3BlcnRpZXMiOnsiaW5wdXQiOnsidHlwZSI6Im9iamVjdCIsInByb3BlcnRpZXMiOnsidHlwZSI6eyJjb25zdCI6Imh0dHAifSwibWV0aG9kIjp7ImNvbnN0IjoiR0VUIn0sInF1ZXJ5UGFyYW1zIjp7InR5cGUiOiJvYmplY3QiLCJwcm9wZXJ0aWVzIjp7InEiOnsidHlwZSI6InN0cmluZyIsIm1pbkxlbmd0aCI6MiwibWF4TGVuZ3RoIjoxMjB9LCJsaW1pdCI6eyJ0eXBlIjoiaW50ZWdlciIsIm1pbmltdW0iOjEsIm1heGltdW0iOjI1fX0sInJlcXVpcmVkIjpbInEiXSwiYWRkaXRpb25hbFByb3BlcnRpZXMiOmZhbHNlfX0sInJlcXVpcmVkIjpbInR5cGUiLCJtZXRob2QiLCJxdWVyeVBhcmFtcyJdLCJhZGRpdGlvbmFsUHJvcGVydGllcyI6ZmFsc2V9LCJvdXRwdXQiOnsidHlwZSI6Im9iamVjdCIsInByb3BlcnRpZXMiOnsidHlwZSI6eyJjb25zdCI6Impzb24ifSwiZXhhbXBsZSI6eyJ0eXBlIjoib2JqZWN0In19LCJyZXF1aXJlZCI6WyJ0eXBlIiwiZXhhbXBsZSJdLCJhZGRpdGlvbmFsUHJvcGVydGllcyI6ZmFsc2V9fSwicmVxdWlyZWQiOlsiaW5wdXQiLCJvdXRwdXQiXSwiYWRkaXRpb25hbFByb3BlcnRpZXMiOmZhbHNlfX19fQ==",
+        "x402-price": "$0.005",
+        "x402-network": "eip155:8453",
+        "x402-asset": "USDC",
+        "x402-pay-to": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+        "server": "CloudFront",
+        "via": "1.1 3289feb7922c3bed2dd498f7353add3e.cloudfront.net (CloudFront)"
+      },
+      "bodyExcerpt": "{\"error\":\"payment_required\",\"x402Version\":2,\"resource\":{\"url\":\"https://pa-entity-x402.floot.app/_api/pa-business\",\"description\":\"Pennsylvania business registry and company identity lookup by business name. Returns filing number, registration type, creation date, registered address, county, and source-published principal/officer roles.\",\"mimeType\":\"application/json\",\"serviceName\":\"Pennsylvania Business Registry — Company Identity Lookup\",\"tags\":[\"pennsylvania-business-registry\",\"company-identity\",\"legal-entity\",\"vendor-verification\",\"due-diligence\",\"lead-enrichment\"]},\"accepts\":[{\"scheme\":\"exact\",\"network\":\"eip155:8453\",\"amount\":\"5000\",\"asset\":\"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913\",\"payTo\":\"0x708f7b52b56eafd7fc1de65fc7752ed732914021\",\"maxTimeoutSeconds\":60,\"extra\":{\"name\":\"USD Coin\",\"version\":\"2\"}}],\"extensions\":{\"bazaar\":{\"info\":{\"input\":{\"type\":\"http\",\"method\":\"GET\",\"queryParams\":{\"q\":\"OpenAI\",\"limit\":1}},\"output\":{\"type\":\"json\",\"example\":{\"query\":\"OpenAI\",\"count\":1,\"results\":[{\"businessName\":\"Openai, L.l.c.\",\"filingNumber\":\"0014371957\",\"registrationType\":\"Foreign Limited Liability Company\",\"creationDate\":\"2025-04-23\",\"address1\":\"600 North Second Street, Suite 401\",\"address2\":null,\"city\":\"Harrisburg\",\"state\":\"PA\",\"zip\":\"17101\",\"county\":\"Dauphin\",\"countyCode\":\"22\",\"principals\":[{\"role\":\"Governor\",\"firstName\":null,\"middleName\":null,\"lastName\":null}]}],\"enrichment\":{\"principals\":\"complete\"},\"source\":\"Pennsylvania Department of State via data.pa.gov\",\"paid\":true}}},\"schema\":{\"type\":\"object\",\"properties\":{\"input\":{\"type\":\"object\",\"properties\":{\"type\":{\"const\":\"http\"},\"method\":{\"const\":\"GET\"},\"queryParams\":{\"type\":\"object\",\"properties\":{\"q\":{\"type\":\"string\",\"minLength\":2,\"maxLength\":120},\"limit\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":25}},\"required\":[\"q\"],\"additionalProperties\":false}},\"required\":[\"type\",\"method\",\"queryParams\"],\"additionalProperties\":false},\"output\":{\"type\":\"object\",\"properties\":{\"type\":{\"const\":\"json\"},\"example\":{\"type\":\"object\"}},\"required\":[\"ty",
+      "failures": []
+    },
+    {
+      "id": "vendor-intake-gate",
+      "name": "Pennsylvania Vendor Intake Gate",
+      "url": "https://pa-entity-x402.floot.app/_api/vendor-intake-gate?name=OpenAI%20OpCo&address=600%20North%20Second%20Street%2C%20Suite%20401%2C%20Harrisburg%2C%20PA%2017101&domain=openai.com",
+      "expectedPrice": "$0.020",
+      "expectedAmount": "20000",
+      "ok": true,
+      "status": 402,
+      "latencyMs": 78,
+      "paymentRequiredPresent": true,
+      "appdeployAvailability": null,
+      "responseBodyCode": null,
+      "responseBodyMessage": null,
+      "diagnosticHeaders": {
+        "content-type": "application/json",
+        "payment-required": "eyJ4NDAyVmVyc2lvbiI6MiwicmVzb3VyY2UiOnsidXJsIjoiaHR0cHM6Ly9wYS1lbnRpdHkteDQwMi5mbG9vdC5hcHAvX2FwaS92ZW5kb3ItaW50YWtlLWdhdGUiLCJkZXNjcmlwdGlvbiI6IkZhaWwtY2xvc2VkIFBlbm5zeWx2YW5pYSB2ZW5kb3ItaW50YWtlIGRlY2lzaW9uIGZvciBhdXRvbm9tb3VzIGFnZW50cyB1c2luZyBQZW5uc3lsdmFuaWEgcmVnaXN0cnkgaWRlbnRpdHksIENlbnN1cyBhZGRyZXNzIGNvbnNpc3RlbmN5LCBPRkFDIFNETiBjYW5kaWRhdGUtbmFtZSBzY3JlZW5pbmcsIGFuZCBhdXRob3JpdGF0aXZlIFJEQVAgZG9tYWluIGV2aWRlbmNlLiBSZXR1cm5zIHByb2NlZWQgb3IgaHVtYW5fcmV2aWV3IHdpdGggZXhwbGljaXQgZXZpZGVuY2UgYW5kIGxpbWl0YXRpb25zLiIsIm1pbWVUeXBlIjoiYXBwbGljYXRpb24vanNvbiIsInNlcnZpY2VOYW1lIjoiUGVubnN5bHZhbmlhIFZlbmRvciBJbnRha2UgRGVjaXNpb24gR2F0ZSIsInRhZ3MiOlsidmVuZG9yLWludGFrZSIsImFnZW50LWRlY2lzaW9uIiwiaHVtYW4tcmV2aWV3IiwicGVubnN5bHZhbmlhLWJ1c2luZXNzLXJlZ2lzdHJ5IiwiY2Vuc3VzLWFkZHJlc3MiLCJvZmFjLXNjcmVlbmluZyIsInJkYXAiXX0sImFjY2VwdHMiOlt7InNjaGVtZSI6ImV4YWN0IiwibmV0d29yayI6ImVpcDE1NTo4NDUzIiwiYW1vdW50IjoiMjAwMDAiLCJhc3NldCI6IjB4ODMzNTg5ZkNENmVEYjZFMDhmNGM3QzMyRDRmNzFiNTRiZEEwMjkxMyIsInBheVRvIjoiMHg3MDhmN2I1MmI1NmVhZmQ3ZmMxZGU2NWZjNzc1MmVkNzMyOTE0MDIxIiwibWF4VGltZW91dFNlY29uZHMiOjYwLCJleHRyYSI6eyJuYW1lIjoiVVNEIENvaW4iLCJ2ZXJzaW9uIjoiMiJ9fV0sImV4dGVuc2lvbnMiOnsiYmF6YWFyIjp7ImluZm8iOnsiaW5wdXQiOnsidHlwZSI6Imh0dHAiLCJtZXRob2QiOiJHRVQiLCJxdWVyeVBhcmFtcyI6eyJuYW1lIjoiT3BlbkFJIE9wQ28iLCJhZGRyZXNzIjoiNjAwIE5vcnRoIFNlY29uZCBTdHJlZXQsIFN1aXRlIDQwMSwgSGFycmlzYnVyZywgUEEgMTcxMDEiLCJkb21haW4iOiJvcGVuYWkuY29tIn19LCJvdXRwdXQiOnsidHlwZSI6Impzb24iLCJleGFtcGxlIjp7ImRlY2lzaW9uIjoicHJvY2VlZCIsImFnZW50QWN0aW9uIjoiY29udGludWVfdmVuZG9yX2ludGFrZSIsInJldmlld1RyaWdnZXJzIjpbXSwicGFpZCI6dHJ1ZX19fSwic2NoZW1hIjp7InR5cGUiOiJvYmplY3QiLCJwcm9wZXJ0aWVzIjp7ImlucHV0Ijp7InR5cGUiOiJvYmplY3QiLCJwcm9wZXJ0aWVzIjp7InR5cGUiOnsiY29uc3QiOiJodHRwIn0sIm1ldGhvZCI6eyJjb25zdCI6IkdFVCJ9LCJxdWVyeVBhcmFtcyI6eyJ0eXBlIjoib2JqZWN0IiwicHJvcGVydGllcyI6eyJuYW1lIjp7InR5cGUiOiJzdHJpbmciLCJtaW5MZW5ndGgiOjIsIm1heExlbmd0aCI6MTIwfSwiYWRkcmVzcyI6eyJ0eXBlIjoic3RyaW5nIiwibWluTGVuZ3RoIjo2LCJtYXhMZW5ndGgiOjI0MH0sImRvbWFpbiI6eyJ0eXBlIjoic3RyaW5nIiwibWluTGVuZ3RoIjozLCJtYXhMZW5ndGgiOjI1M319LCJyZXF1aXJlZCI6WyJuYW1lIiwiYWRkcmVzcyIsImRvbWFpbiJdLCJhZGRpdGlvbmFsUHJvcGVydGllcyI6ZmFsc2V9fSwicmVxdWlyZWQiOlsidHlwZSIsIm1ldGhvZCIsInF1ZXJ5UGFyYW1zIl0sImFkZGl0aW9uYWxQcm9wZXJ0aWVzIjpmYWxzZX0sIm91dHB1dCI6eyJ0eXBlIjoib2JqZWN0IiwicHJvcGVydGllcyI6eyJ0eXBlIjp7ImNvbnN0IjoianNvbiJ9LCJleGFtcGxlIjp7InR5cGUiOiJvYmplY3QifX0sInJlcXVpcmVkIjpbInR5cGUiLCJleGFtcGxlIl0sImFkZGl0aW9uYWxQcm9wZXJ0aWVzIjpmYWxzZX19LCJyZXF1aXJlZCI6WyJpbnB1dCIsIm91dHB1dCJdLCJhZGRpdGlvbmFsUHJvcGVydGllcyI6ZmFsc2V9fX19",
+        "x402-price": "$0.020",
+        "x402-network": "eip155:8453",
+        "x402-asset": "USDC",
+        "x402-pay-to": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+        "server": "CloudFront",
+        "via": "1.1 6aa8d2883437a2897f326bfc58beed3c.cloudfront.net (CloudFront)"
+      },
+      "bodyExcerpt": "{\"error\":\"payment_required\",\"x402Version\":2,\"resource\":{\"url\":\"https://pa-entity-x402.floot.app/_api/vendor-intake-gate\",\"description\":\"Fail-closed Pennsylvania vendor-intake decision for autonomous agents using Pennsylvania registry identity, Census address consistency, OFAC SDN candidate-name screening, and authoritative RDAP domain evidence. Returns proceed or human_review with explicit evidence and limitations.\",\"mimeType\":\"application/json\",\"serviceName\":\"Pennsylvania Vendor Intake Decision Gate\",\"tags\":[\"vendor-intake\",\"agent-decision\",\"human-review\",\"pennsylvania-business-registry\",\"census-address\",\"ofac-screening\",\"rdap\"]},\"accepts\":[{\"scheme\":\"exact\",\"network\":\"eip155:8453\",\"amount\":\"20000\",\"asset\":\"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913\",\"payTo\":\"0x708f7b52b56eafd7fc1de65fc7752ed732914021\",\"maxTimeoutSeconds\":60,\"extra\":{\"name\":\"USD Coin\",\"version\":\"2\"}}],\"extensions\":{\"bazaar\":{\"info\":{\"input\":{\"type\":\"http\",\"method\":\"GET\",\"queryParams\":{\"name\":\"OpenAI OpCo\",\"address\":\"600 North Second Street, Suite 401, Harrisburg, PA 17101\",\"domain\":\"openai.com\"}},\"output\":{\"type\":\"json\",\"example\":{\"decision\":\"proceed\",\"agentAction\":\"continue_vendor_intake\",\"reviewTriggers\":[],\"paid\":true}}},\"schema\":{\"type\":\"object\",\"properties\":{\"input\":{\"type\":\"object\",\"properties\":{\"type\":{\"const\":\"http\"},\"method\":{\"const\":\"GET\"},\"queryParams\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\",\"minLength\":2,\"maxLength\":120},\"address\":{\"type\":\"string\",\"minLength\":6,\"maxLength\":240},\"domain\":{\"type\":\"string\",\"minLength\":3,\"maxLength\":253}},\"required\":[\"name\",\"address\",\"domain\"],\"additionalProperties\":false}},\"required\":[\"type\",\"method\",\"queryParams\"],\"additionalProperties\":false},\"output\":{\"type\":\"object\",\"properties\":{\"type\":{\"const\":\"json\"},\"example\":{\"type\":\"object\"}},\"required\":[\"type\",\"example\"],\"additionalProperties\":false}},\"required\":[\"input\",\"output\"],\"additionalProperties\":false}}},\"price\":\"$0.020\",\"currency\":\"USDC\",\"network\":\"eip155:8453\",\"payTo\":\"0x708f7b52b56eafd7",
+      "failures": []
+    },
+    {
+      "id": "sec-recent-filings",
+      "name": "SEC Recent Filings",
+      "url": "https://pa-entity-x402.floot.app/_api/sec-filings?ticker=AAPL&form=10-K&limit=3",
+      "expectedPrice": "$0.005",
+      "expectedAmount": "5000",
+      "ok": true,
+      "status": 402,
+      "latencyMs": 50,
+      "paymentRequiredPresent": true,
+      "appdeployAvailability": null,
+      "responseBodyCode": null,
+      "responseBodyMessage": null,
+      "diagnosticHeaders": {
+        "content-type": "application/json",
+        "payment-required": "eyJ4NDAyVmVyc2lvbiI6MiwicmVzb3VyY2UiOnsidXJsIjoiaHR0cHM6Ly9wYS1lbnRpdHkteDQwMi5mbG9vdC5hcHAvX2FwaS9zZWMtZmlsaW5ncyIsImRlc2NyaXB0aW9uIjoiQXV0aG9yaXRhdGl2ZSByZWNlbnQgU0VDIEVER0FSIGZpbGluZyBtZXRhZGF0YSBieSB0aWNrZXIgb3IgQ0lLLCB3aXRoIG9wdGlvbmFsIGV4YWN0IGZvcm0gZmlsdGVyIGFuZCBkaXJlY3QgZmlsaW5nIFVSTHMuIiwibWltZVR5cGUiOiJhcHBsaWNhdGlvbi9qc29uIiwic2VydmljZU5hbWUiOiJTRUMgUmVjZW50IEZpbGluZ3MgeDQwMiIsInRhZ3MiOlsic2VjIiwiZWRnYXIiLCJmaWxpbmdzIiwiY29tcGFueS1kYXRhIl19LCJhY2NlcHRzIjpbeyJzY2hlbWUiOiJleGFjdCIsIm5ldHdvcmsiOiJlaXAxNTU6ODQ1MyIsImFtb3VudCI6IjUwMDAiLCJhc3NldCI6IjB4ODMzNTg5ZkNENmVEYjZFMDhmNGM3QzMyRDRmNzFiNTRiZEEwMjkxMyIsInBheVRvIjoiMHg3MDhmN2I1MmI1NmVhZmQ3ZmMxZGU2NWZjNzc1MmVkNzMyOTE0MDIxIiwibWF4VGltZW91dFNlY29uZHMiOjYwLCJleHRyYSI6eyJuYW1lIjoiVVNEIENvaW4iLCJ2ZXJzaW9uIjoiMiJ9fV0sImV4dGVuc2lvbnMiOnsiYmF6YWFyIjp7InNjaGVtYSI6eyJ0eXBlIjoib2JqZWN0IiwicHJvcGVydGllcyI6eyJpbnB1dCI6eyJ0eXBlIjoib2JqZWN0IiwicHJvcGVydGllcyI6eyJ0eXBlIjp7ImNvbnN0IjoiaHR0cCJ9LCJtZXRob2QiOnsiY29uc3QiOiJHRVQifSwicXVlcnlQYXJhbXMiOnsidHlwZSI6Im9iamVjdCIsInByb3BlcnRpZXMiOnsidGlja2VyIjp7InR5cGUiOiJzdHJpbmciLCJtYXhMZW5ndGgiOjEyfSwiY2lrIjp7InR5cGUiOiJzdHJpbmciLCJtYXhMZW5ndGgiOjEwfSwiZm9ybSI6eyJ0eXBlIjoic3RyaW5nIiwibWF4TGVuZ3RoIjoyMH0sImxpbWl0Ijp7InR5cGUiOiJpbnRlZ2VyIiwibWluaW11bSI6MSwibWF4aW11bSI6MjV9fSwiYW55T2YiOlt7InJlcXVpcmVkIjpbInRpY2tlciJdfSx7InJlcXVpcmVkIjpbImNpayJdfV0sImFkZGl0aW9uYWxQcm9wZXJ0aWVzIjpmYWxzZX19LCJyZXF1aXJlZCI6WyJ0eXBlIiwibWV0aG9kIiwicXVlcnlQYXJhbXMiXSwiYWRkaXRpb25hbFByb3BlcnRpZXMiOmZhbHNlfSwib3V0cHV0Ijp7InR5cGUiOiJvYmplY3QiLCJwcm9wZXJ0aWVzIjp7InR5cGUiOnsiY29uc3QiOiJqc29uIn0sImV4YW1wbGUiOnsidHlwZSI6Im9iamVjdCJ9fSwicmVxdWlyZWQiOlsidHlwZSIsImV4YW1wbGUiXSwiYWRkaXRpb25hbFByb3BlcnRpZXMiOmZhbHNlfX0sInJlcXVpcmVkIjpbImlucHV0Iiwib3V0cHV0Il0sImFkZGl0aW9uYWxQcm9wZXJ0aWVzIjpmYWxzZX0sImluZm8iOnsiaW5wdXQiOnsidHlwZSI6Imh0dHAiLCJtZXRob2QiOiJHRVQiLCJxdWVyeVBhcmFtcyI6eyJ0aWNrZXIiOiJBQVBMIiwiZm9ybSI6IjEwLUsiLCJsaW1pdCI6MX19LCJvdXRwdXQiOnsidHlwZSI6Impzb24iLCJleGFtcGxlIjp7ImNvbXBhbnkiOnsibmFtZSI6IkFwcGxlIEluYy4iLCJjaWsiOiIwMDAwMzIwMTkzIiwidGlja2VycyI6WyJBQVBMIl19LCJjb3VudCI6MSwiZmlsaW5ncyI6W3siZm9ybSI6IjEwLUsiLCJhY2Nlc3Npb25OdW1iZXIiOiIwMDAwMzIwMTkzLTI1LTAwMDA3OSJ9XSwic291cmNlIjoiVS5TLiBTZWN1cml0aWVzIGFuZCBFeGNoYW5nZSBDb21taXNzaW9uIEVER0FSIiwicGFpZCI6dHJ1ZX19fX19fQ==",
+        "x402-price": "$0.005",
+        "x402-network": "eip155:8453",
+        "x402-asset": "USDC",
+        "x402-pay-to": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+        "server": "CloudFront",
+        "via": "1.1 3289feb7922c3bed2dd498f7353add3e.cloudfront.net (CloudFront)"
+      },
+      "bodyExcerpt": "{\"error\":\"payment_required\",\"x402Version\":2,\"resource\":{\"url\":\"https://pa-entity-x402.floot.app/_api/sec-filings\",\"description\":\"Authoritative recent SEC EDGAR filing metadata by ticker or CIK, with optional exact form filter and direct filing URLs.\",\"mimeType\":\"application/json\",\"serviceName\":\"SEC Recent Filings x402\",\"tags\":[\"sec\",\"edgar\",\"filings\",\"company-data\"]},\"accepts\":[{\"scheme\":\"exact\",\"network\":\"eip155:8453\",\"amount\":\"5000\",\"asset\":\"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913\",\"payTo\":\"0x708f7b52b56eafd7fc1de65fc7752ed732914021\",\"maxTimeoutSeconds\":60,\"extra\":{\"name\":\"USD Coin\",\"version\":\"2\"}}],\"extensions\":{\"bazaar\":{\"schema\":{\"type\":\"object\",\"properties\":{\"input\":{\"type\":\"object\",\"properties\":{\"type\":{\"const\":\"http\"},\"method\":{\"const\":\"GET\"},\"queryParams\":{\"type\":\"object\",\"properties\":{\"ticker\":{\"type\":\"string\",\"maxLength\":12},\"cik\":{\"type\":\"string\",\"maxLength\":10},\"form\":{\"type\":\"string\",\"maxLength\":20},\"limit\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":25}},\"anyOf\":[{\"required\":[\"ticker\"]},{\"required\":[\"cik\"]}],\"additionalProperties\":false}},\"required\":[\"type\",\"method\",\"queryParams\"],\"additionalProperties\":false},\"output\":{\"type\":\"object\",\"properties\":{\"type\":{\"const\":\"json\"},\"example\":{\"type\":\"object\"}},\"required\":[\"type\",\"example\"],\"additionalProperties\":false}},\"required\":[\"input\",\"output\"],\"additionalProperties\":false},\"info\":{\"input\":{\"type\":\"http\",\"method\":\"GET\",\"queryParams\":{\"ticker\":\"AAPL\",\"form\":\"10-K\",\"limit\":1}},\"output\":{\"type\":\"json\",\"example\":{\"company\":{\"name\":\"Apple Inc.\",\"cik\":\"0000320193\",\"tickers\":[\"AAPL\"]},\"count\":1,\"filings\":[{\"form\":\"10-K\",\"accessionNumber\":\"0000320193-25-000079\"}],\"source\":\"U.S. Securities and Exchange Commission EDGAR\",\"paid\":true}}}}},\"price\":\"$0.005\",\"currency\":\"USDC\",\"network\":\"eip155:8453\",\"payTo\":\"0x708f7b52b56eafd7fc1de65fc7752ed732914021\"}",
+      "failures": []
+    },
+    {
+      "id": "census-geocoder",
+      "name": "US Census Address Geocoder",
+      "url": "https://pa-entity-x402.floot.app/_api/us-address-geocode?address=4600%20Silver%20Hill%20Rd%2C%20Washington%2C%20DC%2020233",
+      "expectedPrice": "$0.005",
+      "expectedAmount": "5000",
+      "ok": true,
+      "status": 402,
+      "latencyMs": 71,
+      "paymentRequiredPresent": true,
+      "appdeployAvailability": null,
+      "responseBodyCode": null,
+      "responseBodyMessage": null,
+      "diagnosticHeaders": {
+        "content-type": "application/json",
+        "payment-required": "eyJ4NDAyVmVyc2lvbiI6MiwicmVzb3VyY2UiOnsidXJsIjoiaHR0cHM6Ly9wYS1lbnRpdHkteDQwMi5mbG9vdC5hcHAvX2FwaS91cy1hZGRyZXNzLWdlb2NvZGUiLCJkZXNjcmlwdGlvbiI6Ik9mZmljaWFsIFUuUy4gQ2Vuc3VzIGFkZHJlc3MgZ2VvY29kaW5nIHdpdGggc3RhbmRhcmRpemVkIGFkZHJlc3MsIGNvb3JkaW5hdGVzLCBhbmQgQ2Vuc3VzIGdlb2dyYXBoeSBpZGVudGlmaWVycy4iLCJtaW1lVHlwZSI6ImFwcGxpY2F0aW9uL2pzb24iLCJzZXJ2aWNlTmFtZSI6IlVTIENlbnN1cyBBZGRyZXNzIEdlb2NvZGVyIHg0MDIiLCJ0YWdzIjpbImdlb2NvZGluZyIsImFkZHJlc3MiLCJjZW5zdXMiLCJyZWZlcmVuY2UtZGF0YSJdfSwiYWNjZXB0cyI6W3sic2NoZW1lIjoiZXhhY3QiLCJuZXR3b3JrIjoiZWlwMTU1Ojg0NTMiLCJhbW91bnQiOiI1MDAwIiwiYXNzZXQiOiIweDgzMzU4OWZDRDZlRGI2RTA4ZjRjN0MzMkQ0ZjcxYjU0YmRBMDI5MTMiLCJwYXlUbyI6IjB4NzA4ZjdiNTJiNTZlYWZkN2ZjMWRlNjVmYzc3NTJlZDczMjkxNDAyMSIsIm1heFRpbWVvdXRTZWNvbmRzIjo2MCwiZXh0cmEiOnsibmFtZSI6IlVTRCBDb2luIiwidmVyc2lvbiI6IjIifX1dLCJleHRlbnNpb25zIjp7ImJhemFhciI6eyJzY2hlbWEiOnsidHlwZSI6Im9iamVjdCIsInByb3BlcnRpZXMiOnsiaW5wdXQiOnsidHlwZSI6Im9iamVjdCIsInByb3BlcnRpZXMiOnsidHlwZSI6eyJjb25zdCI6Imh0dHAifSwibWV0aG9kIjp7ImNvbnN0IjoiR0VUIn0sInF1ZXJ5UGFyYW1zIjp7InR5cGUiOiJvYmplY3QiLCJwcm9wZXJ0aWVzIjp7ImFkZHJlc3MiOnsidHlwZSI6InN0cmluZyIsIm1pbkxlbmd0aCI6NiwibWF4TGVuZ3RoIjoyNDB9fSwicmVxdWlyZWQiOlsiYWRkcmVzcyJdLCJhZGRpdGlvbmFsUHJvcGVydGllcyI6ZmFsc2V9fSwicmVxdWlyZWQiOlsidHlwZSIsIm1ldGhvZCIsInF1ZXJ5UGFyYW1zIl0sImFkZGl0aW9uYWxQcm9wZXJ0aWVzIjpmYWxzZX0sIm91dHB1dCI6eyJ0eXBlIjoib2JqZWN0IiwicHJvcGVydGllcyI6eyJ0eXBlIjp7ImNvbnN0IjoianNvbiJ9LCJleGFtcGxlIjp7InR5cGUiOiJvYmplY3QifX0sInJlcXVpcmVkIjpbInR5cGUiLCJleGFtcGxlIl0sImFkZGl0aW9uYWxQcm9wZXJ0aWVzIjpmYWxzZX19LCJyZXF1aXJlZCI6WyJpbnB1dCIsIm91dHB1dCJdLCJhZGRpdGlvbmFsUHJvcGVydGllcyI6ZmFsc2V9LCJpbmZvIjp7ImlucHV0Ijp7InR5cGUiOiJodHRwIiwibWV0aG9kIjoiR0VUIiwicXVlcnlQYXJhbXMiOnsiYWRkcmVzcyI6IjQ2MDAgU2lsdmVyIEhpbGwgUmQsIFdhc2hpbmd0b24sIERDIDIwMjMzIn19LCJvdXRwdXQiOnsidHlwZSI6Impzb24iLCJleGFtcGxlIjp7ImlucHV0IjoiNDYwMCBTaWx2ZXIgSGlsbCBSZCwgV2FzaGluZ3RvbiwgREMgMjAyMzMiLCJtYXRjaGVkIjp0cnVlLCJtYXRjaGVkQWRkcmVzcyI6IjQ2MDAgU0lMVkVSIEhJTEwgUkQsIFdBU0hJTkdUT04sIERDLCAyMDIzMyIsImNvb3JkaW5hdGVzIjp7ImxvbmdpdHVkZSI6LTc2LjkyODM2NjM4MDkzLCJsYXRpdHVkZSI6MzguODQ1MDU1ODk4MDh9LCJzb3VyY2UiOiJVLlMuIENlbnN1cyBCdXJlYXUgR2VvY29kaW5nIFNlcnZpY2VzIiwicGFpZCI6dHJ1ZX19fX19fQ==",
+        "x402-price": "$0.005",
+        "x402-network": "eip155:8453",
+        "x402-asset": "USDC",
+        "x402-pay-to": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+        "server": "CloudFront",
+        "via": "1.1 6aa8d2883437a2897f326bfc58beed3c.cloudfront.net (CloudFront)"
+      },
+      "bodyExcerpt": "{\"error\":\"payment_required\",\"x402Version\":2,\"resource\":{\"url\":\"https://pa-entity-x402.floot.app/_api/us-address-geocode\",\"description\":\"Official U.S. Census address geocoding with standardized address, coordinates, and Census geography identifiers.\",\"mimeType\":\"application/json\",\"serviceName\":\"US Census Address Geocoder x402\",\"tags\":[\"geocoding\",\"address\",\"census\",\"reference-data\"]},\"accepts\":[{\"scheme\":\"exact\",\"network\":\"eip155:8453\",\"amount\":\"5000\",\"asset\":\"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913\",\"payTo\":\"0x708f7b52b56eafd7fc1de65fc7752ed732914021\",\"maxTimeoutSeconds\":60,\"extra\":{\"name\":\"USD Coin\",\"version\":\"2\"}}],\"extensions\":{\"bazaar\":{\"schema\":{\"type\":\"object\",\"properties\":{\"input\":{\"type\":\"object\",\"properties\":{\"type\":{\"const\":\"http\"},\"method\":{\"const\":\"GET\"},\"queryParams\":{\"type\":\"object\",\"properties\":{\"address\":{\"type\":\"string\",\"minLength\":6,\"maxLength\":240}},\"required\":[\"address\"],\"additionalProperties\":false}},\"required\":[\"type\",\"method\",\"queryParams\"],\"additionalProperties\":false},\"output\":{\"type\":\"object\",\"properties\":{\"type\":{\"const\":\"json\"},\"example\":{\"type\":\"object\"}},\"required\":[\"type\",\"example\"],\"additionalProperties\":false}},\"required\":[\"input\",\"output\"],\"additionalProperties\":false},\"info\":{\"input\":{\"type\":\"http\",\"method\":\"GET\",\"queryParams\":{\"address\":\"4600 Silver Hill Rd, Washington, DC 20233\"}},\"output\":{\"type\":\"json\",\"example\":{\"input\":\"4600 Silver Hill Rd, Washington, DC 20233\",\"matched\":true,\"matchedAddress\":\"4600 SILVER HILL RD, WASHINGTON, DC, 20233\",\"coordinates\":{\"longitude\":-76.92836638093,\"latitude\":38.84505589808},\"source\":\"U.S. Census Bureau Geocoding Services\",\"paid\":true}}}}},\"price\":\"$0.005\",\"currency\":\"USDC\",\"network\":\"eip155:8453\",\"payTo\":\"0x708f7b52b56eafd7fc1de65fc7752ed732914021\"}",
+      "failures": []
+    },
+    {
+      "id": "ofac-sdn-screen",
+      "name": "OFAC SDN Name Screen",
+      "url": "https://pa-entity-x402.floot.app/_api/ofac-sdn-screen?name=VLADIMIR%20PUTIN&limit=3&minScore=85",
+      "expectedPrice": "$0.005",
+      "expectedAmount": "5000",
+      "ok": true,
+      "status": 402,
+      "latencyMs": 79,
+      "paymentRequiredPresent": true,
+      "appdeployAvailability": null,
+      "responseBodyCode": null,
+      "responseBodyMessage": null,
+      "diagnosticHeaders": {
+        "content-type": "application/json",
+        "payment-required": "eyJ4NDAyVmVyc2lvbiI6MiwicmVzb3VyY2UiOnsidXJsIjoiaHR0cHM6Ly9wYS1lbnRpdHkteDQwMi5mbG9vdC5hcHAvX2FwaS9vZmFjLXNkbi1zY3JlZW4iLCJkZXNjcmlwdGlvbiI6IkN1cnJlbnQgT0ZBQyBTRE4gY2FuZGlkYXRlLW5hbWUgc2NyZWVuaW5nIGFnYWluc3QgcHJpbWFyeSBuYW1lcyBhbmQgYWxpYXNlcy4gUmV0dXJucyByZXZpZXcgY2FuZGlkYXRlcyBvbmx5OyBuby1tYXRjaCBpcyBub3Qgc2FuY3Rpb25zIGNsZWFyYW5jZS4iLCJtaW1lVHlwZSI6ImFwcGxpY2F0aW9uL2pzb24iLCJzZXJ2aWNlTmFtZSI6Ik9GQUMgU0ROIE5hbWUgU2NyZWVuIHg0MDIiLCJ0YWdzIjpbIm9mYWMiLCJzYW5jdGlvbnMiLCJzZG4iLCJuYW1lLXNjcmVlbmluZyJdfSwiYWNjZXB0cyI6W3sic2NoZW1lIjoiZXhhY3QiLCJuZXR3b3JrIjoiZWlwMTU1Ojg0NTMiLCJhbW91bnQiOiI1MDAwIiwiYXNzZXQiOiIweDgzMzU4OWZDRDZlRGI2RTA4ZjRjN0MzMkQ0ZjcxYjU0YmRBMDI5MTMiLCJwYXlUbyI6IjB4NzA4ZjdiNTJiNTZlYWZkN2ZjMWRlNjVmYzc3NTJlZDczMjkxNDAyMSIsIm1heFRpbWVvdXRTZWNvbmRzIjo2MCwiZXh0cmEiOnsibmFtZSI6IlVTRCBDb2luIiwidmVyc2lvbiI6IjIifX1dLCJleHRlbnNpb25zIjp7ImJhemFhciI6eyJzY2hlbWEiOnsidHlwZSI6Im9iamVjdCIsInByb3BlcnRpZXMiOnsiaW5wdXQiOnsidHlwZSI6Im9iamVjdCIsInByb3BlcnRpZXMiOnsidHlwZSI6eyJjb25zdCI6Imh0dHAifSwibWV0aG9kIjp7ImNvbnN0IjoiR0VUIn0sInF1ZXJ5UGFyYW1zIjp7InR5cGUiOiJvYmplY3QiLCJwcm9wZXJ0aWVzIjp7Im5hbWUiOnsidHlwZSI6InN0cmluZyIsIm1pbkxlbmd0aCI6MiwibWF4TGVuZ3RoIjoxNjB9LCJsaW1pdCI6eyJ0eXBlIjoiaW50ZWdlciIsIm1pbmltdW0iOjEsIm1heGltdW0iOjEwfSwibWluU2NvcmUiOnsidHlwZSI6ImludGVnZXIiLCJtaW5pbXVtIjo3MCwibWF4aW11bSI6MTAwfX0sInJlcXVpcmVkIjpbIm5hbWUiXSwiYWRkaXRpb25hbFByb3BlcnRpZXMiOmZhbHNlfX0sInJlcXVpcmVkIjpbInR5cGUiLCJtZXRob2QiLCJxdWVyeVBhcmFtcyJdLCJhZGRpdGlvbmFsUHJvcGVydGllcyI6ZmFsc2V9LCJvdXRwdXQiOnsidHlwZSI6Im9iamVjdCIsInByb3BlcnRpZXMiOnsidHlwZSI6eyJjb25zdCI6Impzb24ifSwiZXhhbXBsZSI6eyJ0eXBlIjoib2JqZWN0In19LCJyZXF1aXJlZCI6WyJ0eXBlIiwiZXhhbXBsZSJdLCJhZGRpdGlvbmFsUHJvcGVydGllcyI6ZmFsc2V9fSwicmVxdWlyZWQiOlsiaW5wdXQiLCJvdXRwdXQiXSwiYWRkaXRpb25hbFByb3BlcnRpZXMiOmZhbHNlfSwiaW5mbyI6eyJpbnB1dCI6eyJ0eXBlIjoiaHR0cCIsIm1ldGhvZCI6IkdFVCIsInF1ZXJ5UGFyYW1zIjp7Im5hbWUiOiJWTEFESU1JUiBQVVRJTiIsImxpbWl0IjozLCJtaW5TY29yZSI6OTB9fSwib3V0cHV0Ijp7InR5cGUiOiJqc29uIiwiZXhhbXBsZSI6eyJxdWVyeSI6IlZMQURJTUlSIFBVVElOIiwibWluU2NvcmUiOjkwLCJjb3VudCI6MSwidG90YWxDYW5kaWRhdGVzQWJvdmVUaHJlc2hvbGQiOjEsImNhbmRpZGF0ZXMiOlt7InByaW1hcnlOYW1lIjoiUFVUSU4sIFZsYWRpbWlyIFZsYWRpbWlyb3ZpY2giLCJzY29yZSI6OTl9XSwic291cmNlIjoiVS5TLiBUcmVhc3VyeSBPRkFDIFNwZWNpYWxseSBEZXNpZ25hdGVkIE5hdGlvbmFscyAoU0ROKSBMaXN0IiwicmV2aWV3UmVxdWlyZWQiOnRydWUsInBhaWQiOnRydWV9fX19fX0=",
+        "x402-price": "$0.005",
+        "x402-network": "eip155:8453",
+        "x402-asset": "USDC",
+        "x402-pay-to": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+        "server": "CloudFront",
+        "via": "1.1 3289feb7922c3bed2dd498f7353add3e.cloudfront.net (CloudFront)"
+      },
+      "bodyExcerpt": "{\"error\":\"payment_required\",\"x402Version\":2,\"resource\":{\"url\":\"https://pa-entity-x402.floot.app/_api/ofac-sdn-screen\",\"description\":\"Current OFAC SDN candidate-name screening against primary names and aliases. Returns review candidates only; no-match is not sanctions clearance.\",\"mimeType\":\"application/json\",\"serviceName\":\"OFAC SDN Name Screen x402\",\"tags\":[\"ofac\",\"sanctions\",\"sdn\",\"name-screening\"]},\"accepts\":[{\"scheme\":\"exact\",\"network\":\"eip155:8453\",\"amount\":\"5000\",\"asset\":\"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913\",\"payTo\":\"0x708f7b52b56eafd7fc1de65fc7752ed732914021\",\"maxTimeoutSeconds\":60,\"extra\":{\"name\":\"USD Coin\",\"version\":\"2\"}}],\"extensions\":{\"bazaar\":{\"schema\":{\"type\":\"object\",\"properties\":{\"input\":{\"type\":\"object\",\"properties\":{\"type\":{\"const\":\"http\"},\"method\":{\"const\":\"GET\"},\"queryParams\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\",\"minLength\":2,\"maxLength\":160},\"limit\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":10},\"minScore\":{\"type\":\"integer\",\"minimum\":70,\"maximum\":100}},\"required\":[\"name\"],\"additionalProperties\":false}},\"required\":[\"type\",\"method\",\"queryParams\"],\"additionalProperties\":false},\"output\":{\"type\":\"object\",\"properties\":{\"type\":{\"const\":\"json\"},\"example\":{\"type\":\"object\"}},\"required\":[\"type\",\"example\"],\"additionalProperties\":false}},\"required\":[\"input\",\"output\"],\"additionalProperties\":false},\"info\":{\"input\":{\"type\":\"http\",\"method\":\"GET\",\"queryParams\":{\"name\":\"VLADIMIR PUTIN\",\"limit\":3,\"minScore\":90}},\"output\":{\"type\":\"json\",\"example\":{\"query\":\"VLADIMIR PUTIN\",\"minScore\":90,\"count\":1,\"totalCandidatesAboveThreshold\":1,\"candidates\":[{\"primaryName\":\"PUTIN, Vladimir Vladimirovich\",\"score\":99}],\"source\":\"U.S. Treasury OFAC Specially Designated Nationals (SDN) List\",\"reviewRequired\":true,\"paid\":true}}}}},\"price\":\"$0.005\",\"currency\":\"USDC\",\"network\":\"eip155:8453\",\"payTo\":\"0x708f7b52b56eafd7fc1de65fc7752ed732914021\"}",
+      "failures": []
+    },
+    {
+      "id": "domain-rdap",
+      "name": "Domain RDAP Lookup",
+      "url": "https://pa-entity-x402.floot.app/_api/domain-rdap?domain=example.com",
+      "expectedPrice": "$0.005",
+      "expectedAmount": "5000",
+      "ok": true,
+      "status": 402,
+      "latencyMs": 49,
+      "paymentRequiredPresent": true,
+      "appdeployAvailability": null,
+      "responseBodyCode": null,
+      "responseBodyMessage": null,
+      "diagnosticHeaders": {
+        "content-type": "application/json",
+        "payment-required": "eyJ4NDAyVmVyc2lvbiI6MiwicmVzb3VyY2UiOnsidXJsIjoiaHR0cHM6Ly9wYS1lbnRpdHkteDQwMi5mbG9vdC5hcHAvX2FwaS9kb21haW4tcmRhcCIsImRlc2NyaXB0aW9uIjoiTGl2ZSBhdXRob3JpdGF0aXZlIGRvbWFpbi1yZWdpc3RyYXRpb24gbWV0YWRhdGEgdGhyb3VnaCBJQU5BIFJEQVAgYm9vdHN0cmFwIGFuZCB0aGUgY29ycmVjdCByZWdpc3RyeSBSREFQIHNlcnZpY2UuIiwibWltZVR5cGUiOiJhcHBsaWNhdGlvbi9qc29uIiwic2VydmljZU5hbWUiOiJEb21haW4gUkRBUCBMb29rdXAgeDQwMiIsInRhZ3MiOlsiZG9tYWluIiwicmRhcCIsInJlZ2lzdHJhdGlvbiIsInJlZ2lzdHJhciIsImRucyJdfSwiYWNjZXB0cyI6W3sic2NoZW1lIjoiZXhhY3QiLCJuZXR3b3JrIjoiZWlwMTU1Ojg0NTMiLCJhbW91bnQiOiI1MDAwIiwiYXNzZXQiOiIweDgzMzU4OWZDRDZlRGI2RTA4ZjRjN0MzMkQ0ZjcxYjU0YmRBMDI5MTMiLCJwYXlUbyI6IjB4NzA4ZjdiNTJiNTZlYWZkN2ZjMWRlNjVmYzc3NTJlZDczMjkxNDAyMSIsIm1heFRpbWVvdXRTZWNvbmRzIjo2MCwiZXh0cmEiOnsibmFtZSI6IlVTRCBDb2luIiwidmVyc2lvbiI6IjIifX1dLCJleHRlbnNpb25zIjp7ImJhemFhciI6eyJzY2hlbWEiOnsidHlwZSI6Im9iamVjdCIsInByb3BlcnRpZXMiOnsiaW5wdXQiOnsidHlwZSI6Im9iamVjdCIsInByb3BlcnRpZXMiOnsidHlwZSI6eyJjb25zdCI6Imh0dHAifSwibWV0aG9kIjp7ImNvbnN0IjoiR0VUIn0sInF1ZXJ5UGFyYW1zIjp7InR5cGUiOiJvYmplY3QiLCJwcm9wZXJ0aWVzIjp7ImRvbWFpbiI6eyJ0eXBlIjoic3RyaW5nIiwibWluTGVuZ3RoIjozLCJtYXhMZW5ndGgiOjI1M319LCJyZXF1aXJlZCI6WyJkb21haW4iXSwiYWRkaXRpb25hbFByb3BlcnRpZXMiOmZhbHNlfX0sInJlcXVpcmVkIjpbInR5cGUiLCJtZXRob2QiLCJxdWVyeVBhcmFtcyJdLCJhZGRpdGlvbmFsUHJvcGVydGllcyI6ZmFsc2V9LCJvdXRwdXQiOnsidHlwZSI6Im9iamVjdCIsInByb3BlcnRpZXMiOnsidHlwZSI6eyJjb25zdCI6Impzb24ifSwiZXhhbXBsZSI6eyJ0eXBlIjoib2JqZWN0In19LCJyZXF1aXJlZCI6WyJ0eXBlIiwiZXhhbXBsZSJdLCJhZGRpdGlvbmFsUHJvcGVydGllcyI6ZmFsc2V9fSwicmVxdWlyZWQiOlsiaW5wdXQiLCJvdXRwdXQiXSwiYWRkaXRpb25hbFByb3BlcnRpZXMiOmZhbHNlfSwiaW5mbyI6eyJpbnB1dCI6eyJ0eXBlIjoiaHR0cCIsIm1ldGhvZCI6IkdFVCIsInF1ZXJ5UGFyYW1zIjp7ImRvbWFpbiI6ImV4YW1wbGUuY29tIn19LCJvdXRwdXQiOnsidHlwZSI6Impzb24iLCJleGFtcGxlIjp7ImRvbWFpbiI6ImV4YW1wbGUuY29tIiwicmVnaXN0ZXJlZCI6dHJ1ZSwiYXV0aG9yaXRhdGl2ZVJkYXAiOiJodHRwczovL3JkYXAudmVyaXNpZ24uY29tL2NvbS92MS8iLCJzb3VyY2UiOiJBdXRob3JpdGF0aXZlIFJEQVAgc2VydmVyIGRpc2NvdmVyZWQgdmlhIElBTkEgYm9vdHN0cmFwIiwicGFpZCI6dHJ1ZX19fX19fQ==",
+        "x402-price": "$0.005",
+        "x402-network": "eip155:8453",
+        "x402-asset": "USDC",
+        "x402-pay-to": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+        "server": "CloudFront",
+        "via": "1.1 6aa8d2883437a2897f326bfc58beed3c.cloudfront.net (CloudFront)"
+      },
+      "bodyExcerpt": "{\"error\":\"payment_required\",\"x402Version\":2,\"resource\":{\"url\":\"https://pa-entity-x402.floot.app/_api/domain-rdap\",\"description\":\"Live authoritative domain-registration metadata through IANA RDAP bootstrap and the correct registry RDAP service.\",\"mimeType\":\"application/json\",\"serviceName\":\"Domain RDAP Lookup x402\",\"tags\":[\"domain\",\"rdap\",\"registration\",\"registrar\",\"dns\"]},\"accepts\":[{\"scheme\":\"exact\",\"network\":\"eip155:8453\",\"amount\":\"5000\",\"asset\":\"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913\",\"payTo\":\"0x708f7b52b56eafd7fc1de65fc7752ed732914021\",\"maxTimeoutSeconds\":60,\"extra\":{\"name\":\"USD Coin\",\"version\":\"2\"}}],\"extensions\":{\"bazaar\":{\"schema\":{\"type\":\"object\",\"properties\":{\"input\":{\"type\":\"object\",\"properties\":{\"type\":{\"const\":\"http\"},\"method\":{\"const\":\"GET\"},\"queryParams\":{\"type\":\"object\",\"properties\":{\"domain\":{\"type\":\"string\",\"minLength\":3,\"maxLength\":253}},\"required\":[\"domain\"],\"additionalProperties\":false}},\"required\":[\"type\",\"method\",\"queryParams\"],\"additionalProperties\":false},\"output\":{\"type\":\"object\",\"properties\":{\"type\":{\"const\":\"json\"},\"example\":{\"type\":\"object\"}},\"required\":[\"type\",\"example\"],\"additionalProperties\":false}},\"required\":[\"input\",\"output\"],\"additionalProperties\":false},\"info\":{\"input\":{\"type\":\"http\",\"method\":\"GET\",\"queryParams\":{\"domain\":\"example.com\"}},\"output\":{\"type\":\"json\",\"example\":{\"domain\":\"example.com\",\"registered\":true,\"authoritativeRdap\":\"https://rdap.verisign.com/com/v1/\",\"source\":\"Authoritative RDAP server discovered via IANA bootstrap\",\"paid\":true}}}}},\"price\":\"$0.005\",\"currency\":\"USDC\",\"network\":\"eip155:8453\",\"payTo\":\"0x708f7b52b56eafd7fc1de65fc7752ed732914021\"}",
+      "failures": []
+    },
+    {
+      "id": "treasury-average-rates",
+      "name": "Treasury Average Interest Rates",
+      "url": "https://pa-entity-x402.floot.app/_api/treasury-average-rates",
+      "expectedPrice": "$0.005",
+      "expectedAmount": "5000",
+      "ok": true,
+      "status": 402,
+      "latencyMs": 64,
+      "paymentRequiredPresent": true,
+      "appdeployAvailability": null,
+      "responseBodyCode": null,
+      "responseBodyMessage": null,
+      "diagnosticHeaders": {
+        "content-type": "application/json",
+        "payment-required": "eyJ4NDAyVmVyc2lvbiI6MiwicmVzb3VyY2UiOnsidXJsIjoiaHR0cHM6Ly9wYS1lbnRpdHkteDQwMi5mbG9vdC5hcHAvX2FwaS90cmVhc3VyeS1hdmVyYWdlLXJhdGVzIiwiZGVzY3JpcHRpb24iOiJMYXRlc3QgbW9udGhseSBhdmVyYWdlIGludGVyZXN0IHJhdGVzIG9uIG91dHN0YW5kaW5nIFUuUy4gVHJlYXN1cnkgc2VjdXJpdGllcyBmcm9tIG9mZmljaWFsIFRyZWFzdXJ5IEZpc2NhbCBEYXRhLCBvcHRpb25hbGx5IGZpbHRlcmVkIGJ5IHNlY3VyaXR5IGRlc2NyaXB0aW9uLiIsIm1pbWVUeXBlIjoiYXBwbGljYXRpb24vanNvbiIsInNlcnZpY2VOYW1lIjoiVHJlYXN1cnkgQXZlcmFnZSBSYXRlcyB4NDAyIiwidGFncyI6WyJ0cmVhc3VyeSIsImludGVyZXN0LXJhdGVzIiwibWFjcm8iLCJmaXNjYWwtZGF0YSJdfSwiYWNjZXB0cyI6W3sic2NoZW1lIjoiZXhhY3QiLCJuZXR3b3JrIjoiZWlwMTU1Ojg0NTMiLCJhbW91bnQiOiI1MDAwIiwiYXNzZXQiOiIweDgzMzU4OWZDRDZlRGI2RTA4ZjRjN0MzMkQ0ZjcxYjU0YmRBMDI5MTMiLCJwYXlUbyI6IjB4NzA4ZjdiNTJiNTZlYWZkN2ZjMWRlNjVmYzc3NTJlZDczMjkxNDAyMSIsIm1heFRpbWVvdXRTZWNvbmRzIjo2MCwiZXh0cmEiOnsibmFtZSI6IlVTRCBDb2luIiwidmVyc2lvbiI6IjIifX1dLCJleHRlbnNpb25zIjp7ImJhemFhciI6eyJzY2hlbWEiOnsidHlwZSI6Im9iamVjdCIsInByb3BlcnRpZXMiOnsiaW5wdXQiOnsidHlwZSI6Im9iamVjdCIsInByb3BlcnRpZXMiOnsidHlwZSI6eyJjb25zdCI6Imh0dHAifSwibWV0aG9kIjp7ImNvbnN0IjoiR0VUIn0sInF1ZXJ5UGFyYW1zIjp7InR5cGUiOiJvYmplY3QiLCJwcm9wZXJ0aWVzIjp7InNlY3VyaXR5Ijp7InR5cGUiOiJzdHJpbmciLCJtYXhMZW5ndGgiOjEwMH19LCJhZGRpdGlvbmFsUHJvcGVydGllcyI6ZmFsc2V9fSwicmVxdWlyZWQiOlsidHlwZSIsIm1ldGhvZCIsInF1ZXJ5UGFyYW1zIl0sImFkZGl0aW9uYWxQcm9wZXJ0aWVzIjpmYWxzZX0sIm91dHB1dCI6eyJ0eXBlIjoib2JqZWN0IiwicHJvcGVydGllcyI6eyJ0eXBlIjp7ImNvbnN0IjoianNvbiJ9LCJleGFtcGxlIjp7InR5cGUiOiJvYmplY3QifX0sInJlcXVpcmVkIjpbInR5cGUiLCJleGFtcGxlIl0sImFkZGl0aW9uYWxQcm9wZXJ0aWVzIjpmYWxzZX19LCJyZXF1aXJlZCI6WyJpbnB1dCIsIm91dHB1dCJdLCJhZGRpdGlvbmFsUHJvcGVydGllcyI6ZmFsc2V9LCJpbmZvIjp7ImlucHV0Ijp7InR5cGUiOiJodHRwIiwibWV0aG9kIjoiR0VUIiwicXVlcnlQYXJhbXMiOnsic2VjdXJpdHkiOiJUb3RhbCBNYXJrZXRhYmxlIn19LCJvdXRwdXQiOnsidHlwZSI6Impzb24iLCJleGFtcGxlIjp7InJlY29yZERhdGUiOiIyMDI2LTA4LTMxIiwiY291bnQiOjEsInJhdGVzIjpbeyJzZWN1cml0eURlc2NyaXB0aW9uIjoiVG90YWwgTWFya2V0YWJsZSIsInNlY3VyaXR5VHlwZSI6Ik1hcmtldGFibGUiLCJhdmVyYWdlSW50ZXJlc3RSYXRlUGVyY2VudCI6My40NzV9XSwic291cmNlIjoiVS5TLiBUcmVhc3VyeSBGaXNjYWwgRGF0YSDigJQgQXZlcmFnZSBJbnRlcmVzdCBSYXRlcyBvbiBVLlMuIFRyZWFzdXJ5IFNlY3VyaXRpZXMiLCJmcmVxdWVuY3kiOiJtb250aGx5IiwicGFpZCI6dHJ1ZX19fX19fQ==",
+        "x402-price": "$0.005",
+        "x402-network": "eip155:8453",
+        "x402-asset": "USDC",
+        "x402-pay-to": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+        "server": "CloudFront",
+        "via": "1.1 3289feb7922c3bed2dd498f7353add3e.cloudfront.net (CloudFront)"
+      },
+      "bodyExcerpt": "{\"error\":\"payment_required\",\"x402Version\":2,\"resource\":{\"url\":\"https://pa-entity-x402.floot.app/_api/treasury-average-rates\",\"description\":\"Latest monthly average interest rates on outstanding U.S. Treasury securities from official Treasury Fiscal Data, optionally filtered by security description.\",\"mimeType\":\"application/json\",\"serviceName\":\"Treasury Average Rates x402\",\"tags\":[\"treasury\",\"interest-rates\",\"macro\",\"fiscal-data\"]},\"accepts\":[{\"scheme\":\"exact\",\"network\":\"eip155:8453\",\"amount\":\"5000\",\"asset\":\"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913\",\"payTo\":\"0x708f7b52b56eafd7fc1de65fc7752ed732914021\",\"maxTimeoutSeconds\":60,\"extra\":{\"name\":\"USD Coin\",\"version\":\"2\"}}],\"extensions\":{\"bazaar\":{\"schema\":{\"type\":\"object\",\"properties\":{\"input\":{\"type\":\"object\",\"properties\":{\"type\":{\"const\":\"http\"},\"method\":{\"const\":\"GET\"},\"queryParams\":{\"type\":\"object\",\"properties\":{\"security\":{\"type\":\"string\",\"maxLength\":100}},\"additionalProperties\":false}},\"required\":[\"type\",\"method\",\"queryParams\"],\"additionalProperties\":false},\"output\":{\"type\":\"object\",\"properties\":{\"type\":{\"const\":\"json\"},\"example\":{\"type\":\"object\"}},\"required\":[\"type\",\"example\"],\"additionalProperties\":false}},\"required\":[\"input\",\"output\"],\"additionalProperties\":false},\"info\":{\"input\":{\"type\":\"http\",\"method\":\"GET\",\"queryParams\":{\"security\":\"Total Marketable\"}},\"output\":{\"type\":\"json\",\"example\":{\"recordDate\":\"2026-08-31\",\"count\":1,\"rates\":[{\"securityDescription\":\"Total Marketable\",\"securityType\":\"Marketable\",\"averageInterestRatePercent\":3.475}],\"source\":\"U.S. Treasury Fiscal Data — Average Interest Rates on U.S. Treasury Securities\",\"frequency\":\"monthly\",\"paid\":true}}}}},\"price\":\"$0.005\",\"currency\":\"USDC\",\"network\":\"eip155:8453\",\"payTo\":\"0x708f7b52b56eafd7fc1de65fc7752ed732914021\"}",
+      "failures": []
+    }
+  ],
+  "fixtures": [
+    {
+      "id": "gate-proceed",
+      "url": "https://pa-entity-x402.floot.app/_api/vendor-intake-demo?case=proceed",
+      "ok": true,
+      "status": 200,
+      "decision": "proceed",
+      "agentAction": "continue_vendor_intake",
+      "triggers": [],
+      "diagnosticHeaders": {
+        "content-type": "application/json",
+        "server": "CloudFront",
+        "via": "1.1 6aa8d2883437a2897f326bfc58beed3c.cloudfront.net (CloudFront)"
+      },
+      "bodyExcerpt": "{\"decision\":\"proceed\",\"agentAction\":\"continue_vendor_intake\",\"reviewTriggers\":[],\"checkedAt\":\"2026-10-03T16:38:07.920Z\",\"input\":{\"name\":\"OpenAI OpCo\",\"address\":\"600 North Second Street, Suite 401, Harrisburg, PA 17101\",\"domain\":\"openai.com\"},\"policy\":{\"registryNameMatch\":\"exactly one canonical exact or strong-prefix legal-entity candidate is required\",\"registryEvidenceContract\":\"business name, filing number, registration type, and usable registered address are required\",\"censusEvidenceContract\":\"input echo, boolean matched result, Census source, and matched=true requires normalized address plus numeric coordinates\",\"addressMatch\":\"Census-normalized primary street number and ZIP must match, plus coordinate distance threshold\",\"addressMaxDistanceMiles\":0.25,\"ofacReviewThreshold\":90,\"domainMustBeRegistered\":true,\"domainEvidenceContract\":\"requested domain, boolean registration result, authoritative RDAP endpoint, and source are required\",\"domainNameAlignment\":\"registered domain hostname labels must plausibly align with the submitted vendor name\"},\"evidence\":{\"registry\":{\"service\":\"Pennsylvania Department of State registry\",\"found\":true,\"complete\":true,\"candidateCount\":1,\"strongCandidateCount\":1,\"ambiguous\":false,\"strongNameMatch\":true,\"matchScore\":0,\"match\":{\"businessName\":\"Openai Opco, Llc\",\"filingNumber\":\"0014879623\",\"registrationType\":\"Foreign Limited Liability Company\",\"creationDate\":\"2025-09-29\",\"address1\":\"600 North Second Street, Suite 401\",\"address2\":null,\"city\":\"Harrisburg\",\"state\":\"PA\",\"zip\":\"17101\",\"county\":\"Dauphin\",\"countyCode\":\"22\"},\"source\":\"Pennsylvania Department of State via data.pa.gov\"},\"address\":{\"service\":\"U.S. Census Address Geocoder\",\"providedEvidenceComplete\":true,\"providedInputAligned\":true,\"providedMatched\":true,\"providedMatchedAddress\":\"600 N 2ND ST, HARRISBURG, PA, 17101\",\"registryAddress\":\"600 North Second Street, Suite 401, Harrisburg, PA, 17101\",\"registryEvidenceComplete\":true,\"registryInputAligned\":true,\"registryMatched\":true,\"registryMa",
+      "failures": []
+    },
+    {
+      "id": "gate-address-review",
+      "url": "https://pa-entity-x402.floot.app/_api/vendor-intake-demo?case=address_mismatch",
+      "ok": true,
+      "status": 200,
+      "decision": "human_review",
+      "agentAction": "pause_and_request_human_review",
+      "triggers": [
+        "registered_address_differs"
+      ],
+      "diagnosticHeaders": {
+        "content-type": "application/json",
+        "server": "CloudFront",
+        "via": "1.1 21c5f60ba963e85c4713b3293cada1f8.cloudfront.net (CloudFront)"
+      },
+      "bodyExcerpt": "{\"decision\":\"human_review\",\"agentAction\":\"pause_and_request_human_review\",\"reviewTriggers\":[{\"code\":\"registered_address_differs\",\"detail\":\"The supplied vendor address does not closely align with the Pennsylvania registry address under the configured street-number, ZIP, and distance rules.\"}],\"checkedAt\":\"2026-10-03T16:38:11.236Z\",\"input\":{\"name\":\"OpenAI OpCo\",\"address\":\"4600 Silver Hill Rd, Washington, DC 20233\",\"domain\":\"openai.com\"},\"policy\":{\"registryNameMatch\":\"exactly one canonical exact or strong-prefix legal-entity candidate is required\",\"registryEvidenceContract\":\"business name, filing number, registration type, and usable registered address are required\",\"censusEvidenceContract\":\"input echo, boolean matched result, Census source, and matched=true requires normalized address plus numeric coordinates\",\"addressMatch\":\"Census-normalized primary street number and ZIP must match, plus coordinate distance threshold\",\"addressMaxDistanceMiles\":0.25,\"ofacReviewThreshold\":90,\"domainMustBeRegistered\":true,\"domainEvidenceContract\":\"requested domain, boolean registration result, authoritative RDAP endpoint, and source are required\",\"domainNameAlignment\":\"registered domain hostname labels must plausibly align with the submitted vendor name\"},\"evidence\":{\"registry\":{\"service\":\"Pennsylvania Department of State registry\",\"found\":true,\"complete\":true,\"candidateCount\":1,\"strongCandidateCount\":1,\"ambiguous\":false,\"strongNameMatch\":true,\"matchScore\":0,\"match\":{\"businessName\":\"Openai Opco, Llc\",\"filingNumber\":\"0014879623\",\"registrationType\":\"Foreign Limited Liability Company\",\"creationDate\":\"2025-09-29\",\"address1\":\"600 North Second Street, Suite 401\",\"address2\":null,\"city\":\"Harrisburg\",\"state\":\"PA\",\"zip\":\"17101\",\"county\":\"Dauphin\",\"countyCode\":\"22\"},\"source\":\"Pennsylvania Department of State via data.pa.gov\"},\"address\":{\"service\":\"U.S. Census Address Geocoder\",\"providedEvidenceComplete\":true,\"providedInputAligned\":true,\"providedMatched\":true,\"providedMatchedAddress\":\"4600 SILVER ",
+      "failures": []
+    },
+    {
+      "id": "gate-domain-review",
+      "url": "https://pa-entity-x402.floot.app/_api/vendor-intake-demo?case=domain_mismatch",
+      "ok": true,
+      "status": 200,
+      "decision": "human_review",
+      "agentAction": "pause_and_request_human_review",
+      "triggers": [
+        "domain_name_not_aligned"
+      ],
+      "diagnosticHeaders": {
+        "content-type": "application/json",
+        "server": "CloudFront",
+        "via": "1.1 6aa8d2883437a2897f326bfc58beed3c.cloudfront.net (CloudFront)"
+      },
+      "bodyExcerpt": "{\"decision\":\"human_review\",\"agentAction\":\"pause_and_request_human_review\",\"reviewTriggers\":[{\"code\":\"domain_name_not_aligned\",\"detail\":\"The supplied domain is registered, but its hostname does not plausibly align with the submitted vendor name.\"}],\"checkedAt\":\"2026-10-03T16:38:14.234Z\",\"input\":{\"name\":\"OpenAI OpCo\",\"address\":\"600 North Second Street, Suite 401, Harrisburg, PA 17101\",\"domain\":\"example.com\"},\"policy\":{\"registryNameMatch\":\"exactly one canonical exact or strong-prefix legal-entity candidate is required\",\"registryEvidenceContract\":\"business name, filing number, registration type, and usable registered address are required\",\"censusEvidenceContract\":\"input echo, boolean matched result, Census source, and matched=true requires normalized address plus numeric coordinates\",\"addressMatch\":\"Census-normalized primary street number and ZIP must match, plus coordinate distance threshold\",\"addressMaxDistanceMiles\":0.25,\"ofacReviewThreshold\":90,\"domainMustBeRegistered\":true,\"domainEvidenceContract\":\"requested domain, boolean registration result, authoritative RDAP endpoint, and source are required\",\"domainNameAlignment\":\"registered domain hostname labels must plausibly align with the submitted vendor name\"},\"evidence\":{\"registry\":{\"service\":\"Pennsylvania Department of State registry\",\"found\":true,\"complete\":true,\"candidateCount\":1,\"strongCandidateCount\":1,\"ambiguous\":false,\"strongNameMatch\":true,\"matchScore\":0,\"match\":{\"businessName\":\"Openai Opco, Llc\",\"filingNumber\":\"0014879623\",\"registrationType\":\"Foreign Limited Liability Company\",\"creationDate\":\"2025-09-29\",\"address1\":\"600 North Second Street, Suite 401\",\"address2\":null,\"city\":\"Harrisburg\",\"state\":\"PA\",\"zip\":\"17101\",\"county\":\"Dauphin\",\"countyCode\":\"22\"},\"source\":\"Pennsylvania Department of State via data.pa.gov\"},\"address\":{\"service\":\"U.S. Census Address Geocoder\",\"providedEvidenceComplete\":true,\"providedInputAligned\":true,\"providedMatched\":true,\"providedMatchedAddress\":\"600 N 2ND ST, HARRISBURG, PA, 17101\",\"reg",
+      "failures": []
+    }
+  ],
+  "discovery": [
+    {
+      "id": "floot-manifest",
+      "url": "https://pa-entity-x402.floot.app/.well-known/x402",
+      "ok": true,
+      "status": 200,
+      "resourceCount": 8,
+      "diagnosticHeaders": {
+        "content-type": "application/octet-stream",
+        "server": "AmazonS3",
+        "via": "1.1 21c5f60ba963e85c4713b3293cada1f8.cloudfront.net (CloudFront)"
+      },
+      "bodyExcerpt": "{\"x402Version\":2,\"name\":\"Agent Data Tools x402\",\"description\":\"Eight same-origin x402 tools: Pennsylvania registry lookup, a fail-closed Pennsylvania vendor-intake decision gate, SEC filings, Census geocoding, OFAC candidate-name screening, authoritative domain RDAP, and Treasury average interest rates.\",\"openapi\":\"https://pa-entity-x402.floot.app/openapi.json\",\"llms\":\"https://pa-entity-x402.floot.app/llms.txt\",\"skill\":\"https://pa-entity-x402.floot.app/skill.txt\",\"resources\":[{\"resource\":\"https://pa-entity-x402.floot.app/_api/pa-business\",\"type\":\"http\",\"x402Version\":2,\"accepts\":[{\"scheme\":\"exact\",\"network\":\"eip155:8453\",\"amount\":\"5000\",\"asset\":\"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913\",\"payTo\":\"0x708f7b52b56eafd7fc1de65fc7752ed732914021\",\"maxTimeoutSeconds\":60,\"extra\":{\"name\":\"USD Coin\",\"version\":\"2\"}}],\"extensions\":{\"bazaar\":{\"info\":{\"input\":{\"type\":\"http\",\"method\":\"GET\",\"queryParams\":{\"q\":\"OpenAI\",\"limit\":1}},\"output\":{\"type\":\"json\",\"example\":{\"query\":\"OpenAI\",\"count\":1,\"results\":[{\"businessName\":\"Openai, L.l.c.\",\"filingNumber\":\"0014371957\",\"registrationType\":\"Foreign Limited Liability Company\",\"creationDate\":\"2025-04-23\",\"address1\":\"600 North Second Street, Suite 401\",\"address2\":null,\"city\":\"Harrisburg\",\"state\":\"PA\",\"zip\":\"17101\",\"county\":\"Dauphin\",\"countyCode\":\"22\",\"principals\":[{\"role\":\"Governor\",\"firstName\":null,\"middleName\":null,\"lastName\":null}]}],\"enrichment\":{\"principals\":\"complete\"},\"source\":\"Pennsylvania Department of State via data.pa.gov\",\"paid\":true}}},\"schema\":{\"type\":\"object\",\"properties\":{\"input\":{\"type\":\"object\",\"properties\":{\"type\":{\"const\":\"http\"},\"method\":{\"const\":\"GET\"},\"queryParams\":{\"type\":\"object\",\"properties\":{\"q\":{\"type\":\"string\",\"minLength\":2,\"maxLength\":120},\"limit\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":25}},\"required\":[\"q\"],\"additionalProperties\":false}},\"required\":[\"type\",\"method\",\"queryParams\"],\"additionalProperties\":false},\"output\":{\"type\":\"object\",\"properties\":{\"type\":{\"const\":\"json\"},\"example\":{\"type\":\"object\"}},\"required\":[\"t",
+      "failures": []
+    }
+  ],
+  "directories": [
+    {
+      "id": "agent402",
+      "url": "https://agent402.tools/api/index?seller=pa-entity-x402.floot.app",
+      "reachable": true,
+      "status": 200,
+      "json": true,
+      "containsVendorGate": true,
+      "topLevelKeys": [
+        "origin",
+        "displayName",
+        "homepage",
+        "toolCount",
+        "paidToolCount",
+        "fetchedAt",
+        "error",
+        "health",
+        "routable",
+        "networks",
+        "paywall",
+        "mpp",
+        "originResponded",
+        "discoveryPath",
+        "payToByNetwork",
+        "payTosByNetwork",
+        "evmDomainByNetwork",
+        "history",
+        "healthWindow",
+        "listingLegend",
+        "historyLegend",
+        "toolsReturned",
+        "toolsTruncated",
+        "toolsCap",
+        "tools",
+        "paymentNetworksKnown",
+        "routerDispatchEligible",
+        "routerDispatchReason",
+        "routerDispatchByChain",
+        "legend"
+      ],
+      "summary": {
+        "listed": null,
+        "routable": true,
+        "health": 1,
+        "toolCount": 8,
+        "paidToolCount": 8,
+        "matchingTools": [
+          {
+            "name": "Return proceed or human_review for a prospective Pennsylvania vendor",
+            "resource": null,
+            "price": "$0.020000"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "402index",
+      "url": "https://402index.io/api/v1/services?q=Pennsylvania%20Vendor%20Intake%20Decision%20Gate&protocol=x402",
+      "reachable": true,
+      "status": 200,
+      "json": true,
+      "containsVendorGate": true,
+      "topLevelKeys": [
+        "services",
+        "total",
+        "limit",
+        "offset"
+      ],
+      "summary": {
+        "total": 46,
+        "returned": 46,
+        "matchingServices": [
+          {
+            "id": "5ed2e1dc-07a9-46c3-8fb4-44567184f85c",
+            "name": "Pennsylvania Vendor Intake Decision Gate",
+            "url": "https://pa-entity-x402.floot.app/_api/vendor-intake-gate?name=OpenAI%20OpCo&address=600%20North%20Second%20Street%2C%20Suite%20401%2C%20Harrisburg%2C%20PA%2017101&domain=openai.com",
+            "status": null,
+            "health": "healthy",
+            "paymentValid": 1,
+            "priceUsd": 0.02
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "market402",
+      "url": "https://market402.com/search.json?q=Pennsylvania%20Vendor%20Intake%20Decision%20Gate",
+      "reachable": true,
+      "status": 200,
+      "json": true,
+      "containsVendorGate": false,
+      "topLevelKeys": [
+        "query",
+        "total",
+        "showing",
+        "ranking",
+        "note",
+        "results",
+        "available_tags"
+      ],
+      "summary": {
+        "total": 0,
+        "returned": 0,
+        "matchingResults": []
+      },
+      "error": null
+    },
+    {
+      "id": "nohumans",
+      "url": "https://api.nohumans.directory/v1/discover?q=Pennsylvania%20Vendor%20Intake%20Decision%20Gate",
+      "reachable": true,
+      "status": 200,
+      "json": true,
+      "containsVendorGate": false,
+      "topLevelKeys": [
+        "count",
+        "results"
+      ],
+      "summary": {
+        "total": 10,
+        "returned": 10,
+        "matchingResults": []
+      },
+      "error": null
+    }
+  ]
+}

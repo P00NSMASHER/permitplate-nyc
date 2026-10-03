@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const requiredPaths = [
   '/_api/pa-entity-one',
@@ -64,10 +65,9 @@ const outputPath = path.join(dir, 'ready.md');
 await writeFile(publicPath, JSON.stringify(publicReport), 'utf8');
 await writeFile(agentPath, JSON.stringify(agentReport), 'utf8');
 
-const scriptPath = new URL(
-  './finalize-agentic-ai-vendor-gate-draft.mjs',
-  import.meta.url
-).pathname;
+const scriptPath = fileURLToPath(
+  new URL('./finalize-agentic-ai-vendor-gate-draft.mjs', import.meta.url)
+);
 
 const stdout = execFileSync(
   process.execPath,
