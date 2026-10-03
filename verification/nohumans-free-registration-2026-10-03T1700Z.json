@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "startedAt": "2026-10-03T16:58:10.490Z",
+  "origin": "https://pa-entity-x402.floot.app",
+  "policy": {
+    "freeListingsPerRegisteredDomain": 5,
+    "maxCreatesThisRun": 3,
+    "confirmationRequired": true,
+    "noPaidRetry": true
+  },
+  "publicHealth": {
+    "agent402": {
+      "status": 200,
+      "toolCount": 8,
+      "paidToolCount": 8,
+      "health": 1,
+      "routable": true,
+      "routerDispatchEligible": false,
+      "routerDispatchReason": "settlement_required"
+    },
+    "routes": [
+      {
+        "id": "vendor-intake-gate",
+        "httpStatus": 402,
+        "logicalStatus": 402,
+        "paymentRequiredPresent": true
+      },
+      {
+        "id": "sec-recent-filings",
+        "httpStatus": 402,
+        "logicalStatus": 402,
+        "paymentRequiredPresent": true
+      },
+      {
+        "id": "ofac-sdn-screen",
+        "httpStatus": 402,
+        "logicalStatus": 402,
+        "paymentRequiredPresent": true
+      }
+    ]
+  },
+  "directoryBefore": {
+    "totalListings": 7645,
+    "originListings": [
+      {
+        "id": "958fd262-287",
+        "name": "Pennsylvania Business Registry — Entity Lookup x402",
+        "endpoint_url": "https://pa-entity-x402.floot.app/_api/pa-business",
+        "status": "verified"
+      },
+      {
+        "id": "9f2f7a33-cb2",
+        "name": "Pennsylvania Business Best Match x402",
+        "endpoint_url": "https://pa-entity-x402.floot.app/_api/pa-entity-one",
+        "status": "verified"
+      }
+    ],
+    "remainingFreeSlots": 3
+  },
+  "submissions": [
+    {
+      "id": "vendor-intake-gate",
+      "endpoint_url": "https://pa-entity-x402.floot.app/_api/vendor-intake-gate",
+      "status": 201,
+      "response": {
+        "id": "6843d5a6-9ff",
+        "claim_token": "[stored-locally-not-committed]",
+        "status": "unverified",
+        "note": "Will be probed within its first cycle (about two minutes); 'verified' follows a short pass streak, usually within the hour. SAVE claim_token: it is your private edit key, shown only once. To edit: PATCH /v1/listings/:id with the token in the x-claim-token request header (x-edit-token and Authorization: Bearer also accepted).",
+        "badge": "[![nohumans status](https://nohumans.directory/badge/6843d5a6-9ff.svg)](https://nohumans.directory/l/6843d5a6-9ff) — live status badge; embed it anywhere. Shows 'unverified' until the first pass streak, then flips on its own.",
+        "improve_ranking": "PATCH sample_query (a free or cheap test URL) — it surfaces to buyers as has_sample and is how agents pick you when your score is still thin. request_schema prevents the most common paid-call failure (undocumented required params). submitter_email is the only way we can ever reach you.",
+        "submission_allowance": {
+          "registrable_domain": "floot.app",
+          "free_per_domain": 5,
+          "used_before": 2,
+          "fee": "none (within the free allowance)",
+          "rule": "Submitting is free for the first 5 listings per registered domain (api.example.com and www.example.com both count as example.com; on shared hosts such as vercel.app or workers.dev, each app's or account's own subdomain counts as its domain). Each further new listing costs $0.25 USDC on Base (since 2026-09-28; $0.50 before), paid over x402 on the same POST: over the allowance, an unpaid POST answers 402 with the terms, and the paid retry returns 201. The submission is validated before any charge, so a rejected submission is never charged. Edits, claims, an endpoint that is already listed, and re-listing an endpoint that was listed before are free. Listings already in the directory count toward the five and never pay. The fee buys the entry, never a status, a score or a place in the order. Since 2026-09-25."
+        }
+      }
+    },
+    {
+      "id": "sec-recent-filings",
+      "endpoint_url": "https://pa-entity-x402.floot.app/_api/sec-filings",
+      "status": 201,
+      "response": {
+        "id": "ad7cbe88-c81",
+        "claim_token": "[stored-locally-not-committed]",
+        "status": "unverified",
+        "note": "Will be probed within its first cycle (about two minutes); 'verified' follows a short pass streak, usually within the hour. SAVE claim_token: it is your private edit key, shown only once. To edit: PATCH /v1/listings/:id with the token in the x-claim-token request header (x-edit-token and Authorization: Bearer also accepted).",
+        "badge": "[![nohumans status](https://nohumans.directory/badge/ad7cbe88-c81.svg)](https://nohumans.directory/l/ad7cbe88-c81) — live status badge; embed it anywhere. Shows 'unverified' until the first pass streak, then flips on its own.",
+        "improve_ranking": "PATCH sample_query (a free or cheap test URL) — it surfaces to buyers as has_sample and is how agents pick you when your score is still thin. request_schema prevents the most common paid-call failure (undocumented required params). submitter_email is the only way we can ever reach you.",
+        "submission_allowance": {
+          "registrable_domain": "floot.app",
+          "free_per_domain": 5,
+          "used_before": 3,
+          "fee": "none (within the free allowance)",
+          "rule": "Submitting is free for the first 5 listings per registered domain (api.example.com and www.example.com both count as example.com; on shared hosts such as vercel.app or workers.dev, each app's or account's own subdomain counts as its domain). Each further new listing costs $0.25 USDC on Base (since 2026-09-28; $0.50 before), paid over x402 on the same POST: over the allowance, an unpaid POST answers 402 with the terms, and the paid retry returns 201. The submission is validated before any charge, so a rejected submission is never charged. Edits, claims, an endpoint that is already listed, and re-listing an endpoint that was listed before are free. Listings already in the directory count toward the five and never pay. The fee buys the entry, never a status, a score or a place in the order. Since 2026-09-25."
+        },
+        "warnings": [
+          {
+            "code": "no_sample_query",
+            "detail": "no sample_query provided. Without one, agents can't see real output before paying — they're filtering on description and schema alone. A cheap or free endpoint that returns representative output meaningfully increases how often agents actually call this listing. Optional, but recommended."
+          }
+        ],
+        "warnings_note": "Observations from a single check at submission time. Nothing here blocked the listing. Live status is always at GET /v1/listings/ad7cbe88-c81"
+      }
+    },
+    {
+      "id": "ofac-sdn-screen",
+      "endpoint_url": "https://pa-entity-x402.floot.app/_api/ofac-sdn-screen",
+      "status": 201,
+      "response": {
+        "id": "e74bb774-9e2",
+        "claim_token": "[stored-locally-not-committed]",
+        "status": "unverified",
+        "note": "Will be probed within its first cycle (about two minutes); 'verified' follows a short pass streak, usually within the hour. SAVE claim_token: it is your private edit key, shown only once. To edit: PATCH /v1/listings/:id with the token in the x-claim-token request header (x-edit-token and Authorization: Bearer also accepted).",
+        "badge": "[![nohumans status](https://nohumans.directory/badge/e74bb774-9e2.svg)](https://nohumans.directory/l/e74bb774-9e2) — live status badge; embed it anywhere. Shows 'unverified' until the first pass streak, then flips on its own.",
+        "improve_ranking": "PATCH sample_query (a free or cheap test URL) — it surfaces to buyers as has_sample and is how agents pick you when your score is still thin. request_schema prevents the most common paid-call failure (undocumented required params). submitter_email is the only way we can ever reach you.",
+        "submission_allowance": {
+          "registrable_domain": "floot.app",
+          "free_per_domain": 5,
+          "used_before": 4,
+          "fee": "none (within the free allowance)",
+          "rule": "Submitting is free for the first 5 listings per registered domain (api.example.com and www.example.com both count as example.com; on shared hosts such as vercel.app or workers.dev, each app's or account's own subdomain counts as its domain). Each further new listing costs $0.25 USDC on Base (since 2026-09-28; $0.50 before), paid over x402 on the same POST: over the allowance, an unpaid POST answers 402 with the terms, and the paid retry returns 201. The submission is validated before any charge, so a rejected submission is never charged. Edits, claims, an endpoint that is already listed, and re-listing an endpoint that was listed before are free. Listings already in the directory count toward the five and never pay. The fee buys the entry, never a status, a score or a place in the order. Since 2026-09-25."
+        },
+        "warnings": [
+          {
+            "code": "no_sample_query",
+            "detail": "no sample_query provided. Without one, agents can't see real output before paying — they're filtering on description and schema alone. A cheap or free endpoint that returns representative output meaningfully increases how often agents actually call this listing. Optional, but recommended."
+          }
+        ],
+        "warnings_note": "Observations from a single check at submission time. Nothing here blocked the listing. Live status is always at GET /v1/listings/e74bb774-9e2"
+      }
+    }
+  ],
+  "directoryAfter": {
+    "totalListings": 7648,
+    "originListings": [
+      {
+        "id": "958fd262-287",
+        "name": "Pennsylvania Business Registry — Entity Lookup x402",
+        "endpoint_url": "https://pa-entity-x402.floot.app/_api/pa-business",
+        "category": "data.company",
+        "status": "verified",
+        "price_amount": 0.005
+      },
+      {
+        "id": "9f2f7a33-cb2",
+        "name": "Pennsylvania Business Best Match x402",
+        "endpoint_url": "https://pa-entity-x402.floot.app/_api/pa-entity-one",
+        "category": "data.company",
+        "status": "verified",
+        "price_amount": 0.001
+      },
+      {
+        "id": "6843d5a6-9ff",
+        "name": "Pennsylvania Vendor Intake Decision Gate",
+        "endpoint_url": "https://pa-entity-x402.floot.app/_api/vendor-intake-gate",
+        "category": "data.procurement",
+        "status": "unverified",
+        "price_amount": 0.02
+      },
+      {
+        "id": "ad7cbe88-c81",
+        "name": "SEC Recent Filings x402",
+        "endpoint_url": "https://pa-entity-x402.floot.app/_api/sec-filings",
+        "category": "data.company",
+        "status": "unverified",
+        "price_amount": 0.005
+      },
+      {
+        "id": "e74bb774-9e2",
+        "name": "OFAC SDN Name Screen x402",
+        "endpoint_url": "https://pa-entity-x402.floot.app/_api/ofac-sdn-screen",
+        "category": "infra.compliance",
+        "status": "unverified",
+        "price_amount": 0.005
+      }
+    ],
+    "remainingFreeSlots": 0
+  },
+  "security": {
+    "paymentHeadersSent": false,
+    "paymentSignatureSent": false,
+    "paidRetryAttempted": false,
+    "spendUsd": 0
+  },
+  "ok": true,
+  "completedAt": "2026-10-03T16:59:08.586Z"
+}

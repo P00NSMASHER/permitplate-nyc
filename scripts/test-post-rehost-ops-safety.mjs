@@ -7,6 +7,9 @@ const read = async (path) =>
 
 const agent = await read('scripts/verify-agent402-after-floot-rehost.mjs');
 const market = await read('scripts/repair-marketplaces-after-floot-rehost.mjs');
+const noHumansFree = await read(
+  'scripts/register-nohumans-free-portfolio.mjs'
+);
 const agentWorkflow = await read(
   '.github/workflows/verify-agent402-after-floot-rehost.yml'
 );
@@ -106,17 +109,50 @@ assert.ok(
 );
 assert.ok(
   market.includes("mode: 'read_only'"),
-  'NoHumans must remain read-only'
+  'automated marketplace repair must keep NoHumans read-only'
 );
 assert.equal(
   /nohumans[^\n]{0,200}(method:\s*'POST'|method:\s*"POST")/i.test(market),
   false,
-  'NoHumans POST mutation is forbidden under zero-spend rule'
+  'automated marketplace repair must not create NoHumans listings'
 );
 assert.equal(
   /payment-signature|x-payment/i.test(market),
   false,
   'marketplace repair must not send payment headers'
+);
+
+assert.ok(
+  noHumansFree.includes('const FREE_LIMIT = 5'),
+  'guarded NoHumans registration must cap the published free allowance'
+);
+assert.ok(
+  noHumansFree.includes('const MAX_CREATES = 3'),
+  'guarded NoHumans registration must cap this run at three creates'
+);
+assert.ok(
+  noHumansFree.includes("process.env.CONFIRM_FREE_SUBMISSIONS === 'yes'"),
+  'guarded NoHumans registration must require explicit confirmation'
+);
+assert.ok(
+  noHumansFree.includes("names.includes('payment-signature')"),
+  'guarded NoHumans registration must reject PAYMENT-SIGNATURE headers'
+);
+assert.ok(
+  noHumansFree.includes("names.includes('x-payment')"),
+  'guarded NoHumans registration must reject X-PAYMENT headers'
+);
+assert.ok(
+  noHumansFree.includes('if (response.status === 402)'),
+  'guarded NoHumans registration must detect a payment challenge'
+);
+assert.ok(
+  noHumansFree.includes('stopped without a signature or paid retry'),
+  'guarded NoHumans registration must stop instead of retrying with payment'
+);
+assert.ok(
+  noHumansFree.includes('.private-state/nohumans-claim-tokens.json'),
+  'NoHumans edit credentials must stay in ignored local state'
 );
 
 const agentStep = distributionWorkflow.indexOf(
@@ -157,5 +193,5 @@ console.log('PASS Agent402 acceptance is zero-spend and requires 8-route Floot s
 console.log('PASS marketplace mutation is gated on Agent402 acceptance');
 console.log('PASS combined distribution orders Agent402 before marketplace repair');
 console.log('PASS marketplace mutation scope is six changed routes');
-console.log('PASS NoHumans remains read-only');
+console.log('PASS automated NoHumans repair remains read-only');
 console.log('PASS Agentic.ai draft remains gated and targets Floot');
