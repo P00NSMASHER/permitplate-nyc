@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-03T16:43:25.849Z",
+  "checked_at": "2026-10-03T16:48:52.284Z",
   "mode": "post_floot_rehost_zero_spend_revenue_snapshot",
   "origin": "https://pa-entity-x402.floot.app",
   "manifest": {
@@ -253,7 +253,7 @@
         "to": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
         "amount_usdc": 0.001,
         "timeStamp": "1790923473",
-        "confirmations": "61158",
+        "confirmations": "61326",
         "tokenSymbol": "USDC"
       }
     ],
