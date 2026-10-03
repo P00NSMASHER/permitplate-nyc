@@ -13,6 +13,9 @@ const noHumansFree = await read(
 const noHumansEnrich = await read(
   'scripts/enrich-nohumans-free-listings.mjs'
 );
+const noHumansVendorStabilize = await read(
+  'scripts/stabilize-nohumans-vendor-listing.mjs'
+);
 const agentWorkflow = await read(
   '.github/workflows/verify-agent402-after-floot-rehost.yml'
 );
@@ -191,6 +194,41 @@ assert.ok(
     "docs/pa-entity-floot-recovery/x402-services.json"
   ),
   'NoHumans schemas must come from the immutable recovery source'
+);
+assert.ok(
+  noHumansVendorStabilize.includes(
+    "process.env.CONFIRM_FREE_EDIT === 'yes'"
+  ),
+  'vendor listing stabilization must require explicit confirmation'
+);
+assert.ok(
+  noHumansVendorStabilize.includes("before.probes_failed >= 3"),
+  'vendor listing stabilization must require probe-failure evidence'
+);
+assert.ok(
+  noHumansVendorStabilize.includes("body?.error === 'payment_required'"),
+  'vendor listing stabilization must verify the live paid endpoint'
+);
+assert.ok(
+  noHumansVendorStabilize.includes("method: 'PATCH'"),
+  'vendor listing stabilization must use the free edit path'
+);
+assert.equal(
+  noHumansVendorStabilize.includes("method: 'POST'"),
+  false,
+  'vendor listing stabilization must not create a listing'
+);
+assert.ok(
+  noHumansVendorStabilize.includes("body: JSON.stringify({ sample_query: null })"),
+  'vendor listing stabilization must remove only the optional preview'
+);
+assert.ok(
+  noHumansVendorStabilize.includes("names.includes('payment-signature')"),
+  'vendor listing stabilization must reject PAYMENT-SIGNATURE headers'
+);
+assert.ok(
+  noHumansVendorStabilize.includes("names.includes('x-payment')"),
+  'vendor listing stabilization must reject X-PAYMENT headers'
 );
 
 const agentStep = distributionWorkflow.indexOf(
