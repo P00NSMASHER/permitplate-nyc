@@ -10,6 +10,9 @@ const market = await read('scripts/repair-marketplaces-after-floot-rehost.mjs');
 const noHumansFree = await read(
   'scripts/register-nohumans-free-portfolio.mjs'
 );
+const noHumansEnrich = await read(
+  'scripts/enrich-nohumans-free-listings.mjs'
+);
 const agentWorkflow = await read(
   '.github/workflows/verify-agent402-after-floot-rehost.yml'
 );
@@ -153,6 +156,41 @@ assert.ok(
 assert.ok(
   noHumansFree.includes('.private-state/nohumans-claim-tokens.json'),
   'NoHumans edit credentials must stay in ignored local state'
+);
+assert.ok(
+  noHumansEnrich.includes("process.env.CONFIRM_FREE_EDITS === 'yes'"),
+  'NoHumans schema enrichment must require explicit confirmation'
+);
+assert.ok(
+  noHumansEnrich.includes("before.status,\n    'verified'"),
+  'NoHumans schema enrichment must require verified public status'
+);
+assert.ok(
+  noHumansEnrich.includes("method: 'PATCH'"),
+  'NoHumans schema enrichment must use the free edit path'
+);
+assert.equal(
+  noHumansEnrich.includes("method: 'POST'"),
+  false,
+  'NoHumans schema enrichment must not create listings'
+);
+assert.ok(
+  noHumansEnrich.includes("headers['x-claim-token']"),
+  'NoHumans schema enrichment must use only the private edit credential'
+);
+assert.ok(
+  noHumansEnrich.includes("names.includes('payment-signature')"),
+  'NoHumans schema enrichment must reject PAYMENT-SIGNATURE headers'
+);
+assert.ok(
+  noHumansEnrich.includes("names.includes('x-payment')"),
+  'NoHumans schema enrichment must reject X-PAYMENT headers'
+);
+assert.ok(
+  noHumansEnrich.includes(
+    "docs/pa-entity-floot-recovery/x402-services.json"
+  ),
+  'NoHumans schemas must come from the immutable recovery source'
 );
 
 const agentStep = distributionWorkflow.indexOf(
