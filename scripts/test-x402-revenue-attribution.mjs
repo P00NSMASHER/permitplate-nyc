@@ -209,7 +209,22 @@ console.log('PASS x402 revenue attribution safety suite');
   assert.match(
     workflow,
     /verification\/x402-floot-revenue-snapshot-latest\.json/,
-    'revenue workflow must classify the verified eight-route snapshot'
+    'revenue workflow must persist the verified eight-route snapshot'
+  );
+  assert.match(
+    workflow,
+    /x402-floot-revenue-snapshot-ci\.json/,
+    'revenue workflow must classify only a fresh capture from the current run'
+  );
+  assert.match(
+    workflow,
+    /continue-on-error: true/,
+    'a transient live capture failure must preserve the last verified receipt'
+  );
+  assert.match(
+    workflow,
+    /if: steps\.capture\.outcome == 'success'/,
+    'classification and persistence must be gated on a successful fresh capture'
   );
   assert.match(
     workflow,

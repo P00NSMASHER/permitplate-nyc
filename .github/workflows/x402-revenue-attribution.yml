@@ -30,26 +30,47 @@ jobs:
         run: node scripts/test-x402-revenue-attribution.mjs
 
       - name: Capture fresh verified eight-route revenue evidence
+        id: capture
+        continue-on-error: true
+        shell: bash
         env:
-          REPORT_PATH: verification/x402-floot-revenue-snapshot-latest.json
-        run: node scripts/capture-x402-floot-revenue-snapshot.mjs
+          REPORT_PATH: x402-floot-revenue-snapshot-ci.json
+        run: |
+          for attempt in 1 2 3; do
+            if node scripts/capture-x402-floot-revenue-snapshot.mjs; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              echo "Fresh revenue capture attempt $attempt failed; retrying read-only checks."
+              sleep 5
+            fi
+          done
+          exit 1
 
       - name: Classify settlement provenance
+        if: steps.capture.outcome == 'success'
         run: >
           node scripts/classify-x402-revenue.mjs
-          verification/x402-floot-revenue-snapshot-latest.json
+          x402-floot-revenue-snapshot-ci.json
           verification/x402-revenue-attribution-rules.json
-          verification/x402-revenue-attribution-latest.json
+          x402-revenue-attribution-ci.json
           recovery/x402-portfolio-target.json
 
+      - name: Preserve last verified attribution if fresh capture is unavailable
+        if: steps.capture.outcome != 'success'
+        run: >
+          echo "Fresh verified eight-route revenue evidence was unavailable;
+          leaving the committed snapshot and attribution unchanged."
+
       - name: Commit fresh evidence and attribution receipt
+        if: steps.capture.outcome == 'success'
         shell: bash
         run: |
           set -euo pipefail
           SNAPSHOT='verification/x402-floot-revenue-snapshot-latest.json'
           RECEIPT='verification/x402-revenue-attribution-latest.json'
-          cp "$SNAPSHOT" /tmp/x402-floot-revenue-snapshot-latest.json
-          cp "$RECEIPT" /tmp/x402-revenue-attribution-latest.json
+          cp x402-floot-revenue-snapshot-ci.json /tmp/x402-floot-revenue-snapshot-latest.json
+          cp x402-revenue-attribution-ci.json /tmp/x402-revenue-attribution-latest.json
 
           git fetch origin main
           git reset --hard origin/main
