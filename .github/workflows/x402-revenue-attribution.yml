@@ -5,6 +5,8 @@ on:
     paths:
       - 'verification/pa-entity-directory-status-latest.json'
       - 'verification/x402-revenue-attribution-rules.json'
+      - 'recovery/x402-portfolio-target.json'
+      - 'scripts/capture-x402-floot-revenue-snapshot.mjs'
       - 'scripts/classify-x402-revenue.mjs'
       - 'scripts/test-x402-revenue-attribution.mjs'
       - '.github/workflows/x402-revenue-attribution.yml'
@@ -27,23 +29,36 @@ jobs:
       - name: Test attribution safety
         run: node scripts/test-x402-revenue-attribution.mjs
 
-      - name: Classify settlement provenance
-        run: node scripts/classify-x402-revenue.mjs
+      - name: Capture fresh verified eight-route revenue evidence
+        env:
+          REPORT_PATH: verification/x402-floot-revenue-snapshot-latest.json
+        run: node scripts/capture-x402-floot-revenue-snapshot.mjs
 
-      - name: Commit attribution receipt
+      - name: Classify settlement provenance
+        run: >
+          node scripts/classify-x402-revenue.mjs
+          verification/x402-floot-revenue-snapshot-latest.json
+          verification/x402-revenue-attribution-rules.json
+          verification/x402-revenue-attribution-latest.json
+          recovery/x402-portfolio-target.json
+
+      - name: Commit fresh evidence and attribution receipt
         shell: bash
         run: |
           set -euo pipefail
+          SNAPSHOT='verification/x402-floot-revenue-snapshot-latest.json'
           RECEIPT='verification/x402-revenue-attribution-latest.json'
+          cp "$SNAPSHOT" /tmp/x402-floot-revenue-snapshot-latest.json
           cp "$RECEIPT" /tmp/x402-revenue-attribution-latest.json
 
           git fetch origin main
           git reset --hard origin/main
+          cp /tmp/x402-floot-revenue-snapshot-latest.json "$SNAPSHOT"
           cp /tmp/x402-revenue-attribution-latest.json "$RECEIPT"
 
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add "$RECEIPT"
+          git add "$SNAPSHOT" "$RECEIPT"
           if git diff --cached --quiet; then
             echo 'Revenue attribution receipt unchanged.'
             exit 0

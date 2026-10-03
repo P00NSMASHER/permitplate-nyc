@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-10-03T16:40:17.653Z",
-  "source_snapshot": "verification/pa-entity-directory-status-latest.json",
-  "source_snapshot_checked_at": "2026-10-02T12:31:35.494840+00:00",
+  "generated_at": "2026-10-03T16:43:26.243Z",
+  "source_snapshot": "verification/x402-floot-revenue-snapshot-latest.json",
+  "source_snapshot_checked_at": "2026-10-03T16:43:25.849Z",
   "portfolio_target": "recovery/x402-portfolio-target.json",
   "policy": {
     "unknown_payer": "external_unattributed",
@@ -13,10 +13,10 @@
   },
   "summary": {
     "portfolio_resources": 8,
-    "resource_specific_settlements_observed_last24h": 1,
-    "observed_gross_settlement_value_usd_last24h": 0.001,
+    "resource_specific_settlements_observed_last24h": 0,
+    "observed_gross_settlement_value_usd_last24h": 0,
     "verified_customer_revenue_usd_last24h": 0,
-    "unresolved_settlements_last24h": 1,
+    "unresolved_settlements_last24h": 0,
     "revenue_scoreboard_rule": "Only settlements supported by exact resource stats and verified customer provenance count as third-party revenue. Same-price multi-resource ambiguity, unknown external addresses, probes/verifiers, self-payments, tests, registrations and marketplace checks remain excluded."
   },
   "price_groups": {
@@ -25,14 +25,12 @@
       "resources": [
         "pa-best-match"
       ],
-      "active_resources_last24h": [
-        "pa-best-match"
-      ],
-      "resource_specific_settlements_last24h": 1,
+      "active_resources_last24h": [],
+      "resource_specific_settlements_last24h": 0,
       "verified_customer_transfer_candidates_last24h": 0,
       "countable_verified_customer_settlements_last24h": 0,
       "counted_customer_revenue_usd_last24h": 0,
-      "allocation_state": "single_resource_unattributed",
+      "allocation_state": "no_settlement_observed",
       "note": "A settlement can be attributed only when exact resource stats match the endpoint and customer provenance is verified."
     },
     "0.005000": {
@@ -78,36 +76,26 @@
         "status_ok": true,
         "stats_usable_for_attribution": true,
         "reported_resource": "https://pa-entity-x402.floot.app/_api/pa-entity-one",
-        "raw_settlements_last24h": 1,
-        "settlements_last24h": 1,
+        "raw_settlements_last24h": 0,
+        "settlements_last24h": 0,
         "settlements_last7d": 1,
         "settlements_last30d": 1,
         "settlements_total_bucket": "1-9",
         "unique_buyers_bucket": "1-9",
         "volume_total_usd_bucket": "<$10",
-        "cached_at": "2026-10-02T12:26:24.435Z"
+        "cached_at": "2026-10-03T16:37:24.537Z"
       },
       "onchain": {
-        "exact_price_transfer_candidates_last24h": [
-          {
-            "hash": "0x17985b16137ff8aef95641be06424a5fa4e9edacc6ade5aaf0a58d523ad1cd73",
-            "from": "0x7e6b6556322c4e26c567a867964ac793f5ee2b1c",
-            "to": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
-            "amount_usdc": 0.001,
-            "timestamp": "2026-10-02T06:44:33.000Z",
-            "confirmations": "10412",
-            "payer_classification": "external_unattributed"
-          }
-        ],
+        "exact_price_transfer_candidates_last24h": [],
         "verified_customer_transfer_candidates_last24h": 0,
         "note": "The payout wallet is shared across listings. Exact-price transfers corroborate money movement but do not alone identify the resource or payer purpose."
       },
       "attribution": {
-        "state": "external_unattributed",
+        "state": "no_settlement_observed",
         "verified_customer_settlements_last24h": 0,
-        "unresolved_settlements_last24h": 1,
+        "unresolved_settlements_last24h": 0,
         "counted_customer_revenue_usd_last24h": 0,
-        "observed_gross_settlement_value_usd_last24h": 0.001,
+        "observed_gross_settlement_value_usd_last24h": 0,
         "count_as_revenue": false
       }
     },
@@ -128,7 +116,7 @@
         "settlements_total_bucket": "0",
         "unique_buyers_bucket": "0",
         "volume_total_usd_bucket": "$0",
-        "cached_at": "2026-10-02T12:26:24.201Z"
+        "cached_at": "2026-10-03T16:37:24.722Z"
       },
       "onchain": {
         "exact_price_transfer_candidates_last24h": [],
@@ -149,11 +137,11 @@
       "name": "Pennsylvania Vendor Intake Decision Gate",
       "endpoint": "https://pa-entity-x402.floot.app/_api/vendor-intake-gate",
       "price_usd": 0.02,
-      "payai_resource_matches_endpoint": false,
+      "payai_resource_matches_endpoint": true,
       "facilitator": {
         "status_ok": true,
-        "stats_usable_for_attribution": false,
-        "reported_resource": "https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s/api/vendor-intake-gate",
+        "stats_usable_for_attribution": true,
+        "reported_resource": "https://pa-entity-x402.floot.app/_api/vendor-intake-gate",
         "raw_settlements_last24h": 0,
         "settlements_last24h": 0,
         "settlements_last7d": 0,
@@ -161,7 +149,7 @@
         "settlements_total_bucket": "0",
         "unique_buyers_bucket": "0",
         "volume_total_usd_bucket": "$0",
-        "cached_at": "2026-10-02T12:26:24.627Z"
+        "cached_at": "2026-10-03T16:37:24.759Z"
       },
       "onchain": {
         "exact_price_transfer_candidates_last24h": [],
@@ -182,19 +170,19 @@
       "name": "SEC Recent Filings",
       "endpoint": "https://pa-entity-x402.floot.app/_api/sec-filings",
       "price_usd": 0.005,
-      "payai_resource_matches_endpoint": false,
+      "payai_resource_matches_endpoint": true,
       "facilitator": {
-        "status_ok": false,
-        "stats_usable_for_attribution": false,
-        "reported_resource": null,
+        "status_ok": true,
+        "stats_usable_for_attribution": true,
+        "reported_resource": "https://pa-entity-x402.floot.app/_api/sec-filings",
         "raw_settlements_last24h": 0,
         "settlements_last24h": 0,
-        "settlements_last7d": null,
-        "settlements_last30d": null,
-        "settlements_total_bucket": null,
-        "unique_buyers_bucket": null,
-        "volume_total_usd_bucket": null,
-        "cached_at": null
+        "settlements_last7d": 0,
+        "settlements_last30d": 0,
+        "settlements_total_bucket": "0",
+        "unique_buyers_bucket": "0",
+        "volume_total_usd_bucket": "$0",
+        "cached_at": "2026-10-03T16:37:24.792Z"
       },
       "onchain": {
         "exact_price_transfer_candidates_last24h": [],
@@ -215,19 +203,19 @@
       "name": "US Census Address Geocoder",
       "endpoint": "https://pa-entity-x402.floot.app/_api/us-address-geocode",
       "price_usd": 0.005,
-      "payai_resource_matches_endpoint": false,
+      "payai_resource_matches_endpoint": true,
       "facilitator": {
-        "status_ok": false,
-        "stats_usable_for_attribution": false,
-        "reported_resource": null,
+        "status_ok": true,
+        "stats_usable_for_attribution": true,
+        "reported_resource": "https://pa-entity-x402.floot.app/_api/us-address-geocode",
         "raw_settlements_last24h": 0,
         "settlements_last24h": 0,
-        "settlements_last7d": null,
-        "settlements_last30d": null,
-        "settlements_total_bucket": null,
-        "unique_buyers_bucket": null,
-        "volume_total_usd_bucket": null,
-        "cached_at": null
+        "settlements_last7d": 0,
+        "settlements_last30d": 0,
+        "settlements_total_bucket": "0",
+        "unique_buyers_bucket": "0",
+        "volume_total_usd_bucket": "$0",
+        "cached_at": "2026-10-03T16:37:24.833Z"
       },
       "onchain": {
         "exact_price_transfer_candidates_last24h": [],
@@ -248,19 +236,19 @@
       "name": "OFAC SDN Name Screen",
       "endpoint": "https://pa-entity-x402.floot.app/_api/ofac-sdn-screen",
       "price_usd": 0.005,
-      "payai_resource_matches_endpoint": false,
+      "payai_resource_matches_endpoint": true,
       "facilitator": {
-        "status_ok": false,
-        "stats_usable_for_attribution": false,
-        "reported_resource": null,
+        "status_ok": true,
+        "stats_usable_for_attribution": true,
+        "reported_resource": "https://pa-entity-x402.floot.app/_api/ofac-sdn-screen",
         "raw_settlements_last24h": 0,
         "settlements_last24h": 0,
-        "settlements_last7d": null,
-        "settlements_last30d": null,
-        "settlements_total_bucket": null,
-        "unique_buyers_bucket": null,
-        "volume_total_usd_bucket": null,
-        "cached_at": null
+        "settlements_last7d": 0,
+        "settlements_last30d": 0,
+        "settlements_total_bucket": "0",
+        "unique_buyers_bucket": "0",
+        "volume_total_usd_bucket": "$0",
+        "cached_at": "2026-10-03T16:37:24.864Z"
       },
       "onchain": {
         "exact_price_transfer_candidates_last24h": [],
@@ -281,19 +269,19 @@
       "name": "Domain RDAP Lookup",
       "endpoint": "https://pa-entity-x402.floot.app/_api/domain-rdap",
       "price_usd": 0.005,
-      "payai_resource_matches_endpoint": false,
+      "payai_resource_matches_endpoint": true,
       "facilitator": {
-        "status_ok": false,
-        "stats_usable_for_attribution": false,
-        "reported_resource": null,
+        "status_ok": true,
+        "stats_usable_for_attribution": true,
+        "reported_resource": "https://pa-entity-x402.floot.app/_api/domain-rdap",
         "raw_settlements_last24h": 0,
         "settlements_last24h": 0,
-        "settlements_last7d": null,
-        "settlements_last30d": null,
-        "settlements_total_bucket": null,
-        "unique_buyers_bucket": null,
-        "volume_total_usd_bucket": null,
-        "cached_at": null
+        "settlements_last7d": 0,
+        "settlements_last30d": 0,
+        "settlements_total_bucket": "0",
+        "unique_buyers_bucket": "0",
+        "volume_total_usd_bucket": "$0",
+        "cached_at": "2026-10-03T16:37:24.890Z"
       },
       "onchain": {
         "exact_price_transfer_candidates_last24h": [],
@@ -314,19 +302,19 @@
       "name": "Treasury Average Interest Rates",
       "endpoint": "https://pa-entity-x402.floot.app/_api/treasury-average-rates",
       "price_usd": 0.005,
-      "payai_resource_matches_endpoint": false,
+      "payai_resource_matches_endpoint": true,
       "facilitator": {
-        "status_ok": false,
-        "stats_usable_for_attribution": false,
-        "reported_resource": null,
+        "status_ok": true,
+        "stats_usable_for_attribution": true,
+        "reported_resource": "https://pa-entity-x402.floot.app/_api/treasury-average-rates",
         "raw_settlements_last24h": 0,
         "settlements_last24h": 0,
-        "settlements_last7d": null,
-        "settlements_last30d": null,
-        "settlements_total_bucket": null,
-        "unique_buyers_bucket": null,
-        "volume_total_usd_bucket": null,
-        "cached_at": null
+        "settlements_last7d": 0,
+        "settlements_last30d": 0,
+        "settlements_total_bucket": "0",
+        "unique_buyers_bucket": "0",
+        "volume_total_usd_bucket": "$0",
+        "cached_at": "2026-10-03T16:37:24.918Z"
       },
       "onchain": {
         "exact_price_transfer_candidates_last24h": [],

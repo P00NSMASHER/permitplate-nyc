@@ -12,6 +12,9 @@ const classifier = fileURLToPath(
 const targetPath = fileURLToPath(
   new URL('../recovery/x402-portfolio-target.json', import.meta.url)
 );
+const workflowPath = fileURLToPath(
+  new URL('../.github/workflows/x402-revenue-attribution.yml', import.meta.url)
+);
 
 function baseRules(verifiedCustomers = []) {
   return {
@@ -188,3 +191,31 @@ const verifiedPayer = '0x1111111111111111111111111111111111111111';
 }
 
 console.log('PASS x402 revenue attribution safety suite');
+
+{
+  const workflow = readFileSync(workflowPath, 'utf8');
+  const captureStep = workflow.indexOf(
+    'node scripts/capture-x402-floot-revenue-snapshot.mjs'
+  );
+  const classifyStep = workflow.indexOf(
+    'node scripts/classify-x402-revenue.mjs'
+  );
+
+  assert.ok(captureStep >= 0, 'revenue workflow must capture fresh Floot evidence');
+  assert.ok(
+    classifyStep > captureStep,
+    'revenue workflow must capture fresh evidence before classification'
+  );
+  assert.match(
+    workflow,
+    /verification\/x402-floot-revenue-snapshot-latest\.json/,
+    'revenue workflow must classify the verified eight-route snapshot'
+  );
+  assert.match(
+    workflow,
+    /git add "\$SNAPSHOT" "\$RECEIPT"/,
+    'revenue workflow must persist the source snapshot with its classification'
+  );
+
+  console.log('PASS revenue workflow cannot publish attribution from stale directory status');
+}
