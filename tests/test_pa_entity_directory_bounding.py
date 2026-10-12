@@ -51,6 +51,14 @@ class DirectoryBoundingTests(unittest.TestCase):
         self.assertEqual(len(hits), MAX_MATCHES)
         self.assertEqual(hits[-1]["path"], "/49")
 
+    def test_deeply_nested_provider_payload_never_recurses(self):
+        source = {"url": "vendor-intake-gate"}
+        for _ in range(1200):
+            source = [source]
+        hits = find_matching_dicts(source, ["vendor-intake-gate"])
+        self.assertEqual(len(hits), 1)
+        self.assertIn("vendor-intake-gate", hits[0]["record"]["url"])
+
     def test_missing_terms_are_not_false_matches(self):
         self.assertEqual(find_matching_dicts({"nested": {"url": "other"}}, ["vendor-intake-gate"]), [])
 
