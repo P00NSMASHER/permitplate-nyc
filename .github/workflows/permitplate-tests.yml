@@ -17,6 +17,9 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Verify bounded directory snapshot behavior
+        run: python3 -m unittest discover -s tests -p 'test_directory_snapshot_safety.py'
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
