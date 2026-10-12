@@ -2,6 +2,8 @@
 
 import io
 import json
+import tempfile
+from pathlib import Path
 import unittest
 from unittest.mock import patch
 
@@ -11,6 +13,7 @@ from scripts.directory_snapshot_safety import (
     MAX_RESPONSE_BYTES,
     fetch_json,
     find_matching_dicts,
+    write_bounded_snapshot,
 )
 
 
@@ -60,6 +63,21 @@ class DirectoryReceiptSafetyTests(unittest.TestCase):
             result = fetch_json("https://example.com/directory")
         self.assertTrue(result["ok"])
         self.assertEqual(result["data"]["services"][0]["id"], "1")
+
+    def test_snapshot_budget_rejects_large_receipt_without_overwriting_evidence(self):
+        with tempfile.TemporaryDirectory() as directory:
+            file = Path(directory) / "latest.json"
+            file.write_text("previous evidence", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                write_bounded_snapshot(file, {"data": "x" * 1000}, max_snapshot_bytes=500)
+            self.assertEqual(file.read_text(encoding="utf-8"), "previous evidence")
+
+    def test_writes_valid_small_receipt(self):
+        with tempfile.TemporaryDirectory() as directory:
+            file = Path(directory) / "latest.json"
+            count = write_bounded_snapshot(file, {"ok": True}, max_snapshot_bytes=100)
+            self.assertEqual(count, file.stat().st_size)
+            self.assertEqual(json.loads(file.read_text(encoding="utf-8"))["ok"], True)
 
     def test_missing_targets_do_not_create_false_matches(self):
         self.assertEqual(find_matching_dicts({"url": "unrelated"}, ["vendor-intake-gate"]), [])
