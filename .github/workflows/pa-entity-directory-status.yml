@@ -3,6 +3,7 @@ name: PA Entity directory status
 
 on:
   push:
+    branches: [main]
     paths:
       - '.github/workflows/pa-entity-directory-status.yml'
   workflow_dispatch:
@@ -10,8 +11,15 @@ on:
 permissions:
   contents: write
 
+# Only one latest-receipt writer may commit to main at a time.
+concurrency:
+  group: pa-entity-directory-status-main
+  cancel-in-progress: false
+
 jobs:
   check:
+    # Never write a branch-triggered or branch-dispatched snapshot onto main.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
