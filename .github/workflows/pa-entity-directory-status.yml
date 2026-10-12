@@ -26,6 +26,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Verify bounded directory snapshot behavior
+        run: python3 -m unittest discover -s tests -p 'test_directory_snapshot_safety.py'
+
       - name: Capture zero-spend directory snapshot
         shell: bash
         run: |
