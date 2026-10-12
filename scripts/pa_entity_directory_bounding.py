@@ -58,9 +58,11 @@ def find_matching_dicts(value, needles, path=""):
         start = max(0, match_at - 48)
         return raw[start:start + MAX_FIELD_CHARS] + "…"
 
-    def walk(node, current_path):
-        if len(matches) >= MAX_MATCHES:
-            return
+    # Iterative traversal avoids recursion failures from deeply nested
+    # provider JSON and stops as soon as the 50-match evidence cap is reached.
+    stack = [(value, path)]
+    while stack and len(matches) < MAX_MATCHES:
+        node, current_path = stack.pop()
         if isinstance(node, dict):
             fields = []
             for key, child in node.items():
@@ -79,15 +81,14 @@ def find_matching_dicts(value, needles, path=""):
                         break
                     record[key[:80]] = project_text(raw)
                 matches.append({"path": current_path or "/", "record": record})
-            for key, child in node.items():
+            for key, child in reversed(list(node.items())):
                 if isinstance(child, (dict, list)):
-                    walk(child, current_path + "/" + str(key))
+                    stack.append((child, current_path + "/" + str(key)))
         elif isinstance(node, list):
-            for index, child in enumerate(node):
+            for index in range(len(node) - 1, -1, -1):
+                child = node[index]
                 if isinstance(child, (dict, list)):
-                    walk(child, current_path + "/" + str(index))
-
-    walk(value, path)
+                    stack.append((child, current_path + "/" + str(index)))
     return matches
 
 
