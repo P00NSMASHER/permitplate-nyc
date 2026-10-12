@@ -92,3 +92,20 @@ def find_matching_dicts(value, needles, path=""):
             if isinstance(child, (dict, list)):
                 stack.append((child, current_path + "/" + str(key)[:100]))
     return matches
+
+
+MAX_SNAPSHOT_BYTES = 6 * 1024 * 1024
+
+
+def write_bounded_snapshot(path, snapshot, max_snapshot_bytes=MAX_SNAPSHOT_BYTES):
+    """Write one complete receipt or leave the existing file untouched."""
+    from pathlib import Path
+
+    encoded = (json.dumps(snapshot, indent=2, sort_keys=True) + "\n").encode("utf-8")
+    if len(encoded) > max_snapshot_bytes:
+        raise ValueError(
+            f"directory receipt exceeds {max_snapshot_bytes} bytes; "
+            "refusing to overwrite the previous evidence"
+        )
+    Path(path).write_bytes(encoded)
+    return len(encoded)
