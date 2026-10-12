@@ -39,12 +39,12 @@ jobs:
       ARTIFACT_DIR: ${{ github.workspace }}/.permitplate-state-run
     steps:
       - name: Check out public code and migration history
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           fetch-depth: 0
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22'
 
@@ -60,7 +60,7 @@ jobs:
           test "$repo_visibility" = "private" || { echo "PERMITPLATE_STATE_REPO must resolve to a private GitHub repository."; exit 1; }
 
       - name: Check out private state repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: ${{ vars.PERMITPLATE_STATE_REPO }}
           token: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
@@ -255,7 +255,7 @@ jobs:
 
       - name: Retain aggregate verification evidence only
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: permitplate-private-state-verification
           path: ${{ env.ARTIFACT_DIR }}/public-verification.json
