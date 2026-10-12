@@ -17,6 +17,9 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Verify bounded x402 directory receipts (offline)
+        run: python3 -m unittest discover -s tests -p 'test_pa_entity_directory_bounding.py'
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
