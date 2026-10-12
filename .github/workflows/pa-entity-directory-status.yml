@@ -35,6 +35,13 @@ jobs:
           import urllib.parse
           import urllib.request
           from datetime import datetime, timezone
+          from scripts.pa_entity_directory_bounding import (
+              MAX_RESPONSE_BYTES,
+              OversizedDirectoryResponse,
+              assert_snapshot_size,
+              find_matching_dicts,
+              load_bounded_json,
+          )
 
           APP = 'https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s'
           FLOOT = 'https://pa-entity-x402.floot.app'
@@ -54,18 +61,28 @@ jobs:
               )
               try:
                   with urllib.request.urlopen(req, timeout=timeout) as res:
-                      raw = res.read().decode('utf-8', errors='replace')
+                      try:
+                          data = load_bounded_json(res)
+                      except OversizedDirectoryResponse:
+                          # Source is unverified, NOT a verified negative match.
+                          return {
+                              'ok': False,
+                              'status': res.status,
+                              'url': url,
+                              'error': 'response_too_large',
+                              'response_byte_limit': MAX_RESPONSE_BYTES,
+                          }
                       return {
                           'ok': True,
                           'status': res.status,
                           'url': url,
-                          'data': json.loads(raw),
+                          'data': data,
                       }
               except Exception as exc:
                   status = getattr(exc, 'code', None)
                   body = None
                   try:
-                      body = exc.read().decode('utf-8', errors='replace')[:4000]
+                      body = exc.read(4000).decode('utf-8', errors='replace')
                   except Exception:
                       pass
                   return {
@@ -79,23 +96,15 @@ jobs:
           def query_url(base, params):
               return base + '?' + urllib.parse.urlencode(params)
 
-          def find_matching_dicts(value, needles, path=''):
-              hits = []
-              if isinstance(value, dict):
-                  blob = json.dumps(value, sort_keys=True).lower()
-                  if any(n.lower() in blob for n in needles):
-                      hits.append({'path': path or '/', 'record': value})
-                  for key, child in value.items():
-                      hits.extend(find_matching_dicts(child, needles, path + '/' + str(key)))
-              elif isinstance(value, list):
-                  for index, child in enumerate(value):
-                      hits.extend(find_matching_dicts(child, needles, path + '/' + str(index)))
-              return hits
-
           checked_at = datetime.now(timezone.utc).isoformat()
           snapshot = {
               'checked_at': checked_at,
               'mode': 'read_only_zero_spend',
+              'evidence_schema': 'bounded-v1',
+              'evidence_note': (
+                  'Directory matches retain selected direct fields only. '
+                  'Oversized upstream responses remain unverified, not absent.'
+              ),
               'attribution_rule': (
                   'Do not count shared-wallet payer fields, probes, self-tests, '
                   'registrations, or seller-funded activity as endpoint revenue.'
@@ -276,7 +285,13 @@ jobs:
               json.dump(snapshot, handle, indent=2, sort_keys=True)
               handle.write('\n')
 
+          # Prevent a runaway public Git blob even if a provider changes shape.
+          receipt_size = assert_snapshot_size(
+              'verification/pa-entity-directory-status-latest.json'
+          )
+
           print(json.dumps({
+              'receipt_bytes': receipt_size,
               'checked_at': checked_at,
               '402index_vendor_ok': idx['vendor_service'].get('ok'),
               'nohumans_vendor_search_ok': snapshot['nohumans']['vendor_discovery'].get('ok'),
