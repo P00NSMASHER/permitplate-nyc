@@ -59,8 +59,34 @@ jobs:
           grep -E '/_api/pa-business.*0\.005000.*\[x402\]' /tmp/agentcash.txt
           grep -E '/_api/pa-entity-one.*0\.001000.*\[x402\]' /tmp/agentcash.txt
 
+  register:
+    name: Explicitly approved production directory registration
+    needs: verify
+    if: inputs.register_directories == true && github.ref == 'refs/heads/main'
+    environment: permitplate-directory-approval
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:      - name: Admit fixed origin and exact production main
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/main"
+          CURRENT="$(git ls-remote --exit-code "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/main | cut -f1)"
+          test -n "$CURRENT" && test "$CURRENT" = "$EXPECTED_SHA" || { echo "Stale or unauthorized production source." >&2; exit 1; }
+      - name: Require fixed production origin
+        env:
+          ORIGIN: ${{ inputs.origin }}
+        run: test "$ORIGIN" = 'https://pa-entity-x402.floot.app'
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
       - name: Refresh x402scan origin
-        if: inputs.register_directories == true
         shell: bash
         env:
           ORIGIN: ${{ inputs.origin }}
@@ -70,7 +96,6 @@ jobs:
           jq . /tmp/x402scan.json
 
       - name: Refresh Agent402 and require healthy crawl
-        if: inputs.register_directories == true
         shell: bash
         env:
           ORIGIN: ${{ inputs.origin }}
