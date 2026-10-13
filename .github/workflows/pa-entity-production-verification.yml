@@ -68,7 +68,8 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     timeout-minutes: 12
-    steps:      - name: Admit fixed origin and exact production main
+    steps:
+      - name: Admit fixed origin and exact production main
         shell: bash
         env:
           EXPECTED_SHA: ${{ github.sha }}
