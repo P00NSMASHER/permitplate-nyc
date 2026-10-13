@@ -6,13 +6,31 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: permitplate-directory-mutations
+  cancel-in-progress: false
+
 jobs:
   repair:
+    if: github.ref == 'refs/heads/main'
+    environment: permitplate-directory-approval
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Admit fixed origin and exact production main
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/main"
+          CURRENT="$(git ls-remote --exit-code "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/main | cut -f1)"
+          test -n "$CURRENT" && test "$CURRENT" = "$EXPECTED_SHA" || { echo "Stale or unauthorized production source." >&2; exit 1; }
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '20'
 
@@ -23,7 +41,7 @@ jobs:
 
       - name: Upload repair receipt
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: marketplace-post-floot-rehost
           path: marketplace-post-floot-rehost.json
