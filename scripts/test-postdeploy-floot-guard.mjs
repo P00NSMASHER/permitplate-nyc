@@ -67,9 +67,43 @@ assert.ok(
   workflow.includes('default: false'),
   'directory-registration opt-in must default false'
 );
+const split = workflow.split(/\n  register:\s*\n/);
+assert.equal(split.length, 2, 'verification and directory publication must be different jobs');
+const [verificationJob, registrationJob] = split;
 assert.ok(
-  workflow.includes("REGISTER_DIRECTORIES: ${{ inputs.register_directories && '1' || '0' }}"),
-  'workflow must explicitly pass the opt-in flag'
+  verificationJob.includes("REGISTER_DIRECTORIES: '0'"),
+  'unconditionally read-only verifier must never enable registration'
+);
+assert.equal(
+  verificationJob.includes("REGISTER_DIRECTORIES: '1'"),
+  false,
+  'registration enablement must not exist in the read-only job'
+);
+assert.ok(
+  registrationJob.includes("REGISTER_DIRECTORIES: '1'"),
+  'only the separately gated registration job may pass the opt-in flag'
+);
+assert.ok(
+  registrationJob.includes('needs: verify'),
+  'registration may run only after the independent verification job succeeds'
+);
+assert.ok(
+  registrationJob.includes("inputs.register_directories == true && github.ref == 'refs/heads/main'"),
+  'explicit operator opt-in and exact-main branch selection are required'
+);
+assert.ok(
+  registrationJob.includes('environment: permitplate-directory-approval'),
+  'directory writes require the named protected approval environment'
+);
+assert.ok(
+  registrationJob.includes('group: permitplate-directory-mutations') &&
+    registrationJob.includes('cancel-in-progress: false'),
+  'directory registrations must serialize without interrupting a prior write'
+);
+assert.ok(
+  registrationJob.includes('git ls-remote --exit-code') &&
+    verificationJob.includes('git ls-remote --exit-code'),
+  'both jobs must reject stale or unapproved main source'
 );
 assert.ok(
   workflow.includes('POSTDEPLOY_RECEIPT_PATH: floot-postdeploy-receipt.json'),
