@@ -2,21 +2,40 @@ name: Capture Floot static rollback baseline
 
 on:
   push:
+    branches: [main]
     paths:
       - 'scripts/capture-floot-static-rollback.mjs'
       - '.github/workflows/capture-floot-static-rollback.yml'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: permitplate-main-receipt-writers
+  cancel-in-progress: false
 
 jobs:
   capture:
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Admit only the exact current main commit
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/main"
+          CURRENT="$(git ls-remote --exit-code "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/main | cut -f1)"
+          test -n "$CURRENT" && test "$CURRENT" = "$EXPECTED_SHA" || { echo "Ref refused: current main has moved." >&2; exit 1; }
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '20'
 
@@ -27,13 +46,17 @@ jobs:
 
       - name: Commit rollback receipt
         shell: bash
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
           RECEIPT='verification/floot-static-rollback-public-latest.json'
           cp "$RECEIPT" /tmp/floot-static-rollback-public-latest.json
 
-          git fetch origin main
-          git reset --hard origin/main
+          git fetch --no-tags origin main
+          CURRENT="$(git rev-parse refs/remotes/origin/main)"
+          test "$CURRENT" = "$EXPECTED_SHA" || { echo "Main advanced during capture." >&2; exit 1; }
+          git reset --hard "$EXPECTED_SHA"
           cp /tmp/floot-static-rollback-public-latest.json "$RECEIPT"
 
           git config user.name 'github-actions[bot]'
@@ -44,4 +67,6 @@ jobs:
             exit 0
           fi
           git commit -m 'verification: refresh Floot static rollback baseline'
+          REMOTE="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          test "$REMOTE" = "$EXPECTED_SHA" || { echo "Main advanced; refusing receipt write." >&2; exit 1; }
           git push origin HEAD:main
