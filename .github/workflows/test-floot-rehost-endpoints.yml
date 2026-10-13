@@ -20,6 +20,10 @@ on:
       - 'scripts/test-floot-release-payment-invariants.mjs'
       - 'scripts/postdeploy-floot-x402.mjs'
       - 'scripts/test-postdeploy-floot-guard.mjs'
+      - 'scripts/verify-floot-static-rollback-snapshot.mjs'
+      - 'scripts/test-floot-rollback-baseline.mjs'
+      - 'verification/floot-static-rollback-public-latest.json'
+      - '.github/workflows/capture-floot-static-rollback.yml'
       - '.github/workflows/postdeploy-floot-x402.yml'
       - '.github/workflows/test-floot-rehost-endpoints.yml'
   workflow_dispatch:
@@ -64,6 +68,9 @@ jobs:
 
       - name: Verify post-deploy zero-spend guard
         run: node scripts/test-postdeploy-floot-guard.mjs
+
+      - name: Verify frozen pre-rehost rollback baseline integrity
+        run: node scripts/test-floot-rollback-baseline.mjs
 
       - name: Publish success commit status
         if: success()
