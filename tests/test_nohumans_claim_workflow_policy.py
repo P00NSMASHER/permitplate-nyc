@@ -20,7 +20,7 @@ class NoHumansClaimInspectorPolicyTests(unittest.TestCase):
         self.assertIn("branches: [main]", text)
         self.assertIn("workflow_dispatch:", text)
         self.assertIn("pull_request:", text)
-        self.assertRegex(text, r"(?m)^  inspect:\n    needs: policy\n    if: .*github.ref == 'refs/heads/main'.*github.event_name != 'pull_request'")
+        self.assertRegex(text, r"(?m)^  inspect:\n    needs: policy\n    if: .*github.ref == 'refs/heads/main'.*github.event_name == 'workflow_dispatch'")
         self.assertEqual(len(re.findall(r"(?m)^\s*curl\b", text)), 0)
         self.assertEqual(len(re.findall(r"\bcurl\b", text)), 1)
 
