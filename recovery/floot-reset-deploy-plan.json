@@ -1,0 +1,210 @@
+{
+  "version": 1,
+  "projectId": "b69a3ee6-eb01-430d-aa51-da2fc7beeac4",
+  "productionOrigin": "https://pa-entity-x402.floot.app",
+  "quotaReset": "2026-10-02T18:00:00Z",
+  "invariants": {
+    "spendUsd": 0,
+    "network": "eip155:8453",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "payTo": "0x708f7b52b56eafd7fc1de65fc7752ed732914021",
+    "facilitator": "https://facilitator.payai.network",
+    "expectedPaidResources": 8,
+    "expectedReviewerFixtures": 3
+  },
+  "preserveWithoutRewrite": [
+    "endpoints/pa-entity-one_GET.ts",
+    "endpoints/pa-entity-one_GET.schema.ts",
+    "endpoints/pa-business_GET.ts",
+    "endpoints/pa-business_GET.schema.ts"
+  ],
+  "endpointWrites": [
+    {
+      "fixture": "docs/pa-entity-floot-release/vendor-intake-gate_GET.ts",
+      "target": "endpoints/vendor-intake-gate_GET.ts",
+      "action": "write_file"
+    },
+    {
+      "fixture": "docs/pa-entity-floot-release/vendor-intake-demo_GET.ts",
+      "target": "endpoints/vendor-intake-demo_GET.ts",
+      "action": "write_file"
+    },
+    {
+      "fixture": "docs/pa-entity-floot-release/sec-filings_GET.ts",
+      "target": "endpoints/sec-filings_GET.ts",
+      "action": "write_file"
+    },
+    {
+      "fixture": "docs/pa-entity-floot-release/us-address-geocode_GET.ts",
+      "target": "endpoints/us-address-geocode_GET.ts",
+      "action": "write_file"
+    },
+    {
+      "fixture": "docs/pa-entity-floot-release/ofac-sdn-screen_GET.ts",
+      "target": "endpoints/ofac-sdn-screen_GET.ts",
+      "action": "write_file"
+    },
+    {
+      "fixture": "docs/pa-entity-floot-release/domain-rdap_GET.ts",
+      "target": "endpoints/domain-rdap_GET.ts",
+      "action": "write_file"
+    },
+    {
+      "fixture": "docs/pa-entity-floot-release/treasury-average-rates_GET.ts",
+      "target": "endpoints/treasury-average-rates_GET.ts",
+      "action": "write_file"
+    }
+  ],
+  "schemaBatch": {
+    "action": "apply_patch",
+    "files": [
+      {
+        "route": "vendor-intake-gate",
+        "fixture": "docs/pa-entity-floot-release/vendor-intake-gate_GET.schema.ts",
+        "target": "endpoints/vendor-intake-gate_GET.schema.ts"
+      },
+      {
+        "route": "vendor-intake-demo",
+        "fixture": "docs/pa-entity-floot-release/vendor-intake-demo_GET.schema.ts",
+        "target": "endpoints/vendor-intake-demo_GET.schema.ts"
+      },
+      {
+        "route": "sec-filings",
+        "fixture": "docs/pa-entity-floot-release/sec-filings_GET.schema.ts",
+        "target": "endpoints/sec-filings_GET.schema.ts"
+      },
+      {
+        "route": "us-address-geocode",
+        "fixture": "docs/pa-entity-floot-release/us-address-geocode_GET.schema.ts",
+        "target": "endpoints/us-address-geocode_GET.schema.ts"
+      },
+      {
+        "route": "ofac-sdn-screen",
+        "fixture": "docs/pa-entity-floot-release/ofac-sdn-screen_GET.schema.ts",
+        "target": "endpoints/ofac-sdn-screen_GET.schema.ts"
+      },
+      {
+        "route": "domain-rdap",
+        "fixture": "docs/pa-entity-floot-release/domain-rdap_GET.schema.ts",
+        "target": "endpoints/domain-rdap_GET.schema.ts"
+      },
+      {
+        "route": "treasury-average-rates",
+        "fixture": "docs/pa-entity-floot-release/treasury-average-rates_GET.schema.ts",
+        "target": "endpoints/treasury-average-rates_GET.schema.ts"
+      }
+    ]
+  },
+  "discoveryGeneration": {
+    "command": "node scripts/generate-floot-recovery-discovery.mjs --out-dir <temporary-output>",
+    "expectedFiles": 11,
+    "largeWrites": [
+      {
+        "generated": ".well-known/x402",
+        "target": "static/.well-known/x402",
+        "action": "write_file"
+      },
+      {
+        "generated": ".well-known/x402.json",
+        "target": "static/.well-known/x402.json",
+        "action": "write_file"
+      },
+      {
+        "generated": ".well-known/x402-services.json",
+        "target": "static/.well-known/x402-services.json",
+        "action": "write_file"
+      },
+      {
+        "generated": ".well-known/x402-catalog.json",
+        "target": "static/.well-known/x402-catalog.json",
+        "action": "write_file"
+      },
+      {
+        "generated": "openapi.json",
+        "target": "static/openapi.json",
+        "action": "write_file"
+      }
+    ],
+    "smallBatch": {
+      "action": "apply_patch",
+      "files": [
+        {
+          "generated": ".well-known/x402-service.json",
+          "target": "static/.well-known/x402-service.json"
+        },
+        {
+          "generated": "llms.txt",
+          "target": "static/llms.txt"
+        },
+        {
+          "generated": "llms-full.txt",
+          "target": "static/llms-full.txt"
+        },
+        {
+          "generated": "skill.txt",
+          "target": "static/skill.txt"
+        },
+        {
+          "generated": "robots.txt",
+          "target": "static/robots.txt"
+        },
+        {
+          "generated": "sitemap.xml",
+          "target": "static/sitemap.xml"
+        }
+      ]
+    }
+  },
+  "validation": [
+    {
+      "action": "typecheck",
+      "paths": [
+        "endpoints/vendor-intake-gate_GET.ts",
+        "endpoints/vendor-intake-demo_GET.ts",
+        "endpoints/sec-filings_GET.ts",
+        "endpoints/us-address-geocode_GET.ts",
+        "endpoints/ofac-sdn-screen_GET.ts",
+        "endpoints/domain-rdap_GET.ts",
+        "endpoints/treasury-average-rates_GET.ts"
+      ]
+    },
+    {
+      "action": "preview_smoke",
+      "requirements": [
+        "existing PA best-match still challenges at 1000 atomic",
+        "existing PA enriched search still challenges at 5000 atomic",
+        "vendor gate challenges at 20000 atomic",
+        "five raw rehost endpoints challenge at 5000 atomic",
+        "three reviewer fixtures return proceed/address review/domain review"
+      ]
+    },
+    {
+      "action": "create_checkpoint",
+      "title": "AppDeploy outage recovery — eight-resource Floot seller"
+    },
+    {
+      "action": "publish_app",
+      "count": 1
+    }
+  ],
+  "postPublish": [
+    "Run buyer-style zero-spend verifier and require 8/8 paid routes",
+    "Require 3/3 fixed reviewer fixtures",
+    "Verify all discovery surfaces advertise the same 8 routes",
+    "Re-register the Floot origin with Agent402",
+    "Verify Agent402 sees the expanded resource set",
+    "Refresh Agentic.ai evidence draft",
+    "Do not resubmit Agentic.ai until independent discovery evidence is green"
+  ],
+  "estimatedBuildActions": {
+    "endpointWrites": 7,
+    "schemaBatch": 1,
+    "largeDiscoveryWrites": 5,
+    "smallDiscoveryBatch": 1,
+    "typecheck": 1,
+    "previewSmoke": 1,
+    "checkpoint": 1,
+    "publish": 1,
+    "total": 18
+  }
+}
