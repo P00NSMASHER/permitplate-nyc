@@ -1,25 +1,71 @@
 name: PA Entity PayanAgent catalog check
-# refresh-marker: 2026-10-01T23:13Z
+
+# Pull requests only execute offline policy tests. Live catalog GETs require
+# an explicit manual dispatch selecting the current main ref.
 on:
   push:
+    branches: [main]
     paths:
       - '.github/workflows/pa-entity-payanagent.yml'
+      - 'tests/test_pa_payanagent_workflow_policy.py'
+      - 'scripts/payanagent_catalog_safe.py'
+  pull_request:
+    paths:
+      - '.github/workflows/pa-entity-payanagent.yml'
+      - 'tests/test_pa_payanagent_workflow_policy.py'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: pa-payanagent-review-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  check:
+  policy:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 3
     steps:
-      - name: Search PayanAgent public catalog
+      - name: Checkout source without persisting credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Verify main-only, bounded, no-disclosure catalog policy
+        run: python3 -m unittest discover -s tests -p 'test_pa_payanagent_workflow_policy.py' -v
+
+  inspect:
+    needs: policy
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions: {}
+    steps:
+      - name: Checkout exact reviewed main source without credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Inspect allowlisted public catalog without logging responses
         shell: bash
         run: |
           set -euo pipefail
-          for q in             'Pennsylvania business registry'             'vendor verification Pennsylvania'             'company legal entity identification'
-          do
-            echo "=== $q ==="
-            curl -sS -G 'https://payanagent.com/api/v1/discover'               --data-urlencode "q=$q" | tee /tmp/payan.json
-            echo
-            echo '--- our matches ---'
-            jq '[.. | objects | select(((.endpoint? // .endpointUrl? // .url? // "")|tostring|contains("pa-entity-x402.floot.app")) or ((.endpoint? // .endpointUrl? // .url? // "")|tostring|contains("pa-entity-lookup-x402-4fbm4s")))]' /tmp/payan.json
-            echo
+          umask 077
+          response="$(mktemp)"
+          trap 'rm -f "$response"' EXIT
+          for query in 'Pennsylvania business registry' 'vendor verification Pennsylvania' 'company legal entity identification'; do
+            # Fixed HTTPS GET with no redirects, token, registration or claim submission.
+            status="$(curl --request GET --get --proto '=https' --tlsv1.2               --silent --show-error --connect-timeout 5 --max-time 12               --max-filesize 65536 --retry 0               --header 'Accept: application/json'               --data-urlencode "q=$query" --output "$response"               --write-out '%{http_code}'               'https://payanagent.com/api/v1/discover')"
+            if [[ "$status" != '200' ]]; then
+              echo "PAYAN_CATALOG_UNVERIFIED: non-success status."
+              exit 1
+            fi
+            size="$(wc -c < "$response")"
+            if (( size < 2 || size > 65536 )); then
+              echo "PAYAN_CATALOG_UNVERIFIED: body size outside bounds."
+              exit 1
+            fi
+            # Parse only and emit a bounded count; never print untrusted body.
+            count="$(python3 scripts/payanagent_catalog_safe.py "$response")"
+            digest="$(sha256sum "$response" | cut -d' ' -f1)"
+            printf 'PayanAgent GET=200 bytes=%s digest=%s matching_source_fields=%s commercial_claim=false\n'               "$size" "$digest" "$count"
           done
