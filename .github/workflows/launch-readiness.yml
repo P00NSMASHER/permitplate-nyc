@@ -21,6 +21,28 @@ on:
       - 'pipeline/opportunity-ledger.js'
       - 'verification/launch-external-evidence.json'
       - 'build-site.js'
+      - 'tests/test_launch_readiness_workflow_policy.py'
+      - '.github/workflows/launch-readiness.yml'
+      - '.github/workflows/detection-ledger.yml'
+  pull_request:
+    paths:
+      - 'pipeline/launch-readiness.js'
+      - 'pipeline/run-launch-readiness.js'
+      - 'pipeline/run-source-health.js'
+      - 'pipeline/candidate-builder.js'
+      - 'pipeline/run-shadow-scoring-evaluation.js'
+      - 'pipeline/historical-shadow-score-benchmark.js'
+      - 'pipeline/scoring-policy.js'
+      - 'pipeline/run-first-subscriber-canary.js'
+      - 'pipeline/founder-curated-offer.js'
+      - 'pipeline/run-founder-curated-canary.js'
+      - 'operations/FOUNDER_CURATED_FULFILLMENT.md'
+      - 'release-manifest.json'
+      - 'pipeline/detection-ledger.js'
+      - 'pipeline/opportunity-ledger.js'
+      - 'verification/launch-external-evidence.json'
+      - 'build-site.js'
+      - 'tests/test_launch_readiness_workflow_policy.py'
       - '.github/workflows/launch-readiness.yml'
       - '.github/workflows/detection-ledger.yml'
 
@@ -28,22 +50,50 @@ permissions:
   contents: read
 
 concurrency:
-  group: permitplate-private-state-${{ vars.PERMITPLATE_STATE_REPO }}
-  cancel-in-progress: false
+  group: permitplate-private-state-${{ vars.PERMITPLATE_STATE_REPO }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out exact candidate without credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Reject branch-selectable private-state execution
+        run: python3 -m unittest discover -s tests -p 'test_launch_readiness_workflow_policy.py' -v
+
   launch-readiness:
+    needs: policy
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
       STATE_REPO: ${{ vars.PERMITPLATE_STATE_REPO }}
       PRIVATE_STATE_DIR: ${{ github.workspace }}/.private-state
     steps:
-      - name: Check out public repository
-        uses: actions/checkout@v4
+      - name: Check out exact admitted public source without credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Admit exact current main before private credential
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/main" || { echo "Launch readiness requires main."; exit 1; }
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA" || { echo "Checked-out source is not the event SHA."; exit 1; }
+          remote_main="$(git ls-remote --exit-code origin refs/heads/main | awk '{print $1}')"
+          test -n "$remote_main" || { echo "Unable to resolve current main."; exit 1; }
+          test "$GITHUB_SHA" = "$remote_main" || { echo "Event SHA is not exact current main."; exit 1; }
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22'
 
@@ -59,7 +109,7 @@ jobs:
           test "$repo_visibility" = "private" || { echo "PERMITPLATE_STATE_REPO must resolve to a private GitHub repository."; exit 1; }
 
       - name: Check out private state repository read-only
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: ${{ vars.PERMITPLATE_STATE_REPO }}
           token: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
@@ -77,11 +127,11 @@ jobs:
       - name: Run live launch readiness controller against private state
         run: node pipeline/run-launch-readiness.js pipeline/launch-readiness-result.json "$PRIVATE_STATE_DIR/state/detection-ledger.json" "$PRIVATE_STATE_DIR/state/opportunity-ledger.json"
 
-      - name: Retain launch readiness evidence
+      - name: Retain source-bound launch readiness evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: permitplate-launch-readiness
+          name: permitplate-launch-readiness-${{ github.sha }}
           path: pipeline/launch-readiness-result.json
           if-no-files-found: warn
           retention-days: 30
