@@ -34,6 +34,35 @@ function sourceRecords(batches) {
   );
 }
 
+function booleanOrNull(value) {
+  return typeof value === 'boolean' ? value : null;
+}
+
+function integerOrNull(value) {
+  return Number.isInteger(value) ? value : null;
+}
+
+function sourceDiagnostics(batches) {
+  return Object.keys(batches || {}).sort().map((sourceKey) => {
+    const batch = batches[sourceKey] || {};
+    const observation = batch.observation || {};
+    return {
+      sourceKey,
+      state:typeof observation.state === 'string' ? observation.state : null,
+      stateReason:typeof observation.stateReason === 'string' ? observation.stateReason : null,
+      transportOk:booleanOrNull(observation.transportOk),
+      httpStatus:integerOrNull(observation.httpStatus),
+      sourceFresh:booleanOrNull(observation.sourceFresh),
+      intendedFullScope:booleanOrNull(observation.intendedFullScope),
+      publisherCount:integerOrNull(observation.publisherCount),
+      fetchedCount:Array.isArray(batch.records) ? batch.records.length : null,
+      cursorClosed:booleanOrNull(observation.cursorClosed),
+      supportsPositiveObservation:booleanOrNull(observation.supportsPositiveObservation),
+      supportsAbsenceConclusion:booleanOrNull(observation.supportsAbsenceConclusion)
+    };
+  });
+}
+
 function auditGraph(graph, batches, observedAt) {
   const allRecords = sourceRecords(batches);
   const fitCounts = {};
@@ -100,6 +129,8 @@ function auditGraph(graph, batches, observedAt) {
     observedAt,
     graphState:graph.graphState,
     graphDigest:graph.graphDigest,
+    graphReasons:Array.isArray(graph.reasons) ? graph.reasons.slice() : [],
+    sourceObservations:sourceDiagnostics(batches),
     totalCandidates:total,
     fit:{
       classified:classifiedFit,
@@ -164,6 +195,7 @@ module.exports = {
   sha256,
   increment,
   sourceRecords,
+  sourceDiagnostics,
   auditGraph,
   audit
 };
