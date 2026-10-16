@@ -13,6 +13,7 @@ on:
       - 'scripts/test-floot-rehost-raw-endpoints.mts'
       - 'PA_ENTITY_SKILL.md'
       - 'x402-manifest.json'
+      - 'tests/test_pa_entity_release_regression_policy.py'
       - '.github/workflows/pa-entity-release-regression.yml'
   pull_request:
     paths:
@@ -26,6 +27,8 @@ on:
       - 'scripts/test-floot-rehost-raw-endpoints.mts'
       - 'PA_ENTITY_SKILL.md'
       - 'x402-manifest.json'
+      - 'tests/test_pa_entity_release_regression_policy.py'
+      - '.github/workflows/pa-entity-release-regression.yml'
   workflow_dispatch:
 
 jobs:
@@ -34,6 +37,8 @@ jobs:
     timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
+      - name: Verify release-QA workflow policy
+        run: python3 -m unittest discover -s tests -p 'test_pa_entity_release_regression_policy.py' -v
       - name: Test payment and settlement recovery
         run: npx -y tsx@latest scripts/test-pa-entity-floot-release.mts
       - name: Test $0.001 best-match payment and ranking
