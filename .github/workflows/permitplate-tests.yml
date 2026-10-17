@@ -20,6 +20,9 @@ jobs:
       - name: Verify bounded x402 directory receipts (offline)
         run: python3 -m unittest discover -s tests -p 'test_pa_entity_directory_bounding.py'
 
+      - name: Verify external distribution trust boundary (offline)
+        run: python3 -m unittest discover -s tests -p 'test_post_floot_distribution_workflow_policy.py' -v
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
