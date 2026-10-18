@@ -21,7 +21,7 @@ on:
       - 'pipeline/opportunity-ledger.js'
       - 'verification/launch-external-evidence.json'
       - 'build-site.js'
-      - 'tests/test_launch_readiness_workflow_policy.py'
+      - 'tests/test_pilot_source_admission.py'
       - '.github/workflows/launch-readiness.yml'
       - '.github/workflows/detection-ledger.yml'
   pull_request:
@@ -64,11 +64,8 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
 
-      - name: Reject branch-selectable private-state execution
-        run: python3 -m unittest discover -s tests -p 'test_launch_readiness_workflow_policy.py' -v
-
-      - name: Verify detection private-state trust boundary
-        run: python3 -m unittest discover -s tests -p 'test_detection_private_state_workflow_policy.py' -v
+      - name: Verify pilot private-state trust boundaries
+        run: python3 -m unittest discover -s tests -p 'test_pilot_source_admission.py' -v
 
   launch-readiness:
     needs: policy
