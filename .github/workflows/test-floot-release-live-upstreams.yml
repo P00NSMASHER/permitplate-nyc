@@ -2,6 +2,13 @@ name: Test Floot release live upstreams
 
 on:
   push:
+    branches: [main]
+    paths:
+      - 'scripts/test-floot-release-live-upstreams.mts'
+      - '.github/workflows/test-floot-release-live-upstreams.yml'
+      - 'docs/pa-entity-floot-release/*_GET.ts'
+      - 'tests/test_floot_live_upstream_policy.py'
+  pull_request:
     paths:
       - 'scripts/test-floot-release-live-upstreams.mts'
       - '.github/workflows/test-floot-release-live-upstreams.yml'
@@ -12,17 +19,43 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: floot-live-upstreams-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  test:
+  policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify live-upstream workflow policy
+        run: python3 -m unittest tests/test_floot_live_upstream_policy.py -v
+
+  live-upstreams:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
-          node-version: '20'
-
-      - name: Verify live-upstream workflow policy
-        run: python3 -m unittest tests/test_floot_live_upstream_policy.py -v
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Admit exact current main for authoritative live probes
+        env:
+          EVENT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/main"
+          test "$(git rev-parse HEAD)" = "$EVENT_SHA"
+          current_main="$(git ls-remote --exit-code origin refs/heads/main | awk '{print $1}')"
+          test -n "$current_main"
+          test "$EVENT_SHA" = "$current_main"
       - name: Exercise exact staged endpoints against official public sources
-        run: npx -y tsx scripts/test-floot-release-live-upstreams.mts
+        run: node --experimental-strip-types scripts/test-floot-release-live-upstreams.mts
