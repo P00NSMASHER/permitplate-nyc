@@ -72,8 +72,11 @@ class CuratedWorkflowPolicyTest(unittest.TestCase):
                                        "github.ref"))
 
     def test_post_refresh_public_source_drift_rejected(self):
+        post_refresh_at = self.source.index(POST_REFRESH)
+        mutated = self.source[:post_refresh_at] + self.source[post_refresh_at:].replace(
+            PUBLIC_HEAD, 'current_public="$GITHUB_SHA"', 1)
         with self.assertRaises(AssertionError):
-            verify(self.source.replace(POST_REFRESH, "Skip public source drift check", 1))
+            verify(mutated)
 
     def test_pre_push_public_source_drift_rejected(self):
         publish_at = self.source.index(COMMIT)
