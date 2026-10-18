@@ -3,6 +3,7 @@
 // Read-only, score-independent source of truth for the actual paid product.
 // Never creates a new baseline, sends a message or modifies subscriber state.
 const research=require('./curated-research-ledger');
+const materialChange=require('./material-change');
 const {verifyBaselineAnchor}=require('./run-curated-research');
 
 const VERSION='PermitPlate-curated-production-readiness-v1.0.0';
@@ -38,6 +39,12 @@ function evaluate(input){
     failures.push('CURATED_LEDGER_SNAPSHOT_MISMATCH');
   }
   const candidates=Array.isArray(snapshot&&snapshot.candidates)?snapshot.candidates:[];
+  // Paid changes require genuine versioned source semantics. Legacy private
+  // snapshots without descriptors are not eligible for operational readiness;
+  // the normal verified refresh migrates them without creating customer events.
+  if(candidates.some(candidate=>!materialChange.valid(candidate.materiality))){
+    failures.push('CURATED_SEMANTIC_EVIDENCE_MISSING');
+  }
   const entries=ledger&&ledger.entries&&typeof ledger.entries==='object'?ledger.entries:{};
   const present=Object.values(entries).filter(entry=>entry&&entry.presenceState==='PRESENT').length;
   if(!snapshotValidation.valid||!ledgerValidation.valid||
