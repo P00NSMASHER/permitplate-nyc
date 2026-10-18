@@ -8,6 +8,7 @@ const research=require('./curated-research-ledger');
 const customer=require('./curated-customer-brief');
 const runner=require('./run-curated-research');
 const fulfillment=require('./run-curated-fulfillment');
+const queueMaker=require('./run-curated-review-queue');
 const stripe=require('./stripe-subscriber');
 
 const OLD_AT='2026-10-16T08:00:00.000Z';
@@ -155,7 +156,8 @@ assert.equal(ready.externalSendCalls,0);
 assert(ready.transportPreflight.failures.includes('OWNER_AUTHORIZATION_MISSING'));
 assert.equal(ready.brief.signals[0].businessName,fresh.canonicalName);
 assert(ready.brief.signals[0].sourceUrls[0].includes('camis=50193805'));
-assert(!ready.brief.html.includes('guaranteed leads'));
+assert(ready.brief.html.includes('Research starting points'));
+assert(ready.brief.html.includes('not purchase intent or guaranteed leads'));
 assert(!ready.brief.csv.includes('Purchase Intent'));
 
 const replayDelivery=prepare({deliveredSignalKeys:ready.brief.signalKeys});
@@ -203,6 +205,27 @@ const otherTerritory=checkout();
 otherTerritory.session.custom_fields[1].dropdown.value='Manhattan';
 assert(prepare(otherTerritory).failures.some(f=>f.includes('BOROUGH_NOT_SUBSCRIBED')));
 
+const anchor=runner.baselineAnchor(first.ledger);
+assert(runner.verifyBaselineAnchor(first.ledger,anchor).valid);
+assert(!runner.verifyBaselineAnchor(null,anchor).valid);
+assert(!runner.verifyBaselineAnchor(first.ledger,null).valid);
+assert(!runner.verifyBaselineAnchor(first.ledger,{...anchor,initializedAt:CURRENT_AT}).valid);
+const queue=queueMaker.makeQueue({
+  ...b0,graph:g1,ledger:next.ledger,deliveredSignalKeys:[],
+  preparedAt:PREPARED,limit:1
+});
+assert.equal(queue.status,'REVIEW_REQUIRED');
+assert.equal(queue.candidateCount,2);
+assert.equal(queue.shownCount,1);
+assert.equal(queue.notShownCount,1);
+assert.equal(queue.reviews[0].entityId,'CAMIS:50193805');
+assert.equal(queue.reviews[0].ownerReviewed,false);
+assert.equal(queue.reviews[0].candidateFingerprint,customer.candidateIdentity(fresh));
+assert.equal(queue.reviews[0].preview.officialUrl,customer.primaryUrl(fresh));
+assert.equal(queueMaker.makeQueue({
+  ...b0,graph:g1,ledger:next.ledger,
+  deliveredSignalKeys:ready.brief.signalKeys,preparedAt:PREPARED
+}).candidateCount,1);
 const preview=runner.prepare(first.ledger,g1);
 assert.equal(preview.ready,true);
 assert.equal(preview.summary.externalSendCalls,0);
