@@ -19,18 +19,29 @@ The `PermitPlate curated research (private)` workflow scans official NYC
 sources, replays the complete candidate graph and stores these files only in
 the **dedicated private state repository**:
 
-- `state/curated-research-ledger.json` — the stable first-observed timestamp
-  per CAMIS, including entities now outside the current source window.
+- `state/curated-research-ledger.json` — the stable first-observed timestamp,
+  current verified semantic descriptor, and (where independently detected) last
+  source-material-change event per CAMIS, including out-of-window history.
 - `state/curated-current-graph.json` — the current graph and official-source
   observation receipts. No customer data or scored opportunity packages.
 - `state/curated-baseline-anchor.json` — the immutable initialization anchor
   that prevents accidentally resetting one missing ledger file.
 
 The first valid scan creates a baseline with **zero new signals**. Subsequent
-complete scans can identify newly observed CAMIS identities, with suppressed
-or identity-conflicted candidates held for review. A changing source
-`record_date`, returning candidate, incomplete source, or failure of the
-current graph can never manufacture a new opportunity.
+complete scans identify newly observed CAMIS identities and can detect a
+material change in a *previously verified, accepted* DOB/SLA/DOHMH semantic
+evidence descriptor. Only source-evidence changes without identity, address,
+suppression, status regression, or lost corroboration are eligible for human
+review. Data-extraction `record_date`, generated row hashes, tag-only changes,
+reappearing entities, incomplete sources, or unverifiable identity changes
+never manufacture customer events.
+
+On the first deployment of versioned semantic evidence, existing private V1
+ledger entries are **migrated in place without resetting their first-observed
+dates**. Their first new semantic descriptor is comparison baseline only;
+no claim of a historical change is inferred. Future verified deltas produce
+unique, fingerprint-bound material-event IDs. One event per entity is retained
+as the latest current change, without claiming a prior vendor lead was new.
 
 The research snapshot and ledger are committed together in the private
 repository. Main-only runtime and no-force push protect against concurrent
@@ -75,6 +86,13 @@ From the queue, delete unselected rows until at most **10** remain.
 For each, open its `preview.officialUrl`, verify the business, address,
 current record and actual relevance to the buyer's chosen category, and
 write a supported `whyItMatters` sentence without unsupported claims.
+For `eventKind: MATERIAL_CHANGE`, verify the actual previous and current
+source facts using the official record and source evidence, and fill the
+separate `whatChanged` field. A computed descriptor difference alone
+does not establish a specific filing claim. Preserve the exact `eventId`
+from the review queue; changing it invalidates the report. Material changes
+receive their own subscriber-specific delivery key, so a genuine later update
+can be reported without repeating a prior already-delivered item.
 Set `ownerReviewed: true` on each selected review row and
 `reviewedAt` to the actual review time in ISO-8601 UTC, **after the latest
 graph observation**. Set the root `reviewer` and root `ownerReviewed:true`
@@ -125,8 +143,10 @@ provider receipt as production proof.
   genuinely new, about to open, or buying a category of goods. A human
   validates the research value.
 - Records already present on the initialization baseline do not become
-  retroactive subscriber events. The only pre-subscription allowance is
-  the explicit seven-day Starter window of *tracked first observations*.
+  retroactive new entities. They become eligible only after a later verified
+  semantic source change. The optional seven-day Starter window may include
+  tracked first observations or later verified source changes, distinctly
+  labeled in the customer report.
 - This lane prepares real customer artifacts but does not automate actual
   email transport, payment mutation or provider reconciliation.
 - All customer preference files, queue exports and research snapshots must
