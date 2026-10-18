@@ -246,7 +246,7 @@ function advance(previous, graph) {
     entries
   });
   return {
-    status:baseline ? 'BASELINED' : research.length || held.length ? 'ADVANCED' : 'NO_NEW_ENTITIES',
+    status:baseline ? 'BASELINED' : (research.length || held.length || materialEvents.length || materialReviews.length) ? 'ADVANCED' : 'NO_NEW_ENTITIES',
     failures:[],
     ledger,
     newResearchCount:research.length,
