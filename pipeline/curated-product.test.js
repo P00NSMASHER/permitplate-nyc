@@ -121,6 +121,19 @@ tampered.entries['CAMIS:50193805'].firstObservedAt=OLD_AT;
 assert.equal(research.validate(tampered).valid,false);
 assert.equal(research.advance(tampered,g1).status,'REVIEW');
 
+// The complete source-bound graph receipt must bind every customer-visible
+// field, not merely the list of candidate identifiers.
+const tamperedName=JSON.parse(JSON.stringify(g1));
+tamperedName.candidates[0].canonicalName='REWRITTEN UNVERIFIED NAME';
+assert.equal(research.checkGraph(tamperedName).valid,false);
+assert(research.checkGraph(tamperedName).failures.includes('CURATED_GRAPH_RECEIPT_INVALID'));
+const tamperedAddress=JSON.parse(JSON.stringify(g1));
+tamperedAddress.candidates[0].address='UNVERIFIED REPLACEMENT ADDRESS';
+assert(research.checkGraph(tamperedAddress).failures.includes('CURATED_GRAPH_RECEIPT_INVALID'));
+const backdated=JSON.parse(JSON.stringify(next.ledger));
+backdated.entries['CAMIS:50193805'].firstObservedAt='2026-10-15T00:00:00.000Z';
+const resealed=research.seal(backdated);
+assert(research.validate(resealed).failures.includes('CURATED_LEDGER_ENTRY_TIMELINE_INVALID'));
 const brokenGraph=graph(CURRENT_AT,[fresh],{graphState:'PARTIAL',passed:false});
 assert.equal(research.advance(next.ledger,brokenGraph).status,'REVIEW');
 const absent=graph('2026-10-18T10:30:00.000Z',[old]);
@@ -155,6 +168,11 @@ assert.equal(ready.transportAllowed,false);
 assert.equal(ready.externalSendCalls,0);
 assert(ready.transportPreflight.failures.includes('OWNER_AUTHORIZATION_MISSING'));
 assert.equal(ready.brief.signals[0].businessName,fresh.canonicalName);
+assert.equal(ready.brief.signals[0].section,'NORMAL');
+assert.equal(ready.brief.signals[0].firstObservedAt,CURRENT_AT);
+assert.match(ready.brief.html,/New observation/);
+assert.match(ready.brief.csv,/NORMAL/);
+assert.match(ready.brief.html,/source record date/i);
 assert(ready.brief.signals[0].sourceUrls[0].includes('camis=50193805'));
 assert(ready.brief.html.includes('Research starting points'));
 assert(ready.brief.html.includes('not purchase intent or guaranteed leads'));
@@ -166,9 +184,22 @@ assert.equal(replayDelivery.signalCount,0);
 assert.equal(replayDelivery.attempt.state,'PLANNED');
 assert.equal(replayDelivery.transportAllowed,false);
 
+// Initialization-baseline records are never subscriber-new or Starter signals.
 const starter=prepare({reviews:[review(old)]});
-assert.equal(starter.status,'READY_FOR_OWNER_REVIEW');
-assert.equal(starter.signalCount,1);
+assert.equal(starter.status,'NO_MATCHES_REVIEW');
+assert.equal(starter.signalCount,0);
+assert(starter.excluded.some(item=>item.reason==='BASELINE_EXISTING_NOT_A_NEW_OBSERVATION'));
+// A verified record first observed on a later source run can be a clearly
+// labeled Starter event when the customer subscribes afterward.
+const laterCheckout=checkout();
+laterCheckout.subscription.created=Date.parse('2026-10-18T10:40:00Z')/1000;
+const genuineStarter=prepare({...laterCheckout,reviews:[review(fresh)]});
+assert.equal(genuineStarter.status,'READY_FOR_OWNER_REVIEW');
+assert.equal(genuineStarter.brief.signals[0].section,'STARTER');
+assert.equal(genuineStarter.brief.signals[0].firstObservedAt,CURRENT_AT);
+assert.match(genuineStarter.brief.html,/Starter Snapshot/);
+assert.match(genuineStarter.brief.csv,/STARTER/);
+assert.match(genuineStarter.brief.html,/first observed/i);
 const noStarter=checkout();
 noStarter.session.custom_fields[2].dropdown.value='no';
 assert.equal(prepare({...noStarter,reviews:[review(old)]}).status,'NO_MATCHES_REVIEW');
@@ -215,9 +246,9 @@ const queue=queueMaker.makeQueue({
   preparedAt:PREPARED,limit:1
 });
 assert.equal(queue.status,'REVIEW_REQUIRED');
-assert.equal(queue.candidateCount,2);
+assert.equal(queue.candidateCount,1);
 assert.equal(queue.shownCount,1);
-assert.equal(queue.notShownCount,1);
+assert.equal(queue.notShownCount,0);
 assert.equal(queue.reviews[0].entityId,'CAMIS:50193805');
 assert.equal(queue.reviews[0].ownerReviewed,false);
 assert.equal(queue.reviews[0].candidateFingerprint,customer.candidateIdentity(fresh));
@@ -225,7 +256,7 @@ assert.equal(queue.reviews[0].preview.officialUrl,customer.primaryUrl(fresh));
 assert.equal(queueMaker.makeQueue({
   ...b0,graph:g1,ledger:next.ledger,
   deliveredSignalKeys:ready.brief.signalKeys,preparedAt:PREPARED
-}).candidateCount,1);
+}).candidateCount,0);
 const preview=runner.prepare(first.ledger,g1);
 assert.equal(preview.ready,true);
 assert.equal(preview.summary.externalSendCalls,0);
