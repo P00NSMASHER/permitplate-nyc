@@ -72,6 +72,7 @@ function remediationFor(gate){
     curatedCanaryScoreFree:'REMOVE_SCORING_FROM_PAID_OFFER',
     curatedCanaryStopsWithoutOwnerAuth:'RESTORE_OWNER_SEND_AUTHORIZATION_GATE',
     curatedFulfillmentRunbookPresent:'ADD_FOUNDER_CURATED_FULFILLMENT_RUNBOOK',
+    curatedPrivateResearchCurrent:'REPAIR_OR_REFRESH_PRIVATE_CURATED_RESEARCH',
     realPaidSubscriberEndToEndVerified:'RUN_FIRST_REAL_PAID_SUBSCRIBER_ACCEPTANCE',
     providerBackedDeliveryVerified:'RECONCILE_REAL_PROVIDER_DELIVERY',
     nextRunDuplicateSuppressionVerifiedForRealSubscriber:'VERIFY_REAL_NEXT_RUN_DEDUPE'
@@ -95,6 +96,7 @@ function evaluateLaunchReadiness(input){
   const launchMode=data.launchMode||'SCORED_AUTOMATION_V3';
   const curatedMode=launchMode===CURATED_LAUNCH_MODE;
   const curatedCanary=data.curatedCanary||{};
+  const curatedResearch=data.curatedResearch||{};
 
   const detValidation=detection.validateLedger(detectionLedger);
   const oppValidation=opportunity.validateLedger(opportunityLedger);
@@ -157,6 +159,7 @@ function evaluateLaunchReadiness(input){
       (curatedCanary.transportPreflight.failures||[])
         .includes('OWNER_AUTHORIZATION_MISSING'),
     curatedFulfillmentRunbookPresent:data.curatedFulfillmentRunbookPresent===true,
+    curatedPrivateResearchCurrent:curatedResearch.valid===true,
     publicBuildBoundaryClean:publicBuildFailures.length===0
   };
   const internalGates=curatedMode?curatedInternalGates:scoredInternalGates;
@@ -332,6 +335,14 @@ function evaluateLaunchReadiness(input){
         subscriberCanary.externalSendCalls:null,
       transportPreflight:subscriberCanary.transportPreflight||null,
       artifactFingerprint:subscriberCanary.artifactFingerprint||null
+    },
+    curatedResearch:{
+      valid:curatedResearch.valid===true,
+      failures:Array.isArray(curatedResearch.failures)?curatedResearch.failures:[],
+      graphDigest:curatedResearch.graphDigest||null,
+      observedAt:curatedResearch.observedAt||null,
+      candidateCount:curatedResearch.candidateCount??null,
+      sourceAgeMs:curatedResearch.sourceAgeMs??null
     },
     curatedCanary:{
       passed:curatedCanary.passed===true,

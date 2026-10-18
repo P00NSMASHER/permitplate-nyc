@@ -141,6 +141,31 @@ function external(overrides){
 }
 
 {
+  const input=internalInput({
+    launchMode:'FOUNDER_CURATED_NO_SCORE_V1',
+    curatedCanary:curatedCanary(),
+    curatedFulfillmentRunbookPresent:true,
+    curatedResearch:{valid:false,failures:['CURATED_SNAPSHOT_NOT_CURRENT_SOURCE_GRAPH']}
+  });
+  const out=readiness.evaluateLaunchReadiness(input);
+  assert.equal(out.internalReady,false);
+  assert.equal(out.firstCustomerOperationallyReady,false);
+  assert(out.internalFailures.includes('curatedPrivateResearchCurrent'));
+  assert(out.recommendedNextActions.includes('REPAIR_OR_REFRESH_PRIVATE_CURATED_RESEARCH'));
+  assert.deepEqual(out.curatedResearch.failures,['CURATED_SNAPSHOT_NOT_CURRENT_SOURCE_GRAPH']);
+}
+{
+  const input=internalInput({
+    launchMode:'FOUNDER_CURATED_NO_SCORE_V1',
+    curatedCanary:curatedCanary(),
+    curatedFulfillmentRunbookPresent:true,
+    curatedResearch:null
+  });
+  const out=readiness.evaluateLaunchReadiness(input);
+  assert(out.internalFailures.includes('curatedPrivateResearchCurrent'));
+}
+
+{
   const out=readiness.evaluateLaunchReadiness(internalInput({
     launchMode:'FOUNDER_CURATED_NO_SCORE_V1',
     curatedCanary:curatedCanary({scoreFree:false}),
@@ -183,6 +208,13 @@ function internalInput(overrides){
     detectionLedger:boot.ledger,
     opportunityLedger:opportunity.emptyLedger('2026-09-21T17:00:00Z'),
     subscriberCanary:subscriberCanary(),
+    curatedResearch:{
+      valid:true,failures:[],
+      graphDigest:'graph-launch-1',
+      observedAt:'2026-09-21T17:30:00Z',
+      candidateCount:2,
+      sourceAgeMs:1800000
+    },
     publicBuildFailures:[],
     currentPublicSourceFingerprint:'public-source-fp',
     externalEvidence:external(),

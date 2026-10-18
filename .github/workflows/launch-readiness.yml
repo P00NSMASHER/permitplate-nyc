@@ -2,11 +2,19 @@ name: PermitPlate launch readiness
 
 on:
   workflow_dispatch:
+  schedule:
+    # Run after the daily 14:12 UTC private research refresh.
+    - cron: '7 15 * * *'
   push:
     branches: [main]
     paths:
       - 'pipeline/launch-readiness.js'
       - 'pipeline/run-launch-readiness.js'
+      - 'pipeline/curated-production-readiness.js'
+      - 'pipeline/curated-production-readiness.test.js'
+      - 'pipeline/curated-research-ledger.js'
+      - 'pipeline/run-curated-research.js'
+      - 'pipeline/run-current-graph.js'
       - 'pipeline/run-source-health.js'
       - 'pipeline/candidate-builder.js'
       - 'pipeline/run-shadow-scoring-evaluation.js'
@@ -69,7 +77,7 @@ jobs:
 
   launch-readiness:
     needs: policy
-    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
