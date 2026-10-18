@@ -28,7 +28,8 @@ function candidateIdentity(candidate) {
     lifecycleStage:c.lifecycleStage || null,
     sourceLatestEffectiveAt:c.sourceLatestEffectiveAt || null,
     deliverySuppressed:c.deliverySuppressed === true,
-    crossCamisOperationalConflicts:c.crossCamisOperationalConflicts || []
+    crossCamisOperationalConflicts:c.crossCamisOperationalConflicts || [],
+    materialityFingerprint:c.materiality&&c.materiality.fingerprint||null
   });
 }
 function primaryUrl(candidate) {
@@ -50,7 +51,39 @@ function section(firstObservedAt, baselineAt, starterEnabled, initializedAt) {
   if (starterEnabled && event >= baseline - STARTER_WINDOW_MS) return 'STARTER';
   return null;
 }
-function signalKey(subscriptionId, entry) {
+function eventForEntry(entry,baselineAt,starterEnabled,initializedAt) {
+  if(!entry||entry.presenceState!=='PRESENT') return null;
+  const events=[];
+  const initialized=Date.parse(initializedAt);
+  const first=Date.parse(entry.firstObservedAt);
+  if(Number.isFinite(initialized)&&Number.isFinite(first)&&first>initialized) {
+    events.push({
+      kind:'NEW_OBSERVATION',
+      eventId:'OBS:'+digest({entityId:entry.entityId,observedAt:entry.firstObservedAt}).slice(0,24),
+      observedAt:entry.firstObservedAt,changeReasons:[]
+    });
+  }
+  const material=entry.lastMaterialEvent;
+  if(research.validMaterialEvent(material) &&
+      entry.materiality && entry.materiality.fingerprint===material.toFingerprint &&
+      Number.isFinite(initialized) && Date.parse(material.observedAt)>initialized) {
+    events.push({
+      kind:'MATERIAL_CHANGE',eventId:material.eventId,
+      observedAt:material.observedAt,changeReasons:material.changeReasons.slice()
+    });
+  }
+  events.sort((a,b)=>b.observedAt.localeCompare(a.observedAt)||
+    a.eventId.localeCompare(b.eventId));
+  const latest=events[0];
+  if(!latest) return null;
+  const group=section(latest.observedAt,baselineAt,starterEnabled,initializedAt);
+  return group ? {...latest,section:group} : null;
+}
+function signalKey(subscriptionId, entry, event) {
+  if(event && event.kind==='MATERIAL_CHANGE'){
+    return 'curated:mat:'+digest({subscriptionId,eventId:event.eventId}).slice(0,32);
+  }
+  // Preserve all original first-observation keys for delivery dedupe.
   return 'curated:' + digest({
     subscriptionId,entityId:entry.entityId,firstObservedAt:entry.firstObservedAt
   }).slice(0,32);
@@ -169,29 +202,43 @@ function prepare(input) {
       failures.push(prefix + 'SOURCE_TIME_INVALID');
       continue;
     }
-    const initial=Date.parse(data.ledger.initializedAt);
-    const first=Date.parse(entry.firstObservedAt);
-    if (first <= initial) {
-      excluded.push({entityId:id,reason:'BASELINE_EXISTING_NOT_A_NEW_OBSERVATION'});
-      continue;
-    }
-    const pickedSection = section(
-      entry.firstObservedAt,customer.baselineAt,
-      customer.starterSnapshotEnabled,data.ledger.initializedAt
+    const event=eventForEntry(
+      entry,customer.baselineAt,customer.starterSnapshotEnabled,
+      data.ledger.initializedAt
     );
-    if (!pickedSection) {
-      excluded.push({entityId:id,reason:'OUTSIDE_SUBSCRIBER_BASELINE'});
+    if (!event) {
+      excluded.push({entityId:id,reason:
+        Date.parse(entry.firstObservedAt)<=Date.parse(data.ledger.initializedAt)&&
+        !entry.lastMaterialEvent ?
+        'BASELINE_EXISTING_NOT_A_NEW_OBSERVATION':'OUTSIDE_SUBSCRIBER_BASELINE'});
       continue;
     }
-    const key = signalKey(activated.subscriptionId,entry);
+    if (review.eventId && review.eventId!==event.eventId) {
+      failures.push(prefix + 'EVENT_IDENTITY_MISMATCH');
+      continue;
+    }
+    if (review.eventKind && review.eventKind!==event.kind) {
+      failures.push(prefix + 'EVENT_TYPE_MISMATCH');
+      continue;
+    }
+    const whatChanged=String(review.whatChanged||'').trim();
+    if(event.kind==='MATERIAL_CHANGE' &&
+        (review.eventId!==event.eventId || !whatChanged || whatChanged.length>220)) {
+      failures.push(prefix + 'MATERIAL_EVENT_REVIEW_INCOMPLETE');
+      continue;
+    }
+    const key = signalKey(activated.subscriptionId,entry,event);
     if (delivered.has(key)) {
       excluded.push({entityId:id,reason:'ALREADY_DELIVERED'});
       continue;
     }
     selected.push({
       signalKey:key,
-      section:pickedSection,
-      firstObservedAt:entry.firstObservedAt,
+      section:event.section,
+      firstObservedAt:event.observedAt,
+      eventKind:event.kind,
+      eventId:event.eventId,
+      whatChanged:event.kind==='MATERIAL_CHANGE'?whatChanged:null,
       businessName:candidate.canonicalName,
       address:candidate.address,
       borough:candidate.borough,
@@ -270,5 +317,5 @@ function prepare(input) {
 
 module.exports = {
   VERSION,EXPECTED_PRICE_ID,MAX_SOURCE_AGE_MS,STARTER_WINDOW_MS,
-  digest,candidateIdentity,primaryUrl,section,signalKey,prepare
+  digest,candidateIdentity,primaryUrl,section,eventForEntry,signalKey,prepare
 };
