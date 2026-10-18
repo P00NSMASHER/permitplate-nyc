@@ -207,7 +207,7 @@ function buildCuratedBrief(input){
       signal.section==='NORMAL'?
       `<p style="margin:0 0 6px"><strong>New observation</strong> · first observed by PermitPlate: ${htmlEscape(signal.firstObservedAt)}</p>`:'',
     signal.whatChanged?
-      `<p style="margin:0 0 6px"><strong>What changed:</strong> ${htmlEscape(signal.whatChanged)}</p>`:''
+      `<p style="margin:0 0 6px"><strong>What changed:</strong> ${htmlEscape(signal.whatChanged)}</p>`:'',
     `<p style="margin:0 0 6px;font-size:13px">Source record date: ${htmlEscape(signal.sourceUpdatedAt)} · Reviewed: ${htmlEscape(signal.reviewedAt)}</p>`,
     `<p style="margin:0;font-size:13px">${signal.sourceUrls.map((url,i)=>`<a href="${htmlEscape(url)}">official source ${i+1}</a>`).join(' · ')}</p>`,
     '</article>'
