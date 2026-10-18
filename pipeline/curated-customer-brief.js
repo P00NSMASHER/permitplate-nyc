@@ -37,10 +37,15 @@ function primaryUrl(candidate) {
   return 'https://data.cityofnewyork.us/resource/43nn-pn8j.json?camis=' +
     encodeURIComponent(camis);
 }
-function section(firstObservedAt, baselineAt, starterEnabled) {
+function section(firstObservedAt, baselineAt, starterEnabled, initializedAt) {
   const event = Date.parse(firstObservedAt);
   const baseline = Date.parse(baselineAt);
-  if (!Number.isFinite(event) || !Number.isFinite(baseline)) return null;
+  const initialization = Date.parse(initializedAt);
+  if (!Number.isFinite(event) || !Number.isFinite(baseline) ||
+      !Number.isFinite(initialization)) return null;
+  // Monitoring initialization is not evidence that an existing restaurant is
+  // a newly filed application. Keep the founding baseline out of all reports.
+  if (event <= initialization) return null;
   if (event >= baseline) return 'NORMAL';
   if (starterEnabled && event >= baseline - STARTER_WINDOW_MS) return 'STARTER';
   return null;
@@ -164,8 +169,15 @@ function prepare(input) {
       failures.push(prefix + 'SOURCE_TIME_INVALID');
       continue;
     }
+    const initial=Date.parse(data.ledger.initializedAt);
+    const first=Date.parse(entry.firstObservedAt);
+    if (first <= initial) {
+      excluded.push({entityId:id,reason:'BASELINE_EXISTING_NOT_A_NEW_OBSERVATION'});
+      continue;
+    }
     const pickedSection = section(
-      entry.firstObservedAt,customer.baselineAt,customer.starterSnapshotEnabled
+      entry.firstObservedAt,customer.baselineAt,
+      customer.starterSnapshotEnabled,data.ledger.initializedAt
     );
     if (!pickedSection) {
       excluded.push({entityId:id,reason:'OUTSIDE_SUBSCRIBER_BASELINE'});
@@ -201,7 +213,9 @@ function prepare(input) {
     b.firstObservedAt.localeCompare(a.firstObservedAt) ||
     a.signalKey.localeCompare(b.signalKey)
   );
-  const signals = selected.map(({section:firstSeenSection,firstObservedAt,...signal}) => signal);
+  // Preserve NORMAL/STARTER classification and genuine first-observation
+  // timestamps through CSV and HTML; never relabel an extraction as a filing.
+  const signals = selected.map(signal => ({...signal}));
   const brief = curated.buildCuratedBrief({
     subscriptionId:activated.subscriptionId,
     recipientEmail:customer.recipientEmail,

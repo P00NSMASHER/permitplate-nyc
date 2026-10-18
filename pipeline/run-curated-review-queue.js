@@ -44,8 +44,12 @@ function makeQueue(input) {
     if (!entry || entry.presenceState!=='PRESENT' ||
         !research.eligibleCandidate(candidate) ||
         !profile.boroughs.includes(candidate.borough)) continue;
+    // A record in the one-time initialization baseline is historical context,
+    // not a newly observed sale opportunity or seven-day Starter Snapshot.
+    if (Date.parse(entry.firstObservedAt) <= Date.parse(data.ledger.initializedAt)) continue;
     const group=curated.section(
-      entry.firstObservedAt,profile.baselineAt,profile.starterSnapshotEnabled
+      entry.firstObservedAt,profile.baselineAt,
+      profile.starterSnapshotEnabled,data.ledger.initializedAt
     );
     if (!group) continue;
     if (!research.instant(candidate.sourceLatestEffectiveAt)) continue;

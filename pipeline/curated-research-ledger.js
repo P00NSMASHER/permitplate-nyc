@@ -34,6 +34,8 @@ function validate(ledger) {
   if (!ledger || ledger.version !== VERSION) failures.push('CURATED_LEDGER_VERSION_INVALID');
   if (!ledger || !instant(ledger.initializedAt) || !instant(ledger.observedAt)) {
     failures.push('CURATED_LEDGER_TIMESTAMPS_INVALID');
+  } else if (Date.parse(ledger.observedAt) < Date.parse(ledger.initializedAt)) {
+    failures.push('CURATED_LEDGER_TIMELINE_INVALID');
   }
   if (!ledger || !ledger.entries || typeof ledger.entries !== 'object' ||
       Array.isArray(ledger.entries)) failures.push('CURATED_LEDGER_ENTRIES_INVALID');
@@ -47,6 +49,14 @@ function validate(ledger) {
     if (!entry || !instant(entry.firstObservedAt) || !instant(entry.lastObservedAt) ||
         !['PRESENT', 'OUT_OF_CURRENT_WINDOW'].includes(entry.presenceState)) {
       failures.push('CURATED_LEDGER_ENTRY_INVALID');
+    } else {
+      const first=Date.parse(entry.firstObservedAt);
+      const last=Date.parse(entry.lastObservedAt);
+      const initialized=Date.parse(ledger.initializedAt);
+      const observed=Date.parse(ledger.observedAt);
+      if (first < initialized || first > last || last > observed) {
+        failures.push('CURATED_LEDGER_ENTRY_TIMELINE_INVALID');
+      }
     }
   }
   return { valid:failures.length === 0, failures:[...new Set(failures)] };
@@ -63,7 +73,10 @@ function graphFingerprint(graph) {
     ),
     metrics:graph.metrics,
     knownRegressionChecks:graph.knownRegressionChecks,
-    candidateIds:(graph.candidates || []).map(c => c.entityId).sort()
+    // Match run-current-graph.js: hash every customer-visible field.
+    candidates:(graph.candidates || []).slice().sort(
+      (a,b) => String(a.entityId).localeCompare(String(b.entityId))
+    )
   });
 }
 function checkGraph(graph) {

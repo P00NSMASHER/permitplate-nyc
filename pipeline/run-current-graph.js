@@ -130,7 +130,9 @@ async function replay(nowIso) {
     ),
     metrics:result.metrics,
     knownRegressionChecks:result.knownRegressionChecks,
-    candidateIds:result.candidates.map((candidate) => candidate.entityId).sort()
+    // Bind every field used to assemble customer research, not only CAMIS IDs.
+    // A name, address, lifecycle or suppression edit must invalidate the receipt.
+    candidates:result.candidates.slice().sort((a,b) => String(a.entityId).localeCompare(String(b.entityId)))
   }));
   return result;
 }
