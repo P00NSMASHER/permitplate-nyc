@@ -44,32 +44,34 @@ function makeQueue(input) {
     if (!entry || entry.presenceState!=='PRESENT' ||
         !research.eligibleCandidate(candidate) ||
         !profile.boroughs.includes(candidate.borough)) continue;
-    // A record in the one-time initialization baseline is historical context,
-    // not a newly observed sale opportunity or seven-day Starter Snapshot.
-    if (Date.parse(entry.firstObservedAt) <= Date.parse(data.ledger.initializedAt)) continue;
-    const group=curated.section(
-      entry.firstObservedAt,profile.baselineAt,
-      profile.starterSnapshotEnabled,data.ledger.initializedAt
+    const event=curated.eventForEntry(
+      entry,profile.baselineAt,profile.starterSnapshotEnabled,
+      data.ledger.initializedAt
     );
-    if (!group) continue;
-    if (!research.instant(candidate.sourceLatestEffectiveAt)) continue;
-    const key=curated.signalKey(activated.subscriptionId,entry);
+    if(!event) continue;
+    if(!research.instant(candidate.sourceLatestEffectiveAt)) continue;
+    const key=curated.signalKey(activated.subscriptionId,entry,event);
     if (delivered.has(key)) continue;
     picks.push({
       entityId:candidate.entityId,
       category:chosenCategory,
       candidateFingerprint:curated.candidateIdentity(candidate),
+      eventId:event.eventId,
+      eventKind:event.kind,
       ownerReviewed:false,
       reviewedAt:null,
       whyItMatters:'',
+      whatChanged:'',
       // Preview only; this content is not a reviewed customer claim.
       preview:{
         business:candidate.canonicalName,
         address:candidate.address,
         borough:candidate.borough,
         stage:candidate.lifecycleStage,
-        section:group,
-        firstObservedAt:entry.firstObservedAt,
+        section:event.section,
+        eventKind:event.kind,
+        firstObservedAt:event.observedAt,
+        changeReasons:event.changeReasons,
         officialUrl:curated.primaryUrl(candidate)
       }
     });
@@ -89,7 +91,7 @@ function makeQueue(input) {
     shownCount:Math.min(limit,picks.length),
     notShownCount:Math.max(0,picks.length-limit),
     reviews:picks.slice(0,limit),
-    instruction:'Select no more than 10 matching candidates; verify each official record, address, category relevance and explanation; set per-row ownerReviewed=true, reviewedAt=current ISO timestamp, and top-level ownerReviewed=true only after review. Delete unselected rows. Never send without separate explicit authorization.'
+    instruction:'Select at most 10 records. Open and verify their official sources; evaluate category relevance and the event. For MATERIAL_CHANGE rows, summarize independently verified current and prior facts in whatChanged (the event reasons alone are not evidence of a specific change). Set per-row ownerReviewed=true and reviewedAt=current ISO timestamp only after review, and then top-level ownerReviewed=true. Delete unselected rows. Never send without separate explicit authorization.'
   };
 }
 function main() {
