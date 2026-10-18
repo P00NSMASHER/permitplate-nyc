@@ -6,6 +6,7 @@ on:
       - 'scripts/test-floot-release-live-upstreams.mts'
       - '.github/workflows/test-floot-release-live-upstreams.yml'
       - 'docs/pa-entity-floot-release/*_GET.ts'
+      - 'tests/test_floot_live_upstream_policy.py'
   workflow_dispatch:
 
 permissions:
@@ -21,5 +22,7 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Verify live-upstream workflow policy
+        run: python3 -m unittest tests/test_floot_live_upstream_policy.py -v
       - name: Exercise exact staged endpoints against official public sources
         run: npx -y tsx scripts/test-floot-release-live-upstreams.mts
