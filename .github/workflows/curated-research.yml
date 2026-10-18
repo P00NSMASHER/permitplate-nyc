@@ -109,6 +109,16 @@ jobs:
           node pipeline/run-curated-research.js \
             "$PRIVATE_DIR/state/curated-research-ledger.json" \
             "$PRIVATE_DIR/state/curated-current-graph.json"
+      - name: Recheck exact public main after collection
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          current_public="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          test -n "$current_public" && test "$current_public" = "$GITHUB_SHA" || {
+            echo "Public main advanced during collection. No private state commit." >&2
+            exit 1
+          }
       - name: Commit only private research state
         shell: bash
         run: |
@@ -128,6 +138,12 @@ jobs:
         run: |
           set -euo pipefail
           test -n "${GH_TOKEN:-}"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          current_public="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          test -n "$current_public" && test "$current_public" = "$GITHUB_SHA" || {
+            echo "Public main advanced before publication. Private state held." >&2
+            exit 1
+          }
           gh auth setup-git
           remote_head="$(git -C "$PRIVATE_DIR" ls-remote origin refs/heads/main | cut -f1)"
           current_parent="$(git -C "$PRIVATE_DIR" rev-parse HEAD^ 2>/dev/null || true)"
