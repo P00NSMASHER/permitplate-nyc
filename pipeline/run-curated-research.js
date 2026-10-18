@@ -24,6 +24,31 @@ function atomicJson(file, data) {
     if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
   }
 }
+function baselineAnchor(currentLedger) {
+  const core={
+    version:'PermitPlate-curated-baseline-anchor-v1.0.0',
+    initializedAt:currentLedger.initializedAt,
+    baselineGraphDigest:currentLedger.graphDigest,
+    baselineLedgerFingerprint:currentLedger.ledgerFingerprint
+  };
+  return {...core,anchorFingerprint:ledger.hash(core)};
+}
+function verifyBaselineAnchor(previous,anchor) {
+  if (!previous && !anchor) return {valid:true};
+  if (!previous || !anchor) return {valid:false,reason:'CURATED_BASELINE_ANCHOR_MISSING'};
+  const core={
+    version:anchor.version,
+    initializedAt:anchor.initializedAt,
+    baselineGraphDigest:anchor.baselineGraphDigest,
+    baselineLedgerFingerprint:anchor.baselineLedgerFingerprint
+  };
+  if (core.version!=='PermitPlate-curated-baseline-anchor-v1.0.0' ||
+      core.initializedAt!==previous.initializedAt ||
+      ledger.hash(core)!==anchor.anchorFingerprint) {
+    return {valid:false,reason:'CURATED_BASELINE_ANCHOR_INVALID'};
+  }
+  return {valid:true};
+}
 function prepare(previous, graph) {
   const advanced = ledger.advance(previous,graph);
   if (advanced.status === 'REVIEW') {
@@ -57,11 +82,19 @@ async function run(input) {
   }
   const ledgerPath = privateMaterialPath(opts.ledgerPath);
   const graphPath = privateMaterialPath(opts.graphPath);
+  const anchorPath=path.join(path.dirname(ledgerPath),'curated-baseline-anchor.json');
+  const previous=readOptional(ledgerPath);
+  const anchor=readOptional(anchorPath);
+  const anchorCheck=verifyBaselineAnchor(previous,anchor);
+  if (!anchorCheck.valid) return {
+    status:'REVIEW',ready:false,failures:[anchorCheck.reason]
+  };
   const liveGraph = await replay(opts.nowIso);
-  const result = prepare(readOptional(ledgerPath),liveGraph);
+  const result = prepare(previous,liveGraph);
   if (!result.ready) return result;
   atomicJson(graphPath,result.graph);
   atomicJson(ledgerPath,result.ledger);
+  if (!anchor) atomicJson(anchorPath,baselineAnchor(result.ledger));
   return result;
 }
 async function main() {
@@ -80,4 +113,4 @@ async function main() {
 if (require.main === module) {
   main().catch(error=>{console.error(error.message);process.exitCode=1});
 }
-module.exports = {VERSION,readOptional,atomicJson,prepare,run};
+module.exports = {VERSION,readOptional,atomicJson,baselineAnchor,verifyBaselineAnchor,prepare,run};
