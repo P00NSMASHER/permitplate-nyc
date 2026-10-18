@@ -42,7 +42,7 @@ on:
       - 'pipeline/opportunity-ledger.js'
       - 'verification/launch-external-evidence.json'
       - 'build-site.js'
-      - 'tests/test_launch_readiness_workflow_policy.py'
+      - 'tests/test_pilot_source_admission.py'
       - '.github/workflows/launch-readiness.yml'
       - '.github/workflows/detection-ledger.yml'
 
@@ -50,7 +50,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: permitplate-private-state-${{ vars.PERMITPLATE_STATE_REPO }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.event_name == 'pull_request' && format('permitplate-pilot-policy-pr-{0}', github.event.pull_request.number) || format('permitplate-private-state-{0}', vars.PERMITPLATE_STATE_REPO) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
