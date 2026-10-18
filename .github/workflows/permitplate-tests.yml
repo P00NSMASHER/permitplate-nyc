@@ -110,6 +110,9 @@ jobs:
       - name: Verify real curated research and subscriber fulfillment
         run: node pipeline/curated-product.test.js
 
+      - name: Verify private material-event customer delivery
+        run: node pipeline/curated-material-events.test.js
+
       - name: Verify private curated research workflow policy
         run: python3 -m unittest discover -s tests -p 'test_curated_workflow_policy.py' -v
 

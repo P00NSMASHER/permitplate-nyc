@@ -1,6 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict');
 const research=require('./curated-research-ledger');
+const materialChange=require('./material-change');
 const {baselineAnchor}=require('./run-curated-research');
 const readiness=require('./curated-production-readiness');
 
@@ -13,6 +14,13 @@ const candidate={
   sourceLatestEffectiveAt:'2026-10-18T17:00:00.000Z',
   deliverySuppressed:false,crossCamisOperationalConflicts:[]
 };
+candidate.materiality=materialChange.describe({
+  ...candidate,sourceSystems:['DOHMH'],
+  projectSignal:{materialEvidence:[{
+    system:'DOHMH',key:'DOHMH:50110000',eventType:'DOHMH_APPLICANT_RECORD',
+    eventDate:null,details:{inspectionType:'',action:''}
+  }]}
+});
 function graph(){
   const observations={};
   for(const key of research.REQUIRED_SOURCES){
@@ -43,6 +51,10 @@ const base={
   evaluatedAt
 };
 assert.equal(readiness.evaluate(base).valid,true);
+const missingSemantics=JSON.parse(JSON.stringify(snapshot));
+delete missingSemantics.candidates[0].materiality;
+missingSemantics.artifactFingerprint=research.graphFingerprint(missingSemantics);
+assert(readiness.evaluate({...base,snapshot:missingSemantics}).failures.includes('CURATED_SEMANTIC_EVIDENCE_MISSING'));
 const wrongDigest=readiness.evaluate({...base,currentGraphDigest:'b'.repeat(64)});
 assert.equal(wrongDigest.valid,false);
 assert(wrongDigest.failures.includes('CURATED_SNAPSHOT_NOT_CURRENT_SOURCE_GRAPH'));

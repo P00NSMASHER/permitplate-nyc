@@ -14,8 +14,8 @@ const TERRITORY_VALUES=Object.freeze([
   'ManhattanBrooklynQueens','BrooklynStatenIsland'
 ]);
 const CSV_HEADERS=Object.freeze([
-  'Signal Key','Signal Section','First Observed by PermitPlate',
-  'Business','Address','Borough','Stage','Why It Matters',
+  'Signal Key','Signal Section','Event Type','Event Observed by PermitPlate',
+  'Business','Address','Borough','Stage','What Changed','Why It Matters',
   'Source Record Date','PermitPlate Reviewed','Official Source URLs'
 ]);
 
@@ -114,6 +114,9 @@ function normalizeSignal(input,index,failures){
   const reviewedAt=validInstant(signal.reviewedAt);
   const section=text(signal.section);
   const firstObservedAt=signal.firstObservedAt==null?null:validInstant(signal.firstObservedAt);
+  const eventKind=text(signal.eventKind);
+  const eventId=text(signal.eventId);
+  const whatChanged=text(signal.whatChanged);
   const urls=Array.isArray(signal.sourceUrls)?signal.sourceUrls.map(text).filter(Boolean):[];
 
   if(!signalKey) failures.push(prefix+'_KEY_MISSING');
@@ -129,12 +132,18 @@ function normalizeSignal(input,index,failures){
   if(section&&!firstObservedAt) failures.push(prefix+'_FIRST_OBSERVATION_REQUIRED');
   if(signal.firstObservedAt!=null&&!firstObservedAt) failures.push(prefix+'_FIRST_OBSERVATION_INVALID');
   if(firstObservedAt&&reviewedAt&&firstObservedAt>reviewedAt) failures.push(prefix+'_OBSERVATION_AFTER_REVIEW');
+  if(eventKind&&!['NEW_OBSERVATION','MATERIAL_CHANGE'].includes(eventKind)) {
+    failures.push(prefix+'_EVENT_KIND_INVALID');
+  }
+  if(eventKind==='MATERIAL_CHANGE'&&(!/^MAT:[a-f0-9]{24}$/.test(eventId)||
+    !whatChanged)) failures.push(prefix+'_MATERIAL_EVENT_REVIEW_INCOMPLETE');
+  if(whatChanged.length>220) failures.push(prefix+'_WHAT_CHANGED_TOO_LONG');
   if(!urls.length) failures.push(prefix+'_SOURCE_URL_MISSING');
   if(urls.some((url)=>!officialSourceUrl(url))) failures.push(prefix+'_SOURCE_URL_NOT_OFFICIAL');
 
   return {
     signalKey,businessName,address,borough,stage,whyItMatters,
-    section:firstObservedAt?section:null,firstObservedAt,
+    section:firstObservedAt?section:null,firstObservedAt,eventKind,eventId,whatChanged,
     sourceUpdatedAt,reviewedAt,sourceUrls:Array.from(new Set(urls)).sort()
   };
 }
@@ -172,11 +181,13 @@ function buildCuratedBrief(input){
   const rows=signals.map((signal)=>({
     'Signal Key':signal.signalKey,
     'Signal Section':signal.section||'',
-    'First Observed by PermitPlate':signal.firstObservedAt||'',
+    'Event Type':signal.eventKind||'',
+    'Event Observed by PermitPlate':signal.firstObservedAt||'',
     'Business':signal.businessName,
     'Address':signal.address,
     'Borough':signal.borough,
     'Stage':signal.stage,
+    'What Changed':signal.whatChanged||'',
     'Why It Matters':signal.whyItMatters,
     'Source Record Date':signal.sourceUpdatedAt,
     'PermitPlate Reviewed':signal.reviewedAt,
@@ -189,10 +200,14 @@ function buildCuratedBrief(input){
     `<h3 style="margin:0 0 6px">${index+1}. ${htmlEscape(signal.businessName)}</h3>`,
     `<p style="margin:0 0 6px">${htmlEscape(signal.address)} · ${htmlEscape(signal.borough)}</p>`,
     `<p style="margin:0 0 6px"><strong>${htmlEscape(signal.stage)}</strong> — ${htmlEscape(signal.whyItMatters)}</p>`,
-    signal.section=== 'STARTER'?
+    signal.eventKind==='MATERIAL_CHANGE'?
+      `<p style="margin:0 0 6px"><strong>${signal.section==='STARTER'?'Starter Snapshot · ':''}Material change</strong> · observed by PermitPlate: ${htmlEscape(signal.firstObservedAt)}</p>`:
+      signal.section==='STARTER'?
       `<p style="margin:0 0 6px"><strong>Starter Snapshot</strong> · first observed by PermitPlate: ${htmlEscape(signal.firstObservedAt)}</p>`:
       signal.section==='NORMAL'?
       `<p style="margin:0 0 6px"><strong>New observation</strong> · first observed by PermitPlate: ${htmlEscape(signal.firstObservedAt)}</p>`:'',
+    signal.whatChanged?
+      `<p style="margin:0 0 6px"><strong>What changed:</strong> ${htmlEscape(signal.whatChanged)}</p>`:'',
     `<p style="margin:0 0 6px;font-size:13px">Source record date: ${htmlEscape(signal.sourceUpdatedAt)} · Reviewed: ${htmlEscape(signal.reviewedAt)}</p>`,
     `<p style="margin:0;font-size:13px">${signal.sourceUrls.map((url,i)=>`<a href="${htmlEscape(url)}">official source ${i+1}</a>`).join(' · ')}</p>`,
     '</article>'

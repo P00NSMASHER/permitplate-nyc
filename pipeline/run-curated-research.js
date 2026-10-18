@@ -69,6 +69,8 @@ function prepare(previous, graph) {
       ledgerFingerprint:advanced.ledger.ledgerFingerprint,
       candidateCount:advanced.candidateCount,
       newlyObservedResearchCount:advanced.newResearchCount,
+      verifiedMaterialChangeCount:advanced.newMaterialEventCount||0,
+      materialChangesHeldForReview:advanced.materialReviewCount||0,
       heldForReviewCount:advanced.heldReviewCount,
       externalSendCalls:0,
       customerDataRead:false
