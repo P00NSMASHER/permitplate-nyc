@@ -4,6 +4,9 @@ from pathlib import Path
 
 FLOW = Path(__file__).resolve().parents[1] / '.github' / 'workflows' / 'curated-research.yml'
 MAIN_ONLY = "if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}"
+AFTER_REFRESH = "Recheck exact public main after collection"
+PUBLIC_SOURCE = 'current_public="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"'
+PUBLIC_EQUAL = 'test -n "$current_public" && test "$current_public" = "$GITHUB_SHA"'
 COMMIT = "Publish private state with scoped credentials"
 SECRET = "secrets.PERMITPLATE_STATE_TOKEN"
 
@@ -29,6 +32,13 @@ def verify(source):
     assert "Test actual paid product with offline fixtures" in source
     assert "node pipeline/curated-product.test.js" in source
     assert "state/curated-research-ledger.json state/curated-current-graph.json" in source
+    assert source.index("Refresh current official research in private state") < source.index(AFTER_REFRESH)
+    assert source.index(AFTER_REFRESH) < source.index("Commit only private research state")
+    assert source.count(PUBLIC_SOURCE) == 2
+    assert source.count(PUBLIC_EQUAL) == 2
+    publish = source[source.index(COMMIT):]
+    assert publish.index(PUBLIC_SOURCE) < publish.index("gh auth setup-git")
+    assert publish.index(PUBLIC_EQUAL) < publish.index("gh auth setup-git")
     assert source.index("Commit only private research state") < source.index(COMMIT)
     assert "git -C \"$PRIVATE_DIR\" push origin HEAD:main" in source
     assert "upload-artifact" not in source
@@ -60,6 +70,20 @@ class CuratedWorkflowPolicyTest(unittest.TestCase):
         with self.assertRaises(AssertionError):
             verify(self.source.replace("format('permitplate-private-state-{0}', vars.PERMITPLATE_STATE_REPO)",
                                        "github.ref"))
+
+    def test_post_refresh_drift_is_rejected(self):
+        tail = self.source.index(AFTER_REFRESH)
+        modified = self.source[:tail] + self.source[tail:].replace(
+            PUBLIC_SOURCE, 'current_public="$GITHUB_SHA"', 1)
+        with self.assertRaises(AssertionError):
+            verify(modified)
+
+    def test_pre_push_drift_is_rejected(self):
+        idx = self.source.index(COMMIT)
+        modified = self.source[:idx] + self.source[idx:].replace(
+            PUBLIC_SOURCE, 'current_public="$GITHUB_SHA"', 1)
+        with self.assertRaises(AssertionError):
+            verify(modified)
 
     def test_public_sensitive_artifact_rejected(self):
         with self.assertRaises(AssertionError):
