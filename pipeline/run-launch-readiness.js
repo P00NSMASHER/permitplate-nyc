@@ -11,11 +11,16 @@ const firstSubscriber=require('./run-first-subscriber-canary');
 const publicBuild=require('../build-site');
 const readiness=require('./launch-readiness');
 const curatedCanary=require('./run-founder-curated-canary');
+const curatedProduction=require('./curated-production-readiness');
 
 const RUNNER_VERSION='PermitPlate-launch-readiness-runner-v1.1.0';
 
 function readJson(filePath){
   return JSON.parse(fs.readFileSync(filePath,'utf8'));
+}
+function readOptionalPrivateJson(filePath){
+  try {return readJson(filePath);}
+  catch(error){return null;} // Missing, malformed and inaccessible state must fail closed.
 }
 function promotionEvidenceFrom(current,historicalResult){
   return {
@@ -62,6 +67,14 @@ async function run(options){
 
   const detectionLedger=readJson(detectionPath);
   const opportunityLedger=readJson(opportunityPath);
+  const curatedStateDir=path.dirname(detectionPath);
+  const curatedResearch=curatedProduction.evaluate({
+    snapshot:readOptionalPrivateJson(path.join(curatedStateDir,'curated-current-graph.json')),
+    ledger:readOptionalPrivateJson(path.join(curatedStateDir,'curated-research-ledger.json')),
+    anchor:readOptionalPrivateJson(path.join(curatedStateDir,'curated-baseline-anchor.json')),
+    currentGraphDigest:graph.graphDigest,
+    evaluatedAt:observedAt
+  });
   const externalEvidence=readJson(externalEvidencePath);
   const subscriberCanary=firstSubscriber.run();
   const founderCuratedCanary=curatedCanary.run();
@@ -81,6 +94,7 @@ async function run(options){
     opportunityLedger,
     subscriberCanary,
     curatedCanary:founderCuratedCanary,
+    curatedResearch,
     launchMode:manifest.checkout&&manifest.checkout.launch_mode,
     curatedFulfillmentRunbookPresent,
     publicBuildFailures,
