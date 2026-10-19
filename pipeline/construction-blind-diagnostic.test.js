@@ -186,14 +186,19 @@ assert.equal(newlyFrozen.frozen.anchor.reservedCases,out.manifest.reservedCases)
 assert.equal(newlyFrozen.frozen.anchor.originalScoringHoldoutCasesRead,0);
 assert(frozen.validate(newlyFrozen.frozen).valid);
 assert.equal(frozen.allOrNone(newlyFrozen.frozen),'ALL');
+const rollingLegacy={...legacy,panel:shuffled};
 const replay=frozen.choose({
-  previousFrozen:newlyFrozen.frozen,legacy,
+  previousFrozen:newlyFrozen.frozen,legacy:rollingLegacy,
   current:{panel:shuffled,reviewerPacket:repeat.reviewerPacket,
     reservedAudit:repeat.reservedAudit,manifest:repeat.manifest},
   now:'2026-10-20T18:20:00.000Z'
 });
 assert.equal(replay.status,'FROZEN_ALREADY');
 assert.equal(replay.newlyFrozen,false);
+assert.notEqual(rollingLegacy.panel.artifactFingerprint,
+  newlyFrozen.frozen.panel.artifactFingerprint);
+assert.equal(replay.frozen.panel.artifactFingerprint,
+  newlyFrozen.frozen.panel.artifactFingerprint);
 assert.equal(replay.frozen.anchor.anchorFingerprint,
   newlyFrozen.frozen.anchor.anchorFingerprint);
 assert.equal(replay.frozen.reviewerPacket.packetFingerprint,
