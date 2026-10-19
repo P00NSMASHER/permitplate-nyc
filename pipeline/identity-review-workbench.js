@@ -22,7 +22,9 @@ const HEADERS=Object.freeze([
   'Proposal ID','Monitoring Status','First Observed by PermitPlate',
   'Last Source Context Recheck','Review Class','Identity Hypothesis','Linked CAMIS',
   'Source Record IDs','Operator Name','Applicant DBA','Property Owner',
-  'Premise Key','Name Agreement','Official Source A','Official Source B',
+  'Premise Key','Name Agreement',
+  'Official Building-ID Assessment','BIN Comparison','BBL Comparison',
+  'Official Source A','Official Source B',
   'Evidence Fingerprint','Human Verification Decision','Reviewer Notes',
   'Customer Delivery Allowed'
 ]);
@@ -59,6 +61,8 @@ function validateForRendering(receipt){
 function render(receipt){
   validateForRendering(receipt);
   const props=receipt.proposals.slice().sort((a,b)=>
+    (a.premiseEvidence?.manualConflictHold===true?-1:0)-
+      (b.premiseEvidence?.manualConflictHold===true?-1:0)||
     (MONITORING_PRIORITY[a.monitoringStatus||'UNTRACKED_REVIEW']??99)-
       (MONITORING_PRIORITY[b.monitoringStatus||'UNTRACKED_REVIEW']??99)||
     (PRIORITY[a.reviewClass]??99)-(PRIORITY[b.reviewClass]??99)||
@@ -83,6 +87,10 @@ function render(receipt){
       'Property Owner':p.sourceOwnerName||'',
       'Premise Key':p.premiseKey,
       'Name Agreement':p.nameAgreement,
+      'Official Building-ID Assessment':p.premiseEvidence?.assessment||
+        'OFFICIAL_PROPERTY_IDENTIFIERS_NOT_AVAILABLE',
+      'BIN Comparison':p.premiseEvidence?.binComparison||'NOT_COMPARABLE',
+      'BBL Comparison':p.premiseEvidence?.bblComparison||'NOT_COMPARABLE',
       'Official Source A':urls[0],
       'Official Source B':urls[1],
       'Evidence Fingerprint':p.evidenceFingerprint,
@@ -112,6 +120,10 @@ function render(receipt){
         escapeHtml(row['Identity Hypothesis'])+'</small></td>',
       '<td>'+escapeHtml(row['Premise Key'])+'<small>'+
         escapeHtml(row['Linked CAMIS'])+'</small></td>',
+      '<td><strong>'+escapeHtml(row['Official Building-ID Assessment'])+
+        '</strong><small>BIN: '+escapeHtml(row['BIN Comparison'])+
+        ' · BBL: '+escapeHtml(row['BBL Comparison'])+
+        '</small><small>Operator identity: NOT VERIFIED</small></td>',
       '<td>'+escapeHtml(row['Operator Name'])+'<small>'+
         escapeHtml(row['Applicant DBA'])+'</small><small>Owner: '+
         escapeHtml(row['Property Owner'])+'</small></td>',
@@ -155,10 +167,10 @@ function render(receipt){
       'A source-context recheck is not verified change in ownership or identity. '+
       'The companion CSV is for offline notes; it cannot be imported as approval.</p>',
     '<div class="table"><table><thead><tr>',
-    '<th>#</th><th>Monitoring</th><th>Reason for review</th><th>Premise</th><th>Printed names</th>'+
+    '<th>#</th><th>Monitoring</th><th>Reason for review</th><th>Premise</th><th>Building-ID evidence</th><th>Printed names</th>'+
       '<th>Source identities</th><th>Official records</th><th>Decision</th>',
     '</tr></thead><tbody>',
-    tableRows||'<tr><td colspan="8">No current source relationships proposed.</td></tr>',
+    tableRows||'<tr><td colspan="9">No current source relationships proposed.</td></tr>',
     '</tbody></table></div>',
     '<footer>Document source: private verified PermitPlate research snapshot. '+
       'Automatic merges: 0. Customer delivery: prohibited. No external assets or scripts.</footer>',
