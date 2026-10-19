@@ -99,7 +99,7 @@ function knownRegressionChecks(graph, batches) {
   };
 }
 
-async function replay(nowIso) {
+async function replay(nowIso,options) {
   const {observedAt, batches} = await scanBatches(nowIso);
   const graph = buildCurrentGraph({
     dohmhBatch:batches.DOHMH,
@@ -138,7 +138,9 @@ async function replay(nowIso) {
     // A name, address, lifecycle or suppression edit must invalidate the receipt.
     candidates:result.candidates.slice().sort((a,b) => String(a.entityId).localeCompare(String(b.entityId)))
   }));
-  return result;
+  // Private callers may reuse exactly the source rows that established
+  // the graph. The default public CLI return shape remains unchanged.
+  return options&&options.withBatches===true?{result,batches}:result;
 }
 
 async function main() {
