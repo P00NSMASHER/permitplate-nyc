@@ -12,6 +12,7 @@ const identityReview=require('./identity-bridge-review');
 const identityWorkbench=require('./identity-review-workbench');
 const constructionPanel=require('./construction-validation-panel');
 const constructionBlind=require('./construction-blind-diagnostic');
+const constructionFrozen=require('./construction-frozen-reference');
 const identityHistory=require('./identity-triage-history');
 const receiptRecovery=require('./identity-receipt-recovery');
 const {privateMaterialPath} = require('./run-subscriber-intake');
@@ -198,6 +199,24 @@ async function run(input) {
   const ledgerPath = privateMaterialPath(opts.ledgerPath);
   const graphPath = privateMaterialPath(opts.graphPath);
   const anchorPath=path.join(path.dirname(ledgerPath),'curated-baseline-anchor.json');
+  const sourceDir=path.dirname(ledgerPath);
+  const formerParts={
+    panel:readOptional(path.join(sourceDir,'construction-validation-panel.json')),
+    reviewerPacket:readOptional(path.join(sourceDir,'construction-blind-reviewer.json')),
+    reservedAudit:readOptional(path.join(sourceDir,'construction-reserved-audit.json')),
+    manifest:readOptional(path.join(sourceDir,'construction-blind-manifest.json'))
+  };
+  const freezeDir=path.join(path.dirname(sourceDir),'research','construction-frozen-reference-v1');
+  const frozenParts={
+    panel:readOptional(path.join(freezeDir,'source-panel.json')),
+    reviewerPacket:readOptional(path.join(freezeDir,'reviewer-packet.json')),
+    reservedAudit:readOptional(path.join(freezeDir,'reserved-audit.json')),
+    manifest:readOptional(path.join(freezeDir,'split-manifest.json')),
+    anchor:readOptional(path.join(freezeDir,'anchor.json'))
+  };
+  if(constructionFrozen.allOrNone(frozenParts)==='NONE'&&frozenParts.anchor){
+    return {status:'REVIEW',ready:false,failures:['FROZEN_CONSTRUCTION_ANCHOR_WITHOUT_DATA']};
+  }
   const previous=readOptional(ledgerPath);
   const anchor=readOptional(anchorPath);
   const anchorCheck=verifyBaselineAnchor(previous,anchor);
@@ -272,7 +291,29 @@ async function run(input) {
     return {status:'REVIEW',ready:false,
       failures:blind.failures||['CONSTRUCTION_BLIND_SPLIT_FAILED_CLOSED']};
   }
-  result.summary.constructionReviewerCards=blind.manifest.reviewCases;
+  const freeze=constructionFrozen.choose({
+    previousFrozen:frozenParts,legacy:formerParts,
+    current:{
+      panel:scopeDiagnostic,
+      reviewerPacket:blind.reviewerPacket,
+      reservedAudit:blind.reservedAudit,
+      manifest:blind.manifest
+    },
+    now:result.graph.observedAt
+  });
+  if(!['FROZEN_ALREADY','FROZEN_CREATED'].includes(freeze.status)){
+    return {status:'REVIEW',ready:false,failures:freeze.failures||[
+      'CONSTRUCTION_REFERENCE_FREEZE_FAILED'
+    ]};
+  }
+  result.summary.constructionReferenceOriginalObservedAt=freeze.frozen.anchor.originalSourceObservedAt;
+  result.summary.constructionReferenceCreated=freeze.newlyFrozen;
+  result.summary.constructionReferenceReviewerCases=freeze.frozen.anchor.reviewCases;
+  result.summary.constructionReferenceReservedCases=freeze.frozen.anchor.reservedCases;
+  result.summary.constructionReferenceOriginalScoringHoldoutRead=0;
+  // Current source data may continue changing; the original 67/26 reference
+  // and its reserved audit remain fixed, even when daily strata shift.
+    result.summary.constructionReviewerCards=blind.manifest.reviewCases;
   result.summary.constructionReservedAuditCases=blind.manifest.reservedCases;
   result.summary.constructionReviewerPremiseGroups=blind.manifest.reviewPremiseGroups;
   result.summary.constructionReservedPremiseGroups=blind.manifest.reservedPremiseGroups;
@@ -331,12 +372,32 @@ async function run(input) {
     constructionPanel.report(scopeDiagnostic));
   // Distinct research-only split. The reviewer packet cannot include the
   // reserved audit examples, synthetic labels or scoring predictions.
-  atomicJson(path.join(path.dirname(ledgerPath),'construction-blind-reviewer.json'),
-    blind.reviewerPacket);
-  atomicJson(path.join(path.dirname(ledgerPath),'construction-reserved-audit.json'),
-    blind.reservedAudit);
-  atomicJson(path.join(path.dirname(ledgerPath),'construction-blind-manifest.json'),
-    blind.manifest);
+  if(freeze.newlyFrozen){
+    for(const [name,data] of Object.entries({
+      'source-panel.json':freeze.frozen.panel,
+      'reviewer-packet.json':freeze.frozen.reviewerPacket,
+      'reserved-audit.json':freeze.frozen.reservedAudit,
+      'split-manifest.json':freeze.frozen.manifest,
+      'anchor.json':freeze.frozen.anchor
+    })){
+      const file=path.join(freezeDir,name);
+      if(fs.existsSync(file)){
+        return {status:'REVIEW',ready:false,
+          failures:['CONSTRUCTION_FROZEN_REFERENCE_ALREADY_EXISTS']};
+      }
+      atomicJson(file,data);
+    }
+    // Only on fresh installation, initialize the legacy names once. For
+    // existing deployments they are the historical cohort and MUST NOT move.
+    if(!freeze.originalLegacyExists){
+      atomicJson(path.join(sourceDir,'construction-blind-reviewer.json'),
+        freeze.frozen.reviewerPacket);
+      atomicJson(path.join(sourceDir,'construction-reserved-audit.json'),
+        freeze.frozen.reservedAudit);
+      atomicJson(path.join(sourceDir,'construction-blind-manifest.json'),
+        freeze.frozen.manifest);
+    }
+  }
   return result;
 }
 async function main() {
