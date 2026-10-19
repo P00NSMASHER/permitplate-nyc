@@ -86,6 +86,41 @@ The `omittedByLimit` value reports records left out of the bounded private
 queue rather than implying the queue is exhaustive. The workflow logs only
 aggregate counts, not names, addresses, or applicant details.
 
+## 1B. Identity hypotheses across NYC sources (not verified bridges)
+
+The protected daily private source refresh also writes
+`state/identity-bridge-review.json`. This bounded review-only receipt
+finds possible relationships between:
+
+- An existing health-department CAMIS restaurant and an unlinked DOB
+  construction job or SLA licensing application at the exact same
+  normalized borough and premise address.
+- An unlinked DOB construction job and an unlinked SLA application at
+  that same borough and premise address, before a CAMIS record exists.
+
+Every record is checked against the full source-observation receipts and
+source-row identities. The artifact supplies the official record URLs,
+source fingerprints, record IDs, and reasons requiring review.
+`NAME_AND_PREMISE_TO_VERIFY` indicates that the printed operator and
+license-applicant DBA appear to match at one address. It is still **not**
+proof of a verified identity. DOB property owners and landlords are not
+assumed to be the restaurant operator.
+
+Ambiguous buildings with more than one CAMIS identity and records
+suppressed for operational conflicts are explicitly flagged. Address
+co-location by itself cannot create a source identity. Overflows are
+reported separately and no truncated preview claims to be exhaustive.
+
+**No proposed match is approved automatically.** Each carries
+`reviewStatus: REVIEW_REQUIRED`,
+`needsIndependentVerification: true`,
+`automaticIdentityLinkAllowed: false`, and
+`customerDeliveryAllowed: false`. This queue is not passed to
+`reviewedIdentityBridges`, the paid candidate graph, scoring, or
+customer fulfillment. Independent documentary proof, explicit authorized
+review, and a separately tested acceptance gate are required before any
+future source-link promotion.
+
 ## 2. Assemble a private paid subscriber review
 
 Use an authorized workstation with the product repository and private state
