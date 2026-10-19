@@ -10,6 +10,7 @@ const independentReview=require('./independent-source-review');
 const independentHistory=require('./independent-source-history');
 const identityReview=require('./identity-bridge-review');
 const identityWorkbench=require('./identity-review-workbench');
+const constructionPanel=require('./construction-validation-panel');
 const identityHistory=require('./identity-triage-history');
 const receiptRecovery=require('./identity-receipt-recovery');
 const {privateMaterialPath} = require('./run-subscriber-intake');
@@ -235,6 +236,25 @@ async function run(input) {
     readOptional(identityHistoryPath),readOptional(identityPath),identity
   );
   if(!triage.ready)return triage;
+  // The rich DOB diagnostic is compiled from the SAME independently verified
+  // source batches. It never reads the scoring cohort, holdout or labels.
+  const scopeDiagnostic=constructionPanel.build({
+    graph:result.graph,batches:collected.batches,
+    independent:annotated,identities:triage.annotated,
+    observedAt:result.graph.observedAt
+  });
+  if(scopeDiagnostic.status!=='SOURCE_RICH_DIAGNOSTIC_ONLY'||
+     scopeDiagnostic.customerDeliveryAllowed!==false||
+     scopeDiagnostic.productionAuthorized!==false){
+    return {status:'REVIEW',ready:false,
+      failures:scopeDiagnostic.failures||['CONSTRUCTION_DIAGNOSTIC_HOLD']};
+  }
+  result.summary.constructionDiagnosticFilings=scopeDiagnostic.filings;
+  result.summary.constructionDiagnosticUniqueJobRoots=scopeDiagnostic.uniqueJobNumberRoots;
+  result.summary.constructionDiagnosticFullDescriptionsBeyond180=scopeDiagnostic.officialRowsWithScopeBeyond180;
+  result.summary.constructionDiagnosticSpecificComponentAndAction=scopeDiagnostic.equipmentSpecificComponentAndActionRules;
+  result.summary.constructionDiagnosticHumanReviewers=0;
+  result.summary.constructionDiagnosticHoldoutRead=0;
   // Static human workbench has no approval endpoint, scripts, remote assets,
   // email transport, or public CI artifact. All output stays in private Git.
   const workbench=identityWorkbench.render(triage.annotated);
@@ -274,6 +294,11 @@ async function run(input) {
   atomicJson(identityPath,triage.annotated);
   atomicText(path.join(path.dirname(ledgerPath),'identity-bridge-review.csv'),workbench.csv);
   atomicText(path.join(path.dirname(ledgerPath),'identity-bridge-review.html'),workbench.html);
+  atomicJson(path.join(path.dirname(ledgerPath),'construction-validation-panel.json'),scopeDiagnostic);
+  atomicText(path.join(path.dirname(ledgerPath),'construction-validation-panel.csv'),
+    constructionPanel.csv(scopeDiagnostic));
+  atomicText(path.join(path.dirname(ledgerPath),'construction-validation-summary.md'),
+    constructionPanel.report(scopeDiagnostic));
   return result;
 }
 async function main() {
