@@ -131,6 +131,34 @@ identity evidence are still required for commercial validation.
 The original `70 tuning / 30 scored holdout` files are not accessed,
 modified, or replaced. No calibrated score may be promoted from this panel.
 
+## Frozen construction reviewer/audit reference
+
+The first production run after this upgrade freezes the pre-existing private
+source-rich construction review, its **separate reserved audit** and exact
+source-bound manifest under:
+
+`research/construction-frozen-reference-v1/`
+
+Files: `source-panel.json`, `reviewer-packet.json`,
+`reserved-audit.json`, `split-manifest.json`, `anchor.json`.
+The archive is created exactly once after the original source-panel receipt
+and premise-stratified split verify. The archived reviewer and reserved
+identities, observation time and fingerprints **never change**.
+
+The older `state/construction-blind-*.json` files are retained as the
+same frozen historical reviewer/audit pair for compatibility; subsequent
+daily scans may update the **current source-rich diagnostic** but must NOT
+rewrite the original reviewer or reserved packet. Every daily run verifies
+the old legacy pair against the frozen archive and fails closed if either
+piece disappears or changes. This prevents normal source-data churn from
+moving a historically reserved case into the reviewer packet.
+
+The reserved audit file is for authorized operator validation only. Only
+`reviewer-packet.json` may be shown to genuine independent reviewers.
+Do not merge these datasets, infer customer outcomes, count synthetic
+judgments, or treat this audit as the existing scored Equipment holdout.
+The original 70-case tuning and 30-case scoring holdout remain untouched.
+
 ## Independent full-scope construction diagnostic (not scored calibration)
 
 The source refresh creates three additional **private** artifacts:
