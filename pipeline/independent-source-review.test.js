@@ -52,8 +52,14 @@ const stale=source.normalizeSlaPendingRow({
 
 function fixture(linked=false){
   const sourceObservations={}, batches={};
+  const dohmh=source.normalizeDohmhRow({
+    camis:'50119999',dba:'UNRELATED OPERATOR',boro:'Brooklyn',
+    building:'80',street:'WYTHE AVENUE',
+    record_date:'2026-10-18T00:00:00.000',
+    inspection_date:'1900-01-01T00:00:00.000'
+  },{observedAt:NOW});
   const cases={
-    DOHMH:[],
+    DOHMH:[dohmh],
     DOB_NOW:[restaurant,residential,unrelated,oldDob],
     SLA_PENDING:[sla,westchester,grocery,stale]
   };
@@ -65,7 +71,9 @@ function fixture(linked=false){
       fetchedCount:cases[k].length,publisherCount:cases[k].length
     };
     sourceObservations[k]=o;
-    batches[k]={observation:o,records:cases[k]};
+    batches[k]={observation:o,records:cases[k].map(record=>({
+      ...record,sourceObservationId:o.observationId
+    }))};
   }
   const candidate={
     entityId:'CAMIS:50119999',camis:'50119999',
