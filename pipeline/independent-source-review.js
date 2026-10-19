@@ -70,8 +70,8 @@ function inspect(input){
   const batches=data.batches||{};
   const failures=[];
   const now=date(data.observedAt);
-  if(!now||graph.graphState!=='COMPLETE'||graph.passed!==true||
-      graph.observedAt!==now||!Array.isArray(graph.candidates)){
+  const graphValidation=research.checkGraph(graph);
+  if(!now||!graphValidation.valid||graph.observedAt!==now){
     failures.push('SOURCE_REVIEW_GRAPH_INVALID');
   }
   for(const key of research.REQUIRED_SOURCES){
