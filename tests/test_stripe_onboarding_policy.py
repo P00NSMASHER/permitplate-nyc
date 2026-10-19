@@ -29,9 +29,9 @@ def verify(source):
     assert source.index(SOURCE_RECHECK) < source.index(PUBLISH)
     assert "test \"$(git rev-parse HEAD)\" = \"$GITHUB_SHA\"" in source
     assert source.count('git ls-remote --exit-code origin refs/heads/main') == 3
-    assert source.count(PINNED_CHECKOUT) == 2
+    assert source.count(PINNED_CHECKOUT) == 3
     assert source.count(PINNED_NODE) == 2
-    assert source.count("persist-credentials: false") == 2
+    assert source.count("persist-credentials: false") == 3
     assert "actions/checkout@v4" not in source
     assert "actions/setup-node@v4" not in source
     assert "gh api \"repos/$STATE_REPO\" --jq '.visibility'" in source
