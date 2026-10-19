@@ -4,6 +4,7 @@ const research=require('./curated-research-ledger');
 const panelBuilder=require('./construction-validation-panel');
 const split=require('./construction-blind-diagnostic');
 const frozen=require('./construction-frozen-reference');
+const reviewerWorksheet=require('./construction-reviewer-worksheet');
 const makeHash=value=>research.hash(value);
 const WHEN='2026-10-19T17:43:28.906Z';
 function record(id,place,scopeClass='SPECIFIC_COMPONENT_AND_ACTION',options={}){
@@ -235,5 +236,62 @@ assert.equal(fresh.frozen.anchor.origin,'CURRENT_VERIFIED_SOURCE_SNAPSHOT');
 assert.equal(fresh.frozen.anchor.reviewCases+fresh.frozen.anchor.reservedCases,17);
 assert.equal(fresh.frozen.anchor.customerDeliveryAllowed,false);
 assert.equal(fresh.frozen.anchor.scoringPromotionAuthorized,false);
+
+
+// Create a human-usable *blank* source worksheet without ever rendering
+// reserved audit IDs or contaminating the existing Equipment scoring holdout.
+const reviewerMaterials=reviewerWorksheet.render(newlyFrozen.frozen);
+assert.equal(reviewerMaterials.receipt.status,'UNLABELED_FROZEN_REVIEWER_WORKSHEET');
+assert.equal(reviewerMaterials.receipt.caseCount,out.reviewerPacket.cards.length);
+assert.equal(reviewerMaterials.receipt.reservedAuditCaseIdsEmitted,0);
+assert.equal(reviewerMaterials.receipt.humanJudgmentsPreFilled,0);
+assert.equal(reviewerMaterials.receipt.hiddenOriginalScoringHoldoutAccessed,0);
+assert.equal(reviewerMaterials.receipt.customerDeliveryAllowed,false);
+assert.equal(reviewerMaterials.receipt.productionAuthorized,false);
+assert(reviewerMaterials.html.startsWith('<!doctype html>'));
+assert(reviewerMaterials.html.includes('Content-Security-Policy'));
+assert(reviewerMaterials.html.includes('Unabridged official job description'));
+assert(reviewerMaterials.html.includes('Zero human judgments recorded'));
+assert(!reviewerMaterials.html.includes('<script'));
+assert(!reviewerMaterials.html.includes('model score predictions'));
+assert(reviewerMaterials.csv.startsWith('\ufeff'));
+assert(reviewerMaterials.csv.includes('Equipment Construction Relevance (BLANK)'));
+assert(reviewerMaterials.csv.includes('Source Seen In Official Record? (BLANK)'));
+assert(reviewerMaterials.csv.includes('Reviewer Attestation (BLANK)'));
+assert(!reviewerMaterials.csv.includes('APPROVED BY REVIEWER'));
+for(const c of out.reservedAudit.cases){
+  assert(!reviewerMaterials.html.includes(c.caseId));
+  assert(!reviewerMaterials.csv.includes(c.caseId));
+  assert(!reviewerMaterials.html.includes(c.originalSourceText));
+}
+assert(reviewerWorksheet.verifyFiles(newlyFrozen.frozen,reviewerMaterials).valid);
+const repeatedWorksheet=reviewerWorksheet.render(newlyFrozen.frozen);
+assert.deepEqual(repeatedWorksheet,reviewerMaterials);
+const worksheetTamper=structuredClone(reviewerMaterials);
+worksheetTamper.csv+='FORGED HUMAN APPROVAL';
+assert.equal(reviewerWorksheet.verifyFiles(newlyFrozen.frozen,worksheetTamper).valid,false);
+const maliciousPanel=structuredClone(panel);
+const included=out.reviewerPacket.cards[0].caseId;
+const unsafe=maliciousPanel.cases.find(c=>c.caseId===included);
+assert(unsafe);
+unsafe.fullOfficialScopeText='=HYPERLINK("https://evil.invalid","CLICK") <img src=x onerror="alert(1)">';
+unsafe.fullScopeCharacterLength=unsafe.fullOfficialScopeText.length;
+delete maliciousPanel.artifactFingerprint;
+maliciousPanel.artifactFingerprint=research.hash(maliciousPanel);
+const maliciousSplit=split.split(maliciousPanel);
+assert.equal(maliciousSplit.status,'READY_FOR_REAL_REVIEW');
+const maliciousFrozen=frozen.choose({legacy:{},previousFrozen:{},
+  current:{panel:maliciousPanel,reviewerPacket:maliciousSplit.reviewerPacket,
+    reservedAudit:maliciousSplit.reservedAudit,manifest:maliciousSplit.manifest},
+  now:'2026-10-19T18:20:00.000Z'
+});
+assert.equal(maliciousFrozen.status,'FROZEN_CREATED');
+const escaped=reviewerWorksheet.render(maliciousFrozen.frozen);
+assert(escaped.html.includes('&lt;img'));
+assert(!escaped.html.includes('<img src='));
+assert(escaped.csv.includes("'=HYPERLINK"));
+const unsafeLink=structuredClone(newlyFrozen.frozen);
+unsafeLink.reviewerPacket.cards[0].officialSourceUrl='https://evil.example.com/fake';
+assert.throws(()=>reviewerWorksheet.render(unsafeLink),/UNVERIFIED_FROZEN_CONSTRUCTION_SOURCE/);
 
 console.log('Unscored source-rich construction split: stable premise/root isolation, blinded reviewer packet, reserved audit and scoring-holdout firewall passed.');
