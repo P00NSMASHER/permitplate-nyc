@@ -129,6 +129,16 @@ async function run(options){
   },result);
 }
 
+function shouldFailJob(result){
+  if(result?.internalReady!==true)return true;
+  // The founder-curated public Checkout path can accept money. A missing
+  // private paid-customer polling heartbeat is a material operational fault,
+  // not merely an advisory external-evidence warning.
+  return result.launchMode===readiness.CURATED_LAUNCH_MODE &&
+    Array.isArray(result.firstCustomerExternalFailures) &&
+    result.firstCustomerExternalFailures.includes('stripeIntakeMonitoringVerified');
+}
+
 async function main(){
   const outputPath=process.argv[2]||
     path.join(__dirname,'launch-readiness-result.json');
@@ -137,7 +147,10 @@ async function main(){
   const result=await run({detectionPath,opportunityPath});
   fs.writeFileSync(outputPath,JSON.stringify(result,null,2)+'\n');
   console.log(JSON.stringify(result,null,2));
-  if(!result.internalReady) process.exitCode=1;
+  if(shouldFailJob(result)) {
+    console.error('PERMITPLATE_PAID_INTAKE_OR_INTERNAL_READINESS_BLOCKED');
+    process.exitCode=1;
+  }
 }
 
 if(require.main===module){
@@ -148,5 +161,6 @@ module.exports={
   RUNNER_VERSION,
   readJson,
   promotionEvidenceFrom,
+  shouldFailJob,
   run
 };
