@@ -62,6 +62,21 @@ residential projects, non-NYC counties, old/future dates and records already
 independently linked to CAMIS. Matching addresses are flagged for identity
 review, never assumed to be the same business.
 
+The review-only feed also maintains `state/independent-source-history.json`.
+Every DOB/SLA source ID retains its actual **first observation by PermitPlate**
+across repeated scans, even when an official record leaves the rolling query
+window and later returns. It distinguishes `NEW_TO_PERMITPLATE`,
+`SOURCE_CONTEXT_CHANGED_FOR_REVIEW`, and `ALREADY_OBSERVED`.
+These describe research monitoring, **not** original filing dates, actual
+project changes, future openings, or customer buying intent. The raw official
+filing/received date remains separately labeled `sourceEffectiveAt`.
+
+On deployment, the existing private DOB/SLA queue is used once as the
+historical baseline; previously found records are not treated as new. The
+history ledger has its own hash and rejects missing/corrupt state. If the
+source scan was capped, omitted rows cannot be marked absent. A record's
+first-seen date is not reset by a later scan. Current data remains review-only.
+
 **These are not paid customer leads.** Every row is
 `REVIEW_ONLY_UNLINKED` with `customerDeliveryAllowed: false`. There is no
 automatic graph promotion, source-identity bridge, scoring, email, or
