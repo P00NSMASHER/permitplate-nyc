@@ -7,6 +7,7 @@ const path=require('path');
 const stripe=require('./stripe-subscriber');
 const research=require('./curated-research-ledger');
 const curated=require('./curated-customer-brief');
+const categoryEvidence=require('./category-evidence');
 const {privateMaterialPath,args}=require('./run-subscriber-intake');
 
 const VERSION='PermitPlate-curated-review-queue-v1.0.0';
@@ -39,6 +40,7 @@ function makeQueue(input) {
   const profile=activated.profile;
   const chosenCategory=stripe.customFieldValue(data.session,'category');
   const picks=[];
+  const categoryCounts={SOURCE_KEYWORD_CONTEXT:0,RELATED_OFFICIAL_ACTIVITY:0,APPLICANT_CONTEXT_ONLY:0};
   for (const candidate of graph.candidates) {
     const entry=data.ledger.entries[candidate.entityId];
     if (!entry || entry.presenceState!=='PRESENT' ||
@@ -52,6 +54,9 @@ function makeQueue(input) {
     if(!research.instant(candidate.sourceLatestEffectiveAt)) continue;
     const key=curated.signalKey(activated.subscriptionId,entry,event);
     if (delivered.has(key)) continue;
+    const classification=categoryEvidence.classify(candidate,chosenCategory);
+    if(classification.status==='REVIEW') continue;
+    categoryCounts[classification.status]+=1;
     picks.push({
       entityId:candidate.entityId,
       category:chosenCategory,
@@ -62,6 +67,12 @@ function makeQueue(input) {
       reviewedAt:null,
       whyItMatters:'',
       whatChanged:'',
+      categoryReview:{
+        approved:false,
+        evidenceFingerprint:classification.evidenceFingerprint,
+        sourceUrl:classification.sourceEvidence[0]?.sourceUrl||categoryEvidence.primaryUrl(candidate),
+        rationale:''
+      },
       // Preview only; this content is not a reviewed customer claim.
       preview:{
         business:candidate.canonicalName,
@@ -72,11 +83,16 @@ function makeQueue(input) {
         eventKind:event.kind,
         firstObservedAt:event.observedAt,
         changeReasons:event.changeReasons,
+        categoryEvidenceBasis:classification.status,
+        acceptedCategorySources:classification.sourceEvidence,
         officialUrl:curated.primaryUrl(candidate)
       }
     });
   }
-  picks.sort((a,b)=>b.preview.firstObservedAt.localeCompare(a.preview.firstObservedAt)||
+  // Reviewer triage only. Keyword matches are not leads or purchase-intent scores.
+  const priority={SOURCE_KEYWORD_CONTEXT:0,RELATED_OFFICIAL_ACTIVITY:1,APPLICANT_CONTEXT_ONLY:2};
+  picks.sort((a,b)=>priority[a.preview.categoryEvidenceBasis]-priority[b.preview.categoryEvidenceBasis]||
+    b.preview.firstObservedAt.localeCompare(a.preview.firstObservedAt)||
     a.entityId.localeCompare(b.entityId));
   const limit=Math.min(100,Math.max(1,Number.isInteger(data.limit)?data.limit:50));
   return {
@@ -88,10 +104,11 @@ function makeQueue(input) {
     graphDigest:graph.graphDigest,
     graphObservedAt:graph.observedAt,
     candidateCount:picks.length,
+    categoryEvidenceCounts:categoryCounts,
     shownCount:Math.min(limit,picks.length),
     notShownCount:Math.max(0,picks.length-limit),
     reviews:picks.slice(0,limit),
-    instruction:'Select at most 10 records. Open and verify their official sources; evaluate category relevance and the event. For MATERIAL_CHANGE rows, summarize independently verified current and prior facts in whatChanged (the event reasons alone are not evidence of a specific change). Set per-row ownerReviewed=true and reviewedAt=current ISO timestamp only after review, and then top-level ownerReviewed=true. Delete unselected rows. Never send without separate explicit authorization.'
+    instruction:'Select at most 10 records. Category matches here represent source keywords or general research context, NEVER an asserted buyer need. Inspect acceptedCategorySources or the official record. For each selected record, explicitly approve categoryReview, keep its evidenceFingerprint and official source URL, and write a specific categoryReview.rationale. For MATERIAL_CHANGE, verify old and current source facts and fill whatChanged. Complete both per-row ownerReviewed and root ownerReviewed only after review. Delete unselected rows. Never send without separate explicit authorization.'
   };
 }
 function main() {
