@@ -60,6 +60,23 @@ flags. The old 180-character `sourceExcerpt` remains a non-authoritative
 preview for compatibility. A description is never an equipment order or
 purchase intent.
 
+**October 19 follow-up correction — false scan-ID changes.** The first
+implementation also hashed the changing source-observation ID into each
+durable full-scope fingerprint. Its second production refresh therefore
+reported 93 construction-scope rechecks even though an independent comparison
+of the prior and subsequent private receipts established **93 unchanged
+original description hashes**, **93 changing observation IDs**, and **zero
+changes to the underlying official fact hashes**.
+
+The corrected semantic fingerprint hashes only the official record identity
+and complete description content. Daily observation IDs remain in the
+separate provenance/receipt, but cannot manufacture a content event.
+One-time migration uses the exact previous private review's original
+checksums; it does not reinitialize first-seen dates. Historic alerts from
+the older flawed receipt are retained for traceability but marked as
+requiring re-verification, not silently represented as verified source
+changes. Missing or altered historical evidence fails closed.
+
 The historic independent-source ledger learns a new full-scope hash on its
 first upgraded scan **without creating a material event**. Later changes
 beyond the 180-character preview trigger a source-context recheck, retain
