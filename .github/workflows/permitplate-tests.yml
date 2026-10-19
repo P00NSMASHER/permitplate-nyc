@@ -52,6 +52,9 @@ jobs:
       - name: Verify persistent early-source history and dedupe
         run: node pipeline/independent-source-history.test.js
 
+      - name: Verify conservative cross-source identity review
+        run: node pipeline/identity-bridge-review.test.js
+
       - name: Run ProjectSignal corroboration regression
         run: node pipeline/project-signal.test.js
 
