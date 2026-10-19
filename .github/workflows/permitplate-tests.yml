@@ -49,6 +49,9 @@ jobs:
       - name: Verify review-only unlinked DOB and SLA research
         run: node pipeline/independent-source-review.test.js
 
+      - name: Verify complete official DOB scope and property-identity checks
+        run: node pipeline/construction-scope-evidence.test.js
+
       - name: Verify persistent early-source history and dedupe
         run: node pipeline/independent-source-history.test.js
 
