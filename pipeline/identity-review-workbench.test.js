@@ -129,7 +129,7 @@ const identityConflict=identity.createProposal({...first,
 const conflictWorkbench=report.render(receipt([identityConflict]));
 assert(conflictWorkbench.csv.includes('Official Building-ID Assessment'));
 assert(conflictWorkbench.csv.includes('OFFICIAL_PROPERTY_IDENTIFIER_CONFLICT'));
-assert(conflictWorkbench.html.includes('Official Building-ID Assessment'));
+assert(conflictWorkbench.html.includes('Building-ID evidence'));
 assert(conflictWorkbench.html.includes('Operator identity: NOT VERIFIED'));
 assert.equal(conflictWorkbench.customerDeliveryAllowed,false);
 const repeated=report.render(d);
