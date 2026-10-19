@@ -10,6 +10,7 @@ const independentReview=require('./independent-source-review');
 const independentHistory=require('./independent-source-history');
 const identityReview=require('./identity-bridge-review');
 const identityWorkbench=require('./identity-review-workbench');
+const identityHistory=require('./identity-triage-history');
 const {privateMaterialPath} = require('./run-subscriber-intake');
 
 const VERSION = 'PermitPlate-curated-research-runner-v1.0.0';
@@ -120,6 +121,55 @@ function prepareIndependentHistory(priorHistory,priorReview,currentReview){
   }
   return {ready:true,migrated,advancedHistory,annotated};
 }
+function prepareIdentityHistory(previous,priorReceipt,currentReceipt){
+  if(!previous&&priorReceipt){
+    // Never silently erase a previous tracked history when its separate
+    // durable state file has been deleted.
+    if(priorReceipt.identityHistoryVersion===identityHistory.VERSION){
+      return {ready:false,status:'REVIEW',
+        failures:['IDENTITY_TRIAGE_HISTORY_MISSING']};
+    }
+    const initial=identityHistory.bootstrap(priorReceipt);
+    if(initial.status==='REVIEW')return {
+      ready:false,status:'REVIEW',failures:initial.failures
+    };
+    const updated=identityHistory.advance(initial.ledger,currentReceipt);
+    if(updated.status==='REVIEW')return {
+      ready:false,status:'REVIEW',failures:updated.failures
+    };
+    const annotated=identityHistory.annotate(currentReceipt,updated.ledger,
+      updated.newProposalIds,updated.contextRecheckIds);
+    if(annotated.status==='REVIEW')return {
+      ready:false,status:'REVIEW',failures:annotated.failures
+    };
+    return {ready:true,migrated:true,bootstrapped:false,
+      updated,annotated};
+  }
+  if(!previous){
+    const initial=identityHistory.bootstrap(currentReceipt);
+    if(initial.status==='REVIEW')return {
+      ready:false,status:'REVIEW',failures:initial.failures
+    };
+    const annotated=identityHistory.annotate(currentReceipt,initial.ledger,
+      [],[],true);
+    if(annotated.status==='REVIEW')return {
+      ready:false,status:'REVIEW',failures:annotated.failures
+    };
+    return {ready:true,migrated:false,bootstrapped:true,
+      updated:initial,annotated};
+  }
+  const updated=identityHistory.advance(previous,currentReceipt);
+  if(updated.status==='REVIEW')return {
+    ready:false,status:'REVIEW',failures:updated.failures
+  };
+  const annotated=identityHistory.annotate(currentReceipt,updated.ledger,
+    updated.newProposalIds,updated.contextRecheckIds);
+  if(annotated.status==='REVIEW')return {
+    ready:false,status:'REVIEW',failures:annotated.failures
+  };
+  return {ready:true,migrated:false,bootstrapped:false,
+    updated,annotated};
+}
 async function run(input) {
   const opts = input || {};
   if (!opts.ledgerPath || !opts.graphPath) {
@@ -171,14 +221,24 @@ async function run(input) {
   if(!identityValidation.valid){
     return {status:'REVIEW',ready:false,failures:identityValidation.failures};
   }
+  const identityPath=path.join(path.dirname(ledgerPath),'identity-bridge-review.json');
+  const identityHistoryPath=path.join(path.dirname(ledgerPath),'identity-triage-history.json');
+  const triage=prepareIdentityHistory(
+    readOptional(identityHistoryPath),readOptional(identityPath),identity
+  );
+  if(!triage.ready)return triage;
   // Static human workbench has no approval endpoint, scripts, remote assets,
   // email transport, or public CI artifact. All output stays in private Git.
-  const workbench=identityWorkbench.render(identity);
+  const workbench=identityWorkbench.render(triage.annotated);
   if(workbench.customerDeliveryAllowed!==false||
      workbench.automaticIdentityLinkAllowed!==false){
     return {status:'REVIEW',ready:false,failures:['IDENTITY_WORKBENCH_SEND_BOUNDARY']};
   }
   result.summary.identityWorkbenchRows=workbench.renderedCount;
+  result.summary.identityFirstSeenTracked=Object.keys(triage.updated.ledger.entries).length;
+  result.summary.identityNewHypotheses=triage.updated.newProposalIds.length;
+  result.summary.identityEvidenceRechecks=triage.updated.contextRecheckIds.length;
+  result.summary.identityHistoryMigrated=triage.migrated;
   result.summary.identityReviewOnlyProposalCount=identity.storedCount;
   result.summary.identityReviewTotalProposals=identity.totalProposals;
   result.summary.identityReviewOmittedCount=identity.omittedByLimit;
@@ -195,7 +255,8 @@ async function run(input) {
   if (!anchor) atomicJson(anchorPath,baselineAnchor(result.ledger));
   atomicJson(historyPath,advancedHistory.ledger);
   atomicJson(independentPath,annotated);
-  atomicJson(path.join(path.dirname(ledgerPath),'identity-bridge-review.json'),identity);
+  atomicJson(identityHistoryPath,triage.updated.ledger);
+  atomicJson(identityPath,triage.annotated);
   atomicText(path.join(path.dirname(ledgerPath),'identity-bridge-review.csv'),workbench.csv);
   atomicText(path.join(path.dirname(ledgerPath),'identity-bridge-review.html'),workbench.html);
   return result;
@@ -216,4 +277,4 @@ async function main() {
 if (require.main === module) {
   main().catch(error=>{console.error(error.message);process.exitCode=1});
 }
-module.exports = {VERSION,readOptional,atomicJson,atomicText,baselineAnchor,verifyBaselineAnchor,prepare,prepareIndependentHistory,run};
+module.exports = {VERSION,readOptional,atomicJson,atomicText,baselineAnchor,verifyBaselineAnchor,prepare,prepareIndependentHistory,prepareIdentityHistory,run};
