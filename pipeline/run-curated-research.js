@@ -8,6 +8,7 @@ const {replay} = require('./run-current-graph');
 const ledger = require('./curated-research-ledger');
 const independentReview=require('./independent-source-review');
 const independentHistory=require('./independent-source-history');
+const identityReview=require('./identity-bridge-review');
 const {privateMaterialPath} = require('./run-subscriber-intake');
 
 const VERSION = 'PermitPlate-curated-research-runner-v1.0.0';
@@ -143,6 +144,25 @@ async function run(input) {
   );
   if(!historyState.ready)return historyState;
   const {advancedHistory,annotated,migrated}=historyState;
+  // This cannot alter CAMIS candidate identities or grant a reviewed bridge.
+  // It only saves hypotheses for a separate independently documented review.
+  const identity=identityReview.prepare({
+    graph:result.graph,batches:collected.batches,independent:annotated,
+    observedAt:result.graph.observedAt
+  });
+  if(identity.status!=='REVIEW_ONLY'){
+    return {status:'REVIEW',ready:false,failures:identity.failures||[
+      'IDENTITY_HYPOTHESES_UNVERIFIED'
+    ]};
+  }
+  const identityValidation=identityReview.validate(identity);
+  if(!identityValidation.valid){
+    return {status:'REVIEW',ready:false,failures:identityValidation.failures};
+  }
+  result.summary.identityReviewOnlyProposalCount=identity.storedCount;
+  result.summary.identityReviewTotalProposals=identity.totalProposals;
+  result.summary.identityReviewOmittedCount=identity.omittedByLimit;
+  result.summary.identityAutomaticMerges=0;
   result.summary.independentReviewOnlyCount=annotated.storedCount;
   result.summary.independentReviewTotalMatches=annotated.totalResearchMatches;
   result.summary.independentReviewOverflow=annotated.omittedByLimit;
@@ -155,6 +175,7 @@ async function run(input) {
   if (!anchor) atomicJson(anchorPath,baselineAnchor(result.ledger));
   atomicJson(historyPath,advancedHistory.ledger);
   atomicJson(independentPath,annotated);
+  atomicJson(path.join(path.dirname(ledgerPath),'identity-bridge-review.json'),identity);
   return result;
 }
 async function main() {
