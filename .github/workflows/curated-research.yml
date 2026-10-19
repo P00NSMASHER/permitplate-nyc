@@ -21,6 +21,7 @@ on:
       - 'pipeline/construction-blind-diagnostic.js'
       - 'pipeline/construction-blind-diagnostic.test.js'
       - 'pipeline/source-premise-factors.js'
+      - 'pipeline/nyc-million-bin-real-case.test.js'
       - 'pipeline/independent-source-history.js'
       - 'pipeline/independent-source-history.test.js'
       - 'pipeline/identity-bridge-review.js'
@@ -57,6 +58,7 @@ on:
       - 'pipeline/construction-blind-diagnostic.js'
       - 'pipeline/construction-blind-diagnostic.test.js'
       - 'pipeline/source-premise-factors.js'
+      - 'pipeline/nyc-million-bin-real-case.test.js'
       - 'pipeline/independent-source-history.js'
       - 'pipeline/independent-source-history.test.js'
       - 'pipeline/identity-bridge-review.js'
@@ -104,6 +106,8 @@ jobs:
         run: node pipeline/independent-source-review.test.js
       - name: Verify full DOB scope and conflicting building identifiers
         run: node pipeline/construction-scope-evidence.test.js
+      - name: Verify NYC borough million BIN placeholders are not real conflicts
+        run: node pipeline/nyc-million-bin-real-case.test.js
       - name: Verify separate full-scope DOB diagnostic does not inspect scoring holdout
         run: node pipeline/construction-validation-panel.test.js
       - name: Verify premise-root grouped construction reviewer and reserved audit separation

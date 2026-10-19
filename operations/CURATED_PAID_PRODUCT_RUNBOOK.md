@@ -82,6 +82,15 @@ first upgraded scan **without creating a material event**. Later changes
 beyond the 180-character preview trigger a source-context recheck, retain
 first-seen times, and cannot authorize customer sends.
 
+NYC Geosupport defines a seven-digit borough followed by six zeroes
+(e.g. `3000000`) as a **million BIN**, a placeholder meaning the building
+identifier is unavailable. These values must not be compared as real BINs.
+If DOB BIN is specific but DOHMH supplies a million BIN, PermitPlate
+uses available BBL corroboration only, and clearly records the invalid raw
+placeholder. On October 19, 2026, independent public DOB/DOHMH requery
+identified two same-site hypotheses falsely held as BIN conflicts because of
+`3000000`; a third case had a genuine BBL disagreement and remains held.
+
 For exact-address CAMIS-to-DOB hypotheses, the private reviewer workbench
 compares source-provided DOB and DOHMH **BIN**, and (only when supplied)
 DOB borough/block/lot against DOHMH **BBL**. Conflicting official identifiers

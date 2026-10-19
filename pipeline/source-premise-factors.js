@@ -10,7 +10,14 @@ const BCU=Object.freeze({
 });
 function bin(value){
   const s=String(value==null?'':value).trim();
-  return /^\d{7}$/.test(s)&&!/^[0]+$/.test(s)?s:null;
+  // NYC Geosupport explicitly uses "million BINs" (borough digit followed
+  // by six zeros) for missing/unknown building IDs. These are not real
+  // premises and must never generate an official building ID conflict.
+  // Source: NYC Department of City Planning Geosupport User Programming Guide
+  // (NYC Geosupport error 22: rest of BIN digits all zero is invalid).
+  // https://www.nyc.gov/assets/planning/download/pdf/data-maps/open-data/upg.pdf
+  if(!/^[1-5]\d{6}$/.test(s)||s.slice(1)==='000000')return null;
+  return s;
 }
 function bbl(value){
   const s=String(value==null?'':value).trim();
@@ -34,7 +41,11 @@ function verifyPair(dohmh,dob){
      !dohmh.sourceObservationId||!dob.sourceObservationId){
     throw Error('PREMISE_SOURCE_PROVENANCE_REQUIRED');
   }
-  const leftBin=bin(dohmh.property?.bin),rightBin=bin(dob.property?.bin);
+  const rawDohmhBin=String(dohmh.property?.bin||'').trim();
+  const rawDobBin=String(dob.property?.bin||'').trim();
+  const leftBin=bin(rawDohmhBin),rightBin=bin(rawDobBin);
+  const dohmhMillionPlaceholder=/^[1-5]000000$/.test(rawDohmhBin);
+  const dobMillionPlaceholder=/^[1-5]000000$/.test(rawDobBin);
   const leftBbl=bbl(dohmh.property?.bbl),rightBbl=dobBbl(dob);
   const binComparison=compare(leftBin,rightBin);
   const bblComparison=compare(leftBbl,rightBbl);
@@ -53,6 +64,9 @@ function verifyPair(dohmh,dob){
     dobSourceFactHash:dob.rawFactFingerprint,
     dohmhBin:leftBin,
     dobBin:rightBin,
+    rawDohmhBin,rawDobBin,
+    dohmhMillionBinPlaceholder:dohmhMillionPlaceholder,
+    dobMillionBinPlaceholder:dobMillionPlaceholder,
     dohmhBbl:leftBbl,
     dobDerivedBbl:rightBbl,
     binComparison,bblComparison,
@@ -61,7 +75,7 @@ function verifyPair(dohmh,dob){
     noAutomaticIdentityLink:true,
     independentlyVerifiedOperator:false,
     customerDeliveryAllowed:false,
-    caveat:'Official building identifiers refer to premises, not operating company or vendor contract.'
+    caveat:'A borough million BIN is a missing-building placeholder, not a building-ID conflict. Official non-placeholder identifiers refer to premises, not operating company or vendor contract.'
   };
   return {...core,fingerprint:sha256(stableStringify(core))};
 }
