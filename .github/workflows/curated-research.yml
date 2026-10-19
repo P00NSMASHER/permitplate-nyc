@@ -20,6 +20,8 @@ on:
       - 'pipeline/identity-bridge-review.test.js'
       - 'pipeline/identity-review-workbench.js'
       - 'pipeline/identity-review-workbench.test.js'
+      - 'pipeline/identity-triage-history.js'
+      - 'pipeline/identity-triage-history.test.js'
       - 'pipeline/source-adapters.js'
       - 'pipeline/source-adapters.test.js'
       - 'pipeline/run-current-graph.js'
@@ -45,6 +47,8 @@ on:
       - 'pipeline/identity-bridge-review.test.js'
       - 'pipeline/identity-review-workbench.js'
       - 'pipeline/identity-review-workbench.test.js'
+      - 'pipeline/identity-triage-history.js'
+      - 'pipeline/identity-triage-history.test.js'
       - 'pipeline/source-adapters.js'
       - 'pipeline/source-adapters.test.js'
       - 'pipeline/run-current-graph.js'
@@ -86,6 +90,8 @@ jobs:
         run: node pipeline/identity-bridge-review.test.js
       - name: Verify script-free private workbench and CSV sanitation
         run: node pipeline/identity-review-workbench.test.js
+      - name: Preserve stable identity triage history
+        run: node pipeline/identity-triage-history.test.js
       - name: Verify workflow policy
         run: python3 -m unittest discover -s tests -p 'test_curated_workflow_policy.py' -v
 
@@ -157,7 +163,7 @@ jobs:
           set -euo pipefail
           git -C "$PRIVATE_DIR" config user.name "PermitPlate Curated Research"
           git -C "$PRIVATE_DIR" config user.email "actions@users.noreply.github.com"
-          git -C "$PRIVATE_DIR" add -- state/curated-research-ledger.json state/curated-current-graph.json state/curated-baseline-anchor.json state/independent-source-review.json state/independent-source-history.json state/identity-bridge-review.json state/identity-bridge-review.csv state/identity-bridge-review.html
+          git -C "$PRIVATE_DIR" add -- state/curated-research-ledger.json state/curated-current-graph.json state/curated-baseline-anchor.json state/independent-source-review.json state/independent-source-history.json state/identity-bridge-review.json state/identity-triage-history.json state/identity-bridge-review.csv state/identity-bridge-review.html
           if git -C "$PRIVATE_DIR" diff --cached --quiet; then
             echo "No private research changes."
             exit 0

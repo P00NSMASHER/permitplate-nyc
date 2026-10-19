@@ -3,6 +3,7 @@ const assert=require('node:assert/strict');
 const identity=require('./identity-bridge-review');
 const history=require('./independent-source-history');
 const report=require('./identity-review-workbench');
+const triage=require('./identity-triage-history');
 
 const first=identity.createProposal({
   kind:'CAMIS_TO_EARLY_SOURCE',
@@ -92,6 +93,32 @@ assert(result.csv.includes('PENDING - NOT AN APPROVAL'));
 assert(result.csv.includes('Customer Delivery Allowed'));
 assert.equal(result.byClass.PREMISE_ONLY,1);
 assert.equal(result.byClass.DOB_SLA_SHARED_PREMISE,1);
+// Track provenance without changing the authority of the underlying links.
+const origin=triage.bootstrap(d);
+assert.equal(origin.status,'BASELINED');
+const tracked=triage.annotate(d,origin.ledger,[],[],true);
+assert.equal(tracked.status,'REVIEW_ONLY');
+const human=report.render(tracked);
+assert(human.csv.includes('Monitoring Status'));
+assert(human.csv.includes('First Observed by PermitPlate'));
+assert(human.csv.includes('BASELINE_EXISTING'));
+assert(human.html.includes('Monitoring'));
+assert(human.html.includes('BASELINE_EXISTING'));
+assert(!human.html.includes('verified new business'));
+const oneChanged=identity.createProposal({...first,
+  sourceOwnerName:'UPDATED PRINTED OWNER'});
+const markedSource=receipt([oneChanged,second]);
+markedSource.observedAt='2026-10-19T08:00:00.000Z';
+const {artifactFingerprint:_prev,...bodyWithDate}=markedSource;
+markedSource.artifactFingerprint=history.hash(bodyWithDate);
+const refreshed=triage.advance(origin.ledger,markedSource);
+assert.equal(refreshed.contextRecheckIds.length,1);
+const marked=triage.annotate(markedSource,refreshed.ledger,[],
+  refreshed.contextRecheckIds);
+const riskRanked=report.render(marked);
+assert(riskRanked.csv.includes('SOURCE_CONTEXT_RECHECK'));
+assert(riskRanked.html.includes('source-context recheck')||
+  riskRanked.html.includes('SOURCE_CONTEXT_RECHECK'));
 const repeated=report.render(d);
 assert.equal(repeated.html,result.html);
 assert.equal(repeated.csv,result.csv);

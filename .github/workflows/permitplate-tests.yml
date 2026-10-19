@@ -58,6 +58,9 @@ jobs:
       - name: Verify private identity CSV and HTML workbench safety
         run: node pipeline/identity-review-workbench.test.js
 
+      - name: Verify stable identity triage history and fail-closed migration
+        run: node pipeline/identity-triage-history.test.js
+
       - name: Verify conservative cross-source identity review
         run: node pipeline/identity-bridge-review.test.js
 

@@ -121,6 +121,34 @@ customer fulfillment. Independent documentary proof, explicit authorized
 review, and a separately tested acceptance gate are required before any
 future source-link promotion.
 
+### Stable identity hypothesis history
+
+The private refresh maintains `state/identity-triage-history.json` alongside
+the raw source-bound hypothesis JSON, workbench HTML and CSV. The first
+deployment migrates the existing identity hypothesis receipt as its baseline
+and **does not** label any existing hypothesis as new. Each durable proposal
+ID keeps a stable first-observed monitoring date and last-seen date.
+
+Subsequent complete scans distinguish:
+- `NEW_IDENTITY_HYPOTHESIS`: first observed by PermitPlate since baseline;
+- `SOURCE_CONTEXT_RECHECK`: names, source-row fingerprints or premise
+  context changed and needs another reviewer check; not a verified ownership
+  or operational change;
+- `ALREADY_TRACKED`: the existing unapproved relationship was seen again;
+- `BASELINE_EXISTING`: present when monitoring history initialized.
+
+The workbench sorts new and changed hypotheses first and shows first
+observation dates in its HTML and CSV. Routine source-scan timestamps,
+cryptographic graph receipt updates or a returning previously seen
+hypothesis **do not manufacture a new relationship**. A capped source
+window cannot justify declaring unseen records absent.
+
+If the private history file disappears or fails its integrity checks,
+the workflow fails closed instead of resetting monitoring timestamps.
+Neither monitoring novelty nor a context recheck constitutes accepted
+`reviewedIdentityBridges`; explicit documentary adjudication is still
+required separately.
+
 ### Private review workbench
 
 The same protected refresh produces two additional files in the private

@@ -14,8 +14,13 @@ const PRIORITY=Object.freeze({
   MULTIPLE_CAMIS_SAME_PREMISE:5,
   SUPPRESSED_IDENTITY:6
 });
+const MONITORING_PRIORITY=Object.freeze({
+  NEW_IDENTITY_HYPOTHESIS:0,SOURCE_CONTEXT_RECHECK:1,
+  BASELINE_EXISTING:2,ALREADY_TRACKED:3,UNTRACKED_REVIEW:4
+});
 const HEADERS=Object.freeze([
-  'Proposal ID','Review Class','Identity Hypothesis','Linked CAMIS',
+  'Proposal ID','Monitoring Status','First Observed by PermitPlate',
+  'Last Source Context Recheck','Review Class','Identity Hypothesis','Linked CAMIS',
   'Source Record IDs','Operator Name','Applicant DBA','Property Owner',
   'Premise Key','Name Agreement','Official Source A','Official Source B',
   'Evidence Fingerprint','Human Verification Decision','Reviewer Notes',
@@ -54,6 +59,8 @@ function validateForRendering(receipt){
 function render(receipt){
   validateForRendering(receipt);
   const props=receipt.proposals.slice().sort((a,b)=>
+    (MONITORING_PRIORITY[a.monitoringStatus||'UNTRACKED_REVIEW']??99)-
+      (MONITORING_PRIORITY[b.monitoringStatus||'UNTRACKED_REVIEW']??99)||
     (PRIORITY[a.reviewClass]??99)-(PRIORITY[b.reviewClass]??99)||
     a.proposalId.localeCompare(b.proposalId)
   );
@@ -64,6 +71,9 @@ function render(receipt){
     const urls=p.officialSourceUrls.map(trustedSource);
     return {
       'Proposal ID':p.proposalId,
+      'Monitoring Status':p.monitoringStatus||'UNTRACKED_REVIEW',
+      'First Observed by PermitPlate':p.firstObservedByPermitPlateAt||'',
+      'Last Source Context Recheck':p.lastContextRecheckAt||'',
       'Review Class':p.reviewClass,
       'Identity Hypothesis':p.kind,
       'Linked CAMIS':p.candidateEntityId||'',
@@ -95,6 +105,9 @@ function render(receipt){
     return [
       '<tr>',
       '<td>'+escapeHtml(String(index+1))+'</td>',
+      '<td><strong>'+escapeHtml(row['Monitoring Status'])+'</strong><small>'+
+        escapeHtml(row['First Observed by PermitPlate'])+'</small><small>Last source recheck: '+
+        escapeHtml(row['Last Source Context Recheck'])+'</small></td>',
       '<td><strong>'+escapeHtml(row['Review Class'])+'</strong><small>'+
         escapeHtml(row['Identity Hypothesis'])+'</small></td>',
       '<td>'+escapeHtml(row['Premise Key'])+'<small>'+
@@ -138,13 +151,14 @@ function render(receipt){
       'Every hypothesis requires independent documentary verification and a separate governed acceptance. '+
       'Nothing on this page approves an identity, changes a customer report, or authorizes a send.</div>',
     '<h2>Review categories</h2><p>'+types+'</p>',
-    '<p class="muted">Source IDs and proof fingerprints are provided for independent review. '+
-      'Download the companion CSV for offline notes; it cannot be imported as an approval.</p>',
+    '<p class="muted">Monitoring novelty means new to PermitPlate, never proof of a new restaurant or opening. '+
+      'A source-context recheck is not verified change in ownership or identity. '+
+      'The companion CSV is for offline notes; it cannot be imported as approval.</p>',
     '<div class="table"><table><thead><tr>',
-    '<th>#</th><th>Reason for review</th><th>Premise</th><th>Printed names</th>'+
+    '<th>#</th><th>Monitoring</th><th>Reason for review</th><th>Premise</th><th>Printed names</th>'+
       '<th>Source identities</th><th>Official records</th><th>Decision</th>',
     '</tr></thead><tbody>',
-    tableRows||'<tr><td colspan="7">No current source relationships proposed.</td></tr>',
+    tableRows||'<tr><td colspan="8">No current source relationships proposed.</td></tr>',
     '</tbody></table></div>',
     '<footer>Document source: private verified PermitPlate research snapshot. '+
       'Automatic merges: 0. Customer delivery: prohibited. No external assets or scripts.</footer>',
@@ -160,5 +174,5 @@ function render(receipt){
     customerDeliveryAllowed:false,automaticIdentityLinkAllowed:false
   };
 }
-module.exports={VERSION,PRIORITY,HEADERS,escapeHtml,csvCell,trustedSource,
+module.exports={VERSION,PRIORITY,MONITORING_PRIORITY,HEADERS,escapeHtml,csvCell,trustedSource,
   validateForRendering,render};
