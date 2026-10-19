@@ -1,6 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict');
 const h=require('./independent-source-history');
+const runner=require('./run-curated-research');
 const START='2026-10-19T04:59:48.307Z';
 const FOLLOW='2026-10-19T16:00:00.000Z';
 const THIRD='2026-10-20T04:59:48.307Z';
@@ -38,6 +39,26 @@ const base=h.bootstrap(historical);
 assert.equal(base.status,'BASELINED');
 assert.equal(base.newObservationIds.length,0);
 assert.equal(h.validate(base.ledger).valid,true);
+// Exact production migration boundary: historical review is the initial
+// baseline, and losing the ledger after annotation cannot reset history.
+const migrated=runner.prepareIndependentHistory(null,historical,reviewed(FOLLOW,[
+  item('NA-123',{firstObservedByThisReviewAt:FOLLOW}),
+  item('NA-124',{firstObservedByThisReviewAt:FOLLOW})
+]));
+assert.equal(migrated.ready,true);
+assert.equal(migrated.migrated,true);
+assert.equal(migrated.advancedHistory.newObservationIds.length,0);
+assert.equal(migrated.annotated.items[0].firstObservedByPermitPlateAt,START);
+assert.equal(migrated.annotated.items[0].monitoringStatus,'ALREADY_OBSERVED');
+const missingHistory=runner.prepareIndependentHistory(null,migrated.annotated,
+  reviewed(THIRD,[item('NA-123'),item('NA-124')]));
+assert.equal(missingHistory.ready,false);
+assert(missingHistory.failures.includes('INDEPENDENT_HISTORY_FILE_MISSING'));
+const badHistory=structuredClone(historical);
+badHistory.items[0].sourceStatus='Tampered';
+assert.equal(runner.prepareIndependentHistory(null,badHistory,
+  reviewed(FOLLOW,[item('NA-123')])).ready,false);
+
 const repeated=reviewed(FOLLOW,[item('NA-123',{firstObservedByThisReviewAt:FOLLOW}),
   item('NA-124',{firstObservedByThisReviewAt:FOLLOW})]);
 const unchanged=h.advance(base.ledger,repeated);
