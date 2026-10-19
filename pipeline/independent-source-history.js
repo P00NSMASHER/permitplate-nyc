@@ -65,6 +65,7 @@ function verifyReview(review){
 function validate(ledger){
   const l=ledger||{},failures=[];
   if(l.version!==VERSION||!instant(l.initializedAt)||!instant(l.observedAt)||
+     !/^[a-f0-9]{64}$/.test(l.sourceReviewFingerprint||'')||
      !l.entries||typeof l.entries!=='object'||Array.isArray(l.entries)||
      Date.parse(l.initializedAt)>Date.parse(l.observedAt)){
     failures.push('INDEPENDENT_HISTORY_FORMAT_INVALID');
@@ -115,7 +116,7 @@ function bootstrap(review){
     status:'BASELINED',
     ledger:seal({
       version:VERSION,initializedAt:observedAt,observedAt,
-      entries
+      sourceReviewFingerprint:review.artifactFingerprint,entries
     }),
     newObservationIds:[],contextChangeIds:[]
   };
@@ -130,6 +131,9 @@ function advance(previous,review){
   if(Date.parse(now)<Date.parse(previous.observedAt))return {
     status:'REVIEW',failures:['INDEPENDENT_HISTORY_TIME_REVERSED']
   };
+  if(now===previous.observedAt&&review.artifactFingerprint!==previous.sourceReviewFingerprint){
+    return {status:'REVIEW',failures:['INDEPENDENT_HISTORY_SAME_TIME_REWRITE']};
+  }
   const entries=structuredClone(previous.entries),seen=new Set();
   const newObservationIds=[],contextChangeIds=[];
   for(const item of review.items){
@@ -170,7 +174,8 @@ function advance(previous,review){
     }
   }
   const ledger=seal({
-    version:VERSION,initializedAt:previous.initializedAt,observedAt:now,entries
+    version:VERSION,initializedAt:previous.initializedAt,observedAt:now,
+    sourceReviewFingerprint:review.artifactFingerprint,entries
   });
   return {
     status:newObservationIds.length||contextChangeIds.length?'ADVANCED':'NO_NEW_REVIEW_EVENTS',
