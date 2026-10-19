@@ -5,6 +5,7 @@
 const crypto=require('node:crypto');
 const profiles=require('./subscriber-profile');
 const research=require('./curated-research-ledger');
+const scopeEvidence=require('./construction-scope-evidence');
 
 const VERSION='PermitPlate-independent-source-review-v1.0.0';
 const MAX_ITEMS=300;
@@ -149,6 +150,11 @@ function inspect(input){
       if(alreadyLinked.has(record.sourceRecordId)){
         ignored.alreadyLinked++;continue;
       }
+      const scope=key==='DOB_NOW'?scopeEvidence.capture(record):null;
+      if(scope && !scopeEvidence.validate(scope,record).valid){
+        return {version:VERSION,status:'REVIEW',failures:['INDEPENDENT_DOB_SCOPE_INVALID'],
+          customerDeliveryAllowed:false};
+      }
       seen.add(record.sourceRecordId);
       const possible=[...collocated.get(reviewKey({borough,address:property.address}))||[]].sort();
       items.push({
@@ -162,6 +168,9 @@ function inspect(input){
         matchedResearchTerms:markers,
         sourceExcerpt:key==='DOB_NOW'?safeExcerpt(facts.job_description):
           safeExcerpt(facts.description),
+        // Legacy 180-character preview retained for backwards compatibility.
+        // The complete source-bound text must NOT be inferred from it.
+        ...(scope?{constructionScope:scope}:{}),
         sourceStatus:key==='DOB_NOW'?text(facts.filing_status):text(facts.status),
         possibleRelatedCamis:possible.slice(0,5),
         needsIdentityReview:possible.length>0,
@@ -190,6 +199,14 @@ function inspect(input){
       key,items.filter(row=>row.sourceSystem===key).length
     ])),
     ignored,
+    constructionScopeSummary:{
+      sourceRows:items.filter(x=>x.sourceSystem==='DOB_NOW').length,
+      fullScopeRows:items.filter(x=>x.constructionScope).length,
+      specificActionableScopeContext:items.filter(x=>x.constructionScope?.scopeClass===
+        'SPECIFIC_COMPONENT_AND_ACTION').length,
+      explicitProcurementOrders:0,
+      scopeTruncations:0
+    },
     items:selected,
     customerDeliveryAllowed:false,
     externalSendCalls:0,

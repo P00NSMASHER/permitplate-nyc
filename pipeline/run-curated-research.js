@@ -251,6 +251,10 @@ async function run(input) {
   result.summary.identityReviewOnlyProposalCount=identity.storedCount;
   result.summary.identityReviewTotalProposals=identity.totalProposals;
   result.summary.identityReviewOmittedCount=identity.omittedByLimit;
+  result.summary.identityOfficialPremiseConflicts=identity.proposals.filter(
+    p=>p.premiseEvidence?.manualConflictHold===true).length;
+  result.summary.identityOfficialPremiseMatches=identity.proposals.filter(
+    p=>p.premiseEvidence?.assessment==='MATCHED_PREMISE_IDENTIFIER_REVIEW').length;
   result.summary.identityAutomaticMerges=0;
   result.summary.independentReviewOnlyCount=annotated.storedCount;
   result.summary.independentReviewTotalMatches=annotated.totalResearchMatches;
@@ -258,6 +262,8 @@ async function run(input) {
   result.summary.independentNewObservations=advancedHistory.newObservationIds.length;
   result.summary.independentContextChangesForReview=advancedHistory.contextChangeIds.length;
   result.summary.independentHistoryEntries=Object.keys(advancedHistory.ledger.entries).length;
+  result.summary.independentScopeBaselineMigrated=advancedHistory.scopeBaselineMigratedCount||0;
+  result.summary.independentScopeChangesForReview=advancedHistory.scopeChangeCount||0;
   result.summary.independentHistoricalMigration=migrated;
   atomicJson(graphPath,result.graph);
   atomicJson(ledgerPath,result.ledger);

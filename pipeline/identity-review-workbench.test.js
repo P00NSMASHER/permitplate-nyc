@@ -119,6 +119,19 @@ const riskRanked=report.render(marked);
 assert(riskRanked.csv.includes('SOURCE_CONTEXT_RECHECK'));
 assert(riskRanked.html.includes('source-context recheck')||
   riskRanked.html.includes('SOURCE_CONTEXT_RECHECK'));
+const identityConflict=identity.createProposal({...first,
+  premiseEvidence:{
+    assessment:'OFFICIAL_PROPERTY_IDENTIFIER_CONFLICT',
+    binComparison:'CONFLICT',bblComparison:'MATCH',manualConflictHold:true,
+    independentlyVerifiedOperator:false,noAutomaticIdentityLink:true
+  }
+});
+const conflictWorkbench=report.render(receipt([identityConflict]));
+assert(conflictWorkbench.csv.includes('Official Building-ID Assessment'));
+assert(conflictWorkbench.csv.includes('OFFICIAL_PROPERTY_IDENTIFIER_CONFLICT'));
+assert(conflictWorkbench.html.includes('Building-ID evidence'));
+assert(conflictWorkbench.html.includes('Operator identity: NOT VERIFIED'));
+assert.equal(conflictWorkbench.customerDeliveryAllowed,false);
 const repeated=report.render(d);
 assert.equal(repeated.html,result.html);
 assert.equal(repeated.csv,result.csv);

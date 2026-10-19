@@ -51,6 +51,28 @@ research history and does not change the scored ledger.
 The workflow never contacts customers, publishes paid candidate state to
 public GitHub, or exercises a payment API.
 
+## Full construction evidence and official building keys
+
+DOB job descriptions are now captured **in full**, with original length,
+SHA-256 text checksum, source fact fingerprint, current publisher observation,
+specific component terms, action verbs, and explicit repair/existing-context
+flags. The old 180-character `sourceExcerpt` remains a non-authoritative
+preview for compatibility. A description is never an equipment order or
+purchase intent.
+
+The historic independent-source ledger learns a new full-scope hash on its
+first upgraded scan **without creating a material event**. Later changes
+beyond the 180-character preview trigger a source-context recheck, retain
+first-seen times, and cannot authorize customer sends.
+
+For exact-address CAMIS-to-DOB hypotheses, the private reviewer workbench
+compares source-provided DOB and DOHMH **BIN**, and (only when supplied)
+DOB borough/block/lot against DOHMH **BBL**. Conflicting official identifiers
+are presented first with a clear manual hold. Matching identifiers can
+corroborate a physical site but **never** establish that the property owner
+is the restaurant operator. Missing identifiers remain unresolved. No
+automatic identity bridge, scored lead, or customer delivery is permitted.
+
 ## 1A. Earlier DOB/SLA research (review-only)
 
 The same complete source scan also creates
