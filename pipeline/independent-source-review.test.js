@@ -9,7 +9,7 @@ const restaurant=source.normalizeDobNowRow({
   job_filing_number:'B00991888-I1',filing_status:'Approved',
   filing_date:'2026-10-15T00:00:00.000',
   house_no:'80',street_name:'WYTHE AVENUE',borough:'Brooklyn',
-  building_type:'Commercial',job_description:'INTERIOR ALTERATION OF EXISTING RESTAURANT AND COMMERCIAL KITCHEN',
+  building_type:'Commercial',job_description:'INTERIOR ALTERATION OF EXISTING RESTAURANT AND COMMERCIAL KITCHEN, INCLUDING PARTITIONS, DOORS, FINISHES, WALL TILE, CEILINGS, NON-STRUCTURAL CARPENTRY, COUNTERS AND PUBLIC-AREA FLOORING. NEW COMMERCIAL COOKING EQUIPMENT AND TYPE 1 KITCHEN EXHAUST HOOD TO BE INSTALLED.',
   owner_s_business_name:'EXAMPLE OWNER LLC'
 },{observedAt:NOW});
 const residential=source.normalizeDobNowRow({
@@ -98,6 +98,16 @@ assert.equal(clean.customerDeliveryAllowed,false);
 assert.equal(clean.externalSendCalls,0);
 assert.equal(clean.totalResearchMatches,2);
 assert.equal(clean.items.length,2);
+const dob=clean.items.find(x=>x.sourceSystem==='DOB_NOW');
+assert(dob);
+assert.equal(dob.sourceExcerpt.length,180);
+assert(dob.constructionScope.fullText.length>180);
+assert(dob.constructionScope.fullText.includes('EXHAUST HOOD'));
+assert(!dob.sourceExcerpt.includes('EXHAUST HOOD'));
+assert.equal(dob.constructionScope.scopeClass,'SPECIFIC_COMPONENT_AND_ACTION');
+assert.equal(dob.constructionScope.customerDeliveryAllowed,false);
+assert.equal(clean.constructionScopeSummary.fullScopeRows,1);
+assert.equal(clean.constructionScopeSummary.scopeTruncations,0);
 assert.deepEqual(clean.sourceCounts,{DOB_NOW:1,SLA_PENDING:1});
 assert(clean.items.every(item=>item.reviewStatus==='REVIEW_ONLY_UNLINKED'));
 assert(clean.items.every(item=>item.customerDeliveryAllowed===false));
