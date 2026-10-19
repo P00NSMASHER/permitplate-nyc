@@ -108,7 +108,10 @@ function inspect(input){
     const source=batches[key];
     for(const record of source.records){
       const system=text(record&&record.sourceSystem);
-      if(system!==key){ignored.incomplete++;continue}
+      if(system!==key||
+        record.sourceObservationId!==source.observation.observationId){
+        ignored.incomplete++;continue;
+      }
       const eventDate=date(record.sourceEffectiveAt);
       if(!within(eventDate,now,key==='DOB_NOW'?DOB_DAYS:SLA_DAYS)){
         ignored.oldOrFuture++;continue;
