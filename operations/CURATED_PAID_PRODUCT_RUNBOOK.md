@@ -153,6 +153,23 @@ the old legacy pair against the frozen archive and fails closed if either
 piece disappears or changes. This prevents normal source-data churn from
 moving a historically reserved case into the reviewer packet.
 
+The frozen archive additionally contains a reviewer-only
+`reviewer-worksheet.html`, `reviewer-worksheet.csv`, and immutable
+`reviewer-worksheet-receipt.json`. These render the **67 visible reviewer
+cases only**, with full original construction descriptions, official
+file links, fixed source fingerprints, and BLANK evidence fields. They
+include no model scores, synthetic opinions, prefilled review verdicts,
+or reserved audit case IDs. Source strings are HTML-escaped and CSV-safe
+against spreadsheet formulas. The job refuses missing, partial or
+modified worksheet files rather than overwriting old reviewer materials.
+
+Use these as **working documents** for genuinely independent source
+reviewers. They are NOT a source of automatic signoffs and do not
+fulfill the two independent reviewer requirement until separately
+verified real reviews exist. Do not give any reviewer the private
+`reserved-audit.json`, the operator scoring archive, or the original
+Equipment holdout data.
+
 The reserved audit file is for authorized operator validation only. Only
 `reviewer-packet.json` may be shown to genuine independent reviewers.
 Do not merge these datasets, infer customer outcomes, count synthetic

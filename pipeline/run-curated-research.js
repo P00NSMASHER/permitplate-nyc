@@ -13,6 +13,7 @@ const identityWorkbench=require('./identity-review-workbench');
 const constructionPanel=require('./construction-validation-panel');
 const constructionBlind=require('./construction-blind-diagnostic');
 const constructionFrozen=require('./construction-frozen-reference');
+const constructionWorksheet=require('./construction-reviewer-worksheet');
 const identityHistory=require('./identity-triage-history');
 const receiptRecovery=require('./identity-receipt-recovery');
 const {privateMaterialPath} = require('./run-subscriber-intake');
@@ -306,7 +307,34 @@ async function run(input) {
       'CONSTRUCTION_REFERENCE_FREEZE_FAILED'
     ]};
   }
-  result.summary.constructionReferenceOriginalObservedAt=freeze.frozen.anchor.originalSourceObservedAt;
+  // Provide one immutable, no-score reviewer worksheet. Refuse partial or
+  // modified archived documents instead of overwriting them on a new run.
+  const reviewerWorksheet=constructionWorksheet.render(freeze.frozen);
+  const worksheetPaths={
+    html:path.join(freezeDir,'reviewer-worksheet.html'),
+    csv:path.join(freezeDir,'reviewer-worksheet.csv'),
+    receipt:path.join(freezeDir,'reviewer-worksheet-receipt.json')
+  };
+  const existingWorksheetFiles=Object.values(worksheetPaths)
+    .filter(file=>fs.existsSync(file)).length;
+  if(existingWorksheetFiles!==0&&existingWorksheetFiles!==3){
+    return {status:'REVIEW',ready:false,
+      failures:['FROZEN_REVIEW_WORKSHEET_PARTIAL']};
+  }
+  if(existingWorksheetFiles===3){
+    const oldDocs={
+      html:fs.readFileSync(worksheetPaths.html,'utf8'),
+      csv:fs.readFileSync(worksheetPaths.csv,'utf8'),
+      receipt:readOptional(worksheetPaths.receipt)
+    };
+    const worksheetCheck=constructionWorksheet.verifyFiles(freeze.frozen,oldDocs);
+    if(!worksheetCheck.valid){
+      return {status:'REVIEW',ready:false,failures:worksheetCheck.failures};
+    }
+  }
+  result.summary.constructionFrozenReviewerWorksheetCases=reviewerWorksheet.receipt.caseCount;
+  result.summary.constructionFrozenReviewerWorksheetCreated=existingWorksheetFiles===0;
+    result.summary.constructionReferenceOriginalObservedAt=freeze.frozen.anchor.originalSourceObservedAt;
   result.summary.constructionReferenceCreated=freeze.newlyFrozen;
   result.summary.constructionReferenceReviewerCases=freeze.frozen.anchor.reviewCases;
   result.summary.constructionReferenceReservedCases=freeze.frozen.anchor.reservedCases;
@@ -399,6 +427,11 @@ async function run(input) {
       atomicJson(path.join(sourceDir,'construction-blind-manifest.json'),
         freeze.frozen.manifest);
     }
+  }
+  if(existingWorksheetFiles===0){
+    atomicText(worksheetPaths.html,reviewerWorksheet.html);
+    atomicText(worksheetPaths.csv,reviewerWorksheet.csv);
+    atomicJson(worksheetPaths.receipt,reviewerWorksheet.receipt);
   }
   return result;
 }
