@@ -113,6 +113,9 @@ jobs:
       - name: Verify private material-event customer delivery
         run: node pipeline/curated-material-events.test.js
 
+      - name: Verify category-source evidence for paid leads
+        run: node pipeline/category-evidence.test.js
+
       - name: Verify private curated research workflow policy
         run: python3 -m unittest discover -s tests -p 'test_curated_workflow_policy.py' -v
 

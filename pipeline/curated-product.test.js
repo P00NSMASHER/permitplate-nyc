@@ -10,6 +10,7 @@ const runner=require('./run-curated-research');
 const fulfillment=require('./run-curated-fulfillment');
 const queueMaker=require('./run-curated-review-queue');
 const stripe=require('./stripe-subscriber');
+const categoryEvidence=require('./category-evidence');
 
 const OLD_AT='2026-10-16T08:00:00.000Z';
 const CURRENT_AT='2026-10-18T10:00:00.000Z';
@@ -88,6 +89,12 @@ function review(item,overrides={}) {
     entityId:item.entityId,category:'equipment',
     ownerReviewed:true,
     candidateFingerprint:customer.candidateIdentity(item),
+    categoryReview:{
+      approved:true,
+      evidenceFingerprint:categoryEvidence.classify(item,'Equipment').evidenceFingerprint,
+      sourceUrl:categoryEvidence.primaryUrl(item),
+      rationale:'The verified restaurant applicant record provides a research starting point for an equipment vendor, without proving equipment demand.'
+    },
     whyItMatters:'An official NYC applicant record makes this business worth researching.',
     reviewedAt:'2026-10-18T10:30:00.000Z',
     ...overrides
@@ -169,6 +176,10 @@ assert.equal(ready.externalSendCalls,0);
 assert(ready.transportPreflight.failures.includes('OWNER_AUTHORIZATION_MISSING'));
 assert.equal(ready.brief.signals[0].businessName,fresh.canonicalName);
 assert.equal(ready.brief.signals[0].section,'NORMAL');
+assert.equal(ready.brief.signals[0].categoryEvidenceBasis,'APPLICANT_CONTEXT_ONLY');
+assert.match(ready.brief.html,/General restaurant applicant context/);
+assert(ready.brief.csv.includes('Category Evidence Basis'));
+assert(ready.brief.csv.includes('Category Fit Review'));
 assert.equal(ready.brief.signals[0].firstObservedAt,CURRENT_AT);
 assert.match(ready.brief.html,/New observation/);
 assert.match(ready.brief.csv,/NORMAL/);
@@ -178,6 +189,19 @@ assert(ready.brief.html.includes('Research starting points'));
 assert(ready.brief.html.includes('not purchase intent or guaranteed leads'));
 assert(!ready.brief.csv.includes('Purchase Intent'));
 
+// Owner approval is not a category-verification substitute.
+const unreviewedFit=review(fresh);
+delete unreviewedFit.categoryReview;
+assert(prepare({reviews:[unreviewedFit]}).failures.some(f=>f.includes('CATEGORY_FIT_NOT_APPROVED')));
+const staleCategory=review(fresh);
+staleCategory.categoryReview.evidenceFingerprint='outdated';
+assert(prepare({reviews:[staleCategory]}).failures.some(f=>f.includes('CATEGORY_EVIDENCE_STALE')));
+const fakeWebsite=review(fresh);
+fakeWebsite.categoryReview.sourceUrl='https://example.com/restaurant';
+assert(prepare({reviews:[fakeWebsite]}).failures.some(f=>f.includes('CATEGORY_REVIEW_SOURCE_NOT_BOUND')));
+const fakeNeed=review(fresh);
+fakeNeed.categoryReview.rationale='Guaranteed lead ready to buy kitchen equipment';
+assert(prepare({reviews:[fakeNeed]}).failures.some(f=>f.includes('CATEGORY_FIT_CLAIM_UNSUPPORTED')));
 const replayDelivery=prepare({deliveredSignalKeys:ready.brief.signalKeys});
 assert.equal(replayDelivery.status,'NO_MATCHES_REVIEW');
 assert.equal(replayDelivery.signalCount,0);
@@ -251,6 +275,9 @@ assert.equal(queue.shownCount,1);
 assert.equal(queue.notShownCount,0);
 assert.equal(queue.reviews[0].entityId,'CAMIS:50193805');
 assert.equal(queue.reviews[0].ownerReviewed,false);
+assert.equal(queue.reviews[0].categoryReview.approved,false);
+assert.equal(queue.reviews[0].preview.categoryEvidenceBasis,'APPLICANT_CONTEXT_ONLY');
+assert.equal(queue.categoryEvidenceCounts.APPLICANT_CONTEXT_ONLY,1);
 assert.equal(queue.reviews[0].candidateFingerprint,customer.candidateIdentity(fresh));
 assert.equal(queue.reviews[0].preview.officialUrl,customer.primaryUrl(fresh));
 assert.equal(queueMaker.makeQueue({

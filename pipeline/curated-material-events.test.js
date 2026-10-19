@@ -6,6 +6,7 @@ const ledger=require('./curated-research-ledger');
 const curated=require('./curated-customer-brief');
 const queue=require('./run-curated-review-queue');
 const stripe=require('./stripe-subscriber');
+const categoryEvidence=require('./category-evidence');
 
 const INIT='2026-10-18T12:00:00.000Z';
 const NEXT='2026-10-18T14:00:00.000Z';
@@ -85,6 +86,12 @@ function ownerReview(c,e) {
   return {
     entityId:c.entityId,category:'equipment',
     candidateFingerprint:curated.candidateIdentity(c),
+    categoryReview:{
+      approved:true,
+      evidenceFingerprint:categoryEvidence.classify(c,'Equipment').evidenceFingerprint,
+      sourceUrl:categoryEvidence.primaryUrl(c),
+      rationale:'An approved construction filing is useful equipment-vendor research context, without establishing any specific purchase requirement.'
+    },
     eventId:e.eventId,eventKind:e.kind,
     ownerReviewed:true,reviewedAt:'2026-10-18T15:30:00Z',
     whyItMatters:'The verified updated construction status merits equipment vendor research.',

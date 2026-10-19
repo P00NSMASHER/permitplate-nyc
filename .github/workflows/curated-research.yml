@@ -9,6 +9,8 @@ on:
     paths:
       - 'pipeline/curated-research-ledger.js'
       - 'pipeline/curated-customer-brief.js'
+      - 'pipeline/category-evidence.js'
+      - 'pipeline/category-evidence.test.js'
       - 'pipeline/run-curated-research.js'
       - 'pipeline/run-current-graph.js'
       - 'pipeline/material-change.js'
@@ -22,6 +24,8 @@ on:
     paths:
       - 'pipeline/curated-research-ledger.js'
       - 'pipeline/curated-customer-brief.js'
+      - 'pipeline/category-evidence.js'
+      - 'pipeline/category-evidence.test.js'
       - 'pipeline/run-curated-research.js'
       - 'pipeline/run-current-graph.js'
       - 'pipeline/material-change.js'
