@@ -6,6 +6,8 @@ const research=require('./curated-research-ledger');
 const independent=require('./independent-source-review');
 const history=require('./independent-source-history');
 const project=require('./project-signal');
+const scopeEvidence=require('./construction-scope-evidence');
+const premiseFactors=require('./source-premise-factors');
 const profiles=require('./subscriber-profile');
 
 const VERSION='PermitPlate-identity-bridge-review-v1.0.0';
@@ -144,7 +146,10 @@ function verifyItem(item,record,observationId){
     record.facts?.job_description:record.facts?.description;
   return JSON.stringify(item.matchedResearchTerms)===
     JSON.stringify(independent.hits(description,rules)) &&
-    item.sourceExcerpt===independent.safeExcerpt(description);
+    item.sourceExcerpt===independent.safeExcerpt(description) &&
+    (record.sourceSystem!=='DOB_NOW'||
+      (item.constructionScope!=null&&
+       scopeEvidence.validate(item.constructionScope,record).valid));
 }
 
 function dohmhProvenance(candidate,batch){
@@ -167,6 +172,7 @@ function dohmhProvenance(candidate,batch){
   );
   const row=docs[0];
   return row?{
+    sourceRow:row,
     sourceRecordId:row.sourceRecordId,
     sourceObservationId:row.sourceObservationId,
     rowFingerprint:row.rowFingerprint,
@@ -277,6 +283,11 @@ function prepare(data){
         continue;
       }
       const agreement=operatorAgreement(candidate,record);
+      // Same-address claims alone are not enough. The source-bound DOHMH and
+      // DOB building keys can corroborate a physical premise or flag a
+      // disagreement, but never independently establish the operator.
+      const premiseEvidence=record.sourceSystem==='DOB_NOW'?
+        premiseFactors.verifyPair(origin.sourceRow,record):null;
       const conflict=candidate.deliverySuppressed===true ||
         (candidate.crossCamisOperationalConflicts||[]).length>0;
       const reviewClass=conflict?'SUPPRESSED_IDENTITY':
@@ -293,6 +304,7 @@ function prepare(data){
         sourceSystem:record.sourceSystem,
         premiseKey:key,
         nameAgreement:agreement,
+        premiseEvidence,
         reviewClass,
         competingCamisCount:possible.length,
         officialSourceUrls:[
