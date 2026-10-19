@@ -80,12 +80,41 @@ baseline/optional Starter window, suppressed identities and previously
 delivered events. It is **not** a list of qualified buyers: the machine does
 not infer category-specific vendor need.
 
+The review queue categorizes each source-bound opportunity as:
+- `SOURCE_KEYWORD_CONTEXT`: an accepted official source contains a known
+  category-related term (equipment, hood/fire, or construction-related waste).
+  This **does not** prove a purchase, contract requirement, or buyer intent.
+- `RELATED_OFFICIAL_ACTIVITY`: independently accepted building or licensing
+  activity exists, but no specific category keyword is supported.
+- `APPLICANT_CONTEXT_ONLY`: a restaurant applicant record exists, but the
+  source provides no specific service-category match.
+
+Source-keyword context sorts before general applicant context. Other
+categories (POS, insurance, pest, linen, distribution) do not receive invented
+automatic keyword matches; they require an explicit founder relevance review.
+
+Each queue row includes an independent `categoryReview` structure. The
+founder must verify the candidate's official records, set
+`categoryReview.approved: true`, preserve the exact
+`categoryReview.evidenceFingerprint`, link a bound official record in
+`categoryReview.sourceUrl`, and write a specific 30–220-character
+`categoryReview.rationale`. If source terms provide the apparent category
+match, the cited record must be the actual matched official source; a
+generic applicant page is not a substitute. An applicant-only justification
+must describe relevant research context without implying an equipment order,
+insurance purchase, future opening, or other unverified demand.
+
+
 ## 3. Founder review and artifact preparation
 
 From the queue, delete unselected rows until at most **10** remain.
 For each, open its `preview.officialUrl`, verify the business, address,
 current record and actual relevance to the buyer's chosen category, and
 write a supported `whyItMatters` sentence without unsupported claims.
+A customer artifact is blocked if the distinct founder `categoryReview` is
+missing, unapproved, stale relative to the source graph, or cites an unrelated
+website. The customer report displays the category evidence basis, founder
+rationale and official source link without converting a keyword into a lead.
 For `eventKind: MATERIAL_CHANGE`, verify the actual previous and current
 source facts using the official record and source evidence, and fill the
 separate `whatChanged` field. A computed descriptor difference alone
@@ -139,9 +168,9 @@ provider receipt as production proof.
 - Canonical V3 scoring and the old scored-opportunity workflow remain under
   their original independent promotion gates. This lane neither replaces
   those gates nor claims to have repaired them.
-- New-observation detection is **not** verification that a restaurant is
-  genuinely new, about to open, or buying a category of goods. A human
-  validates the research value.
+- New-observation detection or a source keyword is **not** verification that a
+  restaurant is genuinely new, about to open, or buying a category of goods.
+  The founder validates category context and never promises vendor demand.
 - Records already present on the initialization baseline do not become
   retroactive new entities. They become eligible only after a later verified
   semantic source change. The optional seven-day Starter window may include
