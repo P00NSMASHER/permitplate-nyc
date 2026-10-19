@@ -115,6 +115,12 @@ jobs:
 
       - name: Verify real curated research and subscriber fulfillment
         run: node pipeline/curated-product.test.js
+      - name: Verify Stripe-only private paid subscriber onboarding
+        run: node pipeline/curated-stripe-onboarding.test.js
+
+      - name: Verify opt-in Stripe credential policy
+        run: python3 -m unittest discover -s tests -p 'test_stripe_onboarding_policy.py' -v
+
 
       - name: Verify private material-event customer delivery
         run: node pipeline/curated-material-events.test.js
