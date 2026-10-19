@@ -52,6 +52,9 @@ jobs:
       - name: Verify complete official DOB scope and property-identity checks
         run: node pipeline/construction-scope-evidence.test.js
 
+      - name: Verify independent source-rich DOB validation without calibration reuse
+        run: node pipeline/construction-validation-panel.test.js
+
       - name: Verify persistent early-source history and dedupe
         run: node pipeline/independent-source-history.test.js
 

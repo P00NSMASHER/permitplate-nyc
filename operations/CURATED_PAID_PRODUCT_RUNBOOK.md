@@ -73,6 +73,35 @@ corroborate a physical site but **never** establish that the property owner
 is the restaurant operator. Missing identifiers remain unresolved. No
 automatic identity bridge, scored lead, or customer delivery is permitted.
 
+## Independent full-scope construction diagnostic (not scored calibration)
+
+The source refresh creates three additional **private** artifacts:
+`state/construction-validation-panel.json`,
+`state/construction-validation-panel.csv`, and
+`state/construction-validation-summary.md`. They cover the uncapped
+restaurant-related DOB review records in that same complete official scan,
+using the **full original job_description**, verified source observation,
+filing date/status, source content fingerprint and explicit scope terms.
+
+Every filing remains `customerDeliveryAllowed: false`. The diagnostic
+compares a broad category-context keyword rule with a stricter component
+plus action rule; any agreement is only between two deterministic text
+rules, NOT independent expert validation, measured buyer precision, or an
+actual equipment order. Entries are grouped by job-number root for
+correlation awareness, not falsely treated as independent customer sites.
+
+Exact-address CAMIS links are reported as review-only hypotheses.
+Official BIN/BBL mismatches are flagged as identity conflicts and
+physical-site matches do **not** identify the restaurant tenant.
+
+**Calibration firewall:** this job does not read, change, or sample from
+the separate private blind Equipment tuning / hidden holdout archive.
+The original 70-case tuning and 30-case holdout remain frozen and sealed.
+The new source-rich panel must not be merged into those case labels or
+used to claim an unbiased precision result. Future genuine review of
+this source-selected population requires a new, explicitly declared
+calibration protocol and independent judgments.
+
 ## 1A. Earlier DOB/SLA research (review-only)
 
 The same complete source scan also creates
