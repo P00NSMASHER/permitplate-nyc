@@ -49,6 +49,9 @@ jobs:
       - name: Verify review-only unlinked DOB and SLA research
         run: node pipeline/independent-source-review.test.js
 
+      - name: Verify persistent early-source history and dedupe
+        run: node pipeline/independent-source-history.test.js
+
       - name: Run ProjectSignal corroboration regression
         run: node pipeline/project-signal.test.js
 
