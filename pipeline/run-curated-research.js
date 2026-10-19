@@ -7,6 +7,7 @@ const path = require('path');
 const {replay} = require('./run-current-graph');
 const ledger = require('./curated-research-ledger');
 const independentReview=require('./independent-source-review');
+const independentHistory=require('./independent-source-history');
 const {privateMaterialPath} = require('./run-subscriber-intake');
 
 const VERSION = 'PermitPlate-curated-research-runner-v1.0.0';
@@ -107,14 +108,47 @@ async function run(input) {
       'INDEPENDENT_REVIEW_NOT_READY'
     ]};
   }
-  result.summary.independentReviewOnlyCount=independent.storedCount;
-  result.summary.independentReviewTotalMatches=independent.totalResearchMatches;
-  result.summary.independentReviewOverflow=independent.omittedByLimit;
+  const independentPath=path.join(path.dirname(ledgerPath),'independent-source-review.json');
+  const historyPath=path.join(path.dirname(ledgerPath),'independent-source-history.json');
+  let priorHistory=readOptional(historyPath);
+  const priorReview=readOptional(independentPath);
+  let migrated=false;
+  if(!priorHistory&&priorReview){
+    // An annotated review proves a history ledger already existed. Refuse to
+    // erase history by silently bootstrapping if its separate file disappears.
+    if(priorReview.historyVersion===independentHistory.VERSION){
+      return {status:'REVIEW',ready:false,failures:['INDEPENDENT_HISTORY_FILE_MISSING']};
+    }
+    const baseline=independentHistory.bootstrap(priorReview);
+    if(baseline.status==='REVIEW'){
+      return {status:'REVIEW',ready:false,failures:baseline.failures};
+    }
+    priorHistory=baseline.ledger;
+    migrated=true;
+  }
+  const advancedHistory=independentHistory.advance(priorHistory,independent);
+  if(advancedHistory.status==='REVIEW'){
+    return {status:'REVIEW',ready:false,failures:advancedHistory.failures};
+  }
+  const annotated=independentHistory.annotate(
+    independent,advancedHistory.ledger,
+    advancedHistory.newObservationIds,advancedHistory.contextChangeIds
+  );
+  if(annotated.status==='REVIEW'){
+    return {status:'REVIEW',ready:false,failures:annotated.failures};
+  }
+  result.summary.independentReviewOnlyCount=annotated.storedCount;
+  result.summary.independentReviewTotalMatches=annotated.totalResearchMatches;
+  result.summary.independentReviewOverflow=annotated.omittedByLimit;
+  result.summary.independentNewObservations=advancedHistory.newObservationIds.length;
+  result.summary.independentContextChangesForReview=advancedHistory.contextChangeIds.length;
+  result.summary.independentHistoryEntries=Object.keys(advancedHistory.ledger.entries).length;
+  result.summary.independentHistoricalMigration=migrated;
   atomicJson(graphPath,result.graph);
   atomicJson(ledgerPath,result.ledger);
   if (!anchor) atomicJson(anchorPath,baselineAnchor(result.ledger));
-  const independentPath=path.join(path.dirname(ledgerPath),'independent-source-review.json');
-  atomicJson(independentPath,independent);
+  atomicJson(historyPath,advancedHistory.ledger);
+  atomicJson(independentPath,annotated);
   return result;
 }
 async function main() {
