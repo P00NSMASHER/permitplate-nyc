@@ -11,6 +11,7 @@ const independentHistory=require('./independent-source-history');
 const identityReview=require('./identity-bridge-review');
 const identityWorkbench=require('./identity-review-workbench');
 const identityHistory=require('./identity-triage-history');
+const receiptRecovery=require('./identity-receipt-recovery');
 const {privateMaterialPath} = require('./run-subscriber-intake');
 
 const VERSION = 'PermitPlate-curated-research-runner-v1.0.0';
@@ -129,7 +130,11 @@ function prepareIdentityHistory(previous,priorReceipt,currentReceipt){
       return {ready:false,status:'REVIEW',
         failures:['IDENTITY_TRIAGE_HISTORY_MISSING']};
     }
-    const initial=identityHistory.bootstrap(priorReceipt);
+    const recovered=receiptRecovery.normalizeReceipt(priorReceipt);
+    if(!recovered.ready)return {
+      ready:false,status:'REVIEW',failures:recovered.failures
+    };
+    const initial=identityHistory.bootstrap(recovered.receipt);
     if(initial.status==='REVIEW')return {
       ready:false,status:'REVIEW',failures:initial.failures
     };
@@ -143,6 +148,7 @@ function prepareIdentityHistory(previous,priorReceipt,currentReceipt){
       ready:false,status:'REVIEW',failures:annotated.failures
     };
     return {ready:true,migrated:true,bootstrapped:false,
+      normalizedLegacyReceipt:recovered.legacy,
       updated,annotated};
   }
   if(!previous){
@@ -156,7 +162,7 @@ function prepareIdentityHistory(previous,priorReceipt,currentReceipt){
       ready:false,status:'REVIEW',failures:annotated.failures
     };
     return {ready:true,migrated:false,bootstrapped:true,
-      updated:initial,annotated};
+      normalizedLegacyReceipt:false,updated:initial,annotated};
   }
   const updated=identityHistory.advance(previous,currentReceipt);
   if(updated.status==='REVIEW')return {
@@ -168,7 +174,7 @@ function prepareIdentityHistory(previous,priorReceipt,currentReceipt){
     ready:false,status:'REVIEW',failures:annotated.failures
   };
   return {ready:true,migrated:false,bootstrapped:false,
-    updated,annotated};
+    normalizedLegacyReceipt:false,updated,annotated};
 }
 async function run(input) {
   const opts = input || {};
@@ -239,6 +245,7 @@ async function run(input) {
   result.summary.identityNewHypotheses=triage.updated.newProposalIds.length;
   result.summary.identityEvidenceRechecks=triage.updated.contextRecheckIds.length;
   result.summary.identityHistoryMigrated=triage.migrated;
+  result.summary.identityLegacyReceiptRecovered=triage.normalizedLegacyReceipt;
   result.summary.identityReviewOnlyProposalCount=identity.storedCount;
   result.summary.identityReviewTotalProposals=identity.totalProposals;
   result.summary.identityReviewOmittedCount=identity.omittedByLimit;
