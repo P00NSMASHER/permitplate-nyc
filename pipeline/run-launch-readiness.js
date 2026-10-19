@@ -12,8 +12,9 @@ const publicBuild=require('../build-site');
 const readiness=require('./launch-readiness');
 const curatedCanary=require('./run-founder-curated-canary');
 const curatedProduction=require('./curated-production-readiness');
+const stripeIntakeReadiness=require('./stripe-intake-readiness');
 
-const RUNNER_VERSION='PermitPlate-launch-readiness-runner-v1.1.0';
+const RUNNER_VERSION='PermitPlate-launch-readiness-runner-v1.2.0';
 
 function readJson(filePath){
   return JSON.parse(fs.readFileSync(filePath,'utf8'));
@@ -75,6 +76,18 @@ async function run(options){
     currentGraphDigest:graph.graphDigest,
     evaluatedAt:observedAt
   });
+  // A green public Checkout receipt does not mean paid customers are being
+  // checked. Require a private provider-readback heartbeat and an opted-in
+  // recurring poll before claiming first-customer operational readiness.
+  const stripeIntake=stripeIntakeReadiness.evaluate({
+    monitoringEnabled:opts.stripeIntakeMonitoringEnabled===true ||
+      process.env.PERMITPLATE_STRIPE_ONBOARDING_ENABLED==='true',
+    ledger:readOptionalPrivateJson(path.join(
+      curatedStateDir,'curated-onboarding-ledger.json')),
+    anchor:readOptionalPrivateJson(path.join(
+      curatedStateDir,'curated-onboarding-anchor.json')),
+    evaluatedAt:observedAt
+  });
   const externalEvidence=readJson(externalEvidencePath);
   const subscriberCanary=firstSubscriber.run();
   const founderCuratedCanary=curatedCanary.run();
@@ -95,6 +108,7 @@ async function run(options){
     subscriberCanary,
     curatedCanary:founderCuratedCanary,
     curatedResearch,
+    stripeIntake,
     launchMode:manifest.checkout&&manifest.checkout.launch_mode,
     curatedFulfillmentRunbookPresent,
     publicBuildFailures,
