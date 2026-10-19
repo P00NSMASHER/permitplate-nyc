@@ -3,6 +3,7 @@ const assert=require('node:assert/strict');
 const adapters=require('./source-adapters');
 const scope=require('./construction-scope-evidence');
 const premise=require('./source-premise-factors');
+const history=require('./independent-source-history');
 
 const O='2026-10-19T17:00:00.000Z';
 function dob(job,description,fields={}){
@@ -93,4 +94,55 @@ assert.equal(premise.dobBbl(row),'3023950014');
 assert.equal(premise.bin('0'),null);
 assert.equal(premise.bbl('987'),null);
 assert.throws(()=>premise.verifyPair(row,dohmh()),/PREMISE_SOURCE_PROVENANCE_REQUIRED/);
+
+// Migration must NOT treat the newly captured full scope as a changed filing.
+// But a later material change *after* 180 characters must be detected.
+function item(record,includeScope){
+  return {
+    sourceSystem:'DOB_NOW',sourceRecordId:record.sourceRecordId,
+    sourceEffectiveAt:'2026-10-16T00:00:00.000Z',
+    sourceExcerpt:record.facts.job_description.slice(0,180),
+    matchedResearchTerms:['RESTAURANT'],
+    sourceStatus:record.facts.filing_status,
+    reviewStatus:'REVIEW_ONLY_UNLINKED',customerDeliveryAllowed:false,
+    ...(includeScope?{constructionScope:scope.capture(record)}:{})
+  };
+}
+function review(at,record,withScope){
+  const core={
+    version:history.SOURCE_VERSION,status:'REVIEW_ONLY',
+    observedAt:at,storedCount:1,totalResearchMatches:1,
+    omittedByLimit:0,items:[item(record,withScope)],
+    customerDeliveryAllowed:false,externalSendCalls:0
+  };
+  return {...core,artifactFingerprint:history.hash(core)};
+}
+const beforeDate='2026-10-19T16:00:00.000Z',
+  migrateAt='2026-10-19T17:00:00.000Z',
+  laterAt='2026-10-19T18:00:00.000Z';
+const old=history.bootstrap(review(beforeDate,row,false));
+assert.equal(old.status,'BASELINED');
+const migrated=history.advance(old.ledger,review(migrateAt,row,true));
+assert.equal(migrated.newObservationIds.length,0);
+assert.equal(migrated.contextChangeIds.length,0);
+assert.equal(migrated.scopeBaselineMigratedCount,1);
+assert.equal(migrated.ledger.entries[row.sourceRecordId].firstObservedAt,beforeDate);
+assert.equal(migrated.ledger.entries[row.sourceRecordId].scopeBaselineMigratedAt,migrateAt);
+const replay=history.advance(migrated.ledger,review(laterAt,row,true));
+assert.equal(replay.scopeBaselineMigratedCount,0);
+assert.equal(replay.scopeChangeCount,0);
+assert.deepEqual(replay.contextChangeIds,[]);
+const newSource=dob('B01467007-I1',long+' AN ADDITIONAL COMMERCIAL REFRIGERATION UNIT IS NOW FILED.');
+assert.equal(item(row,true).sourceExcerpt,item(newSource,true).sourceExcerpt);
+const changed=history.advance(migrated.ledger,review(laterAt,newSource,true));
+assert.equal(changed.scopeChangeCount,1);
+assert.deepEqual(changed.contextChangeIds,[row.sourceRecordId]);
+assert.equal(changed.ledger.entries[row.sourceRecordId].firstObservedAt,beforeDate);
+assert(history.validate(changed.ledger).valid);
+assert(history.annotate(review(laterAt,newSource,true),changed.ledger,
+  [],changed.contextChangeIds).items[0].monitoringStatus==='SOURCE_CONTEXT_CHANGED_FOR_REVIEW');
+const dropped=history.advance(migrated.ledger,review(laterAt,newSource,false));
+assert.equal(dropped.status,'REVIEW');
+assert(dropped.failures.includes('INDEPENDENT_FULL_SCOPE_EVIDENCE_MISSING'));
+
 console.log('Full DOB source scope, fingerprint/disk roundtrip, BIN/BBL conflict and review-only identity tests passed.');
