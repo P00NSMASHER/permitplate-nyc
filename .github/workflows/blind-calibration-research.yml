@@ -17,6 +17,7 @@ on:
       - 'pipeline/calibration-cohort.js'
       - 'pipeline/calibration-evaluation.js'
       - 'pipeline/calibration-workbench.js'
+      - 'pipeline/calibration-focused.test.js'
 
 permissions:
   contents: read
@@ -40,7 +41,7 @@ jobs:
         with:
           node-version: '22'
       - name: Test blinded calibration source integrity and private outputs
-        run: node --test pipeline/calibration.test.js pipeline/calibration-integrity.test.js pipeline/calibration-cli.test.js
+        run: node --test pipeline/calibration.test.js pipeline/calibration-integrity.test.js pipeline/calibration-cli.test.js pipeline/calibration-focused.test.js
       - name: Defend private blind-calibration workflow
         run: python3 -m unittest discover -s tests -p 'test_blind_calibration_workflow_policy.py' -v
 
@@ -93,7 +94,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node pipeline/calibration-runner.js prepare "$CALIBRATION_DIR"
+          node pipeline/calibration-runner.js prepare "$CALIBRATION_DIR" Equipment
       - name: Verify sealed cohort, blinded reviewer packet, and blocked promotion
         shell: bash
         run: |
@@ -114,6 +115,10 @@ jobs:
               packet.cards.some(card=>'predictions' in card||'scores' in card||
                 'v3' in card||'v4' in card)||
               blocked.status!=='BLOCKED'||summary.productionAuthorized!==false||
+              operator.categories.length!==1||operator.categories[0]!=='Equipment'||
+              operator.counts.benchmark!==100||operator.counts.tuning!==70||
+              operator.counts.holdout!==30||operator.counts.diagnostic!==0||
+              packet.cards.length!==70||summary.reviewScope!=='ONE_CATEGORY_INDEPENDENT_REVIEW'||
               summary.productionStateWrites!==0||summary.externalSendCalls!==0||
               summary.passed!==true||summary.holdoutReleased!==false||
               operator.sourceRevision!==process.env.GITHUB_SHA){
@@ -125,6 +130,8 @@ jobs:
             graphCandidates:summary.counts.graphCandidates,
             benchmarkCases:summary.counts.benchmark,
             firstReviewerCases:packet.cards.length,
+            category:operator.categories[0],
+            hiddenHoldoutCases:operator.counts.holdout,
             labelState:blocked.status,
             productionAuthorized:false,
             externalSendCalls:0

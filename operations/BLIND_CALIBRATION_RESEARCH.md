@@ -37,6 +37,22 @@ public-main commit and hash-pinned source/scoring/evaluation code. Its
 reviewer packet contains only evidence. It contains a deterministic site
 group sample, with diagnostic cases excluded from threshold selection.
 
+### Focused first calibration: Equipment
+
+To make genuine independent review achievable, the active weekly packet now
+targets **Equipment** only. It still samples 100 eligible site groups, with
+70 tuning and 30 hidden holdout cases. No diagnostic extras or POS/Insurance
+judgments are required for this first Equipment-focused evaluation.
+Two independent reviewers must each judge the full 70-case first packet.
+The 30-case hidden holdout remains unavailable until thresholds are locked.
+All minimum precision, reviewer agreement, coverage and holdout checks remain
+unchanged. The older three-category research packet remains archived privately,
+and separate POS and Insurance calibration is deferred, not silently passed.
+
+The exported review JSON is the *only* way to supply actual human judgments;
+the instrument never fills labels automatically and cannot attest to human
+expertise. No one has been contacted or given access to private material.
+
 The packet is **not a validated lead feed**. It does not prove a restaurant
 is about to open, a customer will buy, or any model's precision.
 
