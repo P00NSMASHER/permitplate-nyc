@@ -209,6 +209,7 @@ async function main(){
   }));
   assert.equal(noPaid.sessions.length,0);
   await assert.rejects(polling.snapshot('rk_test_key',fake),/STRIPE_READ_CREDENTIAL_MISSING/);
+  await assert.rejects(polling.snapshot('sk_live_overprivileged_key',fake),/STRIPE_READ_CREDENTIAL_MISSING/);
   await assert.rejects(polling.snapshot('rk_live_unitfixture',async url=>({
     ok:true,json:async()=>String(url).includes('/v1/payment_links/')?
       verifiedLink:{data:[],has_more:true}
