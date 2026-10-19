@@ -3,6 +3,7 @@
 // Append-only identity memory for private, REVIEW_ONLY DOB/SLA research.
 // A source re-fetch cannot manufacture a new opportunity or customer lead.
 const crypto=require('node:crypto');
+const scopeEvidence=require('./construction-scope-evidence');
 const VERSION='PermitPlate-independent-source-history-v1.0.0';
 const SOURCE_VERSION='PermitPlate-independent-source-review-v1.0.0';
 
@@ -31,6 +32,11 @@ function evidenceBody(item){
   };
 }
 const evidenceHash=item=>hash(evidenceBody(item));
+function fullScopeFingerprint(item){
+  if(item?.sourceSystem!=='DOB_NOW'||item.constructionScope==null)return null;
+  return scopeEvidence.validate(item.constructionScope).valid?
+    item.constructionScope.scopeFingerprint:null;
+}
 function seal(ledger){
   const core={...ledger};
   delete core.ledgerFingerprint;
@@ -56,7 +62,9 @@ function verifyReview(review){
        x.customerDeliveryAllowed!==false||
        x.reviewStatus!=='REVIEW_ONLY_UNLINKED'||
        !instant(x.sourceEffectiveAt)||
-       ids.has(x.sourceRecordId)){
+       ids.has(x.sourceRecordId)||
+       (x.sourceSystem==='DOB_NOW'&&x.constructionScope!=null&&
+         !scopeEvidence.validate(x.constructionScope).valid)){
       failures.push('INDEPENDENT_REVIEW_ITEM_INVALID');
     }else ids.add(x.sourceRecordId);
   }
@@ -76,6 +84,10 @@ function validate(ledger){
     if(!x||x.sourceRecordId!==id||!['DOB_NOW','SLA_PENDING'].includes(x.sourceSystem)||
        !id.startsWith(x.sourceSystem+':')||
        !/^[a-f0-9]{64}$/.test(x.evidenceFingerprint||'')||
+       (x.fullScopeFingerprint!=null&&!/^[a-f0-9]{64}$/.test(x.fullScopeFingerprint))||
+       (x.scopeBaselineMigratedAt!=null&&(!instant(x.scopeBaselineMigratedAt)||
+         Date.parse(x.scopeBaselineMigratedAt)<Date.parse(l.initializedAt)||
+         Date.parse(x.scopeBaselineMigratedAt)>Date.parse(x.lastObservedAt)))||
        !instant(x.firstObservedAt)||!instant(x.lastObservedAt)||
        Date.parse(x.firstObservedAt)<Date.parse(l.initializedAt)||
        Date.parse(x.firstObservedAt)>Date.parse(x.lastObservedAt)||
@@ -109,6 +121,7 @@ function bootstrap(review){
       firstObservedAt:observedAt,lastObservedAt:observedAt,
       presenceState:'IN_CURRENT_REVIEW',
       evidenceFingerprint:evidenceHash(item),
+      ...(fullScopeFingerprint(item)?{fullScopeFingerprint:fullScopeFingerprint(item)}:{}),
       latestContextChange:null
     };
   }
@@ -136,6 +149,7 @@ function advance(previous,review){
   }
   const entries=structuredClone(previous.entries),seen=new Set();
   const newObservationIds=[],contextChangeIds=[];
+  let scopeBaselineMigratedCount=0,scopeChangeCount=0;
   for(const item of review.items){
     const id=item.sourceRecordId,prior=entries[id];
     seen.add(id);
@@ -146,23 +160,43 @@ function advance(previous,review){
         firstObservedAt:now,lastObservedAt:now,
         presenceState:'IN_CURRENT_REVIEW',
         evidenceFingerprint:fingerprint,
+        ...(fullScopeFingerprint(item)?{fullScopeFingerprint:fullScopeFingerprint(item)}:{}),
         latestContextChange:null
       };
       newObservationIds.push(id);
     }else{
+      const full=fullScopeFingerprint(item);
       const updated={...prior,lastObservedAt:now,presenceState:'IN_CURRENT_REVIEW',
         evidenceFingerprint:fingerprint};
-      if(fingerprint!==prior.evidenceFingerprint){
-        const core={
-          sourceRecordId:id,
-          from:prior.evidenceFingerprint,to:fingerprint,observedAt:now
-        };
+      if(prior.fullScopeFingerprint && !full){
+        return {status:'REVIEW',failures:['INDEPENDENT_FULL_SCOPE_EVIDENCE_MISSING']};
+      }
+      if(full){
+        updated.fullScopeFingerprint=full;
+        // The first post-upgrade complete scope is a migration baseline,
+        // NOT a newly detected construction event.
+        if(!prior.fullScopeFingerprint){
+          updated.scopeBaselineMigratedAt=now;
+          scopeBaselineMigratedCount++;
+        }
+      }
+      const legacyChanged=fingerprint!==prior.evidenceFingerprint;
+      const scopeChanged=Boolean(full&&prior.fullScopeFingerprint&&
+        full!==prior.fullScopeFingerprint);
+      if(legacyChanged||scopeChanged){
+        const from=scopeChanged?
+          hash({legacy:prior.evidenceFingerprint,scope:prior.fullScopeFingerprint}):
+          prior.evidenceFingerprint;
+        const to=scopeChanged?
+          hash({legacy:fingerprint,scope:full}):fingerprint;
+        const core={sourceRecordId:id,from,to,observedAt:now};
         updated.latestContextChange={
           observedAt:now,sourceRecordId:id,
-          fromFingerprint:prior.evidenceFingerprint,
-          toFingerprint:fingerprint,eventId:'CTX:'+hash(core).slice(0,24)
+          fromFingerprint:from,toFingerprint:to,
+          eventId:'CTX:'+hash(core).slice(0,24)
         };
         contextChangeIds.push(id);
+        if(scopeChanged)scopeChangeCount++;
       }
       entries[id]=updated;
     }
@@ -179,7 +213,8 @@ function advance(previous,review){
   });
   return {
     status:newObservationIds.length||contextChangeIds.length?'ADVANCED':'NO_NEW_REVIEW_EVENTS',
-    ledger,newObservationIds,contextChangeIds
+    ledger,newObservationIds,contextChangeIds,
+    scopeBaselineMigratedCount,scopeChangeCount
   };
 }
 function annotate(review,ledger,newIds=[],changeIds=[]){
@@ -188,7 +223,9 @@ function annotate(review,ledger,newIds=[],changeIds=[]){
     return {status:'REVIEW',failures:[...v.failures,...check.failures,'INDEPENDENT_REVIEW_HISTORY_MISMATCH']};
   }
   if(review.items.some(item=>!ledger.entries[item.sourceRecordId]||
-      ledger.entries[item.sourceRecordId].evidenceFingerprint!==evidenceHash(item))){
+      ledger.entries[item.sourceRecordId].evidenceFingerprint!==evidenceHash(item)||
+      (ledger.entries[item.sourceRecordId].fullScopeFingerprint!=null&&
+        ledger.entries[item.sourceRecordId].fullScopeFingerprint!==fullScopeFingerprint(item)))){
     return {status:'REVIEW',failures:['INDEPENDENT_REVIEW_HISTORY_IDENTITY_DRIFT']};
   }
   const first=new Set(newIds),changed=new Set(changeIds);
@@ -215,4 +252,4 @@ function annotate(review,ledger,newIds=[],changeIds=[]){
   return {...body,artifactFingerprint:hash(body)};
 }
 module.exports={VERSION,SOURCE_VERSION,stable,hash,instant,evidenceBody,evidenceHash,
-  seal,validate,verifyReview,bootstrap,advance,annotate};
+  fullScopeFingerprint,seal,validate,verifyReview,bootstrap,advance,annotate};
