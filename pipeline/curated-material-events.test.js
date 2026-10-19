@@ -90,7 +90,7 @@ function ownerReview(c,e) {
       approved:true,
       evidenceFingerprint:categoryEvidence.classify(c,'Equipment').evidenceFingerprint,
       sourceUrl:categoryEvidence.primaryUrl(c),
-      rationale:'A verified, changing official construction record may be useful equipment-vendor context, but does not establish purchase intent.'
+      rationale:'An approved construction filing is useful equipment-vendor research context, without establishing any specific purchase requirement.'
     },
     eventId:e.eventId,eventKind:e.kind,
     ownerReviewed:true,reviewedAt:'2026-10-18T15:30:00Z',
