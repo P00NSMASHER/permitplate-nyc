@@ -131,6 +131,9 @@ jobs:
       - name: Run provider reconciliation regression
         run: node pipeline/provider-reconciliation.test.js
 
+      - name: Verify private Stripe intake heartbeat is not treated as commercial proof
+        run: node pipeline/stripe-intake-readiness.test.js
+
       - name: Run launch readiness controller regression
         run: node pipeline/launch-readiness.test.js
 
