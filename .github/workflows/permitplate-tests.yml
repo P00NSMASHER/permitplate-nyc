@@ -46,6 +46,9 @@ jobs:
       - name: Run NYC source adapter regression
         run: node pipeline/source-adapters.test.js
 
+      - name: Verify review-only unlinked DOB and SLA research
+        run: node pipeline/independent-source-review.test.js
+
       - name: Run ProjectSignal corroboration regression
         run: node pipeline/project-signal.test.js
 
