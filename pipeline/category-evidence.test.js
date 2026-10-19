@@ -63,14 +63,14 @@ const forged={
   acceptedCorroboration:[]
 };
 assert.equal(engine.classify(forged,'Equipment').sourceEvidence.length,0);
-assert.equal(engine.classify(forged,'Equipment').status,'RELATED_OFFICIAL_ACTIVITY');
+assert.equal(engine.classify(forged,'Equipment').status,'APPLICANT_CONTEXT_ONLY');
 const noCorroboration={
   ...sample,
   commercialEvidence:[{tag:'EQUIPMENT',sourceSystem:'DOB_NOW',sourceRecordId:'DOB_NOW:not-accepted',
   sourceUrl:dob,matchedPatterns:['commercial kitchen']}],
   acceptedCorroboration:[]
 };
-assert.equal(engine.classify(noCorroboration,'Equipment').status,'RELATED_OFFICIAL_ACTIVITY');
+assert.equal(engine.classify(noCorroboration,'Equipment').status,'APPLICANT_CONTEXT_ONLY');
 // Applicant-only founder review is possible but MUST show it is general
 // restaurant context, never an evidence-backed category purchase.
 const general={...sample,sourceSystems:['DOHMH'],acceptedCorroboration:[],commercialEvidence:[]};
