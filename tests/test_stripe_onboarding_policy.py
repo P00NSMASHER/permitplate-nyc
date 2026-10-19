@@ -21,7 +21,7 @@ def verify(source):
     assert "schedule:" in source
     assert "permissions:\n  contents: read" in source
     assert "contents: write" not in source
-    assert "cancel-in-progress: \${{ github.event_name == 'pull_request' }}" in source
+    assert "cancel-in-progress: ${{ github.event_name == 'pull_request' }}" in source
     assert "format('permitplate-private-state-{0}', vars.PERMITPLATE_STATE_REPO)" in source
     assert source.index(SOURCE_GATE) < source.index(PRIVATE_TOKEN)
     assert source.index(SOURCE_GATE) < source.index(STRIPE_TOKEN)
