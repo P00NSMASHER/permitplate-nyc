@@ -81,8 +81,12 @@ function validate(frozen){
   return {valid:issues.length===0,failures:[...new Set(issues)]};
 }
 function sameLegacy(current,reference){
+  // The source-rich diagnostic panel is intentionally refreshed daily.
+  // Only the three historical reviewer/reserve artifacts are immutable.
+  // Compare them independently of the rolling current diagnostic panel.
   return allOrNone(current)==='ALL'&&
-    PARTS.every(k=>research.hash(current[k])===research.hash(reference[k]));
+    ['reviewerPacket','reservedAudit','manifest'].every(k=>
+      research.hash(current[k])===research.hash(reference[k]));
 }
 function choose({previousFrozen,legacy,current,now}){
   const existing=allOrNone(previousFrozen||{});
