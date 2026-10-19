@@ -90,6 +90,38 @@ corroborate a physical site but **never** establish that the property owner
 is the restaurant operator. Missing identifiers remain unresolved. No
 automatic identity bridge, scored lead, or customer delivery is permitted.
 
+## Source-selected, blind construction review and reserved audit
+
+The daily private scan now creates a **separate, reproducible** construction
+review split. Its reviewer packet is
+`state/construction-blind-reviewer.json`, while the reserved
+`state/construction-reserved-audit.json` is strictly for future separate
+source-audit work. `state/construction-blind-manifest.json` records the
+source-bound fingerprints, strata and full counts. These are **not**
+the original Equipment scoring holdout or validated customer leads.
+
+Cases are grouped by **physical borough/address**, ensuring different
+DOB filing numbers and subfilings at one premise cannot cross between
+reviewer and reserved partitions. Each official job-number root must also
+remain in a single physical premise; the process rejects contradictory
+source identity rather than splitting it. Review assignment uses a
+constant SHA-256 order within source-context strata, independent of
+model scores and reviewer opinions.
+
+The first packet preserves entire original DOB descriptions, the exact
+official source link and source fingerprints. It deliberately omits
+synthetic rule classifications, model predictions and reserved cases.
+The reserved file is withheld from the first-stage reviewer workflow.
+Because the underlying full source corpus exists in private Git, this is an
+**operational access separation**, not a claim that reviewers cannot obtain
+the same public official filings elsewhere.
+
+The selection is from restaurant-related DOB filings, not a random customer
+population. Two genuine independent expert reviews and operator/contract
+identity evidence are still required for commercial validation.
+The original `70 tuning / 30 scored holdout` files are not accessed,
+modified, or replaced. No calibrated score may be promoted from this panel.
+
 ## Independent full-scope construction diagnostic (not scored calibration)
 
 The source refresh creates three additional **private** artifacts:
