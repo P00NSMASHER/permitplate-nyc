@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const {replay} = require('./run-current-graph');
 const ledger = require('./curated-research-ledger');
+const independentReview=require('./independent-source-review');
 const {privateMaterialPath} = require('./run-subscriber-intake');
 
 const VERSION = 'PermitPlate-curated-research-runner-v1.0.0';
@@ -91,12 +92,29 @@ async function run(input) {
   if (!anchorCheck.valid) return {
     status:'REVIEW',ready:false,failures:[anchorCheck.reason]
   };
-  const liveGraph = await replay(opts.nowIso);
-  const result = prepare(previous,liveGraph);
+  const collected = await replay(opts.nowIso,{withBatches:true});
+  const result = prepare(previous,collected.result);
   if (!result.ready) return result;
+  // Review-only DOB/SLA evidence uses the exact source observations already
+  // included in the graph. It cannot be confused with customer-ready CAMIS.
+  const independent=independentReview.inspect({
+    graph:result.graph,
+    batches:collected.batches,
+    observedAt:result.graph.observedAt
+  });
+  if(independent.status!=='REVIEW_ONLY') {
+    return {status:'REVIEW',ready:false,failures:independent.failures||[
+      'INDEPENDENT_REVIEW_NOT_READY'
+    ]};
+  }
+  result.summary.independentReviewOnlyCount=independent.storedCount;
+  result.summary.independentReviewTotalMatches=independent.totalResearchMatches;
+  result.summary.independentReviewOverflow=independent.omittedByLimit;
   atomicJson(graphPath,result.graph);
   atomicJson(ledgerPath,result.ledger);
   if (!anchor) atomicJson(anchorPath,baselineAnchor(result.ledger));
+  const independentPath=path.join(path.dirname(ledgerPath),'independent-source-review.json');
+  atomicJson(independentPath,independent);
   return result;
 }
 async function main() {

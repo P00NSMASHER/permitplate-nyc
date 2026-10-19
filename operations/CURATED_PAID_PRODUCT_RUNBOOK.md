@@ -51,6 +51,26 @@ research history and does not change the scored ledger.
 The workflow never contacts customers, publishes paid candidate state to
 public GitHub, or exercises a payment API.
 
+## 1A. Earlier DOB/SLA research (review-only)
+
+The same complete source scan also creates
+`state/independent-source-review.json` inside the **private** state repository.
+It contains recent DOB restaurant-related construction filings and NYC SLA
+restaurant/premises applications with official direct-record URLs, actual
+filing/received dates, and bounded source excerpts. It excludes clearly
+residential projects, non-NYC counties, old/future dates and records already
+independently linked to CAMIS. Matching addresses are flagged for identity
+review, never assumed to be the same business.
+
+**These are not paid customer leads.** Every row is
+`REVIEW_ONLY_UNLINKED` with `customerDeliveryAllowed: false`. There is no
+automatic graph promotion, source-identity bridge, scoring, email, or
+subscriber artifact. An independently verified cross-source identity and
+explicit separate acceptance would be needed before customer delivery.
+The `omittedByLimit` value reports records left out of the bounded private
+queue rather than implying the queue is exhaustive. The workflow logs only
+aggregate counts, not names, addresses, or applicant details.
+
 ## 2. Assemble a private paid subscriber review
 
 Use an authorized workstation with the product repository and private state
