@@ -13,8 +13,12 @@ grant GitHub Actions permission to read that account.
 
 After reviewing Stripe's restricted-key permissions, configure a GitHub Actions
 secret named `PERMITPLATE_STRIPE_READ_KEY` with a *live*, read-only restricted
-key allowing **Checkout Sessions: Read** and **Subscriptions: Read** for the
-PermitPlate Stripe account. Never supply an unrestricted key or paste it into
+key allowing **Payment Links: Read**, **Checkout Sessions: Read**, and
+**Subscriptions: Read** for the PermitPlate Stripe account. The intake first
+retrieves the exact Payment Link and verifies `livemode=true`, `active=true`,
+`project=permitplate_nyc`, and `plan=monthly_79` in provider metadata.
+A key for another Stripe account cannot silently return an empty subscriber
+list and be treated as healthy. Never supply an unrestricted key or paste it into
 an issue, commit, workflow input or chat.
 
 The job checks exact-current public `main` before any private credentials.

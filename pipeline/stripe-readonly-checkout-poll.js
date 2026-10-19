@@ -5,10 +5,10 @@ const LINK='plink_1UG3RUDPW8riWrxQpZwHExK2';
 const ORIGIN='https://api.stripe.com';
 const MAX_PAGES=20;
 async function jsonGET(url,key,fetchImpl=fetch){
-  if(!/^https:\/\/api\.stripe\.com\/v1\/(?:checkout\/sessions|subscriptions\/)/.test(url)){
+  if(!/^https:\/\/api\.stripe\.com\/v1\/(?:checkout\/sessions|subscriptions\/|payment_links\/)/.test(url)){
     throw Error('STRIPE_ENDPOINT_NOT_ALLOWED');
   }
-  if(!key||!/^(?:sk_live_|rk_live_)/.test(key))throw Error('STRIPE_READ_CREDENTIAL_MISSING');
+  if(!key||!/^rk_live_/.test(key))throw Error('STRIPE_READ_CREDENTIAL_MISSING');
   let response;
   try{
     response=await fetchImpl(url,{
@@ -22,7 +22,21 @@ async function jsonGET(url,key,fetchImpl=fetch){
   if(!data||typeof data!=='object')throw Error('STRIPE_READ_RESPONSE_INVALID');
   return data;
 }
+async function attestPaymentLink(key,fetchImpl=fetch){
+  const url=ORIGIN+'/v1/payment_links/'+encodeURIComponent(LINK);
+  const record=await jsonGET(url,key,fetchImpl);
+  // The connected Stripe merchant account is NOT inferred from an empty list.
+  // A wrong account, test-mode key or inactive/mismatched product fails closed.
+  if(record.object!=='payment_link'||record.id!==LINK||
+     record.livemode!==true||record.active!==true||
+     record.metadata?.project!=='permitplate_nyc'||
+     record.metadata?.plan!=='monthly_79'){
+    throw Error('STRIPE_PAYMENT_LINK_ACCOUNT_NOT_VERIFIED');
+  }
+  return {id:LINK,verified:true};
+}
 async function snapshot(key,fetchImpl=fetch){
+  await attestPaymentLink(key,fetchImpl);
   const sessions=[],seen=new Set(),subscriptions={};
   let cursor=null,complete=false;
   for(let i=0;i<MAX_PAGES;i++){
@@ -66,4 +80,4 @@ async function snapshot(key,fetchImpl=fetch){
     pageCount:Math.max(1,Math.ceil(sessions.length/100)),
     paidSessionCount:paid.length};
 }
-module.exports={LINK,ORIGIN,MAX_PAGES,jsonGET,snapshot};
+module.exports={LINK,ORIGIN,MAX_PAGES,jsonGET,attestPaymentLink,snapshot};
