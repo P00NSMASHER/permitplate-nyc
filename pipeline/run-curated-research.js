@@ -223,7 +223,9 @@ async function run(input) {
       'IDENTITY_HYPOTHESES_UNVERIFIED'
     ]};
   }
-  const identityValidation=identityReview.validate(identity);
+  // Check the exact disk readback representation, not only an in-memory
+  // receipt that may contain unserializable optional fields.
+  const identityValidation=identityReview.validate(JSON.parse(JSON.stringify(identity)));
   if(!identityValidation.valid){
     return {status:'REVIEW',ready:false,failures:identityValidation.failures};
   }
