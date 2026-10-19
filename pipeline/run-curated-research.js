@@ -11,6 +11,7 @@ const independentHistory=require('./independent-source-history');
 const identityReview=require('./identity-bridge-review');
 const identityWorkbench=require('./identity-review-workbench');
 const constructionPanel=require('./construction-validation-panel');
+const constructionBlind=require('./construction-blind-diagnostic');
 const identityHistory=require('./identity-triage-history');
 const receiptRecovery=require('./identity-receipt-recovery');
 const {privateMaterialPath} = require('./run-subscriber-intake');
@@ -261,6 +262,21 @@ async function run(input) {
     return {status:'REVIEW',ready:false,
       failures:scopeDiagnostic.failures||['CONSTRUCTION_DIAGNOSTIC_HOLD']};
   }
+  const blind=constructionBlind.split(scopeDiagnostic);
+  if(blind.status!=='READY_FOR_REAL_REVIEW'||
+     !constructionBlind.verify(blind,scopeDiagnostic).valid||
+     blind.manifest.productionAuthorized!==undefined||
+     blind.manifest.scoringPromotionAuthorized!==false||
+     blind.manifest.customerDeliveryAllowed!==false||
+     blind.manifest.originalScoringHoldoutCasesRead!==0){
+    return {status:'REVIEW',ready:false,
+      failures:blind.failures||['CONSTRUCTION_BLIND_SPLIT_FAILED_CLOSED']};
+  }
+  result.summary.constructionReviewerCards=blind.manifest.reviewCases;
+  result.summary.constructionReservedAuditCases=blind.manifest.reservedCases;
+  result.summary.constructionReviewerPremiseGroups=blind.manifest.reviewPremiseGroups;
+  result.summary.constructionReservedPremiseGroups=blind.manifest.reservedPremiseGroups;
+  result.summary.constructionOriginalScoringHoldoutRead=0;
   result.summary.constructionDiagnosticFilings=scopeDiagnostic.filings;
   result.summary.constructionDiagnosticUniqueJobRoots=scopeDiagnostic.uniqueJobNumberRoots;
   result.summary.constructionDiagnosticFullDescriptionsBeyond180=scopeDiagnostic.officialRowsWithScopeBeyond180;
@@ -313,6 +329,14 @@ async function run(input) {
     constructionPanel.csv(scopeDiagnostic));
   atomicText(path.join(path.dirname(ledgerPath),'construction-validation-summary.md'),
     constructionPanel.report(scopeDiagnostic));
+  // Distinct research-only split. The reviewer packet cannot include the
+  // reserved audit examples, synthetic labels or scoring predictions.
+  atomicJson(path.join(path.dirname(ledgerPath),'construction-blind-reviewer.json'),
+    blind.reviewerPacket);
+  atomicJson(path.join(path.dirname(ledgerPath),'construction-reserved-audit.json'),
+    blind.reservedAudit);
+  atomicJson(path.join(path.dirname(ledgerPath),'construction-blind-manifest.json'),
+    blind.manifest);
   return result;
 }
 async function main() {
