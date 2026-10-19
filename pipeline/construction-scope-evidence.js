@@ -75,6 +75,18 @@ function capture(record){
   };
   return {...core,scopeFingerprint:sha(stableStringify(core))};
 }
+// Semantic scope identity deliberately excludes publisher observation ID,
+ // data-pull time, source row hash and administrative filing status. Those
+ // fields have separate receipts and are not a construction description edit.
+const SEMANTIC_VERSION='PermitPlate-DOB-description-content-v1.0.0';
+function semanticScopeFingerprint(item){
+  if(!validate(item).valid)return null;
+  return sha(stableStringify({
+    version:SEMANTIC_VERSION,
+    sourceRecordId:item.sourceRecordId,
+    sourceTextSha256:item.sourceTextSha256
+  }));
+}
 function validate(item,record){
   if(!item||item.version!==VERSION||item.sourceSystem!=='DOB_NOW'||
      typeof item.fullText!=='string'||item.fullText.length>MAX_DESCRIPTION_CHARS||
@@ -102,5 +114,5 @@ function validate(item,record){
 }
 module.exports={
   VERSION,MAX_DESCRIPTION_CHARS,SPECIFIC_TERMS,CONTEXT_TERMS,ACTION_TERMS,
-  sha,tags,normalizeForTerms,capture,validate
+  SEMANTIC_VERSION,sha,tags,normalizeForTerms,capture,validate,semanticScopeFingerprint
 };

@@ -34,8 +34,7 @@ function evidenceBody(item){
 const evidenceHash=item=>hash(evidenceBody(item));
 function fullScopeFingerprint(item){
   if(item?.sourceSystem!=='DOB_NOW'||item.constructionScope==null)return null;
-  return scopeEvidence.validate(item.constructionScope).valid?
-    item.constructionScope.scopeFingerprint:null;
+  return scopeEvidence.semanticScopeFingerprint(item.constructionScope);
 }
 function seal(ledger){
   const core={...ledger};
@@ -85,6 +84,9 @@ function validate(ledger){
        !id.startsWith(x.sourceSystem+':')||
        !/^[a-f0-9]{64}$/.test(x.evidenceFingerprint||'')||
        (x.fullScopeFingerprint!=null&&!/^[a-f0-9]{64}$/.test(x.fullScopeFingerprint))||
+       (x.fullScopeFingerprintVersion!=null&&
+         x.fullScopeFingerprintVersion!==scopeEvidence.SEMANTIC_VERSION)||
+       (x.fullScopeFingerprintVersion&&!x.fullScopeFingerprint)||
        (x.scopeBaselineMigratedAt!=null&&(!instant(x.scopeBaselineMigratedAt)||
          Date.parse(x.scopeBaselineMigratedAt)<Date.parse(l.initializedAt)||
          Date.parse(x.scopeBaselineMigratedAt)>Date.parse(x.lastObservedAt)))||
@@ -108,6 +110,54 @@ function validate(ledger){
   }
   return {valid:failures.length===0,failures:[...new Set(failures)]};
 }
+function rebaseLegacyScopeHistory(previous,priorReview){
+  const v=validate(previous);
+  if(!v.valid)return {valid:false,failures:v.failures};
+  const entries=structuredClone(previous.entries);
+  const legacy=Object.values(entries).filter(x=>
+    x.fullScopeFingerprint &&
+    x.fullScopeFingerprintVersion!==scopeEvidence.SEMANTIC_VERSION);
+  if(!legacy.length)return {valid:true,ledger:previous,rebasedCount:0,
+    legacyAlertCaveats:0};
+  const proof=verifyReview(priorReview);
+  if(!proof.valid||priorReview.historyFingerprint!==previous.ledgerFingerprint||
+     priorReview.observedAt!==previous.observedAt){
+    return {valid:false,failures:['INDEPENDENT_SCOPE_PRIOR_REVIEW_BINDING_INVALID']};
+  }
+  const byId=new Map(priorReview.items.map(x=>[x.sourceRecordId,x]));
+  let rebased=0,caveats=0;
+  for(const entry of legacy){
+    const old=byId.get(entry.sourceRecordId);
+    // An out-of-window history entry stays untouched until an independently
+    // bound prior review is available. Never invent a baseline from new data.
+    if(!old)continue;
+    if(old.constructionScope?.scopeFingerprint!==entry.fullScopeFingerprint||
+       !scopeEvidence.validate(old.constructionScope).valid){
+      return {valid:false,failures:['INDEPENDENT_SCOPE_OLD_RECEIPT_MISMATCH']};
+    }
+    const fresh=fullScopeFingerprint(old);
+    if(!fresh)return {valid:false,failures:['INDEPENDENT_SCOPE_REBASE_INVALID']};
+    const updated={...entry,
+      fullScopeFingerprint:fresh,
+      fullScopeFingerprintVersion:scopeEvidence.SEMANTIC_VERSION,
+      scopeSemanticRebasedAt:previous.observedAt};
+    // Older observations may have been falsely tagged changed because the
+    // old hash included a changing scan ID. Retain the original audit event,
+    // but visibly distrust its interpretation until independently reviewed.
+    if(entry.latestContextChange?.observedAt===previous.observedAt &&
+       entry.scopeBaselineMigratedAt &&
+       Date.parse(entry.scopeBaselineMigratedAt)<Date.parse(previous.observedAt)){
+      updated.legacyScopeAlertReliability=
+        'VOLATILE_OBSERVATION_ID_HASH_HISTORICAL_ALERT_NOT_VERIFIED';
+      caveats++;
+    }
+    entries[entry.sourceRecordId]=updated;rebased++;
+  }
+  return {
+    valid:true,ledger:seal({...previous,entries}),
+    rebasedCount:rebased,legacyAlertCaveats:caveats
+  };
+}
 function bootstrap(review){
   const v=verifyReview(review);
   if(!v.valid||review.omittedByLimit!==0){
@@ -121,7 +171,10 @@ function bootstrap(review){
       firstObservedAt:observedAt,lastObservedAt:observedAt,
       presenceState:'IN_CURRENT_REVIEW',
       evidenceFingerprint:evidenceHash(item),
-      ...(fullScopeFingerprint(item)?{fullScopeFingerprint:fullScopeFingerprint(item)}:{}),
+      ...(fullScopeFingerprint(item)?{
+        fullScopeFingerprint:fullScopeFingerprint(item),
+        fullScopeFingerprintVersion:scopeEvidence.SEMANTIC_VERSION
+      }:{}),
       latestContextChange:null
     };
   }
@@ -160,7 +213,10 @@ function advance(previous,review){
         firstObservedAt:now,lastObservedAt:now,
         presenceState:'IN_CURRENT_REVIEW',
         evidenceFingerprint:fingerprint,
-        ...(fullScopeFingerprint(item)?{fullScopeFingerprint:fullScopeFingerprint(item)}:{}),
+        ...(fullScopeFingerprint(item)?{
+          fullScopeFingerprint:fullScopeFingerprint(item),
+          fullScopeFingerprintVersion:scopeEvidence.SEMANTIC_VERSION
+        }:{}),
         latestContextChange:null
       };
       newObservationIds.push(id);
@@ -168,11 +224,16 @@ function advance(previous,review){
       const full=fullScopeFingerprint(item);
       const updated={...prior,lastObservedAt:now,presenceState:'IN_CURRENT_REVIEW',
         evidenceFingerprint:fingerprint};
+      if(prior.fullScopeFingerprint &&
+          prior.fullScopeFingerprintVersion!==scopeEvidence.SEMANTIC_VERSION){
+        return {status:'REVIEW',failures:['INDEPENDENT_SCOPE_SEMANTIC_REBASE_REQUIRED']};
+      }
       if(prior.fullScopeFingerprint && !full){
         return {status:'REVIEW',failures:['INDEPENDENT_FULL_SCOPE_EVIDENCE_MISSING']};
       }
       if(full){
         updated.fullScopeFingerprint=full;
+        updated.fullScopeFingerprintVersion=scopeEvidence.SEMANTIC_VERSION;
         // The first post-upgrade complete scope is a migration baseline,
         // NOT a newly detected construction event.
         if(!prior.fullScopeFingerprint){
@@ -243,7 +304,11 @@ function annotate(review,ledger,newIds=[],changeIds=[]){
         monitoringStatus:first.has(item.sourceRecordId)?'NEW_TO_PERMITPLATE':
           changed.has(item.sourceRecordId)?'SOURCE_CONTEXT_CHANGED_FOR_REVIEW':
           'ALREADY_OBSERVED',
-        lastSourceContextChangeAt:entry.latestContextChange?.observedAt||null,
+        lastSourceContextChangeAt:entry.legacyScopeAlertReliability?
+          null:(entry.latestContextChange?.observedAt||null),
+        unverifiedLegacyScopeAlertAt:entry.legacyScopeAlertReliability?
+          entry.latestContextChange?.observedAt||null:null,
+        legacyScopeAlertCaveat:entry.legacyScopeAlertReliability||null,
         customerDeliveryAllowed:false
       };
     })
@@ -252,4 +317,5 @@ function annotate(review,ledger,newIds=[],changeIds=[]){
   return {...body,artifactFingerprint:hash(body)};
 }
 module.exports={VERSION,SOURCE_VERSION,stable,hash,instant,evidenceBody,evidenceHash,
-  fullScopeFingerprint,seal,validate,verifyReview,bootstrap,advance,annotate};
+  fullScopeFingerprint,rebaseLegacyScopeHistory,
+  seal,validate,verifyReview,bootstrap,advance,annotate};
