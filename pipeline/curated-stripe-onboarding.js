@@ -115,7 +115,15 @@ function processSnapshot(input){
     if(!subscription){
       failures.push('STRIPE_PAID_SESSION_SUBSCRIPTION_MISSING');continue;
     }
-    if(subscription.status!=='active'){held++;continue}
+    if(subscription.status!=='active'){
+      held++;
+      if(entries[subId]){
+        entries[subId]={...entries[subId],
+          state:'HOLD_SUBSCRIPTION_CHANGED',
+          transportAllowed:false,ownerAuthorizationGranted:false};
+      }
+      continue;
+    }
     const checked=stripe.profileFromCheckout({
       session,subscription,expectedPriceId:EXPECTED_PRICE_ID
     });
@@ -129,6 +137,10 @@ function processSnapshot(input){
          entries[subId].baselineAt!==profile.baselineAt){
         failures.push('STRIPE_SUBSCRIBER_IDENTITY_CHANGED');
         continue;
+      }
+      if(entries[subId].state==='HOLD_SUBSCRIPTION_CHANGED'){
+        entries[subId]={...entries[subId],state:'PENDING_FOUNDER_REVIEW',
+          transportAllowed:false,ownerAuthorizationGranted:false};
       }
     }else{
       entries[subId]={
