@@ -10,6 +10,7 @@ const runner=require('./run-curated-research');
 const fulfillment=require('./run-curated-fulfillment');
 const queueMaker=require('./run-curated-review-queue');
 const stripe=require('./stripe-subscriber');
+const categoryEvidence=require('./category-evidence');
 
 const OLD_AT='2026-10-16T08:00:00.000Z';
 const CURRENT_AT='2026-10-18T10:00:00.000Z';
