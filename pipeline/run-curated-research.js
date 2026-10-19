@@ -9,6 +9,7 @@ const ledger = require('./curated-research-ledger');
 const independentReview=require('./independent-source-review');
 const independentHistory=require('./independent-source-history');
 const identityReview=require('./identity-bridge-review');
+const identityWorkbench=require('./identity-review-workbench');
 const {privateMaterialPath} = require('./run-subscriber-intake');
 
 const VERSION = 'PermitPlate-curated-research-runner-v1.0.0';
@@ -25,6 +26,17 @@ function atomicJson(file, data) {
     fs.renameSync(temporary,target);
   } finally {
     if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
+  }
+}
+function atomicText(file,contents){
+  const target=privateMaterialPath(file);
+  fs.mkdirSync(path.dirname(target),{recursive:true});
+  const temporary=target+'.'+process.pid+'.tmp';
+  try{
+    fs.writeFileSync(temporary,String(contents),{flag:'wx',mode:0o600});
+    fs.renameSync(temporary,target);
+  }finally{
+    if(fs.existsSync(temporary))fs.unlinkSync(temporary);
   }
 }
 function baselineAnchor(currentLedger) {
@@ -159,6 +171,14 @@ async function run(input) {
   if(!identityValidation.valid){
     return {status:'REVIEW',ready:false,failures:identityValidation.failures};
   }
+  // Static human workbench has no approval endpoint, scripts, remote assets,
+  // email transport, or public CI artifact. All output stays in private Git.
+  const workbench=identityWorkbench.render(identity);
+  if(workbench.customerDeliveryAllowed!==false||
+     workbench.automaticIdentityLinkAllowed!==false){
+    return {status:'REVIEW',ready:false,failures:['IDENTITY_WORKBENCH_SEND_BOUNDARY']};
+  }
+  result.summary.identityWorkbenchRows=workbench.renderedCount;
   result.summary.identityReviewOnlyProposalCount=identity.storedCount;
   result.summary.identityReviewTotalProposals=identity.totalProposals;
   result.summary.identityReviewOmittedCount=identity.omittedByLimit;
@@ -176,6 +196,8 @@ async function run(input) {
   atomicJson(historyPath,advancedHistory.ledger);
   atomicJson(independentPath,annotated);
   atomicJson(path.join(path.dirname(ledgerPath),'identity-bridge-review.json'),identity);
+  atomicText(path.join(path.dirname(ledgerPath),'identity-bridge-review.csv'),workbench.csv);
+  atomicText(path.join(path.dirname(ledgerPath),'identity-bridge-review.html'),workbench.html);
   return result;
 }
 async function main() {
@@ -194,4 +216,4 @@ async function main() {
 if (require.main === module) {
   main().catch(error=>{console.error(error.message);process.exitCode=1});
 }
-module.exports = {VERSION,readOptional,atomicJson,baselineAnchor,verifyBaselineAnchor,prepare,prepareIndependentHistory,run};
+module.exports = {VERSION,readOptional,atomicJson,atomicText,baselineAnchor,verifyBaselineAnchor,prepare,prepareIndependentHistory,run};

@@ -43,9 +43,12 @@ function candidateKey(candidate){
   });
 }
 function createProposal(core){
+  // Rebuilding a review proposal may not reuse an earlier receipt fingerprint
+  // or arbitrary proposal ID supplied by an untrusted caller.
+  const {evidenceFingerprint:_oldProof,proposalId:_oldId,...verifiedCore}=core||{};
   const base={
     version:VERSION,
-    ...core,
+    ...verifiedCore,
     customerDeliveryAllowed:false,
     automaticIdentityLinkAllowed:false,
     needsIndependentVerification:true,
@@ -197,6 +200,10 @@ function validate(receipt){
        p.needsIndependentVerification!==true||
        !REVIEW_CLASSES.has(p.reviewClass)||
        seen.has(p.proposalId)||
+       p.proposalId!=='HYP:'+hash({
+         kind:p.kind,sourceRecordIds:p.sourceRecordIds,
+         candidateEntityId:p.candidateEntityId||null
+       }).slice(0,24)||
        evidenceFingerprint!==hash(core)||
        !Array.isArray(p.sourceRecordIds)||p.sourceRecordIds.length<1||
        !Array.isArray(p.officialSourceUrls)||p.officialSourceUrls.length<2||

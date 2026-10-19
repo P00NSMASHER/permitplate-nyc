@@ -121,6 +121,24 @@ customer fulfillment. Independent documentary proof, explicit authorized
 review, and a separately tested acceptance gate are required before any
 future source-link promotion.
 
+### Private review workbench
+
+The same protected refresh produces two additional files in the private
+repository: `state/identity-bridge-review.html` and
+`state/identity-bridge-review.csv`. Download the static HTML file and open it
+locally to review the current source hypotheses with official links and
+conflict-first evidence labels. The companion CSV contains a manual
+`Human Verification Decision` column initialized to
+`PENDING - NOT AN APPROVAL`, plus an empty reviewer-notes column.
+
+The HTML contains no JavaScript, live forms, external fonts, or remote assets;
+all record text is escaped. Spreadsheet fields are escaped against formulas.
+CSV changes **do not** feed into automatic identity bridges or customer
+delivery. A separate documented reviewer decision and governed release
+acceptance are required before any identity can be promoted. All three
+artifacts (the JSON receipt, CSV, and HTML) must remain private, and CI logs
+may contain only aggregate counts.
+
 ## 2. Assemble a private paid subscriber review
 
 Use an authorized workstation with the product repository and private state
