@@ -13,6 +13,9 @@ function bin(value){
   // NYC Geosupport explicitly uses "million BINs" (borough digit followed
   // by six zeros) for missing/unknown building IDs. These are not real
   // premises and must never generate an official building ID conflict.
+  // Source: NYC Department of City Planning Geosupport User Programming Guide
+  // (NYC Geosupport error 22: rest of BIN digits all zero is invalid).
+  // https://www.nyc.gov/assets/planning/download/pdf/data-maps/open-data/upg.pdf
   if(!/^[1-5]\d{6}$/.test(s)||s.slice(1)==='000000')return null;
   return s;
 }
