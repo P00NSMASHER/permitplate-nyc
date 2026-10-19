@@ -1,0 +1,141 @@
+name: PermitPlate private paid subscriber intake
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 4,10,16,22 * * *'
+  push:
+    branches: [main]
+    paths:
+      - 'pipeline/curated-stripe-onboarding.js'
+      - 'pipeline/stripe-readonly-checkout-poll.js'
+      - 'pipeline/run-curated-stripe-onboarding.js'
+      - 'pipeline/curated-stripe-onboarding.test.js'
+      - '.github/workflows/stripe-onboarding.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'pipeline/curated-stripe-onboarding.js'
+      - 'pipeline/stripe-readonly-checkout-poll.js'
+      - 'pipeline/run-curated-stripe-onboarding.js'
+      - 'pipeline/curated-stripe-onboarding.test.js'
+      - 'tests/test_stripe_onboarding_policy.py'
+      - '.github/workflows/stripe-onboarding.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: \${{ github.event_name == 'pull_request' && format('permitplate-onboarding-pr-{0}', github.event.pull_request.number) || format('permitplate-private-state-{0}', vars.PERMITPLATE_STATE_REPO) }}
+  cancel-in-progress: \${{ github.event_name == 'pull_request' }}
+
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check out exact tested source without credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: \${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Use pinned Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Test checkout idempotency and no-send holds offline
+        run: node pipeline/curated-stripe-onboarding.test.js
+      - name: Enforce production credential boundaries
+        run: python3 -m unittest discover -s tests -p 'test_stripe_onboarding_policy.py' -v
+
+  intake:
+    needs: policy
+    if: \${{ vars.PERMITPLATE_STRIPE_ONBOARDING_ENABLED == 'true' && github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      STATE_REPO: \${{ vars.PERMITPLATE_STATE_REPO }}
+      PRIVATE_DIR: \${{ github.workspace }}/.private-state
+    steps:
+      - name: Check out exact main without public credential persistence
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: \${{ github.sha }}
+          persist-credentials: false
+      - name: Admit current exact main before loading private credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = 'refs/heads/main'
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          current="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          test -n "$current" && test "$current" = "$GITHUB_SHA"
+      - name: Use pinned Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Verify dedicated private state repository
+        env:
+          GH_TOKEN: \${{ secrets.PERMITPLATE_STATE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$STATE_REPO" && test -n "\${GH_TOKEN:-}"
+          test "$STATE_REPO" != "$GITHUB_REPOSITORY"
+          test "$(gh api "repos/$STATE_REPO" --jq '.visibility')" = "private"
+      - name: Check out private state without persistent credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: \${{ vars.PERMITPLATE_STATE_REPO }}
+          token: \${{ secrets.PERMITPLATE_STATE_TOKEN }}
+          ref: main
+          path: .private-state
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Read live Stripe and stage private, NO-SEND onboarding receipts
+        env:
+          PERMITPLATE_STRIPE_READ_KEY: \${{ secrets.PERMITPLATE_STRIPE_READ_KEY }}
+        run: |
+          node pipeline/run-curated-stripe-onboarding.js \
+            "$PRIVATE_DIR/state/curated-onboarding-ledger.json" \
+            "$PRIVATE_DIR/state/curated-onboarding-anchor.json"
+      - name: Recheck exact approved public source after Stripe read
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          current="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          test -n "$current" && test "$current" = "$GITHUB_SHA"
+      - name: Commit only private onboarding state
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C "$PRIVATE_DIR" config user.name 'PermitPlate Private Onboarding'
+          git -C "$PRIVATE_DIR" config user.email 'actions@users.noreply.github.com'
+          git -C "$PRIVATE_DIR" add -- \
+            state/curated-onboarding-ledger.json state/curated-onboarding-anchor.json
+          if git -C "$PRIVATE_DIR" diff --cached --quiet; then
+            echo "Private onboarding state unchanged"
+            exit 0
+          fi
+          git -C "$PRIVATE_DIR" commit -m "state: verified read-only Stripe onboarding ($GITHUB_RUN_ID)"
+      - name: Publish private onboarding with current-main compare and swap
+        env:
+          GH_TOKEN: \${{ secrets.PERMITPLATE_STATE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "\${GH_TOKEN:-}"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          current="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          test -n "$current" && test "$current" = "$GITHUB_SHA"
+          gh auth setup-git
+          remote="$(git -C "$PRIVATE_DIR" ls-remote origin refs/heads/main | cut -f1)"
+          local_head="$(git -C "$PRIVATE_DIR" rev-parse HEAD)"
+          if [ "$remote" = "$local_head" ]; then
+            echo 'No private onboarding push needed'
+            exit 0
+          fi
+          parent="$(git -C "$PRIVATE_DIR" rev-parse HEAD^ 2>/dev/null || true)"
+          test "$remote" = "$parent"
+          git -C "$PRIVATE_DIR" push origin HEAD:main
