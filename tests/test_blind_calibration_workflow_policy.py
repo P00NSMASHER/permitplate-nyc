@@ -41,7 +41,7 @@ def verify(s):
     assert "summary.externalSendCalls!==0" in s
     assert "AWAITING_REAL_INDEPENDENT_LABELS" in s
     assert "research/blind-calibration/LATEST.json" in s
-    assert "git -C \\"$PRIVATE_DIR\\" push origin HEAD:main" in s
+    assert 'git -C "$PRIVATE_DIR" push origin HEAD:main' in s
     assert "upload-artifact" not in s
     assert "workflow_dispatch:\n    inputs:" not in s
     assert "node pipeline/run-curated-fulfillment" not in s
