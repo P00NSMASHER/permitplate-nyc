@@ -110,7 +110,17 @@ function prepareIndependentHistory(priorHistory,priorReview,currentReview){
     priorHistory=baseline.ledger;
     migrated=true;
   }
-  const advancedHistory=independentHistory.advance(priorHistory,currentReview);
+  // Prior version hashed changing sourceObservationId into the full-scope
+  // receipt, creating false rechecks each day. Rebase ONLY from the exact
+  // sealed historical private review, never by trusting today's new graph.
+  const semanticRebase=priorHistory?
+    independentHistory.rebaseLegacyScopeHistory(priorHistory,priorReview):
+    {valid:true,ledger:null,rebasedCount:0,legacyAlertCaveats:0};
+  if(!semanticRebase.valid){
+    return {status:'REVIEW',ready:false,failures:semanticRebase.failures};
+  }
+  const advancedHistory=independentHistory.advance(
+    semanticRebase.ledger,currentReview);
   if(advancedHistory.status==='REVIEW'){
     return {status:'REVIEW',ready:false,failures:advancedHistory.failures};
   }
@@ -121,7 +131,9 @@ function prepareIndependentHistory(priorHistory,priorReview,currentReview){
   if(annotated.status==='REVIEW'){
     return {status:'REVIEW',ready:false,failures:annotated.failures};
   }
-  return {ready:true,migrated,advancedHistory,annotated};
+  return {ready:true,migrated,advancedHistory,annotated,
+    scopeSemanticRebasedCount:semanticRebase.rebasedCount||0,
+    legacyScopeAlertCaveats:semanticRebase.legacyAlertCaveats||0};
 }
 function prepareIdentityHistory(previous,priorReceipt,currentReceipt){
   if(!previous&&priorReceipt){
@@ -284,6 +296,8 @@ async function run(input) {
   result.summary.independentHistoryEntries=Object.keys(advancedHistory.ledger.entries).length;
   result.summary.independentScopeBaselineMigrated=advancedHistory.scopeBaselineMigratedCount||0;
   result.summary.independentScopeChangesForReview=advancedHistory.scopeChangeCount||0;
+  result.summary.independentScopeSemanticRebased=historyState.scopeSemanticRebasedCount||0;
+  result.summary.independentLegacyScopeAlertCaveats=historyState.legacyScopeAlertCaveats||0;
   result.summary.independentHistoricalMigration=migrated;
   atomicJson(graphPath,result.graph);
   atomicJson(ledgerPath,result.ledger);
