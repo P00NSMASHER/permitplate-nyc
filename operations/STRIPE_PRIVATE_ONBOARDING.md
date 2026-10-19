@@ -84,3 +84,48 @@ There were no live PermitPlate subscriptions for the exact recurring price
 when independently checked on October 19, 2026. Sixteen prior checkout
 sessions associated with the Payment Link were expired, not paid customers.
 These live counts are a point-in-time receipt and must not be extrapolated.
+
+## Launch acceptance now requires observed paid-intake coverage
+
+The live Payment Link can accept a payment even when the private onboarding
+workflow is **skipped**. A green test-only `policy` job is not a successful
+Stripe provider check. On October 19, scheduled run
+[`39290418925`](https://github.com/P00NSMASHER/permitplate-nyc/actions/runs/39290418925)
+showed `policy=success` and **`intake=skipped`**. A separate
+`launch-readiness` run incorrectly reported first-customer operational
+readiness without checking that handoff.
+
+The production launch controller now requires both:
+
+1. The exact GitHub repository variable
+   `PERMITPLATE_STRIPE_ONBOARDING_ENABLED` to equal `true`, so the
+   existing six-hour scheduled private Stripe poll is actually opted in.
+2. An intact, matched private onboarding ledger + baseline anchor created
+   by a successful provider-backed GET. Its `checkedAt` must be at most
+   **nine hours old** and cannot be in the future. Nine hours gives the
+   six-hour schedule up to three hours of scheduling delay.
+
+The read-only readiness check never calls Stripe by itself, requests a
+payment, auto-authorizes a brief, or publishes subscription identities.
+Failure means `firstCustomerOperationallyReady=false`,
+`launchState=EXTERNAL_INTEGRATION_BLOCKED`, and next action
+`ENABLE_AND_VERIFY_READ_ONLY_STRIPE_SUBSCRIBER_POLL` for the
+founder-curated offer. Scored-delivery holds are unaffected.
+
+**Before opening or advertising a paid pilot:** create the exact restricted
+live read-only key in Stripe and save it as the GitHub Actions secret
+`PERMITPLATE_STRIPE_READ_KEY`; set
+`PERMITPLATE_STRIPE_ONBOARDING_ENABLED=true`; run or observe the
+main-only `PermitPlate private paid subscriber intake` workflow until
+both `policy` and `intake` jobs pass; then run the main launch-readiness
+check and inspect the aggregate `stripeIntake` gate in the acceptance
+artifact. No secret or Stripe login details should be submitted through
+a public issue, commit, or chat.
+
+This guard reports operational visibility, **not** verified delivery.
+The separate three genuine customer-proof gates must still remain false
+until a real purchaser completes provider-backed onboarding, delivery and
+the next no-duplicate run. Because a reusable Stripe Payment Link may
+remain directly accessible, a blocked software readiness report is **not**
+equivalent to disabling the checkout endpoint; enforce sales-surface
+controls separately before treating intake coverage as safe.

@@ -12,8 +12,9 @@ const publicBuild=require('../build-site');
 const readiness=require('./launch-readiness');
 const curatedCanary=require('./run-founder-curated-canary');
 const curatedProduction=require('./curated-production-readiness');
+const stripeIntakeReadiness=require('./stripe-intake-readiness');
 
-const RUNNER_VERSION='PermitPlate-launch-readiness-runner-v1.1.0';
+const RUNNER_VERSION='PermitPlate-launch-readiness-runner-v1.2.0';
 
 function readJson(filePath){
   return JSON.parse(fs.readFileSync(filePath,'utf8'));
@@ -75,6 +76,18 @@ async function run(options){
     currentGraphDigest:graph.graphDigest,
     evaluatedAt:observedAt
   });
+  // A green public Checkout receipt does not mean paid customers are being
+  // checked. Require a private provider-readback heartbeat and an opted-in
+  // recurring poll before claiming first-customer operational readiness.
+  const stripeIntake=stripeIntakeReadiness.evaluate({
+    monitoringEnabled:opts.stripeIntakeMonitoringEnabled===true ||
+      process.env.PERMITPLATE_STRIPE_ONBOARDING_ENABLED==='true',
+    ledger:readOptionalPrivateJson(path.join(
+      curatedStateDir,'curated-onboarding-ledger.json')),
+    anchor:readOptionalPrivateJson(path.join(
+      curatedStateDir,'curated-onboarding-anchor.json')),
+    evaluatedAt:observedAt
+  });
   const externalEvidence=readJson(externalEvidencePath);
   const subscriberCanary=firstSubscriber.run();
   const founderCuratedCanary=curatedCanary.run();
@@ -95,6 +108,7 @@ async function run(options){
     subscriberCanary,
     curatedCanary:founderCuratedCanary,
     curatedResearch,
+    stripeIntake,
     launchMode:manifest.checkout&&manifest.checkout.launch_mode,
     curatedFulfillmentRunbookPresent,
     publicBuildFailures,
@@ -115,6 +129,16 @@ async function run(options){
   },result);
 }
 
+function shouldFailJob(result){
+  if(result?.internalReady!==true)return true;
+  // The founder-curated public Checkout path can accept money. A missing
+  // private paid-customer polling heartbeat is a material operational fault,
+  // not merely an advisory external-evidence warning.
+  return result.launchMode===readiness.CURATED_LAUNCH_MODE &&
+    Array.isArray(result.firstCustomerExternalFailures) &&
+    result.firstCustomerExternalFailures.includes('stripeIntakeMonitoringVerified');
+}
+
 async function main(){
   const outputPath=process.argv[2]||
     path.join(__dirname,'launch-readiness-result.json');
@@ -123,7 +147,10 @@ async function main(){
   const result=await run({detectionPath,opportunityPath});
   fs.writeFileSync(outputPath,JSON.stringify(result,null,2)+'\n');
   console.log(JSON.stringify(result,null,2));
-  if(!result.internalReady) process.exitCode=1;
+  if(shouldFailJob(result)) {
+    console.error('PERMITPLATE_PAID_INTAKE_OR_INTERNAL_READINESS_BLOCKED');
+    process.exitCode=1;
+  }
 }
 
 if(require.main===module){
@@ -134,5 +161,6 @@ module.exports={
   RUNNER_VERSION,
   readJson,
   promotionEvidenceFrom,
+  shouldFailJob,
   run
 };

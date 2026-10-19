@@ -10,6 +10,11 @@ on:
     paths:
       - 'pipeline/launch-readiness.js'
       - 'pipeline/run-launch-readiness.js'
+      - 'pipeline/stripe-intake-readiness.js'
+      - 'pipeline/stripe-intake-readiness.test.js'
+      - 'pipeline/curated-stripe-onboarding.js'
+      - 'pipeline/run-curated-stripe-onboarding.js'
+      - '.github/workflows/stripe-onboarding.yml'
       - 'pipeline/curated-production-readiness.js'
       - 'pipeline/curated-production-readiness.test.js'
       - 'pipeline/curated-research-ledger.js'
@@ -36,6 +41,11 @@ on:
     paths:
       - 'pipeline/launch-readiness.js'
       - 'pipeline/run-launch-readiness.js'
+      - 'pipeline/stripe-intake-readiness.js'
+      - 'pipeline/stripe-intake-readiness.test.js'
+      - 'pipeline/curated-stripe-onboarding.js'
+      - 'pipeline/run-curated-stripe-onboarding.js'
+      - '.github/workflows/stripe-onboarding.yml'
       - 'pipeline/run-source-health.js'
       - 'pipeline/candidate-builder.js'
       - 'pipeline/run-shadow-scoring-evaluation.js'
@@ -74,6 +84,12 @@ jobs:
 
       - name: Verify pilot private-state trust boundaries
         run: python3 -m unittest discover -s tests -p 'test_pilot_source_admission.py' -v
+      - name: Set up pinned Node for fail-closed intake policy
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Reject missing or stale Stripe intake monitoring
+        run: node pipeline/stripe-intake-readiness.test.js
 
   launch-readiness:
     needs: policy
@@ -82,6 +98,7 @@ jobs:
     timeout-minutes: 15
     env:
       STATE_REPO: ${{ vars.PERMITPLATE_STATE_REPO }}
+      PERMITPLATE_STRIPE_ONBOARDING_ENABLED: ${{ vars.PERMITPLATE_STRIPE_ONBOARDING_ENABLED }}
       PRIVATE_STATE_DIR: ${{ github.workspace }}/.private-state
     steps:
       - name: Check out exact admitted public source without credentials
