@@ -8,7 +8,7 @@ async function jsonGET(url,key,fetchImpl=fetch){
   if(!/^https:\/\/api\.stripe\.com\/v1\/(?:checkout\/sessions|subscriptions\/)/.test(url)){
     throw Error('STRIPE_ENDPOINT_NOT_ALLOWED');
   }
-  if(!key||!/^(sk_|rk_)/.test(key))throw Error('STRIPE_READ_CREDENTIAL_MISSING');
+  if(!key||!/^(?:sk_live_|rk_live_)/.test(key))throw Error('STRIPE_READ_CREDENTIAL_MISSING');
   let response;
   try{
     response=await fetchImpl(url,{
