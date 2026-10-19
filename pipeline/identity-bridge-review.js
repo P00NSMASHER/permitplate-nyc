@@ -13,7 +13,7 @@ const MAX_PROPOSALS=300;
 const REVIEW_CLASSES=new Set([
   'PREMISE_ONLY','NAME_AND_PREMISE_TO_VERIFY',
   'PROPERTY_OWNER_TEXT_ONLY','MULTIPLE_CAMIS_SAME_PREMISE',
-  'SUPPRESSED_IDENTITY','DOB_SLA_SHARED_PREMISE'
+  'SUPPRESSED_IDENTITY','CAMIS_NAME_DRIFT_REVIEW','DOB_SLA_SHARED_PREMISE'
 ]);
 const text=v=>v==null?'':String(v).trim();
 const hash=history.hash;
@@ -129,6 +129,35 @@ function verifyItem(item,record,observationId){
     JSON.stringify(independent.hits(description,rules)) &&
     item.sourceExcerpt===independent.safeExcerpt(description);
 }
+
+function dohmhProvenance(candidate,batch){
+  const premise=candidateKey(candidate);
+  const entityId=text(candidate?.entityId);
+  const docs=(batch?.records||[]).filter(row=>
+    row.sourceSystem==='DOHMH' &&
+    row.sourceEntityId===entityId &&
+    row.sourceObservationId===batch.observation.observationId &&
+    independent.reviewKey({
+      borough:profiles.canonicalBorough(row.property?.borough),
+      address:row.property?.address
+    })===premise &&
+    ['DOHMH_APPLICANT_RECORD','DOHMH_PRE_PERMIT_EVENT'].includes(row.eventType)
+  );
+  docs.sort((a,b)=>
+    (project.norm(a.parties?.operatorName)===project.norm(candidate.canonicalName)?-1:1)-
+    (project.norm(b.parties?.operatorName)===project.norm(candidate.canonicalName)?-1:1)||
+    a.sourceRecordId.localeCompare(b.sourceRecordId)
+  );
+  const row=docs[0];
+  return row?{
+    sourceRecordId:row.sourceRecordId,
+    sourceObservationId:row.sourceObservationId,
+    rowFingerprint:row.rowFingerprint,
+    printedOperatorAgrees:docs.some(doc=>
+      project.norm(doc.parties?.operatorName)&&
+      project.norm(doc.parties?.operatorName)===project.norm(candidate.canonicalName))
+  }:null;
+}
 function operatorAgreement(candidate,record){
   const operator=project.norm(candidate.canonicalName);
   if(!operator)return 'NOT_ESTABLISHED';
@@ -215,16 +244,23 @@ function prepare(data){
     slaByAddress.get(key).push(record);
   }
   const proposals=[];
+  let skippedWithoutDohmhProvenance=0;
   for(const record of recordMap.values()){
     const key=addressKey(record);
     const possible=(camisByAddress.get(key)||[]).slice().sort((a,b)=>
       a.entityId.localeCompare(b.entityId));
     for(const candidate of possible){
+      const origin=dohmhProvenance(candidate,batches.DOHMH);
+      if(!origin){
+        skippedWithoutDohmhProvenance++;
+        continue;
+      }
       const agreement=operatorAgreement(candidate,record);
       const conflict=candidate.deliverySuppressed===true ||
         (candidate.crossCamisOperationalConflicts||[]).length>0;
       const reviewClass=conflict?'SUPPRESSED_IDENTITY':
         possible.length>1?'MULTIPLE_CAMIS_SAME_PREMISE':
+        !origin.printedOperatorAgrees?'CAMIS_NAME_DRIFT_REVIEW':
         agreement==='EXACT_OPERATOR_DBA_TEXT'?'NAME_AND_PREMISE_TO_VERIFY':
         agreement==='PROPERTY_OWNER_NAME_EQUALITY_ONLY'?'PROPERTY_OWNER_TEXT_ONLY':
         'PREMISE_ONLY';
@@ -245,6 +281,9 @@ function prepare(data){
         ],
         sourceObservationId:record.sourceObservationId,
         sourceRowFingerprint:record.rowFingerprint,
+        dohmhRecordId:origin.sourceRecordId,
+        dohmhObservationId:origin.sourceObservationId,
+        dohmhRowFingerprint:origin.rowFingerprint,
         candidateName:candidate.canonicalName,
         sourceTradeName:record.sourceSystem==='SLA_PENDING'?
           text(record.parties?.dba||record.parties?.legalName):null,
@@ -285,7 +324,9 @@ function prepare(data){
     sourceReviewFingerprint:researchReceipt.artifactFingerprint,
     totalProposals:proposals.length,storedCount:stored.length,
     omittedByLimit:proposals.length-stored.length,
-    reviewQueueComplete:proposals.length<=max && researchReceipt.omittedByLimit===0,
+    reviewQueueComplete:proposals.length<=max && researchReceipt.omittedByLimit===0 &&
+      skippedWithoutDohmhProvenance===0,
+    skippedWithoutDohmhProvenance,
     proposals:stored,
     customerDeliveryAllowed:false,automaticIdentityLinkAllowed:false,
     automaticMerges:0,externalSendCalls:0,
@@ -300,6 +341,6 @@ function prepare(data){
 }
 module.exports={
   VERSION,MAX_PROPOSALS,REVIEW_CLASSES,sourceUrlForRecord,sourceBorough,
-  addressKey,candidateKey,verifyInputs,verifyItem,operatorAgreement,
+  addressKey,candidateKey,verifyInputs,verifyItem,dohmhProvenance,operatorAgreement,
   createProposal,validate,prepare
 };
