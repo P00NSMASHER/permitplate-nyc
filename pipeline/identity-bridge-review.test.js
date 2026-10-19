@@ -12,6 +12,7 @@ function rows(){
     DOHMH:[sources.normalizeDohmhRow({
       camis:'50110001',dba:'FRESH BISTRO',boro:'Manhattan',
       building:'101',street:'MAIN STREET',zipcode:'10001',
+      bin:'1004567',bbl:'1004230012',
       inspection_date:'1900-01-01T00:00:00.000',
       record_date:'2026-10-18T09:00:00.000'
     },{observedAt:NOW})],
@@ -19,6 +20,7 @@ function rows(){
       sources.normalizeDobNowRow({
         job_filing_number:'M001-I1',borough:'Manhattan',
         house_no:'101',street_name:'MAIN STREET',
+        bin:'1004567',block:'423',lot:'12',
         owner_s_business_name:'PROPERTY HOLDINGS LLC',
         job_description:'Commercial kitchen renovation for restaurant',
         filing_date:'2026-10-18T09:00:00.000',
@@ -129,6 +131,11 @@ const key='DOB_NOW:M001-I1';
 const building=receipt.proposals.find(p=>p.kind==='CAMIS_TO_EARLY_SOURCE'&&p.sourceRecordId===key);
 assert(building);
 assert.equal(building.reviewClass,'PREMISE_ONLY');
+assert.equal(building.premiseEvidence.binComparison,'MATCH');
+assert.equal(building.premiseEvidence.bblComparison,'MATCH');
+assert.equal(building.premiseEvidence.assessment,'MATCHED_PREMISE_IDENTIFIER_REVIEW');
+assert.equal(building.premiseEvidence.independentlyVerifiedOperator,false);
+assert.equal(building.automaticIdentityLinkAllowed,false);
 assert.equal(building.candidateEntityId,'CAMIS:50110001');
 assert(building.dohmhRecordId.startsWith('DOHMH:50110001:'));
 assert.equal(building.dohmhObservationId,'OBS:DOHMH');
@@ -164,6 +171,20 @@ assert.equal(unproven.reviewQueueComplete,false);
 assert(!unproven.proposals.some(p=>p.candidateEntityId==='CAMIS:50110002'));
 const linked=bridges.prepare(fixture({preLinked:true}));
 assert(!linked.proposals.some(p=>p.sourceRecordId==='DOB_NOW:M001-I1'&&p.kind==='CAMIS_TO_EARLY_SOURCE'));
+const conflictFixture=fixture();
+conflictFixture.batches.DOB_NOW.records[0].property.bin='1004577';
+const conflictReport=bridges.prepare(conflictFixture);
+assert.equal(conflictReport.status,'REVIEW_ONLY');
+const conflictProposal=conflictReport.proposals.find(p=>
+  p.sourceRecordId==='DOB_NOW:M001-I1' && p.kind==='CAMIS_TO_EARLY_SOURCE');
+assert(conflictProposal);
+assert.equal(conflictProposal.premiseEvidence.assessment,'OFFICIAL_PROPERTY_IDENTIFIER_CONFLICT');
+assert.equal(conflictProposal.premiseEvidence.manualConflictHold,true);
+assert.equal(conflictProposal.customerDeliveryAllowed,false);
+const tamperedScope=fixture();
+tamperedScope.independent.items.find(x=>x.sourceSystem==='DOB_NOW').constructionScope.fullText+=' EXTRA';
+const invalidScope=bridges.prepare(tamperedScope);
+assert.equal(invalidScope.status,'REVIEW');
 const incomplete=fixture();
 incomplete.batches.DOB_NOW.records.pop();
 assert.equal(bridges.prepare(incomplete).status,'REVIEW');
