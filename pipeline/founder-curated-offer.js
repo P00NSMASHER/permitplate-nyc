@@ -16,6 +16,7 @@ const TERRITORY_VALUES=Object.freeze([
 const CSV_HEADERS=Object.freeze([
   'Signal Key','Signal Section','Event Type','Event Observed by PermitPlate',
   'Business','Address','Borough','Stage','What Changed','Why It Matters',
+  'Category Evidence Basis','Category Fit Review','Category Official Source',
   'Source Record Date','PermitPlate Reviewed','Official Source URLs'
 ]);
 
@@ -117,6 +118,9 @@ function normalizeSignal(input,index,failures){
   const eventKind=text(signal.eventKind);
   const eventId=text(signal.eventId);
   const whatChanged=text(signal.whatChanged);
+  const categoryEvidenceBasis=text(signal.categoryEvidenceBasis);
+  const categoryFitRationale=text(signal.categoryFitRationale);
+  const categoryOfficialUrl=text(signal.categoryOfficialUrl);
   const urls=Array.isArray(signal.sourceUrls)?signal.sourceUrls.map(text).filter(Boolean):[];
 
   if(!signalKey) failures.push(prefix+'_KEY_MISSING');
@@ -138,12 +142,24 @@ function normalizeSignal(input,index,failures){
   if(eventKind==='MATERIAL_CHANGE'&&(!/^MAT:[a-f0-9]{24}$/.test(eventId)||
     !whatChanged)) failures.push(prefix+'_MATERIAL_EVENT_REVIEW_INCOMPLETE');
   if(whatChanged.length>220) failures.push(prefix+'_WHAT_CHANGED_TOO_LONG');
+  const hasCategoryReview=Boolean(categoryEvidenceBasis||categoryFitRationale||categoryOfficialUrl);
+  if(hasCategoryReview){
+    if(!['SOURCE_KEYWORD_CONTEXT','RELATED_OFFICIAL_ACTIVITY','APPLICANT_CONTEXT_ONLY']
+      .includes(categoryEvidenceBasis)) failures.push(prefix+'_CATEGORY_BASIS_INVALID');
+    if(categoryFitRationale.length<30||categoryFitRationale.length>220){
+      failures.push(prefix+'_CATEGORY_REVIEW_INVALID');
+    }
+    if(!officialSourceUrl(categoryOfficialUrl)){
+      failures.push(prefix+'_CATEGORY_SOURCE_INVALID');
+    }
+  }
   if(!urls.length) failures.push(prefix+'_SOURCE_URL_MISSING');
   if(urls.some((url)=>!officialSourceUrl(url))) failures.push(prefix+'_SOURCE_URL_NOT_OFFICIAL');
 
   return {
     signalKey,businessName,address,borough,stage,whyItMatters,
     section:firstObservedAt?section:null,firstObservedAt,eventKind,eventId,whatChanged,
+    categoryEvidenceBasis,categoryFitRationale,categoryOfficialUrl,
     sourceUpdatedAt,reviewedAt,sourceUrls:Array.from(new Set(urls)).sort()
   };
 }
@@ -189,6 +205,9 @@ function buildCuratedBrief(input){
     'Stage':signal.stage,
     'What Changed':signal.whatChanged||'',
     'Why It Matters':signal.whyItMatters,
+    'Category Evidence Basis':signal.categoryEvidenceBasis||'',
+    'Category Fit Review':signal.categoryFitRationale||'',
+    'Category Official Source':signal.categoryOfficialUrl||'',
     'Source Record Date':signal.sourceUpdatedAt,
     'PermitPlate Reviewed':signal.reviewedAt,
     'Official Source URLs':signal.sourceUrls.join(' | ')
@@ -208,6 +227,8 @@ function buildCuratedBrief(input){
       `<p style="margin:0 0 6px"><strong>New observation</strong> · first observed by PermitPlate: ${htmlEscape(signal.firstObservedAt)}</p>`:'',
     signal.whatChanged?
       `<p style="margin:0 0 6px"><strong>What changed:</strong> ${htmlEscape(signal.whatChanged)}</p>`:'',
+    signal.categoryEvidenceBasis?
+      `<p style="margin:0 0 6px;font-size:13px"><strong>Category context:</strong> ${htmlEscape(signal.categoryEvidenceBasis==='SOURCE_KEYWORD_CONTEXT'?'Official source text contains category-related terms':signal.categoryEvidenceBasis==='RELATED_OFFICIAL_ACTIVITY'?'Related official filing context; no exact category keyword match':'General restaurant applicant context; no exact category keyword match')}. <strong>Founder assessment:</strong> ${htmlEscape(signal.categoryFitRationale)}. <a href="${htmlEscape(signal.categoryOfficialUrl)}">Reviewed official source</a></p>`:'',
     `<p style="margin:0 0 6px;font-size:13px">Source record date: ${htmlEscape(signal.sourceUpdatedAt)} · Reviewed: ${htmlEscape(signal.reviewedAt)}</p>`,
     `<p style="margin:0;font-size:13px">${signal.sourceUrls.map((url,i)=>`<a href="${htmlEscape(url)}">official source ${i+1}</a>`).join(' · ')}</p>`,
     '</article>'
