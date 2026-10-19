@@ -104,26 +104,32 @@ test('Production threshold-lock implementation rejects fabricated reviewer roles
     inspection_date:'1900-01-01T00:00:00.000',
     record_date:observedAt
   },{observedAt});
+  const row2=adapters.normalizeDohmhRow({
+    camis:'50110009',dba:'SECOND MOCK RESTAURANT',
+    building:'99',street:'DIFFERENT AVENUE',boro:'Queens',
+    inspection_date:'1900-01-01T00:00:00.000',
+    record_date:observedAt
+  },{observedAt});
   const batch=records=>({records,observation:{
     state:records.length?'COMPLETE_NONEMPTY':'VERIFIED_EMPTY',
     supportsPositiveObservation:records.length>0,
     supportsAbsenceConclusion:true}});
   const graph=builder.buildCurrentGraph({
-    dohmhBatch:batch([row]),slaBatch:batch([]),dobBatch:batch([])
+    dohmhBatch:batch([row,row2]),slaBatch:batch([]),dobBatch:batch([])
   });
   const cohort=c.buildCohort({
-    graph,batches:{DOHMH:batch([row]),DOB_NOW:batch([]),SLA_PENDING:batch([])},
+    graph,batches:{DOHMH:batch([row,row2]),DOB_NOW:batch([]),SLA_PENDING:batch([])},
     observedAt,sourceRevision:'f'.repeat(40),
     codeHashes:{
       one:'a'.repeat(64),two:'b'.repeat(64),three:'c'.repeat(64)
     },
-    isSynthetic:true,benchmarkSize:2,diagnosticSize:0,
+    isSynthetic:false,benchmarkSize:2,diagnosticSize:0,
     categories:['Equipment']
   });
   const blind=c.blindPacket(cohort);
   const envelopes=sim.simulate(blind,new Date().toISOString());
-  // This mock cohort is deliberately synthetic; the production call also
-  // fails on non-human reviewer claims, separately from synthetic cohort.
+  // This is a unit-test-only mock cohort with valid review schema. Crucially,
+  // the real gate still rejects explicitly simulated reviewer attestations.
   const actual=review.validateReviews(cohort,envelopes,'TUNING');
   assert(actual.errors.includes('INDEPENDENT_HUMAN_REVIEW_REQUIRED'));
   const verdict=sim.dryRunGate(cohort,envelopes,new Date().toISOString());
