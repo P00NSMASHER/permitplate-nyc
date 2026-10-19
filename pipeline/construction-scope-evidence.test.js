@@ -50,6 +50,11 @@ assert.equal(rec.customerDeliveryAllowed,false);
 assert.equal(rec.noBuyerIntentEstablished,true);
 assert(scope.validate(rec,row).valid);
 assert(scope.validate(JSON.parse(JSON.stringify(rec)),row).valid);
+const afterScan={...row,sourceObservationId:'OBS:next-dob-publisher-observation'};
+const afterCapture=scope.capture(afterScan);
+assert.notEqual(afterCapture.scopeFingerprint,rec.scopeFingerprint);
+assert.equal(scope.semanticScopeFingerprint(afterCapture),
+  scope.semanticScopeFingerprint(rec));
 const mutated=structuredClone(rec);
 mutated.fullText+=' UNSUPPORTED';
 assert.equal(scope.validate(mutated,row).valid,false);
@@ -144,5 +149,39 @@ assert(history.annotate(review(laterAt,newSource,true),changed.ledger,
 const dropped=history.advance(migrated.ledger,review(laterAt,newSource,false));
 assert.equal(dropped.status,'REVIEW');
 assert(dropped.failures.includes('INDEPENDENT_FULL_SCOPE_EVIDENCE_MISSING'));
+
+
+// Reproduce the pre-fix production ledger: a scope hash built from a volatile
+// observation receipt, plus the original private review bound to that ledger.
+const legacyReview=review(beforeDate,row,true);
+const legacyEntries=structuredClone(old.ledger.entries);
+legacyEntries[row.sourceRecordId].fullScopeFingerprint=scope.capture(row).scopeFingerprint;
+delete legacyEntries[row.sourceRecordId].fullScopeFingerprintVersion;
+legacyEntries[row.sourceRecordId].scopeBaselineMigratedAt=beforeDate;
+const oldVersionLedger=history.seal({...old.ledger,entries:legacyEntries});
+const priorBody={...legacyReview,
+  historyVersion:history.VERSION,
+  historyFingerprint:oldVersionLedger.ledgerFingerprint};
+delete priorBody.artifactFingerprint;
+const priorAnnotated={...priorBody,artifactFingerprint:history.hash(priorBody)};
+const rebound=history.rebaseLegacyScopeHistory(oldVersionLedger,priorAnnotated);
+assert.equal(rebound.valid,true);
+assert.equal(rebound.rebasedCount,1);
+assert.equal(rebound.ledger.entries[row.sourceRecordId].firstObservedAt,beforeDate);
+assert.equal(rebound.ledger.entries[row.sourceRecordId].fullScopeFingerprintVersion,
+  scope.SEMANTIC_VERSION);
+assert.equal(history.validate(rebound.ledger).valid,true);
+assert(history.advance(oldVersionLedger,review(migrateAt,afterScan,true)).failures.includes(
+  'INDEPENDENT_SCOPE_SEMANTIC_REBASE_REQUIRED'));
+const noFalseChanges=history.advance(rebound.ledger,review(migrateAt,afterScan,true));
+assert.equal(noFalseChanges.status,'NO_NEW_REVIEW_EVENTS');
+assert.equal(noFalseChanges.scopeChangeCount,0);
+assert.deepEqual(noFalseChanges.contextChangeIds,[]);
+assert.equal(noFalseChanges.ledger.entries[row.sourceRecordId].firstObservedAt,beforeDate);
+const wrongPrevious={...priorAnnotated,historyFingerprint:'fake'};
+assert.equal(history.rebaseLegacyScopeHistory(oldVersionLedger,wrongPrevious).valid,false);
+const tamperedPrevious=structuredClone(priorAnnotated);
+tamperedPrevious.items[0].constructionScope.fullText+=' FORGED';
+assert.equal(history.rebaseLegacyScopeHistory(oldVersionLedger,tamperedPrevious).valid,false);
 
 console.log('Full DOB source scope, fingerprint/disk roundtrip, BIN/BBL conflict and review-only identity tests passed.');
