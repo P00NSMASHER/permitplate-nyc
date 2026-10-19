@@ -42,18 +42,32 @@ function candidateKey(candidate){
     address:candidate?.address
   });
 }
+// A private Git receipt must hash the same bytes it will serialize. Earlier
+// code hashed optional own properties with value undefined, then JSON omitted
+// them, making historical readback fail integrity verification. Normalize
+// before hashing; never invent a field or trust a resealed unverified source.
+function jsonSafe(value){
+  if(Array.isArray(value))return value.map(item=>
+    item===undefined?null:jsonSafe(item));
+  if(value&&typeof value==='object'){
+    return Object.fromEntries(Object.entries(value)
+      .filter(([,item])=>item!==undefined)
+      .map(([key,item])=>[key,jsonSafe(item)]));
+  }
+  return value;
+}
 function createProposal(core){
   // Rebuilding a review proposal may not reuse an earlier receipt fingerprint
   // or arbitrary proposal ID supplied by an untrusted caller.
   const {evidenceFingerprint:_oldProof,proposalId:_oldId,...verifiedCore}=core||{};
-  const base={
+  const base=jsonSafe({
     version:VERSION,
     ...verifiedCore,
     customerDeliveryAllowed:false,
     automaticIdentityLinkAllowed:false,
     needsIndependentVerification:true,
     reviewStatus:'REVIEW_REQUIRED'
-  };
+  });
   const proposalId='HYP:'+hash({
     kind:base.kind,sourceRecordIds:base.sourceRecordIds,
     candidateEntityId:base.candidateEntityId||null
@@ -349,5 +363,5 @@ function prepare(data){
 module.exports={
   VERSION,MAX_PROPOSALS,REVIEW_CLASSES,sourceUrlForRecord,sourceBorough,
   addressKey,candidateKey,verifyInputs,verifyItem,dohmhProvenance,operatorAgreement,
-  createProposal,validate,prepare
+  jsonSafe,createProposal,validate,prepare
 };
