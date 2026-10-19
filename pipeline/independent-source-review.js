@@ -84,7 +84,9 @@ function inspect(input){
       observation.state!=='COMPLETE_NONEMPTY' ||
       observation.supportsAbsenceConclusion!==true ||
       observation.sourceFresh!==true ||
-      observation.transportOk!==true){
+      observation.transportOk!==true ||
+      batch.records.length!==observation.fetchedCount ||
+      batch.records.length!==source.fetchedCount){
       failures.push('SOURCE_REVIEW_OBSERVATION_INVALID:'+key);
     }
   }
