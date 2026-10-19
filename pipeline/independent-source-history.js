@@ -90,7 +90,7 @@ function validate(ledger){
           from:x.latestContextChange.fromFingerprint,
           to:x.latestContextChange.toFingerprint,
           observedAt:x.latestContextChange.observedAt
-        }).slice(0,24))))){
+        }).slice(0,24)))){
       failures.push('INDEPENDENT_HISTORY_ENTRY_INVALID');
     }
   }
