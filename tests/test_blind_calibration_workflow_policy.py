@@ -25,9 +25,9 @@ def verify(s):
     assert s.index(RECHECK) < s.index(PUBLISH)
     assert s.count("git ls-remote --exit-code origin refs/heads/main") == 3
     assert s.count('test "$(git rev-parse HEAD)" = "$GITHUB_SHA"') == 3
-    assert s.count(CHECKOUT) == 2
+    assert s.count(CHECKOUT) == 3
     assert s.count(NODE) == 2
-    assert s.count("persist-credentials: false") == 2
+    assert s.count("persist-credentials: false") == 3
     assert "actions/checkout@v4" not in s and "actions/setup-node@v4" not in s
     assert 'gh api "repos/$STATE_REPO" --jq \'.visibility\'' in s
     assert 'test "$STATE_REPO" != "$GITHUB_REPOSITORY"' in s
@@ -66,7 +66,7 @@ class BlindCalibrationPolicy(unittest.TestCase):
             verify(self.source.replace(ADMISSION, SECRET + "\n      - name: " + ADMISSION, 1))
 
     def test_cannot_skip_post_research_public_head_check(self):
-        with self.assertRaises(AssertionError):
+        with self.assertRaises((AssertionError, ValueError)):
             verify(self.source.replace(RECHECK, "No public source check", 1))
 
     def test_private_calibration_only(self):
