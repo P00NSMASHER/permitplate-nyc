@@ -2,6 +2,7 @@
 
 const assert=require('assert');
 const readiness=require('./launch-readiness');
+const runner=require('./run-launch-readiness');
 const detection=require('./detection-ledger');
 const opportunity=require('./opportunity-ledger');
 
@@ -462,7 +463,7 @@ function internalInput(overrides){
     'ENABLE_AND_VERIFY_READ_ONLY_STRIPE_SUBSCRIBER_POLL'));
   assert.deepEqual(out.stripeIntake.failures,['STRIPE_INTAKE_SCHEDULE_NOT_ENABLED']);
   assert.equal(out.commercialProofFailures.length,3);
-  assert(!out.scoring||out.scoring.currentOverlap!==-1);
+  assert.equal(runner.shouldFailJob(out),true);
 }
 {
   const out=readiness.evaluateLaunchReadiness(internalInput({
@@ -489,7 +490,16 @@ function internalInput(overrides){
   assert.equal(out.firstCustomerOperationallyReady,true);
   assert.equal(out.stripeIntake.monitoringEnabled,true);
   assert.equal(out.externalGates.stripeIntakeMonitoringVerified,true);
+  assert.equal(runner.shouldFailJob(out),false);
   assert.equal(out.commerciallyProven,false);
+}
+
+
+{
+  const out=readiness.evaluateLaunchReadiness(internalInput({
+    graph:graph('PARTIAL')
+  }));
+  assert.equal(runner.shouldFailJob(out),true);
 }
 
 console.log('PermitPlate launch readiness controller tests passed.');
