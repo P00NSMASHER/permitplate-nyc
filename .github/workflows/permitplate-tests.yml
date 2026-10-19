@@ -55,6 +55,9 @@ jobs:
       - name: Verify independent source-rich DOB validation without calibration reuse
         run: node pipeline/construction-validation-panel.test.js
 
+      - name: Verify separate blind construction scope review and reserved audit partition
+        run: node pipeline/construction-blind-diagnostic.test.js
+
       - name: Verify persistent early-source history and dedupe
         run: node pipeline/independent-source-history.test.js
 
