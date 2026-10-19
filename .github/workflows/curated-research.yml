@@ -12,6 +12,10 @@ on:
       - 'pipeline/category-evidence.js'
       - 'pipeline/category-evidence.test.js'
       - 'pipeline/run-curated-research.js'
+      - 'pipeline/independent-source-review.js'
+      - 'pipeline/independent-source-review.test.js'
+      - 'pipeline/source-adapters.js'
+      - 'pipeline/source-adapters.test.js'
       - 'pipeline/run-current-graph.js'
       - 'pipeline/material-change.js'
       - 'pipeline/curated-material-events.test.js'
@@ -27,6 +31,10 @@ on:
       - 'pipeline/category-evidence.js'
       - 'pipeline/category-evidence.test.js'
       - 'pipeline/run-curated-research.js'
+      - 'pipeline/independent-source-review.js'
+      - 'pipeline/independent-source-review.test.js'
+      - 'pipeline/source-adapters.js'
+      - 'pipeline/source-adapters.test.js'
       - 'pipeline/run-current-graph.js'
       - 'pipeline/material-change.js'
       - 'pipeline/curated-material-events.test.js'
@@ -58,6 +66,8 @@ jobs:
           node-version: '22'
       - name: Test actual paid product with offline fixtures
         run: node pipeline/curated-product.test.js
+      - name: Verify independent early-source discovery remains review-only
+        run: node pipeline/independent-source-review.test.js
       - name: Verify workflow policy
         run: python3 -m unittest discover -s tests -p 'test_curated_workflow_policy.py' -v
 
@@ -129,7 +139,7 @@ jobs:
           set -euo pipefail
           git -C "$PRIVATE_DIR" config user.name "PermitPlate Curated Research"
           git -C "$PRIVATE_DIR" config user.email "actions@users.noreply.github.com"
-          git -C "$PRIVATE_DIR" add -- state/curated-research-ledger.json state/curated-current-graph.json state/curated-baseline-anchor.json
+          git -C "$PRIVATE_DIR" add -- state/curated-research-ledger.json state/curated-current-graph.json state/curated-baseline-anchor.json state/independent-source-review.json
           if git -C "$PRIVATE_DIR" diff --cached --quiet; then
             echo "No private research changes."
             exit 0
