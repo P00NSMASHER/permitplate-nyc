@@ -18,6 +18,8 @@ on:
       - 'pipeline/construction-scope-evidence.test.js'
       - 'pipeline/construction-validation-panel.js'
       - 'pipeline/construction-validation-panel.test.js'
+      - 'pipeline/construction-blind-diagnostic.js'
+      - 'pipeline/construction-blind-diagnostic.test.js'
       - 'pipeline/source-premise-factors.js'
       - 'pipeline/independent-source-history.js'
       - 'pipeline/independent-source-history.test.js'
@@ -52,6 +54,8 @@ on:
       - 'pipeline/construction-scope-evidence.test.js'
       - 'pipeline/construction-validation-panel.js'
       - 'pipeline/construction-validation-panel.test.js'
+      - 'pipeline/construction-blind-diagnostic.js'
+      - 'pipeline/construction-blind-diagnostic.test.js'
       - 'pipeline/source-premise-factors.js'
       - 'pipeline/independent-source-history.js'
       - 'pipeline/independent-source-history.test.js'
@@ -102,6 +106,8 @@ jobs:
         run: node pipeline/construction-scope-evidence.test.js
       - name: Verify separate full-scope DOB diagnostic does not inspect scoring holdout
         run: node pipeline/construction-validation-panel.test.js
+      - name: Verify premise-root grouped construction reviewer and reserved audit separation
+        run: node pipeline/construction-blind-diagnostic.test.js
       - name: Verify first-observation history across repeated scans
         run: node pipeline/independent-source-history.test.js
       - name: Reject unsupported DOB/SLA/CAMIS identity bridges
@@ -183,7 +189,7 @@ jobs:
           set -euo pipefail
           git -C "$PRIVATE_DIR" config user.name "PermitPlate Curated Research"
           git -C "$PRIVATE_DIR" config user.email "actions@users.noreply.github.com"
-          git -C "$PRIVATE_DIR" add -- state/curated-research-ledger.json state/curated-current-graph.json state/curated-baseline-anchor.json state/independent-source-review.json state/independent-source-history.json state/identity-bridge-review.json state/identity-triage-history.json state/identity-bridge-review.csv state/identity-bridge-review.html state/construction-validation-panel.json state/construction-validation-panel.csv state/construction-validation-summary.md
+          git -C "$PRIVATE_DIR" add -- state/curated-research-ledger.json state/curated-current-graph.json state/curated-baseline-anchor.json state/independent-source-review.json state/independent-source-history.json state/identity-bridge-review.json state/identity-triage-history.json state/identity-bridge-review.csv state/identity-bridge-review.html state/construction-validation-panel.json state/construction-validation-panel.csv state/construction-validation-summary.md state/construction-blind-reviewer.json state/construction-reserved-audit.json state/construction-blind-manifest.json
           if git -C "$PRIVATE_DIR" diff --cached --quiet; then
             echo "No private research changes."
             exit 0
