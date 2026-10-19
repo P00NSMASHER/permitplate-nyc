@@ -24,10 +24,10 @@ function evidenceBody(item){
     sourceSystem:x.sourceSystem,sourceRecordId:x.sourceRecordId,
     officialUrl:x.officialUrl,sourceEffectiveAt:x.sourceEffectiveAt,
     borough:x.borough,address:x.address,
+    // Only official record content may produce a SOURCE_CONTEXT change.
+    // A new CAMIS co-location / unresolved identity bridge is not a filing edit.
     matchedResearchTerms:x.matchedResearchTerms,
-    sourceExcerpt:x.sourceExcerpt,sourceStatus:x.sourceStatus,
-    possibleRelatedCamis:x.possibleRelatedCamis,
-    needsIdentityReview:x.needsIdentityReview
+    sourceExcerpt:x.sourceExcerpt,sourceStatus:x.sourceStatus
   };
 }
 const evidenceHash=item=>hash(evidenceBody(item));
@@ -186,6 +186,10 @@ function annotate(review,ledger,newIds=[],changeIds=[]){
   const v=validate(ledger),check=verifyReview(review);
   if(!v.valid||!check.valid||ledger.observedAt!==review.observedAt){
     return {status:'REVIEW',failures:[...v.failures,...check.failures,'INDEPENDENT_REVIEW_HISTORY_MISMATCH']};
+  }
+  if(review.items.some(item=>!ledger.entries[item.sourceRecordId]||
+      ledger.entries[item.sourceRecordId].evidenceFingerprint!==evidenceHash(item))){
+    return {status:'REVIEW',failures:['INDEPENDENT_REVIEW_HISTORY_IDENTITY_DRIFT']};
   }
   const first=new Set(newIds),changed=new Set(changeIds);
   const body={...review,
