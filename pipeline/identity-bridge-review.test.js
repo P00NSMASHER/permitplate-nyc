@@ -120,6 +120,7 @@ assert.equal(receipt.automaticIdentityLinkAllowed,false);
 assert.equal(receipt.externalSendCalls,0);
 assert.equal(receipt.automaticMerges,0);
 assert(bridges.validate(receipt).valid);
+assert(bridges.validate(JSON.parse(JSON.stringify(receipt))).valid);
 assert.equal(receipt.totalProposals,4);
 assert.equal(receipt.proposals.length,4);
 assert.equal(receipt.omittedByLimit,0);

@@ -61,6 +61,9 @@ jobs:
       - name: Verify stable identity triage history and fail-closed migration
         run: node pipeline/identity-triage-history.test.js
 
+      - name: Verify legacy private identity receipt readback and strict recovery
+        run: node pipeline/identity-receipt-recovery.test.js
+
       - name: Verify conservative cross-source identity review
         run: node pipeline/identity-bridge-review.test.js
 

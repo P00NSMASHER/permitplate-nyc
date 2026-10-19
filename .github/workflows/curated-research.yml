@@ -22,6 +22,8 @@ on:
       - 'pipeline/identity-review-workbench.test.js'
       - 'pipeline/identity-triage-history.js'
       - 'pipeline/identity-triage-history.test.js'
+      - 'pipeline/identity-receipt-recovery.js'
+      - 'pipeline/identity-receipt-recovery.test.js'
       - 'pipeline/source-adapters.js'
       - 'pipeline/source-adapters.test.js'
       - 'pipeline/run-current-graph.js'
@@ -49,6 +51,8 @@ on:
       - 'pipeline/identity-review-workbench.test.js'
       - 'pipeline/identity-triage-history.js'
       - 'pipeline/identity-triage-history.test.js'
+      - 'pipeline/identity-receipt-recovery.js'
+      - 'pipeline/identity-receipt-recovery.test.js'
       - 'pipeline/source-adapters.js'
       - 'pipeline/source-adapters.test.js'
       - 'pipeline/run-current-graph.js'
@@ -92,6 +96,8 @@ jobs:
         run: node pipeline/identity-review-workbench.test.js
       - name: Preserve stable identity triage history
         run: node pipeline/identity-triage-history.test.js
+      - name: Verify legacy identity disk-proof compatibility
+        run: node pipeline/identity-receipt-recovery.test.js
       - name: Verify workflow policy
         run: python3 -m unittest discover -s tests -p 'test_curated_workflow_policy.py' -v
 

@@ -143,6 +143,21 @@ cryptographic graph receipt updates or a returning previously seen
 hypothesis **do not manufacture a new relationship**. A capped source
 window cannot justify declaring unseen records absent.
 
+**Legacy receipt serialization compatibility.** The initial private
+identity workbench was generated before optional source-row fingerprint
+fields were normalized for JSON serialization. Its in-memory hash included
+two undefined optional fields per CAMIS-to-source proposal; JSON on disk
+omitted them. The original stored checksum therefore cannot be validated
+by naïvely rehashing the serialized object.
+
+The one-time migration restores **only** those known absent optional fields
+in memory, validates both the original proposal fingerprints and the
+original entire-receipt fingerprint, then emits a fresh, JSON-safe proof
+without modifying any actual source facts, candidate IDs or first-observed
+dates. A mismatched original proof fails closed. All later production
+receipts must pass independent JSON round-trip verification before private
+publication; this compatibility rule never authorizes identity approval.
+
 If the private history file disappears or fails its integrity checks,
 the workflow fails closed instead of resetting monitoring timestamps.
 Neither monitoring novelty nor a context recheck constitutes accepted
