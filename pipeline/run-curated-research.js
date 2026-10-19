@@ -313,10 +313,12 @@ async function run(input) {
   result.summary.constructionReferenceOriginalScoringHoldoutRead=0;
   // Current source data may continue changing; the original 67/26 reference
   // and its reserved audit remain fixed, even when daily strata shift.
-    result.summary.constructionReviewerCards=blind.manifest.reviewCases;
-  result.summary.constructionReservedAuditCases=blind.manifest.reservedCases;
-  result.summary.constructionReviewerPremiseGroups=blind.manifest.reviewPremiseGroups;
-  result.summary.constructionReservedPremiseGroups=blind.manifest.reservedPremiseGroups;
+    result.summary.constructionProvisionalReviewerCards=blind.manifest.reviewCases;
+  result.summary.constructionProvisionalAuditCases=blind.manifest.reservedCases;
+  result.summary.constructionReviewerCards=freeze.frozen.anchor.reviewCases;
+  result.summary.constructionReservedAuditCases=freeze.frozen.anchor.reservedCases;
+  result.summary.constructionReviewerPremiseGroups=freeze.frozen.anchor.reviewPremiseGroups;
+  result.summary.constructionReservedPremiseGroups=freeze.frozen.anchor.reservedPremiseGroups;
   result.summary.constructionOriginalScoringHoldoutRead=0;
   result.summary.constructionDiagnosticFilings=scopeDiagnostic.filings;
   result.summary.constructionDiagnosticUniqueJobRoots=scopeDiagnostic.uniqueJobNumberRoots;
