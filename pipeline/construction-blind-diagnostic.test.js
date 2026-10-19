@@ -294,4 +294,108 @@ const unsafeLink=structuredClone(newlyFrozen.frozen);
 unsafeLink.reviewerPacket.cards[0].officialSourceUrl='https://evil.example.com/fake';
 assert.throws(()=>reviewerWorksheet.render(unsafeLink),/UNVERIFIED_FROZEN_CONSTRUCTION_SOURCE/);
 
+
+// Completed CSVs remain untrusted declarations; their immutable source fields,
+// complete case coverage, attestation, timestamps and separate review voices
+// must pass strict offline checks before any operator reads aggregate findings.
+const returned=require('./construction-review-intake');
+const csvEscape=require('./identity-review-workbench').csvCell;
+const blankRows=returned.parseCsv(reviewerMaterials.csv);
+assert.equal(blankRows.length,out.reviewerPacket.cards.length+1);
+assert.deepEqual(blankRows[0],reviewerWorksheet.HEADERS);
+function serialize(rows){
+  return '\ufeff'+rows.map(row=>row.map(csvEscape).join(',')).join('\r\n')+'\r\n';
+}
+function filled(scope='RELEVANT'){
+  const rows=blankRows.map(row=>row.slice());
+  const edit=reviewerWorksheet.HEADERS.length-6;
+  for(const row of rows.slice(1)){
+    row[edit]='YES';
+    row[edit+1]=scope;
+    row[edit+2]='Independently rechecked the original NYC DOB source and scope.';
+    row[edit+3]='UNKNOWN';
+    row[edit+4]='2026-10-19T19:45:00.000Z';
+    row[edit+5]=returned.ATTESTATION;
+  }
+  return serialize(rows);
+}
+function declaration(id,csv,override={}){
+  return {reviewerId:id,role:'INDEPENDENT_DOMAIN_REVIEWER',
+    declaresIndependent:true,isSynthetic:false,csv,...override};
+}
+const vA=filled(),vB=filled();
+const noAuth=returned.assess(newlyFrozen.frozen,[
+  declaration('reviewer-alpha',vA),declaration('reviewer-beta',vB)
+], '2026-10-19T20:00:00.000Z');
+assert.equal(noAuth.status,'DECLARATIONS_ONLY_AWAITING_EXTERNAL_AUTHENTICATION');
+assert.deepEqual(noAuth.failures,[]);
+assert.equal(noAuth.caseCountReviewedByBoth,out.reviewerPacket.cards.length);
+assert.equal(noAuth.reviewerAgreementCount,out.reviewerPacket.cards.length);
+assert.equal(noAuth.independentHumanIdentityVerified,false);
+assert.equal(noAuth.reviewerExpertiseVerified,false);
+assert.equal(noAuth.procurementIntentVerified,false);
+assert.equal(noAuth.independentHumanLabelsAcceptedForScoring,0);
+assert.equal(noAuth.scoringPromotionAllowed,false);
+assert.equal(noAuth.customerDeliveryAllowed,false);
+assert.equal(noAuth.reservedAuditCasesReleased,0);
+assert.equal(noAuth.originalScoringHoldoutCasesRead,0);
+assert.equal(noAuth.externalSendCalls,0);
+assert.equal(returned.assess(newlyFrozen.frozen,[
+  declaration('reviewer-alpha',reviewerMaterials.csv),
+  declaration('reviewer-beta',vB)
+], '2026-10-19T20:00:00.000Z').status,'REVIEW');
+assert(returned.assess(newlyFrozen.frozen,[
+  declaration('reviewer-alpha',vA),declaration('reviewer-alpha',vB)
+], '2026-10-19T20:00:00.000Z').failures.includes(
+  'REVIEWER_ALIAS_INVALID_OR_DUPLICATE'));
+assert(returned.assess(newlyFrozen.frozen,[
+  declaration('reviewer-alpha',vA),declaration('reviewer-beta',vB,
+    {isSynthetic:true})
+], '2026-10-19T20:00:00.000Z').failures.includes(
+  'UNVERIFIED_REVIEWER_DECLARATION'));
+const damaged=returned.parseCsv(vB);
+damaged[1][8]='INSUFFICIENT EVIDENCE IN ORIGINAL';
+assert(returned.assess(newlyFrozen.frozen,[
+  declaration('reviewer-alpha',vA),
+  declaration('reviewer-beta',serialize(damaged))
+], '2026-10-19T20:00:00.000Z').failures.includes(
+  'REVIEW_SOURCE_EVIDENCE_MODIFIED'));
+const extra=returned.parseCsv(vB);
+extra.push(extra[1].slice());
+assert(returned.assess(newlyFrozen.frozen,[
+  declaration('reviewer-alpha',vA),
+  declaration('reviewer-beta',serialize(extra))
+], '2026-10-19T20:00:00.000Z').failures.includes(
+  'REVIEW_CSV_HEADER_OR_COVERAGE_MISMATCH'));
+const changed=returned.parseCsv(vB);
+changed[1][reviewerWorksheet.HEADERS.length-5]='NOT_RELEVANT';
+const disagreement=returned.assess(newlyFrozen.frozen,[
+  declaration('reviewer-alpha',vA),
+  declaration('reviewer-beta',serialize(changed))
+], '2026-10-19T20:00:00.000Z');
+assert.equal(disagreement.status,'REVIEW');
+assert.equal(disagreement.disagreementCount,1);
+assert(disagreement.failures.includes('REVIEWER_DISAGREEMENTS_REQUIRE_ADJUDICATION'));
+const leaked=returned.parseCsv(vB);
+leaked[1][reviewerWorksheet.HEADERS.length-4]=
+  'Source checked; reserved '+out.reservedAudit.cases[0].caseId;
+assert(returned.assess(newlyFrozen.frozen,[
+  declaration('reviewer-alpha',vA),
+  declaration('reviewer-beta',serialize(leaked))
+], '2026-10-19T20:00:00.000Z').failures.includes(
+  'RESERVED_AUDIT_CASE_PRESENT_IN_RETURN'));
+const delayed=returned.parseCsv(vB);
+delayed[1][reviewerWorksheet.HEADERS.length-2]='2026-10-20T01:45:00.000Z';
+assert(returned.assess(newlyFrozen.frozen,[
+  declaration('reviewer-alpha',vA),
+  declaration('reviewer-beta',serialize(delayed))
+], '2026-10-19T20:00:00.000Z').failures.includes('REVIEW_TIMESTAMP_INVALID'));
+const forged=structuredClone(newlyFrozen.frozen);
+forged.anchor.reviewCases++;
+assert.equal(returned.assess(forged,[
+  declaration('reviewer-alpha',vA),declaration('reviewer-beta',vB)
+], '2026-10-19T20:00:00.000Z').status,'REVIEW');
+assert.throws(()=>returned.parseCsv('malformed,"unterminated'),/REVIEW_CSV/);
+assert.throws(()=>returned.parseCsv('abc\0def'),/REVIEW_CSV/);
+
 console.log('Unscored source-rich construction split: stable premise/root isolation, blinded reviewer packet, reserved audit and scoring-holdout firewall passed.');
