@@ -61,6 +61,12 @@ function rows(){
 }
 function fixture(options={}){
   const data=rows(),batches={},sourceObservations={};
+  if(options.ambiguous)data.DOHMH.push(sources.normalizeDohmhRow({
+    camis:'50110002',dba:'EARLIER VENUE',boro:'Manhattan',
+    building:'101',street:'MAIN STREET',zipcode:'10001',
+    inspection_date:'1900-01-01T00:00:00.000',
+    record_date:'2026-10-18T09:00:00.000'
+  },{observedAt:NOW}));
   for(const key of research.REQUIRED_SOURCES){
     const observation={
       observationId:'OBS:'+key,observedAt:NOW,
@@ -81,7 +87,7 @@ function fixture(options={}){
       sourceSystems:['DOHMH'],sourceCount:1
     }
   ];
-  if(options.ambiguous)candidates.push({
+  if(options.ambiguous||options.unproven)candidates.push({
     entityId:'CAMIS:50110002',camis:'50110002',
     canonicalName:'EARLIER VENUE',address:'101 MAIN STREET',borough:'Manhattan',
     deliverySuppressed:true,crossCamisOperationalConflicts:[{entityId:'CAMIS:50110001'}],
@@ -123,6 +129,8 @@ const building=receipt.proposals.find(p=>p.kind==='CAMIS_TO_EARLY_SOURCE'&&p.sou
 assert(building);
 assert.equal(building.reviewClass,'PREMISE_ONLY');
 assert.equal(building.candidateEntityId,'CAMIS:50110001');
+assert(building.dohmhRecordId.startsWith('DOHMH:50110001:'));
+assert.equal(building.dohmhObservationId,'OBS:DOHMH');
 assert.equal(building.nameAgreement,'NOT_ESTABLISHED');
 assert.equal(building.needsIndependentVerification,true);
 assert.equal(building.customerDeliveryAllowed,false);
@@ -148,6 +156,11 @@ const multiple=ambiguous.proposals.filter(p=>p.sourceRecordId==='DOB_NOW:M001-I1
 assert.equal(multiple.length,2);
 assert(multiple.every(p=>p.reviewClass==='MULTIPLE_CAMIS_SAME_PREMISE'||p.reviewClass==='SUPPRESSED_IDENTITY'));
 assert(multiple.every(p=>p.automaticIdentityLinkAllowed===false));
+const unproven=bridges.prepare(fixture({unproven:true}));
+assert.equal(unproven.status,'REVIEW_ONLY');
+assert.equal(unproven.skippedWithoutDohmhProvenance,2);
+assert.equal(unproven.reviewQueueComplete,false);
+assert(!unproven.proposals.some(p=>p.candidateEntityId==='CAMIS:50110002'));
 const linked=bridges.prepare(fixture({preLinked:true}));
 assert(!linked.proposals.some(p=>p.sourceRecordId==='DOB_NOW:M001-I1'&&p.kind==='CAMIS_TO_EARLY_SOURCE'));
 const incomplete=fixture();
