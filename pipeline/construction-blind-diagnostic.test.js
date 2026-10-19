@@ -3,6 +3,7 @@ const assert=require('node:assert/strict');
 const research=require('./curated-research-ledger');
 const panelBuilder=require('./construction-validation-panel');
 const split=require('./construction-blind-diagnostic');
+const frozen=require('./construction-frozen-reference');
 const makeHash=value=>research.hash(value);
 const WHEN='2026-10-19T17:43:28.906Z';
 function record(id,place,scopeClass='SPECIFIC_COMPONENT_AND_ACTION',options={}){
@@ -166,4 +167,73 @@ delete crossRoot.artifactFingerprint;
 crossRoot.artifactFingerprint=research.hash(crossRoot);
 assert(split.verifiedPanel(crossRoot).failures.includes(
   'BLIND_CONSTRUCTION_JOB_ROOT_CROSSES_PREMISES'));
+
+// A previous private, genuine-source review reference must freeze before the
+// next source-refresh rebalancing can move reserved cases to visible review.
+const legacy={panel,reviewerPacket:out.reviewerPacket,
+  reservedAudit:out.reservedAudit,manifest:out.manifest};
+const newlyFrozen=frozen.choose({
+  previousFrozen:{},legacy,current:legacy,
+  now:'2026-10-19T18:20:00.000Z'
+});
+assert.equal(newlyFrozen.status,'FROZEN_CREATED');
+assert.equal(newlyFrozen.newlyFrozen,true);
+assert.equal(newlyFrozen.originalLegacyExists,true);
+assert.equal(newlyFrozen.frozen.anchor.origin,'EXISTING_VERIFIED_PRIVATE_SNAPSHOT');
+assert.equal(newlyFrozen.frozen.anchor.originalSourceObservedAt,WHEN);
+assert.equal(newlyFrozen.frozen.anchor.reviewCases,out.manifest.reviewCases);
+assert.equal(newlyFrozen.frozen.anchor.reservedCases,out.manifest.reservedCases);
+assert.equal(newlyFrozen.frozen.anchor.originalScoringHoldoutCasesRead,0);
+assert(frozen.validate(newlyFrozen.frozen).valid);
+assert.equal(frozen.allOrNone(newlyFrozen.frozen),'ALL');
+const rollingLegacy={...legacy,panel:shuffled};
+const replay=frozen.choose({
+  previousFrozen:newlyFrozen.frozen,legacy:rollingLegacy,
+  current:{panel:shuffled,reviewerPacket:repeat.reviewerPacket,
+    reservedAudit:repeat.reservedAudit,manifest:repeat.manifest},
+  now:'2026-10-20T18:20:00.000Z'
+});
+assert.equal(replay.status,'FROZEN_ALREADY');
+assert.equal(replay.newlyFrozen,false);
+assert.notEqual(rollingLegacy.panel.artifactFingerprint,
+  newlyFrozen.frozen.panel.artifactFingerprint);
+assert.equal(replay.frozen.panel.artifactFingerprint,
+  newlyFrozen.frozen.panel.artifactFingerprint);
+assert.equal(replay.frozen.anchor.anchorFingerprint,
+  newlyFrozen.frozen.anchor.anchorFingerprint);
+assert.equal(replay.frozen.reviewerPacket.packetFingerprint,
+  newlyFrozen.frozen.reviewerPacket.packetFingerprint);
+assert.equal(replay.frozen.reservedAudit.reservedFingerprint,
+  newlyFrozen.frozen.reservedAudit.reservedFingerprint);
+const tamperedFrozen=structuredClone(newlyFrozen.frozen);
+tamperedFrozen.reservedAudit.cases[0].originalSourceText='UNAUTHORIZED AUDIT RECORD';
+assert(frozen.validate(tamperedFrozen).failures.includes('CONSTRUCTION_FROZEN_SOURCE_UNVERIFIED'));
+assert.equal(frozen.choose({
+  previousFrozen:tamperedFrozen,legacy,current:legacy,now:'2026-10-20T18:20:00Z'
+}).status,'REVIEW');
+const legacySwapped=structuredClone(legacy);
+legacySwapped.reviewerPacket.cards[0].officialSourceRecordId='DOB_NOW:MISSING';
+assert(frozen.choose({
+  previousFrozen:newlyFrozen.frozen,legacy:legacySwapped,
+  current:legacy,now:'2026-10-20T18:20:00Z'
+}).failures.includes('CONSTRUCTION_LEGACY_AUDIT_WAS_CHANGED'));
+const partialArchive={...newlyFrozen.frozen,reservedAudit:null};
+assert(frozen.choose({
+  previousFrozen:partialArchive,legacy,current:legacy,now:'2026-10-20T18:20:00Z'
+}).failures.includes('CONSTRUCTION_FROZEN_ARCHIVE_PARTIAL'));
+const partialLegacy={...legacy,manifest:null};
+assert(frozen.choose({
+  previousFrozen:{},legacy:partialLegacy,current:legacy,now:'2026-10-20T18:20:00Z'
+}).failures.includes('CONSTRUCTION_LEGACY_SNAPSHOT_PARTIAL'));
+const fresh=frozen.choose({
+  previousFrozen:{},legacy:{},current:legacy,
+  now:'2026-10-19T18:20:00.000Z'
+});
+assert.equal(fresh.status,'FROZEN_CREATED');
+assert.equal(fresh.originalLegacyExists,false);
+assert.equal(fresh.frozen.anchor.origin,'CURRENT_VERIFIED_SOURCE_SNAPSHOT');
+assert.equal(fresh.frozen.anchor.reviewCases+fresh.frozen.anchor.reservedCases,17);
+assert.equal(fresh.frozen.anchor.customerDeliveryAllowed,false);
+assert.equal(fresh.frozen.anchor.scoringPromotionAuthorized,false);
+
 console.log('Unscored source-rich construction split: stable premise/root isolation, blinded reviewer packet, reserved audit and scoring-holdout firewall passed.');

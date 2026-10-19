@@ -36,6 +36,8 @@ def verify(source):
     assert "node pipeline/identity-triage-history.test.js" in source
     assert "node pipeline/construction-validation-panel.test.js" in source
     assert "node pipeline/construction-blind-diagnostic.test.js" in source
+    assert "'pipeline/construction-frozen-reference.js'" in source
+    assert "research/construction-frozen-reference-v1" in source
     assert "state/construction-blind-reviewer.json state/construction-reserved-audit.json state/construction-blind-manifest.json" in source
     assert "pipeline/calibration-cohort.js" not in source
     assert "state/construction-validation-panel.json state/construction-validation-panel.csv state/construction-validation-summary.md" in source
