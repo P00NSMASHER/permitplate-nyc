@@ -89,6 +89,12 @@ function review(item,overrides={}) {
     entityId:item.entityId,category:'equipment',
     ownerReviewed:true,
     candidateFingerprint:customer.candidateIdentity(item),
+    categoryReview:{
+      approved:true,
+      evidenceFingerprint:categoryEvidence.classify(item,'Equipment').evidenceFingerprint,
+      sourceUrl:categoryEvidence.primaryUrl(item),
+      rationale:'The verified restaurant applicant record provides a research starting point for an equipment vendor, without proving equipment demand.'
+    },
     whyItMatters:'An official NYC applicant record makes this business worth researching.',
     reviewedAt:'2026-10-18T10:30:00.000Z',
     ...overrides
