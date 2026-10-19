@@ -2,6 +2,7 @@
 const assert=require('node:assert/strict');
 const identity=require('./identity-bridge-review');
 const h=require('./identity-triage-history');
+const runner=require('./run-curated-research');
 const {hash}=require('./independent-source-history');
 
 const T0='2026-10-19T06:46:11.507Z';
@@ -75,6 +76,24 @@ const recurred=receipt(T1,[
   proposal('M002-I1',{sourceObservationId:'OBS:DOB_NOW:REFRESH',
     sourceGraphFingerprint:'1'.repeat(64)})
 ],0,{sourceArtifactFingerprint:'2'.repeat(64)});
+// One-time migration: use the old private workbench receipt as genesis,
+ // then replay the new receipt without inventing 'new' relationships.
+const migrated=runner.prepareIdentityHistory(null,first,recurred);
+assert.equal(migrated.ready,true);
+assert.equal(migrated.migrated,true);
+assert.equal(migrated.updated.newProposalIds.length,0);
+assert.equal(migrated.updated.contextRecheckIds.length,0);
+assert.equal(migrated.annotated.proposals[0].firstObservedByPermitPlateAt,T0);
+assert.equal(migrated.annotated.proposals[0].monitoringStatus,'ALREADY_TRACKED');
+const destroyed=runner.prepareIdentityHistory(null,migrated.annotated,
+  receipt(T2,[a,b]));
+assert.equal(destroyed.ready,false);
+assert(destroyed.failures.includes('IDENTITY_TRIAGE_HISTORY_MISSING'));
+const firstEver=runner.prepareIdentityHistory(null,null,first);
+assert.equal(firstEver.ready,true);
+assert.equal(firstEver.bootstrapped,true);
+assert.equal(firstEver.annotated.proposals[0].monitoringStatus,'BASELINE_EXISTING');
+assert.equal(firstEver.updated.newProposalIds.length,0);
 const repeated=h.advance(baseline.ledger,recurred);
 assert.equal(repeated.status,'NO_NEW_HYPOTHESES');
 assert.deepEqual(repeated.newProposalIds,[]);
