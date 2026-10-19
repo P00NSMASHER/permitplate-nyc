@@ -79,6 +79,34 @@ function prepare(previous, graph) {
     }
   };
 }
+function prepareIndependentHistory(priorHistory,priorReview,currentReview){
+  let migrated=false;
+  if(!priorHistory&&priorReview){
+    // If an annotated snapshot exists but its companion ledger disappears,
+    // a fresh bootstrap would falsely reclassify existing records as new.
+    if(priorReview.historyVersion===independentHistory.VERSION){
+      return {status:'REVIEW',ready:false,failures:['INDEPENDENT_HISTORY_FILE_MISSING']};
+    }
+    const baseline=independentHistory.bootstrap(priorReview);
+    if(baseline.status==='REVIEW'){
+      return {status:'REVIEW',ready:false,failures:baseline.failures};
+    }
+    priorHistory=baseline.ledger;
+    migrated=true;
+  }
+  const advancedHistory=independentHistory.advance(priorHistory,currentReview);
+  if(advancedHistory.status==='REVIEW'){
+    return {status:'REVIEW',ready:false,failures:advancedHistory.failures};
+  }
+  const annotated=independentHistory.annotate(
+    currentReview,advancedHistory.ledger,
+    advancedHistory.newObservationIds,advancedHistory.contextChangeIds
+  );
+  if(annotated.status==='REVIEW'){
+    return {status:'REVIEW',ready:false,failures:annotated.failures};
+  }
+  return {ready:true,migrated,advancedHistory,annotated};
+}
 async function run(input) {
   const opts = input || {};
   if (!opts.ledgerPath || !opts.graphPath) {
@@ -110,33 +138,11 @@ async function run(input) {
   }
   const independentPath=path.join(path.dirname(ledgerPath),'independent-source-review.json');
   const historyPath=path.join(path.dirname(ledgerPath),'independent-source-history.json');
-  let priorHistory=readOptional(historyPath);
-  const priorReview=readOptional(independentPath);
-  let migrated=false;
-  if(!priorHistory&&priorReview){
-    // An annotated review proves a history ledger already existed. Refuse to
-    // erase history by silently bootstrapping if its separate file disappears.
-    if(priorReview.historyVersion===independentHistory.VERSION){
-      return {status:'REVIEW',ready:false,failures:['INDEPENDENT_HISTORY_FILE_MISSING']};
-    }
-    const baseline=independentHistory.bootstrap(priorReview);
-    if(baseline.status==='REVIEW'){
-      return {status:'REVIEW',ready:false,failures:baseline.failures};
-    }
-    priorHistory=baseline.ledger;
-    migrated=true;
-  }
-  const advancedHistory=independentHistory.advance(priorHistory,independent);
-  if(advancedHistory.status==='REVIEW'){
-    return {status:'REVIEW',ready:false,failures:advancedHistory.failures};
-  }
-  const annotated=independentHistory.annotate(
-    independent,advancedHistory.ledger,
-    advancedHistory.newObservationIds,advancedHistory.contextChangeIds
+  const historyState=prepareIndependentHistory(
+    readOptional(historyPath),readOptional(independentPath),independent
   );
-  if(annotated.status==='REVIEW'){
-    return {status:'REVIEW',ready:false,failures:annotated.failures};
-  }
+  if(!historyState.ready)return historyState;
+  const {advancedHistory,annotated,migrated}=historyState;
   result.summary.independentReviewOnlyCount=annotated.storedCount;
   result.summary.independentReviewTotalMatches=annotated.totalResearchMatches;
   result.summary.independentReviewOverflow=annotated.omittedByLimit;
@@ -167,4 +173,4 @@ async function main() {
 if (require.main === module) {
   main().catch(error=>{console.error(error.message);process.exitCode=1});
 }
-module.exports = {VERSION,readOptional,atomicJson,baselineAnchor,verifyBaselineAnchor,prepare,run};
+module.exports = {VERSION,readOptional,atomicJson,baselineAnchor,verifyBaselineAnchor,prepare,prepareIndependentHistory,run};
