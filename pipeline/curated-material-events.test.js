@@ -6,6 +6,7 @@ const ledger=require('./curated-research-ledger');
 const curated=require('./curated-customer-brief');
 const queue=require('./run-curated-review-queue');
 const stripe=require('./stripe-subscriber');
+const categoryEvidence=require('./category-evidence');
 
 const INIT='2026-10-18T12:00:00.000Z';
 const NEXT='2026-10-18T14:00:00.000Z';
