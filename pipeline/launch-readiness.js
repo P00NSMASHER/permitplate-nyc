@@ -9,7 +9,7 @@ const scoringPolicy=require('./scoring-policy');
 const firstSubscriber=require('./run-first-subscriber-canary');
 const publicBuild=require('../build-site');
 
-const LAUNCH_READINESS_VERSION='PermitPlate-launch-readiness-v1.5.0';
+const LAUNCH_READINESS_VERSION='PermitPlate-launch-readiness-v1.6.0';
 const CURATED_LAUNCH_MODE='FOUNDER_CURATED_NO_SCORE_V1';
 const EXTERNAL_EVIDENCE_MAX_AGE_MS=24*60*60*1000;
 
@@ -54,6 +54,7 @@ function evidenceFresh(observedAt,evaluatedAt){
 }
 function remediationFor(gate){
   const map={
+    stripeIntakeMonitoringVerified:'ENABLE_AND_VERIFY_READ_ONLY_STRIPE_SUBSCRIBER_POLL',
     stripeCheckoutPreferenceFieldsVerified:'APPLY_AND_VERIFY_STRIPE_CHECKOUT_PREFERENCES',
     stripePaymentLinkActiveVerified:'VERIFY_STRIPE_PAYMENT_LINK_ACTIVE',
     stripeCustomerPortalActiveVerified:'CONFIGURE_AND_VERIFY_STRIPE_CUSTOMER_PORTAL',
@@ -97,6 +98,7 @@ function evaluateLaunchReadiness(input){
   const curatedMode=launchMode===CURATED_LAUNCH_MODE;
   const curatedCanary=data.curatedCanary||{};
   const curatedResearch=data.curatedResearch||{};
+  const stripeIntake=data.stripeIntake||{};
 
   const detValidation=detection.validateLedger(detectionLedger);
   const oppValidation=opportunity.validateLedger(opportunityLedger);
@@ -200,6 +202,7 @@ function evaluateLaunchReadiness(input){
     preferenceFieldKeysVerified;
 
   const externalGates={
+    stripeIntakeMonitoringVerified:stripeIntake.valid===true,
     externalEvidenceFresh:evidenceFresh(external.observedAt,evaluatedAt),
     stripeCheckoutPreferenceFieldsVerified:
       normalizeBool(stripe.checkoutPreferenceFieldsVerified)&&preferenceFieldKeysVerified,
@@ -248,6 +251,14 @@ function evaluateLaunchReadiness(input){
     githubPagesProductionDeployVerified:externalGates.githubPagesProductionDeployVerified,
     githubPagesLiveBuildIdentityVerified:externalGates.githubPagesLiveBuildIdentityVerified
   };
+
+  // An active $79 Checkout link without a verified recurring customer-intake
+  // path can create an unobserved paid obligation. Scored research cannot use
+  // this founder-curated customer-intake lane as a scoring release shortcut.
+  if(curatedMode){
+    firstCustomerExternalGates.stripeIntakeMonitoringVerified=
+      externalGates.stripeIntakeMonitoringVerified;
+  }
 
   const firstCustomerExternalFailures=Object.entries(firstCustomerExternalGates)
     .filter(([,passed])=>passed!==true)
@@ -335,6 +346,13 @@ function evaluateLaunchReadiness(input){
         subscriberCanary.externalSendCalls:null,
       transportPreflight:subscriberCanary.transportPreflight||null,
       artifactFingerprint:subscriberCanary.artifactFingerprint||null
+    },
+    stripeIntake:{
+      valid:stripeIntake.valid===true,
+      failures:Array.isArray(stripeIntake.failures)?stripeIntake.failures:[],
+      monitoringEnabled:stripeIntake.monitoringEnabled===true,
+      lastPrivateReadbackAt:stripeIntake.lastPrivateReadbackAt||null,
+      lastPrivateReadbackAgeMs:stripeIntake.lastPrivateReadbackAgeMs??null
     },
     curatedResearch:{
       valid:curatedResearch.valid===true,
