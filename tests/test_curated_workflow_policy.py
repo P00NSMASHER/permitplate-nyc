@@ -34,6 +34,7 @@ def verify(source):
     assert "state/curated-research-ledger.json state/curated-current-graph.json" in source
     assert "state/identity-bridge-review.json state/identity-triage-history.json state/identity-bridge-review.csv state/identity-bridge-review.html" in source
     assert "node pipeline/identity-triage-history.test.js" in source
+    assert "node pipeline/identity-receipt-recovery.test.js" in source
     assert source.index("Refresh current official research in private state") < source.index(AFTER_REFRESH)
     assert source.index(AFTER_REFRESH) < source.index("Commit only private research state")
     assert source.count(PUBLIC_SOURCE) == 2
