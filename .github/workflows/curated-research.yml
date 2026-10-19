@@ -74,6 +74,8 @@ jobs:
         run: node pipeline/independent-source-review.test.js
       - name: Verify first-observation history across repeated scans
         run: node pipeline/independent-source-history.test.js
+      - name: Reject unsupported DOB/SLA/CAMIS identity bridges
+        run: node pipeline/identity-bridge-review.test.js
       - name: Verify workflow policy
         run: python3 -m unittest discover -s tests -p 'test_curated_workflow_policy.py' -v
 
