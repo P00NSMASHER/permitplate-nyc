@@ -31,11 +31,17 @@ def verify(s):
     assert "actions/checkout@v4" not in s and "actions/setup-node@v4" not in s
     assert 'gh api "repos/$STATE_REPO" --jq \'.visibility\'' in s
     assert 'test "$STATE_REPO" != "$GITHUB_REPOSITORY"' in s
-    assert "node --test pipeline/calibration.test.js pipeline/calibration-integrity.test.js pipeline/calibration-cli.test.js" in s
-    assert 'node pipeline/calibration-runner.js prepare "$CALIBRATION_DIR"' in s
+    assert "node --test pipeline/calibration.test.js pipeline/calibration-integrity.test.js pipeline/calibration-cli.test.js pipeline/calibration-focused.test.js" in s
+    assert 'node pipeline/calibration-runner.js prepare "$CALIBRATION_DIR" Equipment' in s
     assert "cohort.validateCohort(operator)" in s
     assert "packet.cards.some(card=>'predictions' in card" in s
     assert "blocked.status!=='BLOCKED'" in s
+    assert "operator.categories[0]!=='Equipment'" in s
+    assert "operator.counts.benchmark!==100" in s
+    assert "operator.counts.tuning!==70" in s
+    assert "operator.counts.holdout!==30" in s
+    assert "packet.cards.length!==70" in s
+    assert "summary.reviewScope!=='ONE_CATEGORY_INDEPENDENT_REVIEW'" in s
     assert "operator.sourceRevision!==process.env.GITHUB_SHA" in s
     assert "summary.productionStateWrites!==0" in s
     assert "summary.externalSendCalls!==0" in s
