@@ -88,6 +88,29 @@ assert.equal(conflict.bblComparison,'MATCH');
 assert.equal(conflict.assessment,'OFFICIAL_PROPERTY_IDENTIFIER_CONFLICT');
 assert.equal(conflict.manualConflictHold,true);
 assert.equal(conflict.customerDeliveryAllowed,false);
+// NYC Geosupport "million BIN" is a missing-building sentinel, not a
+// disagreement with a real DOB BIN. Preserve the raw placeholder for audit.
+const unknownDohmh=premise.verifyPair(dohmh({bin:'3000000'}),row);
+assert.equal(premise.bin('3000000'),null);
+assert.equal(premise.bin('1000000'),null);
+assert.equal(premise.bin('2000000'),null);
+assert.equal(premise.bin('4000000'),null);
+assert.equal(premise.bin('5000000'),null);
+assert.equal(premise.bin('9000000'),null);
+assert.equal(premise.bin('3000289'),'3000289');
+assert.equal(unknownDohmh.dohmhBin,null);
+assert.equal(unknownDohmh.rawDohmhBin,'3000000');
+assert.equal(unknownDohmh.dohmhMillionBinPlaceholder,true);
+assert.equal(unknownDohmh.binComparison,'NOT_COMPARABLE');
+assert.equal(unknownDohmh.bblComparison,'MATCH');
+assert.equal(unknownDohmh.assessment,'MATCHED_PREMISE_IDENTIFIER_REVIEW');
+assert.equal(unknownDohmh.manualConflictHold,false);
+assert.equal(unknownDohmh.independentlyVerifiedOperator,false);
+const unknownBoth=premise.verifyPair(dohmh({bin:'3000000',bbl:''}),
+  dob('B01467007-I3',long,{bin:'3000000',block:'',lot:''}));
+assert.equal(unknownBoth.assessment,'ADDRESS_ONLY_IDENTITY_UNRESOLVED');
+assert.equal(unknownBoth.manualConflictHold,false);
+assert.equal(unknownBoth.dobMillionBinPlaceholder,true);
 const bblConflict=premise.verifyPair(dohmh({bbl:'3023940014'}),row);
 assert.equal(bblConflict.bblComparison,'CONFLICT');
 assert.equal(bblConflict.manualConflictHold,true);
