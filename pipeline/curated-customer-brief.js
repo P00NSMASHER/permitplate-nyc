@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const stripe = require('./stripe-subscriber');
 const profiles = require('./subscriber-profile');
 const curated = require('./founder-curated-offer');
+const categoryEvidence=require('./category-evidence');
 const research = require('./curated-research-ledger');
 const delivery = require('./delivery-plan');
 const transport = require('./transport-authorization');
@@ -178,6 +179,16 @@ function prepare(input) {
       failures.push(prefix + 'CATEGORY_NOT_SUBSCRIBED');
       continue;
     }
+    // A checkout category label alone does not establish category relevance.
+    // Require an independent explicit owner assessment bound to the current
+    // accepted official sources, including for applicant-only context.
+    const fit=categoryEvidence.validateFounderReview(
+      candidate,review.category,review.categoryReview
+    );
+    if(!fit.valid) {
+      failures.push(...fit.failures.map(code=>prefix+code));
+      continue;
+    }
     if (review.ownerReviewed !== true ||
         !String(review.whyItMatters || '').trim() ||
         !String(review.reviewedAt || '').trim()) {
@@ -244,6 +255,10 @@ function prepare(input) {
       borough:candidate.borough,
       stage:candidate.lifecycleStage,
       whyItMatters:review.whyItMatters,
+      category:fit.category,
+      categoryEvidenceBasis:fit.basis,
+      categoryFitRationale:fit.rationale,
+      categoryOfficialUrl:fit.sourceUrl,
       sourceUpdatedAt,
       reviewedAt,
       sourceUrls:[primaryUrl(candidate)]
