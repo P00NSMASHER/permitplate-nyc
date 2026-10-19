@@ -62,6 +62,19 @@ assert.equal(shown.items[2].firstObservedByPermitPlateAt,THIRD);
 assert(!JSON.stringify(shown).includes('purchaseIntent'));
 assert.equal(shown.customerDeliveryAllowed,false);
 
+// A newly observed CAMIS at the same address is NOT an official filing edit.
+const colocation=reviewed('2026-10-20T06:00:00.000Z',[
+  item('NA-123',{possibleRelatedCamis:['CAMIS:50000001'],needsIdentityReview:true}),
+  item('NA-124'),item('NA-125')
+]);
+const sameSource=h.advance(next.ledger,colocation);
+assert.deepEqual(sameSource.contextChangeIds,[]);
+assert.equal(sameSource.ledger.entries['SLA_PENDING:NA-123'].firstObservedAt,START);
+const forgedRow=reviewed(THIRD,[item('NA-123',{sourceStatus:'FORGED'})]);
+const mixed=h.annotate(forgedRow,next.ledger,[],[]);
+assert.equal(mixed.status,'REVIEW');
+assert(mixed.failures.includes('INDEPENDENT_REVIEW_HISTORY_IDENTITY_DRIFT'));
+
 const changedReview=reviewed('2026-10-20T12:00:00.000Z',[
   item('NA-123',{sourceStatus:'Approved'}),
   item('NA-124'),item('NA-125')
