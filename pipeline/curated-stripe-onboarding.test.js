@@ -146,11 +146,19 @@ assert.equal(noFunds.accepted,0);
 assert.equal(noFunds.held,1);
 
 async function main(){
+  const verifiedLink={
+    object:'payment_link',id:stripe.PERMITPLATE_PAYMENT_LINK,
+    livemode:true,active:true,
+    metadata:{project:'permitplate_nyc',plan:'monthly_79'}
+  };
   const fake=async(url,args)=>{
     assert.equal(args.method,'GET');
     assert.equal(args.redirect,'error');
     assert.equal(args.headers.Authorization,'Bearer rk_live_unitfixture');
     const u=new URL(url);
+    if(u.pathname==='/v1/payment_links/'+stripe.PERMITPLATE_PAYMENT_LINK){
+      return {ok:true,json:async()=>verifiedLink};
+    }
     if(u.pathname==='/v1/checkout/sessions'){
       assert.equal(u.searchParams.get('payment_link'),stripe.PERMITPLATE_PAYMENT_LINK);
       return {ok:true,json:async()=>({data:[session()],has_more:false})};
@@ -195,14 +203,25 @@ async function main(){
     assert.equal(blocked.ready,false);
     assert(blocked.failures.includes('STRIPE_INTAKE_STATE_PAIR_INCOMPLETE'));
   }finally{fs.rmSync(tmp,{recursive:true,force:true})}
-  const noPaid=await polling.snapshot('rk_live_unitfixture',async()=>({
-    ok:true,json:async()=>({data:[],has_more:false})
+  const noPaid=await polling.snapshot('rk_live_unitfixture',async url=>({
+    ok:true,json:async()=>String(url).includes('/v1/payment_links/')?
+      verifiedLink:{data:[],has_more:false}
   }));
   assert.equal(noPaid.sessions.length,0);
   await assert.rejects(polling.snapshot('rk_test_key',fake),/STRIPE_READ_CREDENTIAL_MISSING/);
-  await assert.rejects(polling.snapshot('rk_live_unitfixture',async()=>({
-    ok:true,json:async()=>({data:[],has_more:true})
+  await assert.rejects(polling.snapshot('rk_live_unitfixture',async url=>({
+    ok:true,json:async()=>String(url).includes('/v1/payment_links/')?
+      verifiedLink:{data:[],has_more:true}
   })),/STRIPE_PAGE_CURSOR_MISSING/);
+  await assert.rejects(polling.snapshot('rk_live_unitfixture',async()=>({
+    ok:true,json:async()=>({...verifiedLink,id:'plink_wrong'})
+  })),/STRIPE_PAYMENT_LINK_ACCOUNT_NOT_VERIFIED/);
+  await assert.rejects(polling.snapshot('rk_live_unitfixture',async()=>({
+    ok:true,json:async()=>({...verifiedLink,active:false})
+  })),/STRIPE_PAYMENT_LINK_ACCOUNT_NOT_VERIFIED/);
+  await assert.rejects(polling.snapshot('rk_live_unitfixture',async()=>({
+    ok:true,json:async()=>({data:[],has_more:false})
+  })),/STRIPE_PAYMENT_LINK_ACCOUNT_NOT_VERIFIED/);
   console.log('Verified private Stripe onboarding, idempotency, billing holds and no-send.');
 }
 main().catch(err=>{console.error(err);process.exitCode=1});
