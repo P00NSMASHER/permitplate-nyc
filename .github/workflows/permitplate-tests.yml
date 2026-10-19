@@ -55,6 +55,9 @@ jobs:
       - name: Verify conservative source identity review
         run: node pipeline/identity-bridge-review.test.js
 
+      - name: Verify private identity CSV and HTML workbench safety
+        run: node pipeline/identity-review-workbench.test.js
+
       - name: Verify conservative cross-source identity review
         run: node pipeline/identity-bridge-review.test.js
 
