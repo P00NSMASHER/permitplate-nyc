@@ -121,6 +121,13 @@ function processSnapshot(input){
         entries[subId]={...entries[subId],
           state:'HOLD_SUBSCRIPTION_CHANGED',
           transportAllowed:false,ownerAuthorizationGranted:false};
+      }else{
+        // A customer may pay and immediately cancel (or become past due)
+        // before the first six-hour poll. This is still a paid obligation:
+        // never return READY while silently omitting that subscriber.
+        // An operator must independently reconcile/refund this historical
+        // paid checkout; do not infer a deliverable active subscription.
+        failures.push('STRIPE_UNTRACKED_PAID_INACTIVE_SUBSCRIPTION');
       }
       continue;
     }
