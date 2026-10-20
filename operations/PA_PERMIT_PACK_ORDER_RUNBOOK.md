@@ -97,3 +97,78 @@ After a successful private state commit/push, the scheduled PA intake runs **rea
 Offline monitoring regression: node pipeline/pa-permit-health.test.js.
 
 A green run with zero paid orders verifies operational intake, not actual paid-customer delivery or successful permit advice. Genuine paid order, real reviewed permit records, separate QC and independent provider proof are necessary for commercial acceptance.
+
+## Durable, guarded publication of human-approved case updates
+
+A local change to a private JSON file is **not** yet a durable production
+update. The scheduled Stripe poll writes to the same private main branch.
+Never hand-edit and force-push the ledger: doing so can erase new paid orders
+or lose a verified delivery.
+
+For a *real* operator working with *real independently reviewed evidence*,
+use the guarded private transaction command. It accepts only the five case
+operations: `research`, `qc`, `resolve-hold`, `record-accepted`, and
+`verify-delivery`. It does not send mail, refund Stripe payments, create
+customers or release scored leads.
+
+First, use a **clean, current main** checkout of both source repo
+`P00NSMASHER/permitplate-nyc` and private repo
+`P00NSMASHER/permitplate-state`. The private checkout must be a standalone
+Git repository with its own exact `origin/main`, not a copied folder.
+View the complete current `ledgerFingerprint` inside the private
+`state/pa-permit-orders.json` using trusted local tooling. Prepare the
+genuine evidence JSON outside the public repository.
+
+Run this from the clean public source repo, with the private state-root,
+paid Checkout Session ID, evidence path and expected *full* ledger SHA-256:
+
+```sh
+node pipeline/pa-permit-case-transaction.js \
+  research \
+  /private/permitplate-state \
+  cs_LIVE_SESSION_ID \
+  /private/reviewed-research.json \
+  EXPECTED_CURRENT_LEDGER_FINGERPRINT
+```
+
+Use the other supported mode names for a different authorized transition.
+For `verify-delivery`, supply `-` instead of an evidence-packet path and
+provide a separately scoped local `PERMITPLATE_RESEND_READ_KEY` variable;
+the module performs only a Resend provider **GET**, never a send. The
+command generates its UTC transaction time itself.
+
+The transaction fails closed unless both source and private checkouts are
+clean, use `main`, point to their **exact approved** GitHub repositories,
+and their local HEAD equals the remote main commit. It additionally requires
+a complete matching private anchor and current ledger-fingerprint match, one
+known paid case and the expected allowed transition. A local lock prevents
+concurrent owner edits. The post-review check confirms that the only changed
+file is the PA order ledger, that original payment identity and every other
+paid order were preserved, and that the anchor has not changed.
+
+Only then does the command commit **one private ledger file** and attempt a
+normal **non-force push**. If a scheduled Stripe poll or another owner update
+moves the remote in between, that push is rejected. The operator must
+refresh, re-review the changed state and reconcile the private branch rather
+than force-pushing or overwriting main. A process interruption can leave a
+local `.git/permitplate-pa-operator.lock`; do not remove a lock until its
+owner process is definitively stopped. A stale local commit is not evidence
+that production was updated.
+
+The module's CLI response includes only the private commit ID and aggregate
+no-send status. It never prints customer names, addresses, recipient email,
+project scope or raw provider responses. Because a case is independently
+reviewed by humans, a green offline fixture or a recorded alias never counts
+as authenticated real customer evidence.
+
+Regression:
+
+```sh
+node pipeline/pa-permit-case-transaction.test.js
+```
+
+This uses a disposable local bare Git remote and entirely synthetic paid
+Checkouts to verify normal publication, idempotent replay, stale-checkout
+refusal, dirty-worktree refusal, trusted remote checks, expected revision
+binding, local concurrency lock and immutable paid-order identity. It does
+not contact any customer or private production state.
