@@ -1,0 +1,534 @@
+{
+  "title": "PA Permit Pack - real-world public jurisdiction and permit reference sample",
+  "version": "2026-10-20-source-bounded-v1",
+  "observedAsOf": "2026-10-20",
+  "strictlyPublicReferenceOnly": true,
+  "hasRealCustomerRecords": false,
+  "hasGenuinePrivateHumanReviewLabels": false,
+  "sourceOfMunicipalTruth": "https://www.pa.gov/content/dam/copapwp-pagov/en/dli/documents/individuals/labor-management-relations/bois/documents/uccmun.htm",
+  "municipalReferenceNotes": "PA Department of Labor and Industry UCC election registry; this is a 30-row selected sample, not all 2,562 municipalities. Amendment flags are historical only. These are NOT complete permit requirements.",
+  "municipals": [
+    {
+      "id": "PA-UCC-001",
+      "county": "SCHUYLKILL",
+      "name": "POTTSVILLE",
+      "type": "CITY",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": true,
+      "registryLine": 2056
+    },
+    {
+      "id": "PA-UCC-002",
+      "county": "SCHUYLKILL",
+      "name": "MOUNT CARBON",
+      "type": "BOROUGH",
+      "uccElection": "OPT-OUT",
+      "pre1999Amendments": false,
+      "registryLine": 2042
+    },
+    {
+      "id": "PA-UCC-003",
+      "county": "SCHUYLKILL",
+      "name": "PINE GROVE",
+      "type": "BOROUGH",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": true,
+      "registryLine": 2052
+    },
+    {
+      "id": "PA-UCC-004",
+      "county": "SCHUYLKILL",
+      "name": "PINE GROVE",
+      "type": "TOWNSHIP",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": false,
+      "registryLine": 2051
+    },
+    {
+      "id": "PA-UCC-005",
+      "county": "SCHUYLKILL",
+      "name": "SCHUYLKILL HAVEN",
+      "type": "BOROUGH",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": true,
+      "registryLine": 2062
+    },
+    {
+      "id": "PA-UCC-006",
+      "county": "SCHUYLKILL",
+      "name": "NORWEGIAN",
+      "type": "TOWNSHIP",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": true,
+      "registryLine": 2048
+    },
+    {
+      "id": "PA-UCC-007",
+      "county": "SCHUYLKILL",
+      "name": "PORT CARBON",
+      "type": "BOROUGH",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": true,
+      "registryLine": 2053
+    },
+    {
+      "id": "PA-UCC-008",
+      "county": "SCHUYLKILL",
+      "name": "NEW PHILADELPHIA",
+      "type": "BOROUGH",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": false,
+      "registryLine": 2044
+    },
+    {
+      "id": "PA-UCC-009",
+      "county": "SCHUYLKILL",
+      "name": "MIDDLEPORT",
+      "type": "BOROUGH",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": false,
+      "registryLine": 2040
+    },
+    {
+      "id": "PA-UCC-010",
+      "county": "SCHUYLKILL",
+      "name": "MINERSVILLE",
+      "type": "BOROUGH",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": true,
+      "registryLine": 2041
+    },
+    {
+      "id": "PA-UCC-011",
+      "county": "SCHUYLKILL",
+      "name": "PORTER",
+      "type": "TOWNSHIP",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": false,
+      "registryLine": 2055
+    },
+    {
+      "id": "PA-UCC-012",
+      "county": "SCHUYLKILL",
+      "name": "SHENANDOAH",
+      "type": "BOROUGH",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": false,
+      "registryLine": 2063
+    },
+    {
+      "id": "PA-UCC-013",
+      "county": "SCHUYLKILL",
+      "name": "COALDALE",
+      "type": "BOROUGH",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": false,
+      "registryLine": 2018
+    },
+    {
+      "id": "PA-UCC-014",
+      "county": "PIKE",
+      "name": "PORTER",
+      "type": "TOWNSHIP",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": true,
+      "registryLine": 1978
+    },
+    {
+      "id": "PA-UCC-015",
+      "county": "PIKE",
+      "name": "MILFORD",
+      "type": "BOROUGH",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": false,
+      "registryLine": 1975
+    },
+    {
+      "id": "PA-UCC-016",
+      "county": "PIKE",
+      "name": "MILFORD",
+      "type": "TOWNSHIP",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": false,
+      "registryLine": 1976
+    },
+    {
+      "id": "PA-UCC-017",
+      "county": "FAYETTE",
+      "name": "MENALLEN",
+      "type": "TOWNSHIP",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": true,
+      "registryLine": 1151
+    },
+    {
+      "id": "PA-UCC-018",
+      "county": "ADAMS",
+      "name": "MENALLEN",
+      "type": "TOWNSHIP",
+      "uccElection": "OPT-OUT",
+      "pre1999Amendments": false,
+      "registryLine": 27
+    },
+    {
+      "id": "PA-UCC-019",
+      "county": "FAYETTE",
+      "name": "FAYETTE CITY",
+      "type": "BOROUGH",
+      "uccElection": "OPT-OUT",
+      "pre1999Amendments": false,
+      "registryLine": 1141
+    },
+    {
+      "id": "PA-UCC-020",
+      "county": "FAYETTE",
+      "name": "BROWNSVILLE",
+      "type": "BOROUGH",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": true,
+      "registryLine": 1131
+    },
+    {
+      "id": "PA-UCC-021",
+      "county": "FAYETTE",
+      "name": "BROWNSVILLE",
+      "type": "TOWNSHIP",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": false,
+      "registryLine": 1132
+    },
+    {
+      "id": "PA-UCC-022",
+      "county": "POTTER",
+      "name": "HOMER",
+      "type": "TOWNSHIP",
+      "uccElection": "OPT-OUT",
+      "pre1999Amendments": false,
+      "registryLine": 1993
+    },
+    {
+      "id": "PA-UCC-023",
+      "county": "PHILADELPHIA",
+      "name": "PHILADELPHIA",
+      "type": "CITY",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": true,
+      "registryLine": 1967
+    },
+    {
+      "id": "PA-UCC-024",
+      "county": "ALLEGHENY",
+      "name": "PITTSBURGH",
+      "type": "CITY",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": true,
+      "registryLine": 125
+    },
+    {
+      "id": "PA-UCC-025",
+      "county": "ALLEGHENY",
+      "name": "ELIZABETH",
+      "type": "BOROUGH",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": false,
+      "registryLine": 72
+    },
+    {
+      "id": "PA-UCC-026",
+      "county": "ALLEGHENY",
+      "name": "ELIZABETH",
+      "type": "TOWNSHIP",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": false,
+      "registryLine": 73
+    },
+    {
+      "id": "PA-UCC-027",
+      "county": "ALLEGHENY",
+      "name": "PENN HILLS",
+      "type": "HOME RULE",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": true,
+      "registryLine": 121
+    },
+    {
+      "id": "PA-UCC-028",
+      "county": "ALLEGHENY",
+      "name": "GREEN TREE",
+      "type": "BOROUGH",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": true,
+      "registryLine": 86
+    },
+    {
+      "id": "PA-UCC-029",
+      "county": "ADAMS",
+      "name": "GETTYSBURG",
+      "type": "BOROUGH",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": false,
+      "registryLine": 18
+    },
+    {
+      "id": "PA-UCC-030",
+      "county": "PIKE",
+      "name": "BLOOMING GROVE",
+      "type": "TOWNSHIP",
+      "uccElection": "OPT-IN",
+      "pre1999Amendments": true,
+      "registryLine": 1968
+    }
+  ],
+  "permitNotes": "Real City of Philadelphia public permit references. Null currentStatus means the source lists an issue date but current status was NOT verified. Property address shared by permits does not prove they are one approved project.",
+  "publicPermitSources": {
+    "225-38": "https://li.phila.gov/Property-History/search/Permit-Detail?Id=ZP-2026-003524&address=%22225+N+38TH+ST%22",
+    "521-BROAD": "https://li.phila.gov/Property-History/search?address=521+S+BROAD+ST",
+    "6393-WOODBINE": "https://li.phila.gov/property-history/search?address=6393+WOODBINE+AVE",
+    "4341-TACONY": "https://li.phila.gov/property-history/search?address=4341+TACONY+ST",
+    "4041-CORP": "https://li.phila.gov/contractor-permit-lookup/search?searchTerm=40",
+    "RP-2026-000163": "https://li.phila.gov/contractor-permit-lookup/search?searchTerm=RP-2026-000163",
+    "MP-2026-000163": "https://li.phila.gov/contractor-permit-lookup/search?searchTerm=MP-2026-000163",
+    "MP-2026-000453": "https://li.phila.gov/contractor-permit-lookup/search?searchTerm=MP-2026-000453",
+    "699-BROAD": "https://li.phila.gov/Property-History/search?address=699+N+BROAD+ST",
+    "2743-3RD": "https://li.phila.gov/Property-History/search?address=2743+S+3RD+ST"
+  },
+  "publicPermits": [
+    {
+      "id": "PA-LI-001",
+      "number": "ZP-2026-003524",
+      "type": "Zoning Permit",
+      "issuedDate": "2026-04-07",
+      "currentStatusAsDisplayed": "ISSUED",
+      "publicAddress": "225 N 38TH ST",
+      "sourceKey": "225-38",
+      "workDescriptionAsDisplayed": "Change of Use Personal Services"
+    },
+    {
+      "id": "PA-LI-002",
+      "number": "FP-2026-000570",
+      "type": "Fire Suppression Permit",
+      "issuedDate": "2026-04-27",
+      "currentStatusAsDisplayed": null,
+      "publicAddress": "521 S BROAD ST",
+      "sourceKey": "521-BROAD",
+      "workDescriptionAsDisplayed": null
+    },
+    {
+      "id": "PA-LI-003",
+      "number": "EP-2026-002426",
+      "type": "Electrical Permit",
+      "issuedDate": "2026-04-22",
+      "currentStatusAsDisplayed": null,
+      "publicAddress": "521 S BROAD ST",
+      "sourceKey": "521-BROAD",
+      "workDescriptionAsDisplayed": null
+    },
+    {
+      "id": "PA-LI-004",
+      "number": "MP-2026-001881",
+      "type": "Mechanical / Fuel Gas Permit",
+      "issuedDate": "2026-04-20",
+      "currentStatusAsDisplayed": null,
+      "publicAddress": "521 S BROAD ST",
+      "sourceKey": "521-BROAD",
+      "workDescriptionAsDisplayed": null
+    },
+    {
+      "id": "PA-LI-005",
+      "number": "CP-2026-001299",
+      "type": "Commercial Building Permit",
+      "issuedDate": "2026-03-20",
+      "currentStatusAsDisplayed": null,
+      "publicAddress": "521 S BROAD ST",
+      "sourceKey": "521-BROAD",
+      "workDescriptionAsDisplayed": null
+    },
+    {
+      "id": "PA-LI-006",
+      "number": "EP-2026-008219",
+      "type": "Electrical Permit",
+      "issuedDate": "2026-09-01",
+      "currentStatusAsDisplayed": null,
+      "publicAddress": "6393 WOODBINE AVE",
+      "sourceKey": "6393-WOODBINE",
+      "workDescriptionAsDisplayed": null
+    },
+    {
+      "id": "PA-LI-007",
+      "number": "PP-2026-011794",
+      "type": "Plumbing Permit",
+      "issuedDate": "2026-08-26",
+      "currentStatusAsDisplayed": null,
+      "publicAddress": "6393 WOODBINE AVE",
+      "sourceKey": "6393-WOODBINE",
+      "workDescriptionAsDisplayed": null
+    },
+    {
+      "id": "PA-LI-008",
+      "number": "MP-2026-004773",
+      "type": "Mechanical / Fuel Gas Permit",
+      "issuedDate": "2026-08-20",
+      "currentStatusAsDisplayed": null,
+      "publicAddress": "6393 WOODBINE AVE",
+      "sourceKey": "6393-WOODBINE",
+      "workDescriptionAsDisplayed": null
+    },
+    {
+      "id": "PA-LI-009",
+      "number": "RP-2026-008628",
+      "type": "Residential Building Permit",
+      "issuedDate": "2026-08-19",
+      "currentStatusAsDisplayed": null,
+      "publicAddress": "6393 WOODBINE AVE",
+      "sourceKey": "6393-WOODBINE",
+      "workDescriptionAsDisplayed": null
+    },
+    {
+      "id": "PA-LI-010",
+      "number": "DP-2026-000570",
+      "type": "Demolition Permit",
+      "issuedDate": "2026-09-01",
+      "currentStatusAsDisplayed": null,
+      "publicAddress": "4341 TACONY ST",
+      "sourceKey": "4341-TACONY",
+      "workDescriptionAsDisplayed": null
+    },
+    {
+      "id": "PA-LI-011",
+      "number": "GP-2026-007233",
+      "type": "General Permit",
+      "issuedDate": "2026-08-26",
+      "currentStatusAsDisplayed": null,
+      "publicAddress": "4341 TACONY ST",
+      "sourceKey": "4341-TACONY",
+      "workDescriptionAsDisplayed": null
+    },
+    {
+      "id": "PA-LI-012",
+      "number": "ZP-2026-008376",
+      "type": "Zoning Permit",
+      "issuedDate": "2026-08-06",
+      "currentStatusAsDisplayed": null,
+      "publicAddress": "4341 TACONY ST",
+      "sourceKey": "4341-TACONY",
+      "workDescriptionAsDisplayed": null
+    },
+    {
+      "id": "PA-LI-013",
+      "number": "PP-2026-010607",
+      "type": "Plumbing Permit",
+      "issuedDate": "2026-08-06",
+      "currentStatusAsDisplayed": null,
+      "publicAddress": "4341 TACONY ST",
+      "sourceKey": "4341-TACONY",
+      "workDescriptionAsDisplayed": null
+    },
+    {
+      "id": "PA-LI-014",
+      "number": "MP-2026-003720",
+      "type": "Mechanical / Fuel Gas Permit",
+      "issuedDate": "2026-09-24",
+      "currentStatusAsDisplayed": "ISSUED",
+      "publicAddress": null,
+      "sourceKey": "4041-CORP",
+      "workDescriptionAsDisplayed": null
+    },
+    {
+      "id": "PA-LI-015",
+      "number": "CP-2026-004256",
+      "type": "Commercial Building Permit",
+      "issuedDate": "2026-09-02",
+      "currentStatusAsDisplayed": "AMENDMENT APPLICATION INCOMPLETE",
+      "publicAddress": null,
+      "sourceKey": "4041-CORP",
+      "workDescriptionAsDisplayed": null
+    },
+    {
+      "id": "PA-LI-016",
+      "number": "CP-2025-005916",
+      "type": "Commercial Building Permit",
+      "issuedDate": "2025-11-21",
+      "currentStatusAsDisplayed": "EXPIRED",
+      "publicAddress": null,
+      "sourceKey": "4041-CORP",
+      "workDescriptionAsDisplayed": null
+    },
+    {
+      "id": "PA-LI-017",
+      "number": "MP-2025-003125",
+      "type": "Mechanical / Fuel Gas Permit",
+      "issuedDate": "2025-08-01",
+      "currentStatusAsDisplayed": "COMPLETED",
+      "publicAddress": null,
+      "sourceKey": "4041-CORP",
+      "workDescriptionAsDisplayed": null
+    },
+    {
+      "id": "PA-LI-018",
+      "number": "RP-2026-000163",
+      "type": "Residential Building Permit",
+      "issuedDate": "2026-01-20",
+      "currentStatusAsDisplayed": "COMPLETED",
+      "publicAddress": null,
+      "sourceKey": "RP-2026-000163",
+      "workDescriptionAsDisplayed": null
+    },
+    {
+      "id": "PA-LI-019",
+      "number": "MP-2026-000163",
+      "type": "Mechanical / Fuel Gas Permit",
+      "issuedDate": "2026-01-12",
+      "currentStatusAsDisplayed": "COMPLETED",
+      "publicAddress": null,
+      "sourceKey": "MP-2026-000163",
+      "workDescriptionAsDisplayed": null
+    },
+    {
+      "id": "PA-LI-020",
+      "number": "MP-2026-000453",
+      "type": "Mechanical / Fuel Gas Permit",
+      "issuedDate": "2026-01-30",
+      "currentStatusAsDisplayed": "COMPLETED",
+      "publicAddress": null,
+      "sourceKey": "MP-2026-000453",
+      "workDescriptionAsDisplayed": null
+    },
+    {
+      "id": "PA-LI-021",
+      "number": "ZP-2026-000609",
+      "type": "Zoning Permit",
+      "issuedDate": "2026-03-03",
+      "currentStatusAsDisplayed": null,
+      "publicAddress": "699 N BROAD ST",
+      "sourceKey": "699-BROAD",
+      "workDescriptionAsDisplayed": null
+    },
+    {
+      "id": "PA-LI-022",
+      "number": "ZP-2026-004299",
+      "type": "Zoning Permit",
+      "issuedDate": "2026-04-24",
+      "currentStatusAsDisplayed": null,
+      "publicAddress": "2743 S 3RD ST",
+      "sourceKey": "2743-3RD",
+      "workDescriptionAsDisplayed": null
+    },
+    {
+      "id": "PA-LI-023",
+      "number": "FP-2026-000675",
+      "type": "Fire Suppression Permit",
+      "issuedDate": "2026-04-14",
+      "currentStatusAsDisplayed": null,
+      "publicAddress": "2743 S 3RD ST",
+      "sourceKey": "2743-3RD",
+      "workDescriptionAsDisplayed": null
+    }
+  ],
+  "jurisdictionsToRecheck": [
+    "PINE GROVE in SCHUYLKILL is a Borough and a Township with different amendment flags",
+    "MENALLEN Township in ADAMS is OPT-OUT; MENALLEN Township in FAYETTE is OPT-IN",
+    "PORTER Township in PIKE and SCHUYLKILL have different historical amendment flags",
+    "An OPT-OUT for commercial construction does not remove separate local zoning checks",
+    "Municipal UCC election does not prove the required permit for a specific real project"
+  ]
+}
