@@ -22,12 +22,13 @@
   "githubPages": {
     "canonicalUrl": "https://p00nsmasher.github.io/permitplate-nyc/",
     "enabled": true,
-    "verifiedPublicBuildCommit": "114f27f4b601ef076686c4aa4471356e283bcd04",
-    "verifiedPublicSourceFingerprint": "51e162f82aa3bf11f2c0f82cc388c008cb31e05d2c273a62515198b745a91b4a",
-    "liveVerifiedCommit": "114f27f4b601ef076686c4aa4471356e283bcd04",
-    "livePublicSourceFingerprint": "51e162f82aa3bf11f2c0f82cc388c008cb31e05d2c273a62515198b745a91b4a",
+    "verifiedPublicBuildCommit": "d5e7cf8585933fd5ce45d5efe2b88bbc1e6b9238",
+    "verifiedPublicSourceFingerprint": "27b3e47291a10d8ae3205aa700f3b1e579b0118e803917e5890ce2d45be78e1b",
+    "liveVerifiedCommit": "d5e7cf8585933fd5ce45d5efe2b88bbc1e6b9238",
+    "livePublicSourceFingerprint": "27b3e47291a10d8ae3205aa700f3b1e579b0118e803917e5890ce2d45be78e1b",
     "productionDeployVerified": true,
-    "reason": "Fresh public GET of https://p00nsmasher.github.io/permitplate-nyc/build-info.json returned HTTP 200 on 2026-10-19 with live sourceCommit=114f27f4b601ef076686c4aa4471356e283bcd04 and immutable publicSourceFingerprint=51e162f82aa3bf11f2c0f82cc388c008cb31e05d2c273a62515198b745a91b4a. The current exact-main launch controller independently computed the same allowlisted public-source fingerprint, confirming subsequent pipeline-only source commits have not changed the deployed public bundle. This does NOT claim current software-engineering commit has itself been deployed to GitHub Pages."
+    "reason": "Read-only production GET of https://p00nsmasher.github.io/permitplate-nyc/build-info.json verified HTTP 200, sourceCommit d5e7cf8585933fd5ce45d5efe2b88bbc1e6b9238, publicSourceFingerprint 27b3e47291a10d8ae3205aa700f3b1e579b0118e803917e5890ce2d45be78e1b, 36 allowlisted files and builtAt 2026-10-20T02:41:32.256Z. Independent live GETs also confirmed HTTP 200 on the homepage, NYC subscription page, PA Permit Pack, new Field Notes, sample, and welcome page. GitHub Pages deployment run https://github.com/P00NSMASHER/permitplate-nyc/actions/runs/39360261205 passed build-and-deploy, postpublication exact commit and SHA-256 public-source fingerprint verification. Checkout and price were unchanged. This is evidence of this released static website, not paid customer delivery, conversion, independent scored-lead approval or real PA Permit Pack fulfillment.",
+    "observedAt": "2026-10-20T02:44:19.907Z"
   },
   "customerProof": {
     "realPaidSubscriberEndToEndVerified": false,
