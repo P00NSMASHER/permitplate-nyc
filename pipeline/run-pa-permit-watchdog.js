@@ -9,6 +9,12 @@ const {privateMaterialPath}=require('./run-subscriber-intake');
 
 const VERSION='PermitPlate-PA-independent-heartbeat-watch-v1.0.0';
 const RECENT_MS=24*60*60*1000;
+// A paid order still awaiting its *first* human research examination must
+// surface an operator incident even when the private Stripe polling is green.
+// Acknowledging a case by completing research clears this alert, never sends.
+const NEEDS_FIRST_REVIEW=new Set([
+  'RESEARCH_QUEUE','HOLD_PROJECT_DETAILS','HOLD_POSSIBLE_DUPLICATE'
+]);
 const PHASES=[
   'RESEARCH_QUEUE','HOLD_PROJECT_DETAILS','HOLD_POSSIBLE_DUPLICATE',
   'RESEARCH_SUBMITTED','QC_HOLD','READY_FOR_MANUAL_DELIVERY',
@@ -40,6 +46,7 @@ function assess(input){
     checkedAt:now,
     lastProviderCheckAt:ledger&&core.iso(ledger.checkedAt)||null,
     ordersDiscoveredLast24h:0,
+    paidOrdersAwaitingFirstReview:0,
     orderPhaseCounts:Object.fromEntries(PHASES.map(p=>[p,0])),
     paidOrdersTotal:0,
     health:null,
@@ -62,22 +69,28 @@ function assess(input){
     return {...output,incidents:['PA_PRIVATE_HEALTH_CALCULATION_INVALID']};
   }
   const phaseCounts=output.orderPhaseCounts;
-  let recent=0;
+  let recent=0,needsReview=0;
   const threshold=Date.parse(now)-RECENT_MS;
   for(const order of Object.values(ledger.orders)){
     if(!Object.hasOwn(phaseCounts,order.phase)){
       return {...output,incidents:['PA_ORDER_PHASE_NOT_RECOGNIZED']};
     }
     phaseCounts[order.phase]++;
+    if(NEEDS_FIRST_REVIEW.has(order.phase))needsReview++;
     const discovered=Date.parse(order.firstDiscoveredAt);
     if(Number.isFinite(discovered)&&
        discovered>=threshold&&discovered<=Date.parse(now))recent++;
   }
+  const incidents=detail.incidents.slice();
+  if(needsReview){
+    incidents.push('PA_PAID_ORDER_AWAITING_FIRST_HUMAN_REVIEW');
+  }
   return {
     ...output,
-    state:detail.incidents.length?'OPERATOR_ATTENTION_REQUIRED':'MONITORING_HEALTHY',
-    incidents:detail.incidents.slice(),
+    state:incidents.length?'OPERATOR_ATTENTION_REQUIRED':'MONITORING_HEALTHY',
+    incidents,
     ordersDiscoveredLast24h:recent,
+    paidOrdersAwaitingFirstReview:needsReview,
     paidOrdersTotal:Object.keys(ledger.orders).length,
     health:{
       providerReadbackAgeMs:detail.lastProviderCheckAgeMs,
@@ -113,4 +126,4 @@ if(require.main===module){
     process.exitCode=1;
   }
 }
-module.exports={VERSION,PHASES,RECENT_MS,assess};
+module.exports={VERSION,PHASES,RECENT_MS,NEEDS_FIRST_REVIEW,assess};

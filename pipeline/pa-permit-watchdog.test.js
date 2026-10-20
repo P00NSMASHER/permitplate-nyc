@@ -77,7 +77,23 @@ x=check(paid.ledger);
 assert.equal(x.paidOrdersTotal,1);
 assert.equal(x.orderPhaseCounts.RESEARCH_QUEUE,1);
 assert.equal(x.ordersDiscoveredLast24h,1);
-assert.equal(x.incidents.length,0);
+assert(x.incidents.includes('PA_PAID_ORDER_AWAITING_FIRST_HUMAN_REVIEW'));
+assert.equal(x.paidOrdersAwaitingFirstReview,1);
+assert.equal(x.state,'OPERATOR_ATTENTION_REQUIRED');
+const reviewed=structuredClone(paid.ledger);
+reviewed.orders[ID].phase='RESEARCH_SUBMITTED';
+reviewed.orders[ID].research={fingerprint:'a'.repeat(64)};
+const reviewedValid=core.seal(reviewed);
+assert(core.validate(reviewedValid).valid);
+const acknowledged=check(reviewedValid);
+assert.equal(acknowledged.state,'MONITORING_HEALTHY');
+assert.equal(acknowledged.paidOrdersAwaitingFirstReview,0);
+const past24h=core.seal({...paid.ledger,
+  checkedAt:'2026-10-21T05:05:00.000Z'});
+const stillPending=check(past24h,'2026-10-21T05:05:00.000Z');
+assert.equal(stillPending.ordersDiscoveredLast24h,0);
+assert.equal(stillPending.paidOrdersAwaitingFirstReview,1);
+assert(stillPending.incidents.includes('PA_PAID_ORDER_AWAITING_FIRST_HUMAN_REVIEW'));
 const output=JSON.stringify(x);
 for(const secret of [session.customer_details.email,session.custom_fields[1].text.value,
   session.payment_intent,session.id]){
@@ -118,6 +134,12 @@ try{
   result=invoke('false');
   assert.equal(result.status,1);
   assert(result.stdout.includes('PA_INTAKE_MONITORING_NOT_ENABLED'));
+  fs.writeFileSync(lPath,JSON.stringify(paid.ledger),'utf8');
+  result=invoke('true');
+  assert.equal(result.status,1);
+  assert(result.stdout.includes('PA_PAID_ORDER_AWAITING_FIRST_HUMAN_REVIEW'));
+  assert(!result.stdout.includes('synthetic-private@fixtures.example'));
+  assert(!result.stdout.includes(session.id));
   const financialHold=structuredClone(paid.ledger);
   financialHold.orders[ID].phase='DELIVERY_RECONCILIATION_HOLD';
   fs.writeFileSync(lPath,JSON.stringify(core.seal(financialHold)),'utf8');

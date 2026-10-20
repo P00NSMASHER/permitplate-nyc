@@ -233,3 +233,44 @@ The public/PR jobs run only offline synthetic fixtures and security policy tests
     python3 -m unittest discover -s tests -p 'test_pa_permit_watchdog_policy.py' -v
 
 The independently scheduled watchdog is read-only and intentionally uses no additional API key, paid monitoring vendor, or external customer transport.
+
+## County and municipality text guard (bounded reference set)
+
+The intake validator additionally compares the customer-supplied municipality
+text to 32 distinct, sanitized official Pennsylvania DLI municipal-election
+reference rows from two previously reviewed public source packs. It conservatively
+holds a project for operator clarification if a known municipality name is
+paired with an unmatched county, a mismatched borough/township/city type, an
+ambiguous same-name municipality type, or no explicit county. The paid
+Checkout is still privately registered as a financial obligation even when
+the project enters HOLD_PROJECT_DETAILS.
+
+A matching record is **only a municipal text-reference match**. It does not
+geocode the property to municipality boundaries, establish a current enforcing
+agency/official or prove permit applicability. A municipality not included in
+these 32 selected rows is NOT automatically invalidated: the same genuinely
+independent human official-source and boundary verification remains mandatory
+during research and QC. This is **not** a statewide 2,562-municipality census.
+No contact names or phone numbers from the government source enter the public
+repository or commercial evidence.
+
+Regression:
+`node pipeline/pa-jurisdiction-identity.test.js`
+
+### Owner triage alert on a newly registered payment
+
+The existing independent, read-only PA watchdog now treats any privately
+registered paid Checkout that is still in `RESEARCH_QUEUE`,
+`HOLD_PROJECT_DETAILS` or `HOLD_POSSIBLE_DUPLICATE` as an
+`PA_PAID_ORDER_AWAITING_FIRST_HUMAN_REVIEW` operational incident. It reports
+only the **count**, never session IDs, names, locations or customer emails.
+The watchdog remains red until an authorized operator actually advances the
+order into researched review (or another independently justified state). This
+alert does **not** authorize delivery, refund or duplicate-charge resolution.
+
+The current watchdog cadence is roughly every three hours, subject to GitHub
+Actions scheduling delays. A failed workflow is a machine-readable incident;
+whether a human receives a notification depends on GitHub notification
+settings. Do not promise instant customer support or a real-time alert.
+The six-hour read-only payment intake itself remains unchanged. A synthetic
+fixture cannot stand in for a real paying customer.

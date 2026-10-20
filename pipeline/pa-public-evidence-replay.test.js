@@ -30,8 +30,9 @@ for(const municipality of fixture.municipals){
     projectAddress:'100 Fictional Test Street, PA',
     projectScope:'Commercial kitchen or ventilation renovation for diagnostic testing'
   };
-  // The current production validator is merely a text safety/length gate.
-  // Passing does NOT verify the county, boundary, election or authority.
+  // The text gate now rejects contradictions in the selected public source
+  // sample; a passing result STILL does not verify a parcel's boundary,
+  // current election/contact information or any permit applicability.
   assert.equal(core.projectHealth(project),true);
   projectTextAdmitted++;
 }
@@ -47,10 +48,9 @@ assert.equal(lookup('SCHUYLKILL','PINE GROVE','TOWNSHIP').pre1999Amendments,fals
 assert.equal(lookup('PIKE','PORTER','TOWNSHIP').pre1999Amendments,true);
 assert.equal(lookup('SCHUYLKILL','PORTER','TOWNSHIP').pre1999Amendments,false);
 
-// IMPORTANT: these are KNOWN CURRENT GAPS, not safety features that passed.
-// The text gate currently admits incorrect or ambiguous municipalities.
-// Deliberately track the counterexamples until an independently verified
-// full-state registry and conservative exact county+type resolver is built.
+// Selected official-reference text consistency guard. The five previously
+// admitted wrong-county/ambiguous name cases must now be held. This is NOT a
+// statewide 2,562-row census or actual address/parcel geocoding.
 const negativeControls=[
   ['Pottsville City, Fayette County, PA','WRONG_COUNTY_ACCEPTED'],
   ['Pine Grove, Schuylkill County, PA','SAME_NAME_BOROUGH_TOWNSHIP_AMBIGUOUS'],
@@ -66,8 +66,8 @@ for(const [municipality,kind] of negativeControls){
   });
   if(admitted)knownGaps.push(kind);
 }
-assert.equal(knownGaps.length,5,
-  'update this diagnostic when the genuine jurisdiction validator is repaired');
+assert.equal(knownGaps.length,0,
+  'none of the five selected-reference ambiguity controls may pass project text review');
 
 // Public permit metadata is separate from private Checkout Session identity.
 // The same address may hold several legal permit types and statuses.
@@ -130,6 +130,6 @@ const outcome={
   providerVerifiedCustomerDeliveries:0,
   jurisdictionAutomaticallyAuthenticated:false,
   baselineTextGateFalseAcceptances:knownGaps,
-  result:'FIXTURE_AND_PROVENANCE_REGRESSION_PASS_KNOWN_JURISDICTION_GAPS_OPEN'
+  result:'SELECTED_REFERENCE_TEXT_GUARD_PASS_STATEWIDE_JURISDICTION_UNVERIFIED'
 };
 console.log(JSON.stringify(outcome,null,2));

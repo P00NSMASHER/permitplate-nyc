@@ -8,6 +8,8 @@ on:
     branches: [main]
     paths:
       - 'pipeline/pa-permit-*.js'
+      - 'pipeline/pa-jurisdiction-identity*.js'
+      - 'verification/pa-official-ucc-permit-samples.json'
       - 'pipeline/run-pa-permit-*.js'
       - 'pipeline/pa-real-official-evidence.json'
       - 'pipeline/pa-real-official-evidence.test.js'
@@ -17,6 +19,8 @@ on:
     branches: [main]
     paths:
       - 'pipeline/pa-permit-*.js'
+      - 'pipeline/pa-jurisdiction-identity*.js'
+      - 'verification/pa-official-ucc-permit-samples.json'
       - 'pipeline/run-pa-permit-*.js'
       - 'pipeline/pa-real-official-evidence.json'
       - 'pipeline/pa-real-official-evidence.test.js'
@@ -46,6 +50,8 @@ jobs:
           node-version: '22'
       - name: Test PA official public-source cases without release claims
         run: node pipeline/pa-real-official-evidence.test.js
+      - name: Verify selected official PA municipality identity and ambiguity holds
+        run: node pipeline/pa-jurisdiction-identity.test.js
       - name: Test paid PA orders, research, QC, delivery and replay safety
         run: node pipeline/pa-permit-orders.test.js
       - name: Replay public PA municipal and Philadelphia permit evidence without customer data
