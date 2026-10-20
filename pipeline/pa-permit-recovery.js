@@ -14,11 +14,17 @@ function plan(ledger,anchor,now){
     (Date.parse(at)-Date.parse(o.paidAt))>5*24*60*60*1000);
   const pending=orders.filter(o=>o.phase==='PROVIDER_DELIVERY_PENDING'&&
     Date.parse(at)-Date.parse(o.delivery?.registeredAt||at)>2*60*60*1000);
+  const holds=orders.filter(o=>o.phase.includes('HOLD'));
+  const agedHolds=holds.filter(o=>
+    Date.parse(at)-Date.parse(o.firstDiscoveredAt)>24*60*60*1000);
+  const changedPayment=orders.filter(o=>o.phase==='DELIVERY_RECONCILIATION_HOLD');
   return {
     version:'PermitPlate-PA-recovery-plan-v1.0.0',
     providerReadbackAgeMs:age,providerReadbackStale:age>MAX_AGE_MS,
     totalPaidOrders:orders.length,
-    held:orders.filter(o=>o.phase.includes('HOLD')).length,
+    held:holds.length,
+    holdsAwaitingHumanReviewOver24h:agedHolds.length,
+    paymentStatusReconciliationRequired:changedPayment.length,
     overdueReviewOrDelivery:overdue.length,
     providerDeliveryVerificationDelayed:pending.length,
     resolutionRequiresRealHumanEvidence:true,
