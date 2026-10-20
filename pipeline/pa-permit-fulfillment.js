@@ -85,7 +85,10 @@ function submitResearch(data){
   if(!order||!['RESEARCH_QUEUE','QC_HOLD','RESEARCH_SUBMITTED'].includes(order.phase)||
      !order.projectValid)throw Error('PA_RESEARCH_CASE_NOT_ELIGIBLE');
   const errors=researchErrors(data.research,order.paidAt);
-  if(errors.length)return {status:'REVIEW',failures:errors};
+  if(!core.iso(data.now)||data.research?.preparedAt>data.now){
+    errors.push('PA_RESEARCH_FUTURE_OR_MISSING_RUN_TIME');
+  }
+  if(errors.length)return {status:'REVIEW',failures:[...new Set(errors)]};
   const fingerprint=core.sha(data.research);
   if(order.phase==='RESEARCH_SUBMITTED'&&order.research?.fingerprint===fingerprint){
     return {status:'UNCHANGED',ledger:data.ledger};
@@ -107,6 +110,7 @@ function qc(data){
   if(!text(r.reviewerId,3,64)||!/^[A-Za-z0-9_-]+$/.test(r.reviewerId||'')||
      r.reviewerId===order.research.researcherId||
      !core.iso(r.reviewedAt)||r.reviewedAt<order.research.preparedAt||
+     !core.iso(data.now)||r.reviewedAt>data.now||
      r.expectedResearchFingerprint!==order.research.fingerprint||
      !text(r.limitations,25,1200)){
     return {status:'REVIEW',failures:['PA_QC_REVIEWER_AND_RESEARCH_BINDING_REQUIRED']};
@@ -135,12 +139,14 @@ function recordSendReceipt(data){
      order.quality?.approvalAttested!==true)throw Error('PA_SEND_RECEIPT_CASE_NOT_READY');
   const r=data.receipt||{};
   if(r.provider!=='RESEND'||!core.iso(r.sentAt)||
+     !core.iso(data.now)||r.sentAt>data.now||
      r.sentAt<order.quality.reviewedAt||
      !/^[0-9a-fA-F-]{30,40}$/.test(r.messageId||'')||
      String(r.recipient||'').toLowerCase()!==order.email||
      r.expectedResearchFingerprint!==order.research.fingerprint||
      r.expectedReportFingerprint!==core.sha(reportDraft(order))||
      r.sentSubject!=='PA Permit Pack | Public-Source Research'||
+     !expectedSender(r.expectedSender)||
      r.ownerManuallyAuthorized!==true){
     return {status:'REVIEW',failures:['PA_EXTERNAL_SEND_RECEIPT_INCOMPLETE']};
   }
@@ -150,12 +156,28 @@ function recordSendReceipt(data){
       provider:'RESEND',messageId:r.messageId,recipient:order.email,
       sentAt:r.sentAt,researchFingerprint:order.research.fingerprint,
       reportFingerprint:r.expectedReportFingerprint,
-      subject:r.sentSubject,
+      subject:r.sentSubject,sender:r.expectedSender,
       verification:'PENDING_PROVIDER_READBACK',registeredAt:at
     };
     draft.history.push({at,action:'DECLARED_SEND_PENDING_PROVIDER_VERIFICATION'});
   });
   return {status:'PROVIDER_READBACK_REQUIRED',ledger,externalSendCalls:0};
+}
+function providerCreatedAt(value){
+  if(typeof value!=='string'||value.length>45||
+     !/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}(?::?\d{2})?)$/.test(value)){
+    return null;
+  }
+  const normalized=value.replace(' ','T').replace(/([+-]\d{2})$/,'$1:00')
+    .replace(/([+-]\d{2})(\d{2})$/,'$1:$2');
+  const ms=Date.parse(normalized);
+  return Number.isFinite(ms)?new Date(ms).toISOString():null;
+}
+function expectedSender(value){
+  if(typeof value!=='string'||value.length>160||/[\r\n]/.test(value))return false;
+  if(core.email(value))return true;
+  const match=/^[A-Za-z0-9 .,'-]{2,80} <([^<>]+)>$/.exec(value);
+  return Boolean(match&&core.email(match[1]));
 }
 function verifiedDelivery(data){
   const order=data?.ledger?.orders?.[data.sessionId];
@@ -164,18 +186,34 @@ function verifiedDelivery(data){
   }
   const response=data.providerResponse||{},msg=order.delivery;
   const to=Array.isArray(response.to)?response.to:[response.to];
-  if(response.id!==msg.messageId||
-     !to.map(a=>String(a).toLowerCase()).includes(order.email)||
-     !['delivered','email.delivered'].includes(response.last_event)||
-     !core.iso(response.created_at)||response.created_at<msg.sentAt||
+  const createdAt=providerCreatedAt(response.created_at);
+  const providerMs=Date.parse(createdAt||'');
+  const acceptedMs=Date.parse(msg.sentAt);
+  const checkedMs=Date.parse(core.iso(data.now)||'');
+  // Resend's API returns offset timestamps with microseconds. Provider email
+  // creation can precede manual recording of the send acknowledgement.
+  const withinSendWindow=Number.isFinite(providerMs)&&
+    Number.isFinite(acceptedMs)&&Number.isFinite(checkedMs)&&
+    providerMs>=Date.parse(order.paidAt)&&
+    Math.abs(providerMs-acceptedMs)<=10*60*1000&&
+    providerMs<=checkedMs;
+  if(response.id!==msg.messageId||to.length!==1||
+     String(to[0]).toLowerCase()!==order.email||
+     response.from!==msg.sender||
+     !['delivered','opened','clicked'].includes(response.last_event)||
+     !withinSendWindow||
      response.subject!==msg.subject||
+     (response.html!=null&&response.html!=='')||
+     (Array.isArray(response.cc)&&response.cc.length>0)||
+     (Array.isArray(response.bcc)&&response.bcc.length>0)||
      typeof response.text!=='string'||core.sha(response.text)!==msg.reportFingerprint){
     return {status:'REVIEW',failures:['PA_PROVIDER_DELIVERY_NOT_INDEPENDENTLY_VERIFIED']};
   }
   const ledger=mutate(data,data.sessionId,(draft,at)=>{
     draft.phase='DELIVERED_PROVIDER_VERIFIED';
     draft.delivery={...draft.delivery,verification:'PROVIDER_READBACK_VERIFIED',
-      providerLastEvent:response.last_event,providerReadbackAt:at,
+      providerLastEvent:response.last_event,
+      providerCreatedAt:createdAt,providerReadbackAt:at,
       providerReceiptFingerprint:core.sha({
         id:response.id,to,created_at:response.created_at,last_event:response.last_event
       })};
@@ -213,4 +251,5 @@ function reportDraft(order){
   ].join('\n')+'\n';
 }
 module.exports={text,validUrl,govUrl,researchErrors,validState,mutate,
+  providerCreatedAt,expectedSender,
   submitResearch,qc,recordSendReceipt,verifiedDelivery,reportDraft};
