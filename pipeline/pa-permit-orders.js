@@ -1,6 +1,7 @@
 'use strict';
 // PA Permit Pack: provider-backed private order tracking. NEVER sends, charges or scores.
 const crypto=require('node:crypto');
+const jurisdiction=require('./pa-jurisdiction-identity');
 const LINK='plink_1ULoeQDPW8riWrxQnDvhOlWS';
 const PRICE='price_1ULoeQDPW8riWrxQYrINdZAv';
 const VERSION='PermitPlate-PA-order-ledger-v1.0.0';
@@ -77,6 +78,16 @@ function validate(ledger){
        !Array.isArray(o.history)||o.history.length>50){
       failures.push('PA_ORDER_SHAPE_INVALID');continue;
     }
+    // A reference-text check is not geocoding. Its recorded status is derived
+    // solely from the immutable original customer-supplied municipality field.
+    if(o.jurisdictionReferenceStatus!==undefined&&
+       o.jurisdictionReferenceStatus!==
+         jurisdiction.assess(o.project?.municipality).status){
+      failures.push('PA_JURISDICTION_REFERENCE_STATUS_MISMATCH');
+    }
+    if(o.jurisdictionBoundaryIndependentlyVerified===true){
+      failures.push('PA_AUTOMATED_GEOGRAPHIC_BOUNDARY_VERIFICATION_FORBIDDEN');
+    }
     if(intents.has(o.paymentIntentId))failures.push('PA_DUPLICATE_PAYMENT_INTENT');
     intents.add(o.paymentIntentId);
     if(['RESEARCH_SUBMITTED','QC_HOLD','READY_FOR_MANUAL_DELIVERY',
@@ -134,7 +145,8 @@ function customerProject(session){
   return {municipality,projectAddress,projectScope};
 }
 function projectHealth(p){
-  if(!p)return false;
+  if(!p||typeof p.municipality!=='string'||
+     typeof p.projectAddress!=='string'||typeof p.projectScope!=='string')return false;
   if(p.municipality.length<2||p.projectAddress.length<5||
      p.projectScope.length<5||!/county|,\s*PA\b|philadelphia/i.test(p.municipality))return false;
   // A government project listing often names only a facility or county, not
@@ -144,6 +156,10 @@ function projectHealth(p){
   const address=p.projectAddress.trim();
   if(!/^[1-9][0-9]{0,6}[A-Za-z]?(?:-[0-9]{1,6})?\s+\S.{3,}$/.test(address)||
      /\b(?:TBD|TO BE DETERMINED|UNKNOWN|PLACEHOLDER)\b/i.test(address))return false;
+  // A county/name/type contradiction in our bounded official source sample
+  // is an operator clarification HOLD. Unknown statewide jurisdictions remain
+  // unverified and still need genuine human source checks before delivery.
+  if(jurisdiction.requiresClarification(p.municipality))return false;
   const combined=Object.values(p).join(' ');
   if(/(?:\b\d{3}[- ]?\d{2}[- ]?\d{4}\b)|(?:\b(?:\d[ -]?){15,19}\b)|(?:BEGIN PRIVATE KEY)|(?:\bpassword\s*:)/i.test(combined))return false;
   return true;
@@ -262,6 +278,8 @@ function evaluate(input){
     const paidAt=new Date(session.created*1000).toISOString();
     orders[session.id]={
       ...identity,verifiedPayment:true,paidAt,firstDiscoveredAt:now,
+      jurisdictionReferenceStatus:jurisdiction.assess(project?.municipality).status,
+      jurisdictionBoundaryIndependentlyVerified:false,
       paymentFingerprint:fp,projectFingerprint,
       phase,projectValid:good,
       research:null,quality:null,delivery:null,

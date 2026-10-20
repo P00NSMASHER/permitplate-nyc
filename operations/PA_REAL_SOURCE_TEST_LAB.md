@@ -23,14 +23,14 @@ Permit records deliberately distinguish `issuedDate` from `currentStatusAsDispla
 node pipeline/pa-public-evidence-replay.test.js
 ```
 
-This invokes the **actual** PermitPlate `pa-permit-orders.projectHealth` and `pa-permit-fulfillment.researchErrors` implementations. It verifies fixture uniqueness, coverage, permit ID format and source integrity while recording known negative-control weaknesses. It cannot constitute human, legal, permit or delivery acceptance.
+This invokes the **actual** PermitPlate `pa-permit-orders.projectHealth`, `pa-jurisdiction-identity.assess` and `pa-permit-fulfillment.researchErrors` implementations. It verifies fixture uniqueness, coverage, permit ID format and source integrity; five earlier false-admitted known-name county/type examples are now rejected for project clarification. It cannot constitute human, legal, permit or delivery acceptance.
 
 ### Reproducible gaps exposed
 
-- Current text-based `projectHealth` is permissive: it accepts plausible but wrong county/municipality combinations and under-specified municipality names (the test intentionally documents five negative controls). **A true county + type + boundary + current UCC jurisdiction resolver is not yet implemented.**
+- The source-selected `pa-jurisdiction-identity` check now rejects the **five previously reproduced** wrong-county or ambiguous municipality-name controls. It compares **32 distinct official public municipal election reference rows** across two sanitized reference packs; it does not cover every Pennsylvania jurisdiction. **Actual parcel boundary geocoding, all 2,562 municipal elections, current ordinance and building-code-official authentication are still not implemented.** Unknown municipality names are not declared wrong by this partial sample and must receive genuine human current-source review before a customer report.
 - Source URLs, government election status and public permits do not automatically prove the project location, current ordinance, service fee, occupancy, permit approval, purchase intent or delivery.
 - No genuine paid customer, actual private case review, or independently verified delivered report was present in this source pack.
 
-**Do not change those known gaps into passing jurisdiction claims.** Build a separate, independently verified statewide jurisdiction matcher and reject ambiguous input before releasing it commercially. Preserve the existing founder QC and no-send gates until then.
+**Do not report these sample-backed text checks as a statewide jurisdiction match.** Expand to an independently verified entire 2,562-municipality registry, determine parcel boundaries and independently recheck current authority before any positive jurisdiction claim. The founder QC, private-case and no-send gates remain in force.
 
 The fixture is selected public rows rather than a statistically representative holdout. No estimate of statewide accuracy should be inferred.

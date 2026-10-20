@@ -134,6 +134,9 @@ jobs:
       - name: Verify real Pennsylvania source cases without inventing a customer or permit approval
         run: node pipeline/pa-real-official-evidence.test.js
 
+      - name: Verify selected PA official jurisdiction text and known-name conflicts
+        run: node pipeline/pa-jurisdiction-identity.test.js
+
       - name: Verify PA Permit Pack payment intake, source review, delivery and dedupe
         run: node pipeline/pa-permit-orders.test.js
       - name: Replay public PA municipal and Philadelphia permit evidence without customer data
