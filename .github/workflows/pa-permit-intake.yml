@@ -9,6 +9,8 @@ on:
     paths:
       - 'pipeline/pa-permit-*.js'
       - 'pipeline/run-pa-permit-*.js'
+      - 'pipeline/pa-real-official-evidence.json'
+      - 'pipeline/pa-real-official-evidence.test.js'
       - 'tests/test_pa_permit_intake_policy.py'
       - '.github/workflows/pa-permit-intake.yml'
   pull_request:
@@ -16,6 +18,8 @@ on:
     paths:
       - 'pipeline/pa-permit-*.js'
       - 'pipeline/run-pa-permit-*.js'
+      - 'pipeline/pa-real-official-evidence.json'
+      - 'pipeline/pa-real-official-evidence.test.js'
       - 'tests/test_pa_permit_intake_policy.py'
       - '.github/workflows/pa-permit-intake.yml'
 
@@ -40,6 +44,8 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22'
+      - name: Test PA official public-source cases without release claims
+        run: node pipeline/pa-real-official-evidence.test.js
       - name: Test paid PA orders, research, QC, delivery and replay safety
         run: node pipeline/pa-permit-orders.test.js
       - name: Verify separate read-only PA PaymentIntent and Charge financial clearance
