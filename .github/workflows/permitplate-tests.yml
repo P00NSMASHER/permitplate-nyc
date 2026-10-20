@@ -136,6 +136,8 @@ jobs:
 
       - name: Verify PA Permit Pack payment intake, source review, delivery and dedupe
         run: node pipeline/pa-permit-orders.test.js
+      - name: Replay public PA municipal and Philadelphia permit evidence without customer data
+        run: node pipeline/pa-public-evidence-replay.test.js
       - name: Verify payment/refund/dispute clearance before PA private reports
         run: node pipeline/pa-permit-financial-readback.test.js
       - name: Verify PA private case operator transaction and no-clobber publication
