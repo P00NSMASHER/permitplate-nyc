@@ -194,13 +194,14 @@ async function apply(input){
   }
 }
 async function main(){
-  if(process.argv.length!==8){
+  if(process.argv.length!==7&&process.argv.length!==8){
     throw Error('PA_PRIVATE_CASE_TRANSACTION_USAGE_INVALID');
   }
   const out=await apply({
     mode:process.argv[2],privateRoot:process.argv[3],
     sessionId:process.argv[4],packetPath:process.argv[5],
-    expectedLedgerFingerprint:process.argv[6],now:process.argv[7]
+    expectedLedgerFingerprint:process.argv[6],
+    now:process.argv[7]||new Date().toISOString()
   });
   process.stdout.write(JSON.stringify(out,null,2)+'\n');
   if(!out.published&&out.status==='REVIEW')process.exitCode=1;
