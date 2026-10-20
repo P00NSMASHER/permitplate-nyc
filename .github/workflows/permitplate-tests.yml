@@ -133,6 +133,8 @@ jobs:
 
       - name: Verify PA Permit Pack payment intake, source review, delivery and dedupe
         run: node pipeline/pa-permit-orders.test.js
+      - name: Verify private PA order health and provider-delivery readback safeguards
+        run: node pipeline/pa-permit-health.test.js
 
       - name: Enforce PA private order workflow credential and no-send boundaries
         run: python3 -m unittest discover -s tests -p 'test_pa_permit_intake_policy.py' -v
