@@ -256,3 +256,21 @@ repository or commercial evidence.
 
 Regression:
 `node pipeline/pa-jurisdiction-identity.test.js`
+
+### Owner triage alert on a newly registered payment
+
+The existing independent, read-only PA watchdog now treats any privately
+registered paid Checkout that is still in `RESEARCH_QUEUE`,
+`HOLD_PROJECT_DETAILS` or `HOLD_POSSIBLE_DUPLICATE` as an
+`PA_PAID_ORDER_AWAITING_FIRST_HUMAN_REVIEW` operational incident. It reports
+only the **count**, never session IDs, names, locations or customer emails.
+The watchdog remains red until an authorized operator actually advances the
+order into researched review (or another independently justified state). This
+alert does **not** authorize delivery, refund or duplicate-charge resolution.
+
+The current watchdog cadence is roughly every three hours, subject to GitHub
+Actions scheduling delays. A failed workflow is a machine-readable incident;
+whether a human receives a notification depends on GitHub notification
+settings. Do not promise instant customer support or a real-time alert.
+The six-hour read-only payment intake itself remains unchanged. A synthetic
+fixture cannot stand in for a real paying customer.
