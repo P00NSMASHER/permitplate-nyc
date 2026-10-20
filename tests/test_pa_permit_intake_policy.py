@@ -35,6 +35,7 @@ def verify(source):
     assert "state/pa-permit-orders.json state/pa-permit-anchor.json" in source
     assert "git -C \"$PRIVATE_DIR\" push origin HEAD:main" in source
     assert "node pipeline/pa-permit-orders.test.js" in source
+    assert "node pipeline/pa-permit-case-transaction.test.js" in source
     assert "node pipeline/pa-permit-health.test.js" in source
     assert "node pipeline/run-pa-permit-health.js" in source
     assert source.index("Publish private PA orders with current-main compare and swap") < source.index(
