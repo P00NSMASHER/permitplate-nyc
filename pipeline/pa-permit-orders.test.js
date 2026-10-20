@@ -102,6 +102,43 @@ assert.equal(repeated.status,'READY');
 assert.equal(repeated.newOrders,0);
 assert.equal(repeated.totalOrders,1);
 assert.deepEqual(repeated.ledger.orders[SESSION],order);
+
+const changedStatus=core.evaluate({
+  ...snapshot([session({payment_status:'unpaid'})]),
+  checkedAt:'2026-10-19T15:01:00.000Z',
+  previousLedger:first.ledger
+});
+assert.equal(changedStatus.status,'READY');
+assert.equal(changedStatus.ledger.orders[SESSION].phase,'DELIVERY_RECONCILIATION_HOLD');
+assert.equal(changedStatus.ledger.orders[SESSION].verifiedPayment,true);
+assert(core.validate(changedStatus.ledger).valid);
+assert.equal(changedStatus.ledger.orders[SESSION].history.at(-1).action,
+  'PREVIOUSLY_PAID_CHECKOUT_NOW_UNPAID');
+const driftReplay=core.evaluate({
+  ...snapshot([session({payment_status:'unpaid'})]),
+  checkedAt:'2026-10-19T15:02:00.000Z',
+  previousLedger:changedStatus.ledger
+});
+assert.equal(driftReplay.status,'READY');
+assert.equal(driftReplay.ledger.orders[SESSION].history.length,
+  changedStatus.ledger.orders[SESSION].history.length);
+const revivedStatus=core.evaluate({
+  ...snapshot([session()]),
+  checkedAt:'2026-10-19T15:03:00.000Z',
+  previousLedger:changedStatus.ledger
+});
+assert.equal(revivedStatus.status,'READY');
+assert.equal(revivedStatus.ledger.orders[SESSION].phase,
+  'DELIVERY_RECONCILIATION_HOLD');
+const replacedPaymentIntent=core.evaluate({
+  ...snapshot([session({payment_status:'unpaid',
+    payment_intent:'pi_different_payment_123'})]),
+  checkedAt:'2026-10-19T15:01:00.000Z',
+  previousLedger:first.ledger
+});
+assert.equal(replacedPaymentIntent.status,'REVIEW');
+assert(replacedPaymentIntent.failures.includes('PA_PREVIOUS_PAID_PAYMENT_ID_CHANGED'));
+
 const second=session({id:'cs_live_pa_research2',payment_intent:'pi_live_pa_research2',
   created:Date.parse('2026-10-19T13:05:00Z')/1000});
 const duplicates=core.evaluate({...snapshot([session(),second]),checkedAt:LATER,
@@ -202,6 +239,10 @@ assert(fulfil.researchErrors({...research,sources:[]},PAID)
   .includes('PA_RESEARCH_SOURCES_INCOMPLETE'));
 assert(fulfil.researchErrors({...research,claimsGovernmentApproval:true},PAID)
   .includes('PA_FORBIDDEN_SERVICE_CLAIM'));
+assert.equal(fulfil.submitResearch({
+  ledger:first.ledger,anchor,sessionId:SESSION,research,
+  now:'2026-10-19T14:05:00.000Z'
+}).status,'REVIEW');
 const researchRecorded=fulfil.submitResearch({
   ledger:first.ledger,anchor,sessionId:SESSION,research,now:'2026-10-19T14:20:00.000Z'
 });
@@ -223,6 +264,11 @@ assert.equal(fulfil.qc({
   review:{...review,reviewerId:research.researcherId},
   now:'2026-10-19T14:23:00.000Z'
 }).status,'REVIEW');
+assert.equal(fulfil.qc({
+  ledger:researchRecorded.ledger,anchor,sessionId:SESSION,
+  review:{...review,reviewedAt:'2026-10-19T14:30:00.000Z'},
+  now:'2026-10-19T14:23:00.000Z'
+}).status,'REVIEW');
 const checked=fulfil.qc({
   ledger:researchRecorded.ledger,anchor,sessionId:SESSION,
   review,now:'2026-10-19T14:23:00.000Z'
@@ -240,32 +286,47 @@ const declared={
   expectedResearchFingerprint:core.sha(research),
   expectedReportFingerprint:core.sha(md),
   sentSubject:'PA Permit Pack | Public-Source Research',
+  expectedSender:'PermitPlate <research@example.org>',
   ownerManuallyAuthorized:true
 };
+assert.equal(fulfil.recordSendReceipt({
+  ledger:checked.ledger,anchor,sessionId:SESSION,
+  receipt:{...declared,sentAt:'2026-10-19T14:27:00.000Z'},
+  now:'2026-10-19T14:26:00.000Z'
+}).status,'REVIEW');
+assert.equal(fulfil.recordSendReceipt({
+  ledger:checked.ledger,anchor,sessionId:SESSION,
+  receipt:{...declared,expectedSender:'injected\nX-Header: bad'},
+  now:'2026-10-19T14:26:00.000Z'
+}).status,'REVIEW');
 const receipt=fulfil.recordSendReceipt({
   ledger:checked.ledger,anchor,sessionId:SESSION,
   receipt:declared,now:'2026-10-19T14:26:00.000Z'
 });
 assert.equal(receipt.status,'PROVIDER_READBACK_REQUIRED');
+assert.equal(receipt.ledger.orders[SESSION].delivery.sender,declared.expectedSender);
 assert.equal(receipt.ledger.orders[SESSION].phase,'PROVIDER_DELIVERY_PENDING');
 assert.equal(receipt.ledger.orders[SESSION].delivery.verification,'PENDING_PROVIDER_READBACK');
 assert.equal(fulfil.verifiedDelivery({
   ledger:receipt.ledger,anchor,sessionId:SESSION,
   providerResponse:{id:declared.messageId,to:[order.email],last_event:'bounced',
-    created_at:'2026-10-19T14:25:00.000Z',subject:declared.sentSubject,text:md},
+    created_at:'2026-10-19T14:25:00.000Z',subject:declared.sentSubject,
+    from:declared.expectedSender,text:md},
   now:'2026-10-19T14:28:00.000Z'
 }).status,'REVIEW');
 assert.equal(fulfil.verifiedDelivery({
   ledger:receipt.ledger,anchor,sessionId:SESSION,
   providerResponse:{id:declared.messageId,to:[order.email],last_event:'delivered',
     created_at:'2026-10-19T14:26:00.000Z',subject:declared.sentSubject,
+    from:declared.expectedSender,
     text:'A different message not matching the approved report'},
   now:'2026-10-19T14:28:00.000Z'
 }).status,'REVIEW');
 const verified=fulfil.verifiedDelivery({
   ledger:receipt.ledger,anchor,sessionId:SESSION,
   providerResponse:{id:declared.messageId,to:[order.email],last_event:'delivered',
-    created_at:'2026-10-19T14:26:00.000Z',subject:declared.sentSubject,text:md},
+    created_at:'2026-10-19T14:26:00.000Z',subject:declared.sentSubject,
+    from:declared.expectedSender,text:md},
   now:'2026-10-19T14:28:00.000Z'
 });
 assert.equal(verified.status,'DELIVERED_PROVIDER_VERIFIED');
@@ -391,7 +452,8 @@ async function main(){
     }),/PA_RESEARCH_CASE_NOT_ELIGIBLE/);
     const readback={
       id:declared.messageId,to:[order.email],last_event:'delivered',
-      created_at:'2026-10-19T14:26:00.000Z',subject:declared.sentSubject,text:md
+      created_at:'2026-10-19T14:26:00.000Z',subject:declared.sentSubject,
+      from:declared.expectedSender,text:md
     };
     const get=async(url,opts)=>{
       assert.equal(opts.method,'GET');
