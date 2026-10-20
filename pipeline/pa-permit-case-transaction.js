@@ -10,10 +10,10 @@ const core=require('./pa-permit-orders');
 const workbench=require('./run-pa-permit-workbench');
 const {privateMaterialPath}=require('./run-subscriber-intake');
 
-const VERSION='PermitPlate-PA-private-operator-transaction-v1.0.0';
+const VERSION='PermitPlate-PA-private-operator-transaction-v1.1.0';
 const PRIVATE_REMOTE=/^(?:https:\/\/github\.com\/|git@github\.com:|ssh:\/\/git@github\.com\/)P00NSMASHER\/permitplate-state(?:\.git)?$/;
 const SOURCE_REMOTE=/^(?:https:\/\/github\.com\/|git@github\.com:|ssh:\/\/git@github\.com\/)P00NSMASHER\/permitplate-nyc(?:\.git)?$/;
-const MODES=Object.freeze(['research','qc','resolve-hold','record-accepted','verify-delivery']);
+const MODES=Object.freeze(['research','qc','resolve-hold','record-accepted','verify-delivery','report']);
 
 function git(cwd,argv){
   const result=cp.spawnSync('git',['-C',cwd,...argv],{
@@ -111,6 +111,73 @@ async function perform(input){
   if(!before.orders[opts.sessionId]){
     throw Error('PA_PRIVATE_PAID_ORDER_NOT_REGISTERED');
   }
+  // Report generation changes no private Git state, but is commercially
+  // sensitive. Use the same clean exact-current private+source main trust gate
+  // as case mutations; never render from an old local QC/payment snapshot.
+  if(opts.mode==='report'){
+    const dst=privateMaterialPath(opts.packetPath||'');
+    const base=path.dirname(dst);
+    if(!opts.packetPath||opts.packetPath==='-'||
+       !fs.existsSync(base)||fs.lstatSync(base).isSymbolicLink()||
+       fs.existsSync(dst)){
+      throw Error('PA_PRIVATE_REPORT_OUTPUT_DIRECTORY_INVALID');
+    }
+    // Resolve the ENTIRE parent path, not only the last path component.
+    // A symlinked ancestor must not redirect the private report into Git.
+    const realDst=path.join(normalizePath(base),path.basename(dst));
+    const privateRelative=path.relative(repo.root,realDst);
+    const sourceRoot=normalizePath(path.resolve(__dirname,'..'));
+    const sourceRelative=path.relative(sourceRoot,realDst);
+    if((!privateRelative.startsWith('..')&&!path.isAbsolute(privateRelative))||
+       (!sourceRelative.startsWith('..')&&!path.isAbsolute(sourceRelative))){
+      throw Error('PA_PRIVATE_REPORT_MUST_BE_OUTSIDE_GIT_REPOS');
+    }
+    let created=false;
+    try{
+      const options=opts.testOnlyRemote===undefined?{}:{
+        financialKey:opts.testOnlyFinanceKey,
+        fetchImpl:opts.testFinanceFetchImpl
+      };
+      const result=await workbench.run([
+        'report',paths.ledger,paths.anchor,opts.sessionId,'-',dst
+      ],opts.now||new Date().toISOString(),options);
+      created=fs.existsSync(dst);
+      if(fs.readFileSync(paths.ledger,'utf8')!==rawBefore||
+         fs.readFileSync(paths.anchor,'utf8')!==rawAnchor){
+        throw Error('PA_PRIVATE_REPORT_MODIFIED_LEDGER_UNEXPECTEDLY');
+      }
+      const live=git(repo.root,['ls-remote','--exit-code','origin',
+        'refs/heads/main']).split(/\s+/)[0];
+      if(live!==repo.head){
+        throw Error('PA_PRIVATE_REPORT_REMOTE_CHANGED_DURING_PAYMENT_READ');
+      }
+      if(opts.testOnlyRemote===undefined){
+        // A security fix merged during the two Stripe reads must also prevent
+        // an old public source checkout from authoring a customer report.
+        verifyRepo(path.resolve(__dirname,'..'),SOURCE_REMOTE,undefined);
+      }
+      if(result.status==='FINANCIAL_RECONCILIATION_HOLD'){
+        return {version:VERSION,status:result.status,
+          failures:result.failures,published:false,externalSendCalls:0,
+          paymentMutations:0};
+      }
+      if(result.status!=='PRIVATE_QC_REPORT_GENERATED'||!created){
+        throw Error('PA_PRIVATE_REPORT_FINANCIAL_PREFLIGHT_UNVERIFIED');
+      }
+      return {
+        version:VERSION,status:result.status,
+        reportFingerprint:result.fingerprint,
+        paymentReceiptFingerprint:result.paymentReceiptFingerprint,
+        financialReadbackVerified:result.financialReadbackVerified===true,
+        actualFinancialSettlementGuaranteed:false,
+        privateStateRevision:before.ledgerFingerprint,
+        published:false,externalSendCalls:0,paymentMutations:0
+      };
+    }catch(error){
+      if(created&&fs.existsSync(dst))fs.unlinkSync(dst);
+      throw error;
+    }
+  }
   const packet=opts.packetPath||'-';
   if(opts.mode!=='verify-delivery'&&packet==='-'){
     throw Error('PA_PRIVATE_EVIDENCE_PACKET_REQUIRED');
@@ -206,7 +273,7 @@ async function main(){
     now:process.argv[7]||new Date().toISOString()
   });
   process.stdout.write(JSON.stringify(out,null,2)+'\n');
-  if(!out.published&&out.status==='REVIEW')process.exitCode=1;
+  if(!out.published&&['REVIEW','FINANCIAL_RECONCILIATION_HOLD'].includes(out.status))process.exitCode=1;
 }
 if(require.main===module){
   main().catch(error=>{

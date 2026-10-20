@@ -59,9 +59,34 @@ The QC JSON must use a distinct real human alias, bind the exact research finger
 
 Create the private reviewed report:
 
-    node pipeline/run-pa-permit-workbench.js report PRIVATE_LEDGER PRIVATE_ANCHOR cs_LIVE_SESSION - PRIVATE_REPORT_MD
+    node pipeline/pa-permit-case-transaction.js report PRIVATE_STATE_ROOT cs_LIVE_SESSION PRIVATE_REPORT_MD EXPECTED_CURRENT_LEDGER_FINGERPRINT
 
-This Markdown is a research starting point, not an official decision. It is not sent automatically.
+Financial proof is now mandatory before a delivery-ready report is rendered.
+Do not use the old direct workbench report command. The guarded transaction
+requires clean, exact-current main checkouts of the public source and separate
+private state repositories, a matching untouched private anchor, and a current
+ledger fingerprint. The output must be a NEW file outside BOTH Git repositories.
+No private customer details or report body are written to public CI.
+
+Separately create a LIVE Stripe restricted read-only key named
+PermitPlate-PA-FinancialReview, with Payment Intents: Read and Charges: Read
+permissions only. All other permissions must be None. Supply this key as
+the local environment variable PERMITPLATE_PA_FINANCIAL_READ_KEY. Do not paste
+it into chat, commit it, or store it in public Actions. The existing recurring
+six-hour Checkout monitor still uses its existing narrowly scoped key.
+
+At report time the guarded transaction performs exactly two authenticated
+GETs: the immutable original Payment Intent, then its latest Charge. Both
+must match the original customer, amount, USD currency and successful
+paid/captured status, with no refund, refunded amount or dispute. An absent
+credential, forbidden provider read, inconsistent identity, or changed payment
+results in a financial hold and NO REPORT output. This is a point-in-time
+risk check, not proof of settlement or freedom from future chargebacks.
+A fresh financial check is needed immediately before any manual send.
+
+The reviewed Markdown is a research starting point, not an official decision.
+It is not sent automatically, and the financial readback does not authorize
+delivery by itself.
 
 ## Delivery evidence
 
@@ -104,7 +129,7 @@ After a successful private state commit/push, the scheduled PA intake runs **rea
 
 Offline monitoring regression: node pipeline/pa-permit-health.test.js.
 
-A green run with zero paid orders verifies operational intake, not actual paid-customer delivery or successful permit advice. Genuine paid order, real reviewed permit records, separate QC and independent provider proof are necessary for commercial acceptance.
+A green run with zero paid orders verifies operational intake, not actual paid-customer delivery or successful permit advice. The financial proof regression (node pipeline/pa-permit-financial-readback.test.js) uses a disposable synthetic private Git repository and fake Stripe responses. It does not prove a real paid customer or a production financial key is configured. Genuine paid order, real reviewed permit records, separate QC and independent provider proof are necessary for commercial acceptance.
 
 ## Durable, guarded publication of human-approved case updates
 
@@ -114,10 +139,12 @@ Never hand-edit and force-push the ledger: doing so can erase new paid orders
 or lose a verified delivery.
 
 For a *real* operator working with *real independently reviewed evidence*,
-use the guarded private transaction command. It accepts only the five case
-operations: `research`, `qc`, `resolve-hold`, `record-accepted`, and
-`verify-delivery`. It does not send mail, refund Stripe payments, create
-customers or release scored leads.
+use the guarded private transaction command. It accepts five private ledger
+mutation operations (research, qc, resolve-hold, record-accepted, and
+verify-delivery), plus one read-only guarded report operation. The report
+operation verifies the current payment and private order state before creating
+a new private artifact. No operation automatically sends customer mail, refunds
+a Stripe payment, creates a customer or releases scored leads.
 
 First, use a **clean, current main** checkout of both source repo
 `P00NSMASHER/permitplate-nyc` and private repo

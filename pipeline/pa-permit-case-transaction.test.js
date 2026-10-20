@@ -82,7 +82,7 @@ const research={
 async function main(){
   // The public operator CLI must never bypass the exact-main transaction.
   // No private data is opened for this rejection.
-  for(const mode of ['research','qc','resolve-hold','record-accepted','verify-delivery']){
+  for(const mode of ['research','qc','resolve-hold','record-accepted','verify-delivery','report']){
     const direct=cp.spawnSync(process.execPath,[
       path.join(__dirname,'run-pa-permit-workbench.js'),
       mode,'/nonexistent-ledger','/nonexistent-anchor',
