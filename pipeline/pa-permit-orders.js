@@ -93,6 +93,7 @@ function validate(ledger){
     if(['PROVIDER_DELIVERY_PENDING','DELIVERED_PROVIDER_VERIFIED'].includes(o.phase)&&
        (!o.delivery||!/^[0-9a-fA-F-]{30,40}$/.test(o.delivery.messageId||'')||
         o.delivery.recipient!==o.email||
+        typeof o.delivery.sender!=='string'||o.delivery.sender.length>160||
         o.delivery.researchFingerprint!==o.research?.fingerprint||
         !/^[a-f0-9]{64}$/.test(o.delivery.reportFingerprint||''))){
       failures.push('PA_DELIVERY_STATE_INVALID');
@@ -103,7 +104,7 @@ function validate(ledger){
     }
     if(o.phase==='DELIVERED_PROVIDER_VERIFIED'&&
        (o.delivery?.verification!=='PROVIDER_READBACK_VERIFIED'||
-        !['delivered','email.delivered'].includes(o.delivery?.providerLastEvent)||
+        !['delivered','opened','clicked'].includes(o.delivery?.providerLastEvent)||
         !iso(o.delivery?.providerReadbackAt)||
         !/^[a-f0-9]{64}$/.test(o.delivery?.providerReceiptFingerprint||''))){
       failures.push('PA_DELIVERY_PROOF_INVALID');
@@ -185,7 +186,33 @@ function evaluate(input){
       failures.push('PA_PROVIDER_SESSION_IDENTITY_INVALID');continue;
     }
     sessionIds.add(session.id);
-    if(session.payment_status!=='paid'){unpaid++;continue;}
+    if(!['paid','unpaid','no_payment_required'].includes(session.payment_status)){
+      failures.push('PA_PROVIDER_PAYMENT_STATUS_INVALID');continue;
+    }
+    if(session.payment_status!=='paid'){
+      unpaid++;
+      // A previously paid Checkout no longer reported paid is an incident,
+      // not permission to silently continue research or delivery.
+      // Refunds/disputes may NOT change Checkout payment_status; these
+      // still require separate authorized accounting reconciliation.
+      const registered=orders[session.id];
+      if(registered){
+        if(registered.paymentIntentId!==session.payment_intent){
+          failures.push('PA_PREVIOUS_PAID_PAYMENT_ID_CHANGED');continue;
+        }
+        if(registered.phase!=='DELIVERY_RECONCILIATION_HOLD'){
+          registered.history.push({
+            at:now,action:'PREVIOUSLY_PAID_CHECKOUT_NOW_UNPAID',
+            precedingPhase:registered.phase
+          });
+          registered.phase='DELIVERY_RECONCILIATION_HOLD';
+          if(registered.history.length>50){
+            failures.push('PA_ORDER_HISTORY_LIMIT');
+          }
+        }
+      }
+      continue;
+    }
     paid++;
     if(!id(session.payment_intent,'pi')||
        (intentIds.has(session.payment_intent)&&
