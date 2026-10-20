@@ -72,6 +72,22 @@ function fakeProvider(sessions=[],linkInfo=link,priced=items,sessionPrice=items)
 }
 const first=core.evaluate({...snapshot([session()]),checkedAt:NOW});
 assert.equal(first.status,'READY');
+for(const providerPaymentStatus of [undefined,null,'pending','unknown','refunded']){
+  const unrecognized=core.evaluate({
+    ...snapshot([session({payment_status:providerPaymentStatus})]),
+    checkedAt:NOW
+  });
+  assert.equal(unrecognized.status,'REVIEW');
+  assert(unrecognized.failures.includes('PA_PROVIDER_PAYMENT_STATUS_INVALID'));
+  assert.equal(unrecognized.ledger,undefined);
+}
+const knownUnpaid=core.evaluate({
+  ...snapshot([session({payment_status:'unpaid'})]),checkedAt:NOW
+});
+assert.equal(knownUnpaid.status,'READY');
+assert.equal(knownUnpaid.unpaid,1);
+assert.equal(knownUnpaid.totalOrders,0);
+
 assert.equal(first.newOrders,1);
 assert.equal(first.heldOrders,0);
 assert.equal(first.totalOrders,1);
