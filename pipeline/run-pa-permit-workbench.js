@@ -108,6 +108,13 @@ async function run(argv,now){
     transportAllowed:false,externalSendCalls:0};
 }
 async function main(){
+  // Direct workbench mutation used to update only a local JSON file, allowing
+  // a later unguarded publish to clobber new live Stripe-paid orders. Require
+  // the exact-main CAS wrapper for every ledger-mutating CLI operation.
+  const mutating=['research','qc','resolve-hold','record-accepted','verify-delivery'];
+  if(mutating.includes(process.argv[2])){
+    throw Error('PA_PRIVATE_OPERATOR_TRANSACTION_REQUIRED');
+  }
   const result=await run(process.argv.slice(2));
   console.log(JSON.stringify(result,null,2));
   if(result.status==='REVIEW')process.exitCode=1;

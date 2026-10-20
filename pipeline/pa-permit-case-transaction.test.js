@@ -80,6 +80,18 @@ const research={
 };
 
 async function main(){
+  // The public operator CLI must never bypass the exact-main transaction.
+  // No private data is opened for this rejection.
+  for(const mode of ['research','qc','resolve-hold','record-accepted','verify-delivery']){
+    const direct=cp.spawnSync(process.execPath,[
+      path.join(__dirname,'run-pa-permit-workbench.js'),
+      mode,'/nonexistent-ledger','/nonexistent-anchor',
+      'cs_live_pa_transaction_fixture_01','/nonexistent-evidence'
+    ],{encoding:'utf8',timeout:5000});
+    assert.equal(direct.status,1);
+    assert(direct.stderr.includes('PA_PRIVATE_OPERATOR_TRANSACTION_REQUIRED'));
+    assert(!direct.stderr.includes('@example.org'));
+  }
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'pa-private-op-'));
   try{
     const bare=path.join(root,bareName);
