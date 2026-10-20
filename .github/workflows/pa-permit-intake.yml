@@ -48,6 +48,8 @@ jobs:
         run: node pipeline/pa-real-official-evidence.test.js
       - name: Test paid PA orders, research, QC, delivery and replay safety
         run: node pipeline/pa-permit-orders.test.js
+      - name: Replay public PA municipal and Philadelphia permit evidence without customer data
+        run: node pipeline/pa-public-evidence-replay.test.js
       - name: Verify separate read-only PA PaymentIntent and Charge financial clearance
         run: node pipeline/pa-permit-financial-readback.test.js
       - name: Test private owner case publication with guarded Git main CAS
