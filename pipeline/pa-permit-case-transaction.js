@@ -23,7 +23,9 @@ function git(cwd,argv){
   if(result.error||result.status!==0||typeof result.stdout!=='string'){
     throw Error('PA_PRIVATE_GIT_COMMAND_FAILED');
   }
-  return result.stdout.trim();
+  // Git porcelain status uses meaningful leading spaces; trim only one
+  // terminating line break or a tracked modification becomes indistinguishable.
+  return result.stdout.replace(/\r?\n$/, '');
 }
 function normalizePath(p){
   const full=fs.realpathSync(p);
