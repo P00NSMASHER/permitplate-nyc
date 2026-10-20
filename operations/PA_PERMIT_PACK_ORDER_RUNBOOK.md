@@ -91,3 +91,45 @@ Offline:
 Activate only after tests, exact-head CI, and a successful provider-backed production read. Set PERMITPLATE_PA_ORDER_INTAKE_ENABLED=true, dispatch the PA private intake on main, require policy AND intake jobs to pass, and verify both new files in the private repository.
 
 A green run with zero paid orders verifies operational intake, not actual paid-customer delivery or successful permit advice. Genuine paid order, real reviewed permit records, separate QC and independent provider proof are necessary for commercial acceptance.
+
+## Provider-time and operational health safeguards (October 2026)
+
+The read-only Resend evidence check now accepts explicit UTC-offset timestamps
+and microsecond precision (the format returned by the provider). It requires
+the exact originally authorized sender, one intended recipient with no extra
+CC/BCC, matching message ID and subject, matching plain-text SHA-256 content,
+and a plausible provider creation timestamp within ten minutes of the manual
+send acknowledgement. Unexpected HTML or a changed recipient/content fails
+closed. Provider `delivered`, `opened`, or `clicked` status is accepted
+as provider-side transmission evidence; none proves the customer actually read
+or benefited from the report.
+
+A Checkout that was previously registered as paid but later appears unpaid in
+Stripe enters `DELIVERY_RECONCILIATION_HOLD` without discarding the original
+paid-order evidence. Returning to `paid` does **not** release that hold.
+A refund, chargeback or dispute may leave `payment_status=paid`; separately
+verify current Stripe financial evidence before fulfilling or resolving the
+customer's payment.
+
+After a successful private intake publication, the workflow now runs a
+privacy-safe aggregate-only health check on its private ledger. It fails the
+workflow visibly, **after retaining the private order state**, if any of these
+operator-attention conditions exists: provider poll over nine hours old,
+a payment-status reconciliation hold, a human hold over 24 hours old, an
+undelivered case over five calendar days old, or a provider delivery receipt
+unconfirmed after two hours. These durations are operational triage, not
+promises of a completed report or evidence of actual customer delivery.
+No messages are automatically sent, no payment is modified and no individual
+customer identifiers are printed to CI logs.
+
+Offline checks:
+
+```sh
+node pipeline/pa-permit-orders.test.js
+node pipeline/pa-permit-health.test.js
+```
+
+The previously successful zero-order production runs establish provider access
+and empty-state integrity, **not** a completed paid-customer delivery. The
+independent commercial-delivery gate remains unmet until genuine provider
+and researched-document evidence is available.
