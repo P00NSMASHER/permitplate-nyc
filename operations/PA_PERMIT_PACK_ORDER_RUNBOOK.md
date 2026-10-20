@@ -207,3 +207,29 @@ Checkouts to verify normal publication, idempotent replay, stale-checkout
 refusal, dirty-worktree refusal, trusted remote checks, expected revision
 binding, local concurrency lock and immutable paid-order identity. It does
 not contact any customer or private production state.
+
+
+## Independent PA order intake watchdog — missing-run detection
+
+The normal PA intake is scheduled four times daily. Its own health check executes **after** the provider scan, so a disabled GitHub schedule, missed run, or sustained checkout-token failure might otherwise go unnoticed.
+
+The separate **PermitPlate PA independent order watchdog** reads only the already-retained PRIVATE ledger and anchor, without any Stripe API credential, financial account access, Git writes, provider POST, customer contact, or sending. It runs at 02:17, 05:17, 08:17, 11:17, 14:17, 17:17, 20:17 and 23:17 UTC, forty minutes after alternating scheduled intake runs. GitHub Actions scheduling can itself be delayed; this is independent in workflow design but not an external uptime service.
+
+Before opening private state it confirms exact current public main and the configured private repository, uses immutable pinned workflow dependencies and the existing private-state token, then rechecks the public source commit. Its concurrency group matches the PA private-state writers so a legitimate in-flight update is not mistaken for stale state.
+
+The watchdog reports only aggregate counts by phase and the number of newly registered paid orders in the preceding 24 hours. It fails its scheduled GitHub Actions run if:
+
+- Automatic PA monitoring has been disabled while the watchdog remains active.
+- Either private state file is missing, malformed or mismatched to its original anchor.
+- The current clock predates the last verified provider read.
+- The last Stripe-backed private intake observation is more than nine hours old.
+- An existing paid order needs financial reconciliation, has an unresolved operator hold exceeding 24 hours, has not been delivered in over five calendar days, or has been waiting more than two hours for provider delivery evidence.
+
+A red watchdog requires operator review of the private order ledger and the failed run. No automated retry, refund, customer email or scored lead follows. A green watchdog and zero orders demonstrate provider-monitoring continuity only, not real fulfillment. GitHub failure notifications depend on the account's repository notification settings, and GitHub-wide outages cannot be detected by another GitHub workflow.
+
+The public/PR jobs run only offline synthetic fixtures and security policy tests:
+
+    node pipeline/pa-permit-watchdog.test.js
+    python3 -m unittest discover -s tests -p 'test_pa_permit_watchdog_policy.py' -v
+
+The independently scheduled watchdog is read-only and intentionally uses no additional API key, paid monitoring vendor, or external customer transport.
