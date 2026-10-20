@@ -7,6 +7,7 @@ const core=require('./pa-permit-orders');
 const fulfil=require('./pa-permit-fulfillment');
 const delivery=require('./pa-permit-delivery-readback');
 const recovery=require('./pa-permit-recovery');
+const finance=require('./pa-permit-financial-readback');
 const {privateMaterialPath}=require('./run-subscriber-intake');
 const {writeAtomic,priorHealth}=require('./run-pa-permit-intake');
 function read(file){
@@ -59,7 +60,7 @@ function createDraft(order){
     neverPublishToPublicRepo:true,neverAutoSend:true
   };
 }
-async function run(argv,now){
+async function run(argv,now,internalOptions={}){
   const [mode,ledgerFile,anchorFile,sessionId,packetFile,outFile]=argv;
   if(!['status','recovery-plan','resolve-hold','draft','research','qc','record-accepted','verify-delivery','report'].includes(mode)||
      !ledgerFile||!anchorFile){
@@ -80,9 +81,34 @@ async function run(argv,now){
   }
   if(mode==='report'){
     if(!outFile)throw Error('PA_PRIVATE_REPORT_OUTPUT_REQUIRED');
+    if(order.phase!=='READY_FOR_MANUAL_DELIVERY'||!order.projectValid||
+       !order.research||order.quality?.approvalAttested!==true){
+      throw Error('PA_REPORT_NOT_QC_READY');
+    }
+    // A verified paid Checkout is not enough: refunds and disputes can occur
+    // later without changing Checkout.payment_status. Before exposing a
+    // delivery-ready report, read current PI+Charge financial state from Stripe.
+    // No financial-key or PII values are logged or added to public artifacts.
+    const checkedAt=now||new Date().toISOString();
+    const financeStatus=await finance.inspect(
+      order,
+      internalOptions.financialKey||process.env.PERMITPLATE_PA_FINANCIAL_READ_KEY,
+      checkedAt,internalOptions.fetchImpl
+    );
+    if(financeStatus.status!=='CURRENTLY_PAID_FOR_MANUAL_REPORT'){
+      return {status:'FINANCIAL_RECONCILIATION_HOLD',
+        failures:financeStatus.failures,
+        transportAllowed:false,externalSendCalls:0};
+    }
     const md=fulfil.reportDraft(order);
     writePrivate(outFile,md);
     return {status:'PRIVATE_QC_REPORT_GENERATED',fingerprint:core.sha(md),
+      financialReadbackVerified:true,
+      paymentCheckAt:financeStatus.checkedAt,
+      paymentReceiptFingerprint:financeStatus.receiptFingerprint,
+      // Financial clearance is a point-in-time preflight, NOT a recurring
+      // authorization or a guarantee against subsequent disputes.
+      paymentSettlementGuaranteed:false,
       transportAllowed:false,externalSendCalls:0};
   }
   const inputs={ledger,anchor,sessionId,now:now||new Date().toISOString()};
@@ -111,13 +137,13 @@ async function main(){
   // Direct workbench mutation used to update only a local JSON file, allowing
   // a later unguarded publish to clobber new live Stripe-paid orders. Require
   // the exact-main CAS wrapper for every ledger-mutating CLI operation.
-  const mutating=['research','qc','resolve-hold','record-accepted','verify-delivery'];
+  const mutating=['research','qc','resolve-hold','record-accepted','verify-delivery','report'];
   if(mutating.includes(process.argv[2])){
     throw Error('PA_PRIVATE_OPERATOR_TRANSACTION_REQUIRED');
   }
   const result=await run(process.argv.slice(2));
   console.log(JSON.stringify(result,null,2));
-  if(result.status==='REVIEW')process.exitCode=1;
+  if(['REVIEW','FINANCIAL_RECONCILIATION_HOLD'].includes(result.status))process.exitCode=1;
 }
 if(require.main===module){
   main().catch(e=>{

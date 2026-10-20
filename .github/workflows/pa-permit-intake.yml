@@ -42,6 +42,8 @@ jobs:
           node-version: '22'
       - name: Test paid PA orders, research, QC, delivery and replay safety
         run: node pipeline/pa-permit-orders.test.js
+      - name: Verify separate read-only PA PaymentIntent and Charge financial clearance
+        run: node pipeline/pa-permit-financial-readback.test.js
       - name: Test private owner case publication with guarded Git main CAS
         run: node pipeline/pa-permit-case-transaction.test.js
       - name: Test aggregate PA order health and real provider timestamp formats
