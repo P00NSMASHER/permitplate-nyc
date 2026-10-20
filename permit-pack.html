@@ -28,9 +28,11 @@
   <nav class="nav" aria-label="Main navigation">
     <div class="shell navin">
       <a class="brand" href="/permitplate-nyc/" aria-label="PermitPlate home"><span class="brand-mark" aria-hidden="true"></span><span>PermitPlate <small>PA</small></span></a>
-      <div class="navlinks">
+      <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="pa-main-menu" data-menu-toggle><span></span><span></span><span></span></button>
+      <div class="navlinks" id="pa-main-menu" data-menu>
         <a href="/permitplate-nyc/">NYC vendor research</a>
-        <a class="button button-small" href="https://buy.stripe.com/dRm6oH4oXgy351tglH9sk06">Get permit pack</a>
+        <a href="/permitplate-nyc/field-notes.html">Field notes</a>
+        <a class="button button-small" href="#pa-order">Get permit pack</a>
       </div>
     </div>
   </nav>
@@ -41,8 +43,28 @@
         <div class="checkout-copy">
           <div class="eyebrow">Pennsylvania permit research</div>
           <h1>Know what to file before the job starts.</h1>
-          <p>Tell us the Pennsylvania location and the work you plan to do. We research the public requirements and turn them into a clear starting checklist instead of a pile of municipal tabs.</p>
+          <p>Tell us the municipality, address and planned work. We research likely authorities, public forms and questions to verify, and turn them into a practical project checklist.</p>
+          <p class="checkout-promise">One project <span aria-hidden="true">·</span> $29 one time <span aria-hidden="true">·</span> Not government advice</p>
 
+        </div>
+
+        <aside class="checkout-card" id="pa-order" aria-label="PA Permit Pack purchase">
+          <div class="price-label">PA Permit Pack · one project</div>
+          <div class="price"><strong>$29</strong><span>USD<br />one time</span></div>
+          <p class="purchase-summary">One researched Pennsylvania project · public sources and a practical checklist</p>
+          <a class="button button-primary button-wide" href="https://buy.stripe.com/dRm6oH4oXgy351tglH9sk06">Buy securely for $29 <span class="arrow" aria-hidden="true">→</span></a>
+          <p class="checkout-legal">Founder-prepared public-source research, not an instant permit determination. One-time purchase, no subscription or automatic renewal. <a href="/permitplate-nyc/terms.html">Terms</a> · <a href="/permitplate-nyc/privacy.html">Privacy</a> · <a href="/permitplate-nyc/refunds.html">Refunds</a></p>
+          <ul>
+            <li>Likely permitting authority and public contacts</li>
+            <li>Likely permit applications and public form links</li>
+            <li>Submission order and practical filing checklist</li>
+            <li>Public fee or portal information when available</li>
+            <li>Questions to ask when public guidance is unclear</li>
+            <li>Source links for the important requirements</li>
+          </ul>
+        </aside>
+        <section class="checkout-explainer" aria-label="PA Permit Pack process">
+          <h2 class="checkout-explainer-title">From project question to researched checklist.</h2>
           <div class="steps-row" aria-label="How it works">
             <article class="mini-step">
               <span>01 · Location</span>
@@ -60,22 +82,7 @@
               <p>We send the completed public-source permit research pack to your checkout email.</p>
             </article>
           </div>
-        </div>
-
-        <aside class="checkout-card" aria-label="PA Permit Pack purchase">
-          <div class="price-label">PA Permit Pack · one project</div>
-          <div class="price"><strong>$29</strong><span>USD<br />one time</span></div>
-          <ul>
-            <li>Likely permitting authority and public contacts</li>
-            <li>Likely permit applications and public form links</li>
-            <li>Submission order and practical filing checklist</li>
-            <li>Public fee or portal information when available</li>
-            <li>Questions to ask when public guidance is unclear</li>
-            <li>Source links for the important requirements</li>
-          </ul>
-          <a class="button button-primary button-wide" href="https://buy.stripe.com/dRm6oH4oXgy351tglH9sk06">Buy securely for $29 <span class="arrow" aria-hidden="true">→</span></a>
-          <p class="checkout-legal">One-time purchase. No subscription or automatic renewal. <a href="/permitplate-nyc/terms.html">Terms</a> · <a href="/permitplate-nyc/privacy.html">Privacy</a> · <a href="/permitplate-nyc/refunds.html">Refunds</a></p>
-        </aside>
+        </section>
       </div>
     </section>
 
@@ -156,5 +163,6 @@
     </div>
     <div class="shell footer-bottom"><p>PermitPlate provides public-source research and administrative guidance. Verify requirements with the applicable authority before filing or starting regulated work. Not affiliated with or endorsed by the Commonwealth of Pennsylvania or any municipality.</p><span>© 2026 PermitPlate</span></div>
   </footer>
+  <script src="/permitplate-nyc/site.js" defer></script>
 </body>
 </html>

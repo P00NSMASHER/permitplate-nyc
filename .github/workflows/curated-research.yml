@@ -9,7 +9,36 @@ on:
     paths:
       - 'pipeline/curated-research-ledger.js'
       - 'pipeline/curated-customer-brief.js'
+      - 'pipeline/category-evidence.js'
+      - 'pipeline/category-evidence.test.js'
       - 'pipeline/run-curated-research.js'
+      - 'pipeline/independent-source-review.js'
+      - 'pipeline/independent-source-review.test.js'
+      - 'pipeline/construction-scope-evidence.js'
+      - 'pipeline/construction-scope-evidence.test.js'
+      - 'pipeline/construction-validation-panel.js'
+      - 'pipeline/construction-validation-panel.test.js'
+      - 'pipeline/construction-blind-diagnostic.js'
+      - 'pipeline/construction-frozen-reference.js'
+      - 'pipeline/construction-reviewer-worksheet.js'
+      - 'pipeline/construction-blind-diagnostic.test.js'
+      - 'pipeline/source-premise-factors.js'
+      - 'pipeline/nyc-million-bin-real-case.test.js'
+      - 'pipeline/independent-source-history.js'
+      - 'pipeline/independent-source-history.test.js'
+      - 'pipeline/identity-bridge-review.js'
+      - 'pipeline/identity-bridge-review.test.js'
+      - 'pipeline/identity-review-workbench.js'
+      - 'pipeline/identity-review-workbench.test.js'
+      - 'pipeline/identity-triage-history.js'
+      - 'pipeline/identity-triage-history.test.js'
+      - 'pipeline/identity-receipt-recovery.js'
+      - 'pipeline/identity-receipt-recovery.test.js'
+      - 'pipeline/source-adapters.js'
+      - 'pipeline/source-adapters.test.js'
+      - 'pipeline/run-current-graph.js'
+      - 'pipeline/material-change.js'
+      - 'pipeline/curated-material-events.test.js'
       - 'pipeline/run-curated-fulfillment.js'
       - 'pipeline/run-curated-review-queue.js'
       - 'pipeline/curated-product.test.js'
@@ -19,7 +48,36 @@ on:
     paths:
       - 'pipeline/curated-research-ledger.js'
       - 'pipeline/curated-customer-brief.js'
+      - 'pipeline/category-evidence.js'
+      - 'pipeline/category-evidence.test.js'
       - 'pipeline/run-curated-research.js'
+      - 'pipeline/independent-source-review.js'
+      - 'pipeline/independent-source-review.test.js'
+      - 'pipeline/construction-scope-evidence.js'
+      - 'pipeline/construction-scope-evidence.test.js'
+      - 'pipeline/construction-validation-panel.js'
+      - 'pipeline/construction-validation-panel.test.js'
+      - 'pipeline/construction-blind-diagnostic.js'
+      - 'pipeline/construction-frozen-reference.js'
+      - 'pipeline/construction-reviewer-worksheet.js'
+      - 'pipeline/construction-blind-diagnostic.test.js'
+      - 'pipeline/source-premise-factors.js'
+      - 'pipeline/nyc-million-bin-real-case.test.js'
+      - 'pipeline/independent-source-history.js'
+      - 'pipeline/independent-source-history.test.js'
+      - 'pipeline/identity-bridge-review.js'
+      - 'pipeline/identity-bridge-review.test.js'
+      - 'pipeline/identity-review-workbench.js'
+      - 'pipeline/identity-review-workbench.test.js'
+      - 'pipeline/identity-triage-history.js'
+      - 'pipeline/identity-triage-history.test.js'
+      - 'pipeline/identity-receipt-recovery.js'
+      - 'pipeline/identity-receipt-recovery.test.js'
+      - 'pipeline/source-adapters.js'
+      - 'pipeline/source-adapters.test.js'
+      - 'pipeline/run-current-graph.js'
+      - 'pipeline/material-change.js'
+      - 'pipeline/curated-material-events.test.js'
       - 'pipeline/run-curated-fulfillment.js'
       - 'pipeline/curated-product.test.js'
       - 'tests/test_curated_workflow_policy.py'
@@ -48,6 +106,26 @@ jobs:
           node-version: '22'
       - name: Test actual paid product with offline fixtures
         run: node pipeline/curated-product.test.js
+      - name: Verify independent early-source discovery remains review-only
+        run: node pipeline/independent-source-review.test.js
+      - name: Verify full DOB scope and conflicting building identifiers
+        run: node pipeline/construction-scope-evidence.test.js
+      - name: Verify NYC borough million BIN placeholders are not real conflicts
+        run: node pipeline/nyc-million-bin-real-case.test.js
+      - name: Verify separate full-scope DOB diagnostic does not inspect scoring holdout
+        run: node pipeline/construction-validation-panel.test.js
+      - name: Verify premise-root grouped construction reviewer and reserved audit separation
+        run: node pipeline/construction-blind-diagnostic.test.js
+      - name: Verify first-observation history across repeated scans
+        run: node pipeline/independent-source-history.test.js
+      - name: Reject unsupported DOB/SLA/CAMIS identity bridges
+        run: node pipeline/identity-bridge-review.test.js
+      - name: Verify script-free private workbench and CSV sanitation
+        run: node pipeline/identity-review-workbench.test.js
+      - name: Preserve stable identity triage history
+        run: node pipeline/identity-triage-history.test.js
+      - name: Verify legacy identity disk-proof compatibility
+        run: node pipeline/identity-receipt-recovery.test.js
       - name: Verify workflow policy
         run: python3 -m unittest discover -s tests -p 'test_curated_workflow_policy.py' -v
 
@@ -103,13 +181,23 @@ jobs:
           node pipeline/run-curated-research.js \
             "$PRIVATE_DIR/state/curated-research-ledger.json" \
             "$PRIVATE_DIR/state/curated-current-graph.json"
+      - name: Recheck exact public main after collection
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          current_public="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          test -n "$current_public" && test "$current_public" = "$GITHUB_SHA" || {
+            echo "Public main advanced during collection. No private state commit." >&2
+            exit 1
+          }
       - name: Commit only private research state
         shell: bash
         run: |
           set -euo pipefail
           git -C "$PRIVATE_DIR" config user.name "PermitPlate Curated Research"
           git -C "$PRIVATE_DIR" config user.email "actions@users.noreply.github.com"
-          git -C "$PRIVATE_DIR" add -- state/curated-research-ledger.json state/curated-current-graph.json state/curated-baseline-anchor.json
+          git -C "$PRIVATE_DIR" add -- state/curated-research-ledger.json state/curated-current-graph.json state/curated-baseline-anchor.json state/independent-source-review.json state/independent-source-history.json state/identity-bridge-review.json state/identity-triage-history.json state/identity-bridge-review.csv state/identity-bridge-review.html state/construction-validation-panel.json state/construction-validation-panel.csv state/construction-validation-summary.md state/construction-blind-reviewer.json state/construction-reserved-audit.json state/construction-blind-manifest.json research/construction-frozen-reference-v1
           if git -C "$PRIVATE_DIR" diff --cached --quiet; then
             echo "No private research changes."
             exit 0
@@ -122,6 +210,12 @@ jobs:
         run: |
           set -euo pipefail
           test -n "${GH_TOKEN:-}"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          current_public="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          test -n "$current_public" && test "$current_public" = "$GITHUB_SHA" || {
+            echo "Public main advanced before publication. Private state held." >&2
+            exit 1
+          }
           gh auth setup-git
           remote_head="$(git -C "$PRIVATE_DIR" ls-remote origin refs/heads/main | cut -f1)"
           current_parent="$(git -C "$PRIVATE_DIR" rev-parse HEAD^ 2>/dev/null || true)"

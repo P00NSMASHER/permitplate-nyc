@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const {scanBatches, publicObservation} = require('./run-source-health');
 const {buildCurrentGraph} = require('./candidate-builder');
+const materialChange = require('./material-change');
 const {sha256, stableStringify} = require('./socrata-reader');
 
 const RUNNER_VERSION = 'PermitPlate-current-graph-v1.0.0';
@@ -27,6 +28,9 @@ function publicCandidate(candidate) {
     borough:candidate.borough,
     zip:candidate.zip,
     lifecycleStage:candidate.lifecycleStage,
+    // Versioned semantic change evidence from the full verified graph; public
+    // previews omit source rows but retain the tamper-evident descriptor.
+    materiality:materialChange.describe(candidate),
     sourceFirstEffectiveAt:candidate.sourceFirstEffectiveAt,
     sourceLatestEffectiveAt:candidate.sourceLatestEffectiveAt,
     latestPrePermitAt:candidate.latestPrePermitAt,
@@ -95,7 +99,7 @@ function knownRegressionChecks(graph, batches) {
   };
 }
 
-async function replay(nowIso) {
+async function replay(nowIso,options) {
   const {observedAt, batches} = await scanBatches(nowIso);
   const graph = buildCurrentGraph({
     dohmhBatch:batches.DOHMH,
@@ -134,7 +138,9 @@ async function replay(nowIso) {
     // A name, address, lifecycle or suppression edit must invalidate the receipt.
     candidates:result.candidates.slice().sort((a,b) => String(a.entityId).localeCompare(String(b.entityId)))
   }));
-  return result;
+  // Private callers may reuse exactly the source rows that established
+  // the graph. The default public CLI return shape remains unchanged.
+  return options&&options.withBatches===true?{result,batches}:result;
 }
 
 async function main() {

@@ -33,7 +33,7 @@ const SOURCE_CONFIGS = Object.freeze({
     recordFields: [
       'job_filing_number','filing_status','house_no','street_name','borough',
       'block','lot','bin','job_description','initial_cost','owner_s_business_name',
-      'filing_date','work_on_floor'
+      'filing_date','work_on_floor','building_type'
     ]
   }),
   SLA_PENDING: Object.freeze({
@@ -47,7 +47,7 @@ const SOURCE_CONFIGS = Object.freeze({
     entityKeyFields: ['application_id'],
     recordFields: [
       'application_id','description','legalname','dba','actual_address_of_premises',
-      'additional_address_information','city','state_name','zip_code','received_date',
+      'additional_address_information','premises_county','city','state_name','zip_code','received_date',
       'status','aka_address','georeference'
     ]
   })
@@ -218,6 +218,7 @@ function normalizeSlaPendingRow(row, context) {
     property: {
       address: normalizedAddress([r.actual_address_of_premises]),
       unit: nullableText(r.additional_address_information),
+      county: nullableText(r.premises_county),
       city: nullableText(r.city),
       state: nullableText(r.state_name),
       zip: nullableText(r.zip_code)

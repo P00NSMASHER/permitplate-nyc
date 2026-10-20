@@ -46,6 +46,39 @@ jobs:
       - name: Run NYC source adapter regression
         run: node pipeline/source-adapters.test.js
 
+      - name: Verify review-only unlinked DOB and SLA research
+        run: node pipeline/independent-source-review.test.js
+
+      - name: Verify complete official DOB scope and property-identity checks
+        run: node pipeline/construction-scope-evidence.test.js
+
+      - name: Verify official NYC million-BIN placeholder treatment
+        run: node pipeline/nyc-million-bin-real-case.test.js
+
+      - name: Verify independent source-rich DOB validation without calibration reuse
+        run: node pipeline/construction-validation-panel.test.js
+
+      - name: Verify separate blind construction scope review and reserved audit partition
+        run: node pipeline/construction-blind-diagnostic.test.js
+
+      - name: Verify persistent early-source history and dedupe
+        run: node pipeline/independent-source-history.test.js
+
+      - name: Verify conservative source identity review
+        run: node pipeline/identity-bridge-review.test.js
+
+      - name: Verify private identity CSV and HTML workbench safety
+        run: node pipeline/identity-review-workbench.test.js
+
+      - name: Verify stable identity triage history and fail-closed migration
+        run: node pipeline/identity-triage-history.test.js
+
+      - name: Verify legacy private identity receipt readback and strict recovery
+        run: node pipeline/identity-receipt-recovery.test.js
+
+      - name: Verify conservative cross-source identity review
+        run: node pipeline/identity-bridge-review.test.js
+
       - name: Run ProjectSignal corroboration regression
         run: node pipeline/project-signal.test.js
 
@@ -98,6 +131,27 @@ jobs:
       - name: Run provider reconciliation regression
         run: node pipeline/provider-reconciliation.test.js
 
+      - name: Verify PA Permit Pack payment intake, source review, delivery and dedupe
+        run: node pipeline/pa-permit-orders.test.js
+      - name: Verify payment/refund/dispute clearance before PA private reports
+        run: node pipeline/pa-permit-financial-readback.test.js
+      - name: Verify PA private case operator transaction and no-clobber publication
+        run: node pipeline/pa-permit-case-transaction.test.js
+      - name: Verify PA private operations health and provider readback reliability
+        run: node pipeline/pa-permit-health.test.js
+
+      - name: Verify independent PA heartbeat watchdog and private output
+        run: node pipeline/pa-permit-watchdog.test.js
+
+      - name: Enforce PA watchdog main-only read and no-send policy
+        run: python3 -m unittest discover -s tests -p 'test_pa_permit_watchdog_policy.py' -v
+
+      - name: Enforce PA private order workflow credential and no-send boundaries
+        run: python3 -m unittest discover -s tests -p 'test_pa_permit_intake_policy.py' -v
+
+      - name: Verify private Stripe intake heartbeat is not treated as commercial proof
+        run: node pipeline/stripe-intake-readiness.test.js
+
       - name: Run launch readiness controller regression
         run: node pipeline/launch-readiness.test.js
 
@@ -109,6 +163,18 @@ jobs:
 
       - name: Verify real curated research and subscriber fulfillment
         run: node pipeline/curated-product.test.js
+      - name: Verify Stripe-only private paid subscriber onboarding
+        run: node pipeline/curated-stripe-onboarding.test.js
+
+      - name: Verify opt-in Stripe credential policy
+        run: python3 -m unittest discover -s tests -p 'test_stripe_onboarding_policy.py' -v
+
+
+      - name: Verify private material-event customer delivery
+        run: node pipeline/curated-material-events.test.js
+
+      - name: Verify category-source evidence for paid leads
+        run: node pipeline/category-evidence.test.js
 
       - name: Verify private curated research workflow policy
         run: python3 -m unittest discover -s tests -p 'test_curated_workflow_policy.py' -v

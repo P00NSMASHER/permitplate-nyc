@@ -1,0 +1,148 @@
+name: PermitPlate PA private order intake
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '37 1,7,13,19 * * *'
+  push:
+    branches: [main]
+    paths:
+      - 'pipeline/pa-permit-*.js'
+      - 'pipeline/run-pa-permit-*.js'
+      - 'tests/test_pa_permit_intake_policy.py'
+      - '.github/workflows/pa-permit-intake.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'pipeline/pa-permit-*.js'
+      - 'pipeline/run-pa-permit-*.js'
+      - 'tests/test_pa_permit_intake_policy.py'
+      - '.github/workflows/pa-permit-intake.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('permitplate-pa-pr-{0}', github.event.pull_request.number) || format('permitplate-private-state-{0}', vars.PERMITPLATE_STATE_REPO) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check out exact tested source without credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Use pinned Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Test paid PA orders, research, QC, delivery and replay safety
+        run: node pipeline/pa-permit-orders.test.js
+      - name: Verify separate read-only PA PaymentIntent and Charge financial clearance
+        run: node pipeline/pa-permit-financial-readback.test.js
+      - name: Test private owner case publication with guarded Git main CAS
+        run: node pipeline/pa-permit-case-transaction.test.js
+      - name: Test aggregate PA order health and real provider timestamp formats
+        run: node pipeline/pa-permit-health.test.js
+      - name: Enforce private-state and no-send workflow policy
+        run: python3 -m unittest discover -s tests -p 'test_pa_permit_intake_policy.py' -v
+
+  intake:
+    needs: policy
+    if: ${{ vars.PERMITPLATE_PA_ORDER_INTAKE_ENABLED == 'true' && github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      STATE_REPO: ${{ vars.PERMITPLATE_STATE_REPO }}
+      PRIVATE_DIR: ${{ github.workspace }}/.private-state
+    steps:
+      - name: Check out exact main without public credential persistence
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Admit current exact main before loading private credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = 'refs/heads/main'
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          current="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          test -n "$current" && test "$current" = "$GITHUB_SHA"
+      - name: Use pinned Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Verify dedicated private state repository
+        env:
+          GH_TOKEN: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$STATE_REPO" && test -n "$GH_TOKEN"
+          test "$STATE_REPO" != "$GITHUB_REPOSITORY"
+          test "$(gh api "repos/$STATE_REPO" --jq '.visibility')" = "private"
+      - name: Check out private state without persistent credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: ${{ vars.PERMITPLATE_STATE_REPO }}
+          token: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
+          ref: main
+          path: .private-state
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Read paid PA Checkouts and write only private NO-SEND order ledger
+        env:
+          PERMITPLATE_STRIPE_READ_KEY: ${{ secrets.PERMITPLATE_STRIPE_READ_KEY }}
+        run: |
+          node pipeline/run-pa-permit-intake.js \
+            "$PRIVATE_DIR/state/pa-permit-orders.json" \
+            "$PRIVATE_DIR/state/pa-permit-anchor.json"
+      - name: Recheck exact approved public source after live provider read
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          current="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          test -n "$current" && test "$current" = "$GITHUB_SHA"
+      - name: Commit only private PA order state
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C "$PRIVATE_DIR" config user.name 'PermitPlate PA Private Orders'
+          git -C "$PRIVATE_DIR" config user.email 'actions@users.noreply.github.com'
+          git -C "$PRIVATE_DIR" add -- state/pa-permit-orders.json state/pa-permit-anchor.json
+          if git -C "$PRIVATE_DIR" diff --cached --quiet; then
+            echo "Private PA order state unchanged"
+            exit 0
+          fi
+          git -C "$PRIVATE_DIR" commit -m "state: verified private PA order intake ($GITHUB_RUN_ID)"
+      - name: Publish private PA orders with current-main compare and swap
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$GH_TOKEN"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          current="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          test -n "$current" && test "$current" = "$GITHUB_SHA"
+          gh auth setup-git
+          remote="$(git -C "$PRIVATE_DIR" ls-remote origin refs/heads/main | cut -f1)"
+          local_head="$(git -C "$PRIVATE_DIR" rev-parse HEAD)"
+          if [ "$remote" = "$local_head" ]; then
+            echo 'No private PA state push needed'
+            exit 0
+          fi
+          parent="$(git -C "$PRIVATE_DIR" rev-parse HEAD^ 2>/dev/null || true)"
+          test "$remote" = "$parent"
+          git -C "$PRIVATE_DIR" push origin HEAD:main
+      - name: Surface overdue private paid orders and receipt holds without PII
+        run: |
+          node pipeline/run-pa-permit-health.js \
+            "$PRIVATE_DIR/state/pa-permit-orders.json" \
+            "$PRIVATE_DIR/state/pa-permit-anchor.json"

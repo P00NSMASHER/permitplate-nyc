@@ -72,8 +72,8 @@ try{
   }
 
   const index=fs.readFileSync(path.join(build.OUT,'index.html'),'utf8');
-  assert(index.includes('Good timing starts with a'));
-  assert(index.includes('Founder reviewed'));
+  assert(index.includes('The right project.'));
+  assert(index.includes('Founder-reviewed'));
   assert(index.includes('Up to 10'));
   assert(index.includes('First brief in 5 business days'));
   assert(index.includes('data-source-freshness'));
@@ -112,6 +112,43 @@ try{
   assert(terms.includes('costs $79 USD per month'));
   assert(welcome.includes('name="robots" content="noindex,nofollow"'));
   assert(welcome.includes('within five business days'));
+
+  // Source-first editorial redesign cannot weaken the payment, privacy or
+  // publication boundaries. The direct welcome URL proves no completed sale.
+  const notes=fs.readFileSync(path.join(build.OUT,'field-notes.html'),'utf8');
+  const pa=fs.readFileSync(path.join(build.OUT,'permit-pack.html'),'utf8');
+  const css=fs.readFileSync(path.join(build.OUT,'site.css'),'utf8');
+  const sitemap=fs.readFileSync(path.join(build.OUT,'sitemap.xml'),'utf8');
+  const workflow=fs.readFileSync(path.join(__dirname,'.github/workflows/public-site-build.yml'),'utf8');
+  assert(notes.includes('Educational')===false || !notes.includes('guaranteed leads'));
+  assert(notes.includes('w9ak-ipjd'));
+  assert(notes.includes('43nn-pn8j'));
+  assert(notes.includes('f8i8-k2gm'));
+  assert(notes.includes('Public records'));
+  assert(index.includes('data-demo-select'));
+  assert(index.includes('ILLUSTRATIVE ONLY'));
+  assert(index.includes('Fictional format preview'));
+  assert(start.includes('checkout-explainer'));
+  assert(start.indexOf('class="checkout-card"')<start.indexOf('class="checkout-explainer"'));
+  assert(pa.includes('data-menu-toggle') && pa.includes('data-menu'));
+  assert(pa.includes('<script src="/permitplate-nyc/site.js" defer></script>'));
+  assert(start.indexOf('Continue to secure checkout')<start.indexOf('<ul>'));
+  assert(pa.indexOf('Buy securely for $29')<pa.indexOf('<ul>'));
+  assert(pa.indexOf('class="checkout-card"')<pa.indexOf('class="checkout-explainer"'));
+  assert(!welcome.includes('Payment complete'));
+  assert(welcome.includes('Viewing this page alone is not payment confirmation.'));
+  assert(welcome.includes('within five business days'));
+  assert(welcome.includes('name="robots" content="noindex,nofollow"'));
+  assert(css.includes('grid-template-columns:minmax(0,1fr)'));
+  assert(css.includes(':focus-visible'));
+  assert(sitemap.includes('field-notes.html'));
+  assert(workflow.includes("'permit-pack.html'"));
+  assert(workflow.includes("'welcome.html'"));
+  assert(workflow.includes("'field-notes.html'"));
+  assert(workflow.includes("'assets/**'"));
+  for(const path of ['start.html','permit-pack.html','field-notes.html','sample.html']){
+    assert(fs.readFileSync(build.OUT+'/'+path,'utf8').includes('name="description"'));
+  }
 
   const siteJs=fs.readFileSync(path.join(build.OUT,'site.js'),'utf8');
   assert(!siteJs.includes(STRIPE_URL));
