@@ -140,6 +140,12 @@ jobs:
       - name: Verify PA private operations health and provider readback reliability
         run: node pipeline/pa-permit-health.test.js
 
+      - name: Verify independent PA heartbeat watchdog and private output
+        run: node pipeline/pa-permit-watchdog.test.js
+
+      - name: Enforce PA watchdog main-only read and no-send policy
+        run: python3 -m unittest discover -s tests -p 'test_pa_permit_watchdog_policy.py' -v
+
       - name: Enforce PA private order workflow credential and no-send boundaries
         run: python3 -m unittest discover -s tests -p 'test_pa_permit_intake_policy.py' -v
 
