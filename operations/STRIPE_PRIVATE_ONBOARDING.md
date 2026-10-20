@@ -37,6 +37,36 @@ The initial run may start from an empty ledger only when **both** files are
 absent. If only one disappears, the process refuses to reset subscriber
 history. All outputs remain private, and CI prints aggregate counters only.
 
+## Prevent live Checkout configuration drift
+
+The private poller now performs **two read-only Stripe Payment Link GETs**
+before checking completed sessions. The existing `Payment Links: Read`
+restricted-key permission covers both the link record and its line-item list.
+
+- The exact live Payment Link must be active and match project/plan metadata.
+- The `category`, `territory`, and `starter` custom fields must be
+  nonoptional dropdowns, with distinct supported option values. An unexpected
+  key, missing field, duplicate key, unsupported vendor category/territory,
+  or an invalid Starter option blocks intake.
+- The full current line-item list must contain exactly one item, quantity
+  one, with the configured price ID at **$79.00 USD every month**, licensed
+  and unmetered. A different price, interval, quantity, currency, or
+  incomplete line-item page blocks intake. This catches changes not reflected
+  in the Payment Link's `monthly_79` metadata.
+
+These are provider-readback conditions, not marketing-page claims. They do
+not charge, refund, cancel, send or alter anything in the Stripe account.
+One rejected provider contract cannot be used to create a fresh intake
+heartbeat.
+
+If a real Checkout Session shows `payment_status=paid` but its Subscription
+was already canceled, unpaid, past due or otherwise inactive **before first
+observation**, the intake fails closed as
+`STRIPE_UNTRACKED_PAID_INACTIVE_SUBSCRIPTION`. It must not silently
+report a healthy empty review queue while a real payment may require human
+fulfillment/refund review. An already tracked subscriber that later becomes
+inactive remains explicitly held; it is never auto-released.
+
 ## What the intake means
 
 Stripe must confirm a `complete` Checkout Session, `paid` payment status,
