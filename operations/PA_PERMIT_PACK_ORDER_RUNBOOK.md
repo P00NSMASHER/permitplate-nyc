@@ -29,6 +29,14 @@ If either file is absent while its partner exists, if state is altered, if pagin
 
 ## Private operator workflow — no automated send
 
+The direct workbench CLI is **read-only or draft-only**. Its mutating commands
+are intentionally disabled to prevent a local JSON edit from bypassing the
+guarded private Git synchronization. For every genuine research, QC,
+hold-resolution, send-receipt or delivery-verification transition, use the
+transaction command documented below and supply the current private ledger
+fingerprint. Refresh it before **each** mutation because an intervening
+scheduled Stripe poll changes the private state revision.
+
 Work on a fresh private state-repository checkout. Use the workbench from the PermitPlate code repo, substituting **private absolute paths**:
 
     node pipeline/run-pa-permit-workbench.js status PRIVATE_LEDGER PRIVATE_ANCHOR
@@ -44,8 +52,8 @@ The draft is not evidence. It includes real customer details and must never go i
 
 Register genuine research, then review it separately:
 
-    node pipeline/run-pa-permit-workbench.js research PRIVATE_LEDGER PRIVATE_ANCHOR cs_LIVE_SESSION PRIVATE_RESEARCH_JSON
-    node pipeline/run-pa-permit-workbench.js qc PRIVATE_LEDGER PRIVATE_ANCHOR cs_LIVE_SESSION PRIVATE_QC_JSON
+    node pipeline/pa-permit-case-transaction.js research PRIVATE_STATE_ROOT cs_LIVE_SESSION PRIVATE_RESEARCH_JSON EXPECTED_CURRENT_LEDGER_FINGERPRINT
+    node pipeline/pa-permit-case-transaction.js qc PRIVATE_STATE_ROOT cs_LIVE_SESSION PRIVATE_QC_JSON EXPECTED_CURRENT_LEDGER_FINGERPRINT
 
 The QC JSON must use a distinct real human alias, bind the exact research fingerprint, and attest independent source, address and jurisdiction rechecks plus service limits. Self-declared IDs do NOT prove human identity or independent external validation. Even a passing QC remains NO SEND and requires real owner delivery authorization.
 
@@ -59,13 +67,13 @@ This Markdown is a research starting point, not an official decision. It is not 
 
 After an actual owner-approved manual email delivery through optional Resend, retain its true provider message ID, recipient, **exact approved From sender**, UTC sent time, exact research fingerprint, report SHA-256 fingerprint, and subject PA Permit Pack | Public-Source Research. The private receipt must now include expectedSender matching the actual Resend From value (either a verified email or a named sender such as PermitPlate Research <research@example.org>). The message plain-text body must match the exact reviewed Markdown report. A changed sender, subject, recipient, body or message ID blocks independent verification. Register:
 
-    node pipeline/run-pa-permit-workbench.js record-accepted PRIVATE_LEDGER PRIVATE_ANCHOR cs_LIVE_SESSION PRIVATE_RECEIPT_JSON
+    node pipeline/pa-permit-case-transaction.js record-accepted PRIVATE_STATE_ROOT cs_LIVE_SESSION PRIVATE_RECEIPT_JSON EXPECTED_CURRENT_LEDGER_FINGERPRINT
 
 The case becomes PROVIDER_DELIVERY_PENDING, NOT delivered. A typed receipt is never delivery proof.
 
 For optional independent verification, provide a separately authorized local PERMITPLATE_RESEND_READ_KEY and use:
 
-    node pipeline/run-pa-permit-workbench.js verify-delivery PRIVATE_LEDGER PRIVATE_ANCHOR cs_LIVE_SESSION
+    node pipeline/pa-permit-case-transaction.js verify-delivery PRIVATE_STATE_ROOT cs_LIVE_SESSION - EXPECTED_CURRENT_LEDGER_FINGERPRINT
 
 The validator issues only HTTPS GET to Resend for the message and checks the exact one-recipient delivery, approved sender, message ID, subject and SHA-256 of the original reviewed plain-text report. The documented created_at date may contain an explicit timezone offset and microseconds; the readback accepts those formats with a ten-minute send-time correlation window. Last events delivered, opened and clicked constitute provider delivery-status evidence, **not** evidence that a real human read or acted on the report. Bounces, complaints, unexpected HTML versions, CC/BCC recipients, forged/mismatched timestamps, sender mismatches and changed contents fail closed. A separate Resend credential and genuine provider receipt remain unverified for real customers.
 
@@ -79,7 +87,7 @@ The validator issues only HTTPS GET to Resend for the message and checks the exa
 - If a previously paid Checkout later reports unpaid, the original order enters a financial reconciliation hold. A subsequent paid readback does **not** silently release the hold. Verify the payment and correct state manually before any additional fulfillment.
 - Stripe Checkout paid status alone does **not** prove the transaction was never refunded, disputed or charged back. Before manually sending, the operator must check current Stripe payment/charge details using separately authorized financial read access; the restricted checkout credential alone is insufficient.
 - Recovery plan reports stale provider checks, old paid orders, delayed provider delivery readbacks and holds, without revealing PII in logs. Run: node pipeline/run-pa-permit-workbench.js recovery-plan PRIVATE_LEDGER PRIVATE_ANCHOR
-- A held case may be moved back to research only after a real operator reviews original customer support evidence and submits a private clarification/duplicate-separate-purchase attestation. Run: node pipeline/run-pa-permit-workbench.js resolve-hold PRIVATE_LEDGER PRIVATE_ANCHOR cs_LIVE_SESSION PRIVATE_EVIDENCE_JSON. The original paid Checkout is retained, the original fields remain immutable, and this does NOT authenticate a human or authorize customer sends.
+- A held case may be moved back to research only after a real operator reviews original customer support evidence and submits a private clarification/duplicate-separate-purchase attestation. Run: node pipeline/pa-permit-case-transaction.js resolve-hold PRIVATE_STATE_ROOT cs_LIVE_SESSION PRIVATE_EVIDENCE_JSON EXPECTED_CURRENT_LEDGER_FINGERPRINT. The original paid Checkout is retained, the original fields remain immutable, and this does NOT authenticate a human or authorize customer sends.
 - Recovery from destroyed/corrupted ledgers requires restoration from reviewed private Git history; no forced pushes or unverified reset.
 - Scored NYC leads, original scoring holdouts and public customer pages remain unaffected.
 
