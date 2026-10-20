@@ -83,7 +83,7 @@ function immutablePayments(before,after){
     return y&&keys.every(key=>core.stable(x[key])===core.stable(y[key]));
   });
 }
-async function apply(input){
+async function perform(input){
   const opts=input||{};
   if(!MODES.includes(opts.mode)||!core.id(opts.sessionId,'cs')){
     throw Error('PA_PRIVATE_CASE_OPERATION_INVALID');
@@ -102,7 +102,7 @@ async function apply(input){
   if(!core.validate(before).valid||!core.verifyAnchor(before,anchor)){
     throw Error('PA_PRIVATE_INTEGRITY_INVALID');
   }
-  if(opts.expectedLedgerFingerprint&&
+  if(!/^[a-f0-9]{64}$/.test(opts.expectedLedgerFingerprint||'')||
      opts.expectedLedgerFingerprint!==before.ledgerFingerprint){
     throw Error('PA_PRIVATE_EXPECTED_LEDGER_REVISION_MISMATCH');
   }
@@ -172,6 +172,26 @@ async function apply(input){
     independentHumanAuthenticationProven:false,
     customerDeliveryAutomaticallyAuthorized:false,
     externalSendCalls:0,paymentMutations:0};
+}
+async function apply(input){
+  const opts=input||{};
+  const privateRoot=privateMaterialPath(opts.privateRoot||'');
+  const full=normalizePath(privateRoot);
+  // Local interprocess exclusion. A stale lock after a crash requires
+  // inspected manual cleanup; never take over another operator session.
+  const lock=path.join(full,'.git','permitplate-pa-operator.lock');
+  let fd;
+  try{
+    fd=fs.openSync(lock,'wx',0o600);
+  }catch{
+    throw Error('PA_PRIVATE_LOCAL_OPERATOR_LOCK_UNAVAILABLE');
+  }
+  try{
+    return await perform(input);
+  }finally{
+    fs.closeSync(fd);
+    fs.unlinkSync(lock);
+  }
 }
 async function main(){
   if(process.argv.length!==8){
