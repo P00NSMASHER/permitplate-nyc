@@ -189,6 +189,12 @@ function evaluate(input){
     if(!['paid','unpaid','no_payment_required'].includes(session.payment_status)){
       failures.push('PA_PROVIDER_PAYMENT_STATUS_INVALID');continue;
     }
+    // Stripe Checkout's documented status values are exhaustive. A new or
+    // malformed provider status is not equivalent to a verified unpaid order.
+    if(!['paid','unpaid','no_payment_required'].includes(session.payment_status)){
+      failures.push('PA_PROVIDER_PAYMENT_STATUS_INVALID');
+      continue;
+    }
     if(session.payment_status!=='paid'){
       unpaid++;
       // A previously paid Checkout no longer reported paid is an incident,
