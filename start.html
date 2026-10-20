@@ -10,6 +10,9 @@
   <meta name="description" content="Start a PermitPlate NYC membership for $79/month through secure Stripe checkout." />
   <title>Start your membership — PermitPlate NYC</title>
   <link rel="canonical" href="https://p00nsmasher.github.io/permitplate-nyc/start.html" />
+  <meta property="og:title" content="PermitPlate NYC — Founder-reviewed research membership" />
+  <meta property="og:description" content="Weekly official-source research briefs for NYC restaurant vendors, one category and territory, $79/month." />
+  <meta property="og:image" content="https://p00nsmasher.github.io/permitplate-nyc/og-card.png" />
   <link rel="icon" href="/permitplate-nyc/favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="/permitplate-nyc/apple-touch-icon.png" />
   <link rel="manifest" href="/permitplate-nyc/manifest.webmanifest" />
@@ -21,8 +24,8 @@
   <nav class="nav" aria-label="Main navigation">
     <div class="shell navin">
       <a class="brand" href="/permitplate-nyc/"><span class="brand-mark" aria-hidden="true"></span><span>PermitPlate <small>NYC</small></span></a>
-      <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" data-menu-toggle><span></span><span></span><span></span></button>
-      <div class="navlinks" data-menu><a href="/permitplate-nyc/">Home</a><a href="/permitplate-nyc/sample.html">Sample</a><a href="/permitplate-nyc/methodology.html">Method</a><a href="/permitplate-nyc/refunds.html">Refunds</a></div>
+      <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="start-main-menu" data-menu-toggle><span></span><span></span><span></span></button>
+      <div class="navlinks" id="start-main-menu" data-menu><a href="/permitplate-nyc/">Home</a><a href="/permitplate-nyc/sample.html">Sample</a><a href="/permitplate-nyc/methodology.html">Method</a><a href="/permitplate-nyc/refunds.html">Refunds</a></div>
     </div>
   </nav>
 
@@ -30,8 +33,28 @@
     <div class="shell checkout-grid">
       <section class="checkout-copy">
         <div class="eyebrow">Ready when you are</div>
-        <h1>Start with a sharper list.</h1>
-        <p>Choose what you sell and where you work. Your first founder-reviewed brief arrives within five business days.</p>
+        <h1>Your weekly NYC research brief starts here.</h1>
+        <p>Choose your vendor category and NYC territory at Stripe checkout. Receive a concise, founder-reviewed brief within five business days after confirmed payment.</p>
+        <p class="checkout-promise">Official source links <span aria-hidden="true">·</span> No mystery scores <span aria-hidden="true">·</span> Seven-day first-payment refund</p>
+      </section>
+
+      <aside class="checkout-card" id="plan" aria-label="PermitPlate checkout summary">
+        <div class="price-label">Your founder-reviewed membership</div>
+        <div class="price"><strong>$79</strong><span>USD<br />each month</span></div>
+          <p class="purchase-summary">Weekly founder-reviewed NYC research · one vendor category and territory</p>
+        <a class="button button-primary button-wide" href="https://buy.stripe.com/4gM28r1cL81x8dF9Xj9sk02" rel="noopener">Continue to secure checkout <span class="arrow" aria-hidden="true">→</span></a>
+        <p class="checkout-legal">Checkout opens on Stripe. By subscribing, you agree to the <a href="/permitplate-nyc/terms.html">Terms</a>. Read the <a href="/permitplate-nyc/refunds.html">refund policy</a> and <a href="/permitplate-nyc/privacy.html">privacy notice</a>.</p>
+        <ul>
+          <li>One vendor category</li>
+          <li>One NYC territory</li>
+          <li>Weekly founder-reviewed brief</li>
+          <li>Up to 10 matching signals</li>
+          <li>Official links with every item</li>
+          <li>First brief within 5 business days</li>
+        </ul>
+      </aside>
+      <section class="checkout-explainer" aria-label="What happens after membership checkout">
+        <h2 class="checkout-explainer-title">Here's what happens after checkout.</h2>
         <div class="steps-row" aria-label="What happens after checkout">
           <article class="mini-step"><span>Step 1</span><strong>Choose</strong><p>Select one vendor category and your NYC territory in Stripe.</p></article>
           <article class="mini-step"><span>Step 2</span><strong>We review</strong><p>The founder checks current official records and removes weak matches.</p></article>
@@ -42,21 +65,6 @@
           <img src="/permitplate-nyc/assets/images/storefront-renovation-large.webp" width="1448" height="1086" alt="A New York City restaurant storefront being renovated" loading="lazy" />
         </picture>
       </section>
-
-      <aside class="checkout-card" aria-label="PermitPlate checkout summary">
-        <div class="price-label">PermitPlate NYC membership</div>
-        <div class="price"><strong>$79</strong><span>USD<br />each month</span></div>
-        <ul>
-          <li>One vendor category</li>
-          <li>One NYC territory</li>
-          <li>Weekly founder-reviewed brief</li>
-          <li>Up to 10 matching signals</li>
-          <li>Official links with every item</li>
-          <li>First brief within 5 business days</li>
-        </ul>
-        <a class="button button-primary button-wide" href="https://buy.stripe.com/4gM28r1cL81x8dF9Xj9sk02" rel="noopener">Continue to secure checkout <span class="arrow" aria-hidden="true">→</span></a>
-        <p class="checkout-legal">Checkout opens on Stripe. By subscribing, you agree to the <a href="/permitplate-nyc/terms.html">Terms</a>. Read the <a href="/permitplate-nyc/refunds.html">refund policy</a> and <a href="/permitplate-nyc/privacy.html">privacy notice</a>.</p>
-      </aside>
     </div>
   </main>
 
