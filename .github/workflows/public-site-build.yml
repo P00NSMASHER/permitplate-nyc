@@ -10,10 +10,12 @@ on:
       - '404.html'
       - 'apple-touch-icon.png'
       - 'favicon.svg'
+      - 'field-notes.html'
       - 'index.html'
       - 'manifest.webmanifest'
       - 'methodology.html'
       - 'og-card.png'
+      - 'permit-pack.html'
       - 'privacy.html'
       - 'refunds.html'
       - 'release-manifest.json'
@@ -24,6 +26,8 @@ on:
       - 'start.html'
       - 'sitemap.xml'
       - 'terms.html'
+      - 'welcome.html'
+      - 'assets/**'
       - '.github/workflows/public-site-build.yml'
 
 permissions:

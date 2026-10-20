@@ -27,6 +27,7 @@ const PUBLIC_FILES=Object.freeze([
   'assets/images/storefront-renovation-large.webp',
   'assets/images/storefront-renovation-small.webp',
   'favicon.svg',
+  'field-notes.html',
   'index.html',
   'manifest.webmanifest',
   'methodology.html',

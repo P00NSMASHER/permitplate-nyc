@@ -30,7 +30,9 @@ assert(!index.includes(stripeUrl));
 
 assert(start.includes(stripeUrl));
 assert(start.includes('Continue to secure checkout'));
-assert(start.includes('Choose what you sell and where you work'));
+assert(start.includes('Choose your vendor category and NYC territory at Stripe checkout.'));
+assert(start.indexOf('Continue to secure checkout')<start.indexOf('<ul>'),
+  'paid checkout action must precede the long benefits list on mobile');
 assert(start.includes('One vendor category'));
 assert(start.includes('One NYC territory'));
 assert(start.toLowerCase().includes('weekly founder-reviewed brief'));
