@@ -145,12 +145,60 @@ assert.equal(noFunds.status,'READY');
 assert.equal(noFunds.accepted,0);
 assert.equal(noFunds.held,1);
 
+for(const status of ['canceled','past_due','unpaid','incomplete']){
+  const untracked=adapter.processSnapshot({
+    checkedAt:AFTER,complete:true,previousLedger:empty.ledger,
+    sessions:[session()],
+    subscriptionById:{[SUB]:subscription({status})}
+  });
+  assert.equal(untracked.status,'REVIEW');
+  assert(untracked.failures.includes('STRIPE_UNTRACKED_PAID_INACTIVE_SUBSCRIPTION'));
+  assert.equal(untracked.ledger,undefined);
+  assert.equal(untracked.created,undefined);
+}
+
+
 async function main(){
   const verifiedLink={
     object:'payment_link',id:stripe.PERMITPLATE_PAYMENT_LINK,
     livemode:true,active:true,
-    metadata:{project:'permitplate_nyc',plan:'monthly_79'}
+    metadata:{project:'permitplate_nyc',plan:'monthly_79'},
+    custom_fields:[
+      {key:'category',type:'dropdown',optional:false,
+        dropdown:{default_value:null,options:[
+          {value:'equipment',label:'Restaurant equipment'},
+          {value:'insurance',label:'Insurance'}
+        ]}},
+      {key:'territory',type:'dropdown',optional:false,
+        dropdown:{default_value:null,options:[
+          {value:'Brooklyn',label:'Brooklyn'},
+          {value:'AllNYC',label:'All five boroughs'}
+        ]}},
+      {key:'starter',type:'dropdown',optional:false,
+        dropdown:{default_value:'yes',options:[
+          {value:'yes',label:'Yes'},
+          {value:'no',label:'No'}
+        ]}}
+    ]
   };
+  const pricedItems={
+    object:'list',has_more:false,data:[{
+      quantity:1,price:{
+        id:adapter.EXPECTED_PRICE_ID,currency:'usd',unit_amount:7900,
+        recurring:{interval:'month',interval_count:1,usage_type:'licensed'}
+      }
+    }]
+  };
+  const providerResponse=(url,link=verifiedLink,items=pricedItems)=>{
+    const pathname=new URL(url).pathname;
+    if(pathname==='/v1/payment_links/'+stripe.PERMITPLATE_PAYMENT_LINK)
+      return link;
+    if(pathname==='/v1/payment_links/'+stripe.PERMITPLATE_PAYMENT_LINK+'/line_items')
+      return items;
+    return {data:[],has_more:false};
+  };
+  assert.equal(polling.validRequiredDropdowns(verifiedLink.custom_fields),true);
+  assert.equal(polling.validPriceContract(pricedItems),true);
   const fake=async(url,args)=>{
     assert.equal(args.method,'GET');
     assert.equal(args.redirect,'error');
@@ -158,6 +206,10 @@ async function main(){
     const u=new URL(url);
     if(u.pathname==='/v1/payment_links/'+stripe.PERMITPLATE_PAYMENT_LINK){
       return {ok:true,json:async()=>verifiedLink};
+    }
+    if(u.pathname==='/v1/payment_links/'+stripe.PERMITPLATE_PAYMENT_LINK+'/line_items'){
+      assert.equal(u.searchParams.get('limit'),'100');
+      return {ok:true,json:async()=>pricedItems};
     }
     if(u.pathname==='/v1/checkout/sessions'){
       assert.equal(u.searchParams.get('payment_link'),stripe.PERMITPLATE_PAYMENT_LINK);
@@ -204,15 +256,14 @@ async function main(){
     assert(blocked.failures.includes('STRIPE_INTAKE_STATE_PAIR_INCOMPLETE'));
   }finally{fs.rmSync(tmp,{recursive:true,force:true})}
   const noPaid=await polling.snapshot('rk_live_unitfixture',async url=>({
-    ok:true,json:async()=>String(url).includes('/v1/payment_links/')?
-      verifiedLink:{data:[],has_more:false}
+    ok:true,json:async()=>providerResponse(url)
   }));
   assert.equal(noPaid.sessions.length,0);
   await assert.rejects(polling.snapshot('rk_test_key',fake),/STRIPE_READ_CREDENTIAL_MISSING/);
   await assert.rejects(polling.snapshot('sk_live_overprivileged_key',fake),/STRIPE_READ_CREDENTIAL_MISSING/);
   await assert.rejects(polling.snapshot('rk_live_unitfixture',async url=>({
-    ok:true,json:async()=>String(url).includes('/v1/payment_links/')?
-      verifiedLink:{data:[],has_more:true}
+    ok:true,json:async()=>new URL(url).pathname==='/v1/checkout/sessions'?
+      {data:[],has_more:true}:providerResponse(url)
   })),/STRIPE_PAGE_CURSOR_MISSING/);
   await assert.rejects(polling.snapshot('rk_live_unitfixture',async()=>({
     ok:true,json:async()=>({...verifiedLink,id:'plink_wrong'})
@@ -223,6 +274,49 @@ async function main(){
   await assert.rejects(polling.snapshot('rk_live_unitfixture',async()=>({
     ok:true,json:async()=>({data:[],has_more:false})
   })),/STRIPE_PAYMENT_LINK_ACCOUNT_NOT_VERIFIED/);
+
+  const decline=async(link=verifiedLink,items=pricedItems)=>
+    polling.snapshot('rk_live_unitfixture',async url=>({
+      ok:true,json:async()=>providerResponse(url,link,items)
+    }));
+  for(const fields of [
+    [],verifiedLink.custom_fields.slice(0,2),
+    [...verifiedLink.custom_fields,verifiedLink.custom_fields[0]],
+    verifiedLink.custom_fields.map(f=>f.key==='category'?
+      {...f,optional:true}:f),
+    verifiedLink.custom_fields.map(f=>f.key==='category'?
+      {...f,dropdown:{...f.dropdown,options:[{value:'unsupported_vendor'}]}}:f),
+    verifiedLink.custom_fields.map(f=>f.key==='territory'?
+      {...f,dropdown:{...f.dropdown,options:[{value:'NewJersey'}]}}:f),
+    verifiedLink.custom_fields.map(f=>f.key==='starter'?
+      {...f,dropdown:{...f.dropdown,options:[{value:'yes'}]}}:f),
+    verifiedLink.custom_fields.map(f=>f.key==='starter'?
+      {...f,dropdown:{...f.dropdown,options:[{value:'yes'},{value:'yes'}]}}:f)
+  ]){
+    assert.equal(polling.validRequiredDropdowns(fields),false);
+    await assert.rejects(decline({...verifiedLink,custom_fields:fields}),
+      /STRIPE_PAYMENT_LINK_CUSTOM_FIELDS_INVALID/);
+  }
+  for(const badLineItems of [
+    {...pricedItems,has_more:true},
+    {...pricedItems,data:[]},
+    {...pricedItems,data:[...pricedItems.data,...pricedItems.data]},
+    {...pricedItems,data:[{...pricedItems.data[0],quantity:2}]},
+    {...pricedItems,data:[{...pricedItems.data[0],
+      price:{...pricedItems.data[0].price,id:'price_wrong'}}]},
+    {...pricedItems,data:[{...pricedItems.data[0],
+      price:{...pricedItems.data[0].price,unit_amount:7800}}]},
+    {...pricedItems,data:[{...pricedItems.data[0],
+      price:{...pricedItems.data[0].price,currency:'eur'}}]},
+    {...pricedItems,data:[{...pricedItems.data[0],
+      price:{...pricedItems.data[0].price,
+        recurring:{interval:'year',interval_count:1,usage_type:'licensed'}}}]}
+  ]){
+    assert.equal(polling.validPriceContract(badLineItems),false);
+    await assert.rejects(decline(verifiedLink,badLineItems),
+      /STRIPE_PAYMENT_LINK_PRICE_CONTRACT_INVALID/);
+  }
+
   console.log('Verified private Stripe onboarding, idempotency, billing holds and no-send.');
 }
 main().catch(err=>{console.error(err);process.exitCode=1});
