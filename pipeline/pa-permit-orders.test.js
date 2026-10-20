@@ -322,6 +322,51 @@ assert.equal(fulfil.verifiedDelivery({
     text:'A different message not matching the approved report'},
   now:'2026-10-19T14:28:00.000Z'
 }).status,'REVIEW');
+
+assert.equal(fulfil.providerCreatedAt('2026-10-19 14:24:59.994981+00'),
+  '2026-10-19T14:24:59.994Z');
+assert.equal(fulfil.providerCreatedAt('2026-10-19T14:24:59.994981+00:00'),
+  '2026-10-19T14:24:59.994Z');
+assert.equal(fulfil.providerCreatedAt('2026-10-19T14:24:59.994981Z'),
+  '2026-10-19T14:24:59.994Z');
+assert.equal(fulfil.providerCreatedAt('2026-10-19T14:24:59.994Z'),
+  '2026-10-19T14:24:59.994Z');
+assert.equal(fulfil.providerCreatedAt('2026-10-19T14:24:59'),null);
+assert.equal(fulfil.providerCreatedAt('2026-10-19T14:24:59+25:00'),null);
+assert.equal(fulfil.providerCreatedAt('not a provider timestamp'),null);
+assert(fulfil.expectedSender('PermitPlate <research@example.org>'));
+assert(!fulfil.expectedSender('bad\nX-Injected: yes'));
+const providerBase={
+  id:declared.messageId,to:[order.email],from:declared.expectedSender,
+  last_event:'delivered',created_at:'2026-10-19 14:24:59.994981+00',
+  subject:declared.sentSubject,text:md,html:null,cc:[],bcc:[]
+};
+const verifyWith=(providerResponse)=>fulfil.verifiedDelivery({
+  ledger:receipt.ledger,anchor,sessionId:SESSION,
+  providerResponse,now:'2026-10-19T14:28:00.000Z'
+});
+assert.equal(verifyWith(providerBase).status,'DELIVERED_PROVIDER_VERIFIED');
+assert.equal(verifyWith({...providerBase,last_event:'opened'}).status,
+  'DELIVERED_PROVIDER_VERIFIED');
+assert.equal(verifyWith({...providerBase,last_event:'clicked'}).status,
+  'DELIVERED_PROVIDER_VERIFIED');
+for(const bad of [
+  {...providerBase,last_event:'sent'},
+  {...providerBase,last_event:'bounced'},
+  {...providerBase,last_event:'complained'},
+  {...providerBase,from:'Wrong Sender <wrong@example.org>'},
+  {...providerBase,to:[order.email,'another@example.org']},
+  {...providerBase,bcc:['hidden@example.org']},
+  {...providerBase,html:'<p>Different material</p>'},
+  {...providerBase,created_at:'2026-10-19 12:10:00.000000+00'},
+  {...providerBase,created_at:'2026-10-19 15:25:00.000000+00'},
+  {...providerBase,created_at:'2026-10-19T14:25:00'},
+  {...providerBase,subject:'PA permit spoofed subject'},
+  {...providerBase,text:md+'This changes the contract.'}
+]){
+  assert.equal(verifyWith(bad).status,'REVIEW');
+}
+
 const verified=fulfil.verifiedDelivery({
   ledger:receipt.ledger,anchor,sessionId:SESSION,
   providerResponse:{id:declared.messageId,to:[order.email],last_event:'delivered',
