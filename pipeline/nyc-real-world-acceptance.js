@@ -88,10 +88,12 @@ function assessSnapshot(publicGraph, batches, graph) {
   const allRecords = KEYS.flatMap(key => batches[key].records);
   const recordsById = shadow.sourceMap(allRecords);
   const stageCounts = {}, boroughCounts = {}, bestShadowFitCounts = {};
+  const effectiveTimestampCounts = {};
   const categoryStatus = Object.fromEntries(CATEGORIES.map(label => [label, {}]));
   const supportByEntity = new Map();
   const examples = [];
   let missingName = 0, missingAddress = 0, missingBorough = 0;
+  let invalidBorough = 0, uninspectedPlaceholder = 0, misleadinglyRecentPlaceholder = 0;
   let suppressed = 0, shadowScored = 0, literalScored = 0, categoryKeywordEntities = 0;
   let shadowFailed = 0, unsupportedCategoryPromotion = 0;
 
@@ -102,6 +104,21 @@ function assessSnapshot(publicGraph, batches, graph) {
     if (!candidate.canonicalName) missingName++;
     if (!candidate.address) missingAddress++;
     if (!candidate.borough) missingBorough++;
+    if (!['Manhattan','Brooklyn','Queens','Bronx','Staten Island'].includes(
+      String(candidate.borough || ''))) invalidBorough++;
+    inc(effectiveTimestampCounts,iso(candidate.sourceLatestEffectiveAt));
+    // DOHMH inspection date 1900-01-01 means *not yet inspected*, not
+    // "the business applied yesterday". A fresh record_date is not
+    // independently verified opening/application evidence.
+    const placeholder = String(candidate.primaryRecord?.facts?.inspection_date || '')
+      .startsWith('1900-01-01');
+    if (placeholder) {
+      uninspectedPlaceholder++;
+      const effective = Date.parse(String(candidate.sourceLatestEffectiveAt || ''));
+      const nowMs = Date.parse(observedAt);
+      if (Number.isFinite(effective) && effective <= nowMs &&
+          nowMs - effective <= 7 * 86400000) misleadinglyRecentPlaceholder++;
+    }
     if (candidate.deliverySuppressed) suppressed++;
 
     const publicCandidate = byPublicId.get(candidate.entityId);
@@ -177,7 +194,13 @@ function assessSnapshot(publicGraph, batches, graph) {
       acceptedSlaCorroboration:graph.metrics.acceptedSlaCorroborationCount,
       acceptedReviewedDobCorroboration:graph.metrics.acceptedDobReviewedCorroborationCount,
       rejectedDobColocation:graph.metrics.rejectedDobColocationCount,
-      missingName, missingAddress, missingBorough,
+      missingName, missingAddress, missingBorough, invalidBorough,
+      uninspectedPlaceholderCandidates:uninspectedPlaceholder,
+      uninspectedPlaceholderWithRecentRecordDate:misleadinglyRecentPlaceholder,
+      mostFrequentSourceEffectiveTimestamps:Object.entries(effectiveTimestampCounts)
+        .sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))
+        .slice(0,5).map(([timestamp,count])=>({timestamp,count})),
+      dateSemanticsWarning:'DOHMH 1900 inspection placeholders and record_date updates do not prove new restaurant openings or application dates.',
       latestSourceEffectiveDateAge:ageSummary(entities,observedAt),
       regressionChecks:publicGraph.knownRegressionChecks
     },
