@@ -205,5 +205,8 @@ jobs:
       - name: Verify owner-authorized V4 internal production scores never enable customer transport
         run: node pipeline/nyc-v4-internal-production-scoring.test.js
 
+      - name: Verify private operator V4 HTML and CSV security
+        run: node pipeline/nyc-v4-review-workbench.test.js
+
       - name: Run controlled scoring promotion policy regression
         run: node pipeline/scoring-policy.test.js

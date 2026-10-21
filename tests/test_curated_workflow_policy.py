@@ -59,7 +59,22 @@ def verify(source):
         assert "      - '" + exact + "'" in push
         assert "      - '" + exact + "'" in pr
     assert "node pipeline/nyc-v4-internal-production-scoring.test.js" in source
-    assert "state/nyc-v4-internal-scores.json" in source
+    assert "node pipeline/nyc-v4-review-workbench.test.js" in source
+    for exact in (
+        "pipeline/nyc-v4-review-workbench.js",
+        "pipeline/nyc-v4-review-workbench.test.js",
+    ):
+        assert "      - '" + exact + "'" in push
+        assert "      - '" + exact + "'" in pr
+    for private_path in (
+        "state/nyc-v4-internal-scores.json",
+        "state/nyc-v4-review-workbench-receipt.json",
+        "state/nyc-v4-review-workbench.csv",
+        "state/nyc-v4-review-workbench.html",
+    ):
+        assert private_path in source[
+            source.index("Commit only private research state"):source.index(COMMIT)
+        ]
     assert "state/curated-research-ledger.json state/curated-current-graph.json" in source
     assert "state/identity-bridge-review.json state/identity-triage-history.json state/identity-bridge-review.csv state/identity-bridge-review.html" in source
     assert "node pipeline/identity-triage-history.test.js" in source
@@ -94,6 +109,11 @@ class CuratedWorkflowPolicyTest(unittest.TestCase):
 
     def test_current_policy(self):
         verify(self.source)
+
+    def test_missing_private_workbench_artifact_publication_rejected(self):
+        modified = self.source.replace("state/nyc-v4-review-workbench.html", "", 1)
+        with self.assertRaises(AssertionError):
+            verify(modified)
 
     def test_missing_production_scoring_snapshot_publication_rejected(self):
         mutated = self.source.replace("state/nyc-v4-internal-scores.json", "", 1)

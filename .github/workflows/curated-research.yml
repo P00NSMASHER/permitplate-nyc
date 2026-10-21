@@ -14,6 +14,8 @@ on:
       - 'pipeline/run-curated-research.js'
       - 'pipeline/nyc-v4-internal-production-scoring.js'
       - 'pipeline/nyc-v4-internal-production-scoring.test.js'
+      - 'pipeline/nyc-v4-review-workbench.js'
+      - 'pipeline/nyc-v4-review-workbench.test.js'
       - 'scoring/nyc-v4-internal-owner-authorization.json'
       - 'pipeline/independent-source-review.js'
       - 'pipeline/independent-source-review.test.js'
@@ -64,6 +66,8 @@ on:
       - 'pipeline/run-curated-research.js'
       - 'pipeline/nyc-v4-internal-production-scoring.js'
       - 'pipeline/nyc-v4-internal-production-scoring.test.js'
+      - 'pipeline/nyc-v4-review-workbench.js'
+      - 'pipeline/nyc-v4-review-workbench.test.js'
       - 'scoring/nyc-v4-internal-owner-authorization.json'
       - 'pipeline/independent-source-review.js'
       - 'pipeline/independent-source-review.test.js'
@@ -130,6 +134,8 @@ jobs:
         run: node pipeline/curated-product.test.js
       - name: Verify no-send NYC internal production score boundary
         run: node pipeline/nyc-v4-internal-production-scoring.test.js
+      - name: Verify private V4 workbench source links and safe exports
+        run: node pipeline/nyc-v4-review-workbench.test.js
       - name: Verify independent early-source discovery remains review-only
         run: node pipeline/independent-source-review.test.js
       - name: Verify full DOB scope and conflicting building identifiers
@@ -221,7 +227,7 @@ jobs:
           set -euo pipefail
           git -C "$PRIVATE_DIR" config user.name "PermitPlate Curated Research"
           git -C "$PRIVATE_DIR" config user.email "actions@users.noreply.github.com"
-          git -C "$PRIVATE_DIR" add -- state/curated-research-ledger.json state/curated-current-graph.json state/curated-baseline-anchor.json state/nyc-v4-internal-scores.json state/independent-source-review.json state/independent-source-history.json state/identity-bridge-review.json state/identity-triage-history.json state/identity-bridge-review.csv state/identity-bridge-review.html state/construction-validation-panel.json state/construction-validation-panel.csv state/construction-validation-summary.md state/construction-blind-reviewer.json state/construction-reserved-audit.json state/construction-blind-manifest.json research/construction-frozen-reference-v1
+          git -C "$PRIVATE_DIR" add -- state/curated-research-ledger.json state/curated-current-graph.json state/curated-baseline-anchor.json state/nyc-v4-internal-scores.json state/nyc-v4-review-workbench-receipt.json state/nyc-v4-review-workbench.csv state/nyc-v4-review-workbench.html state/independent-source-review.json state/independent-source-history.json state/identity-bridge-review.json state/identity-triage-history.json state/identity-bridge-review.csv state/identity-bridge-review.html state/construction-validation-panel.json state/construction-validation-panel.csv state/construction-validation-summary.md state/construction-blind-reviewer.json state/construction-reserved-audit.json state/construction-blind-manifest.json research/construction-frozen-reference-v1
           if git -C "$PRIVATE_DIR" diff --cached --quiet; then
             echo "No private research changes."
             exit 0
