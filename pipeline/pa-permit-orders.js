@@ -88,6 +88,15 @@ function validate(ledger){
     if(o.jurisdictionBoundaryIndependentlyVerified===true){
       failures.push('PA_AUTOMATED_GEOGRAPHIC_BOUNDARY_VERIFICATION_FORBIDDEN');
     }
+    // A manual correction may not introduce a project that would have
+    // been held at original paid-Checkout intake. Verify the effective
+    // customer project independently of the ledger's mutable validity flag.
+    if(typeof o.projectValid!=='boolean'||(o.projectValid&&
+       !projectHealth(o.projectOverride===undefined?o.project:o.projectOverride))||
+       (o.projectOverride!==undefined&&
+        (!o.holdResolution||!projectHealth(o.projectOverride)))){
+      failures.push('PA_EFFECTIVE_PROJECT_DETAILS_INVALID');
+    }
     if(intents.has(o.paymentIntentId))failures.push('PA_DUPLICATE_PAYMENT_INTENT');
     intents.add(o.paymentIntentId);
     if(['RESEARCH_SUBMITTED','QC_HOLD','READY_FOR_MANUAL_DELIVERY',
@@ -147,6 +156,11 @@ function customerProject(session){
 function projectHealth(p){
   if(!p||typeof p.municipality!=='string'||
      typeof p.projectAddress!=='string'||typeof p.projectScope!=='string')return false;
+  // Operator corrections must obey the same canonical, length-bounded,
+  // markup- and URL-free input rules as original Stripe custom fields.
+  if(safeText(p.municipality,100)!==p.municipality||
+     safeText(p.projectAddress,200)!==p.projectAddress||
+     safeText(p.projectScope,255)!==p.projectScope)return false;
   if(p.municipality.length<2||p.projectAddress.length<5||
      p.projectScope.length<5||!/county|,\s*PA\b|philadelphia/i.test(p.municipality))return false;
   // A government project listing often names only a facility or county, not

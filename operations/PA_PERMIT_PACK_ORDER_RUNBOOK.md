@@ -106,6 +106,9 @@ The validator issues only HTTPS GET to Resend for the message and checks the exa
 
 - Repeated PA provider scans never create a second order for the same Checkout.
 - Separate paid sessions for the same project are flagged as possible duplicate charges, never discarded.
+- A customer-confirmed separate purchase does **not** validate project details. Before releasing any duplicate hold, independently review the effective original or customer-corrected municipality, address and scope. An invalid original or malformed override remains held; do not set `projectValid=true` by attestation alone.
+- Manual project corrections must satisfy the same text limits, canonicalization, jurisdiction ambiguity checks, and no-markup/no-URL rules as original paid Checkout input. Private ledger readback rechecks corrected projects even if its SHA-256 seal was recomputed. This text verification is **not** boundary geocoding or verified permit authority.
+- A hold-release review timestamp must be a valid UTC instant between the actual paid order time and the current operation time. Future-dated self-attestations remain on hold.
 - Research, QC and delivery progress are preserved during each recheck.
 - No transport retry is automatic; a timeout requires independent provider reconciliation to avoid double sending.
 - A provider-verified delivery becomes terminal for sending; tampering or changed Checkout identity stops intake.
