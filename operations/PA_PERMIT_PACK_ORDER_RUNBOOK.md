@@ -47,6 +47,7 @@ The draft is not evidence. It includes real customer details and must never go i
 - A real researcher alias and preparation timestamp.
 - Actual project interpretation, jurisdiction, authority and fee limits.
 - At least two separate cited sources with IDs, URLs, timestamps and specific facts. At least one must be a government source.
+- Each source's actual `observedAt` must be on or before the packet's `preparedAt`. Do not future-date or backfill a source observation to make a packet appear more current. The validator refuses impossible chronology, and timestamps alone do not prove genuine independent human inspection.
 - Two applicable actions supported by those sources and at least one unresolved issue.
 - No guarantee of permit approval, project applicability, legal advice, or government endorsement.
 
