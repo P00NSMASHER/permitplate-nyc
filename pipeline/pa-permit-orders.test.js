@@ -418,6 +418,17 @@ const clarification={
   originalCustomerEvidenceInspected:true,ownerAttestation:true,
   projectOverride:correctedProject
 };
+// Adversarial audit: a future review timestamp cannot be backdated into
+// today's private state by a self-attesting operator.
+const futureAttestation=recovery.resolveHold({
+  ledger:hold.ledger,anchor,sessionId:SESSION,
+  now:LATER,evidence:{
+    ...clarification,reviewedAt:'2026-10-21T14:12:00.000Z'
+  }
+});
+assert.equal(futureAttestation.status,'REVIEW');
+assert(futureAttestation.failures.includes('PA_HOLD_REVIEW_FUTURE_OR_INVALID'));
+assert.equal(futureAttestation.ledger,undefined);
 const recovered=recovery.resolveHold({
   ledger:hold.ledger,anchor,sessionId:SESSION,
   now:LATER,evidence:clarification
