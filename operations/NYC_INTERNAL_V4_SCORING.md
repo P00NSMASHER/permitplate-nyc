@@ -36,6 +36,44 @@ A source-locked PAAM-L044 replay at `2026-10-21T15:00:49Z` fetched **5,522 DOHMH
 
 A clean-room private-state bootstrap and a second repeated scan both passed. The second pass recorded **zero** spurious newly observed restaurant events despite the fresh data-extract clock.
 
+## Private founder research board
+
+The same authenticated main-only curated refresh now prepares **three additional
+private outputs** directly from its already-verified V4 snapshot and source graph:
+
+- `state/nyc-v4-review-workbench.html` — responsive, offline, script-free
+  evidence review board with source links, dates, and the top 16 entries per
+  vendor category. No tracking pixels, fonts, scripts, forms or contact buttons.
+- `state/nyc-v4-review-workbench.csv` — all internally ranked records across
+  eight vendor categories, including source evidence and blank owner source,
+  independent buyer-need, notes and disposition fields. CSV formula injection
+  is escaped. Blank fields **do not mean the claim is verified**.
+- `state/nyc-v4-review-workbench-receipt.json` — source, score, output-integrity
+  hashes, category totals and explicit `ownerApproved:false`,
+  `customerDeliveryAllowed:false`, and `externalSendCalls:0`.
+
+The private board makes the daily source-based ranking actionable for the
+operator, but **does not change which restaurants are eligible for a paid
+brief**. Category relevance remains a bounded heuristic and any claimed buyer
+demand requires evidence and explicit per-record owner assessment. A user must
+not forward the board/CSV as a customer lead list or treat the numerical values
+as predicted sales. Existing first-subscriber Stripe verification, category
+attestation, customer delivery approval, provider readback, and suppression
+controls remain entirely separate.
+
+When checking a record, open its exact official dataset link and CAMIS public
+inspection link, verify name/premises and category suitability, then write an
+actual evidence-based conclusion in a **separate private editable copy** of
+the CSV. No automated process treats that copy as a signed or approved
+customer decision. The next daily refresh may replace the generated blank
+worksheet; do not edit the generated workbench artifact in place.
+
+The refresh **rejects** invalid V4 score hashes, graph/source observation
+mismatch, suppressed or cross-tenant CAMIS, altered timestamps, nonofficial
+links, and unsafe presentation before any new private publication. All files
+are committed only by the existing private Git state writer and must never be
+added to the public GitHub Pages allowlist or public Actions artifacts.
+
 ## Verification and rollback
 
 On an exact candidate or current source revision:
