@@ -441,6 +441,54 @@ assert.equal(separate.status,'RESEARCH_QUEUE_AFTER_MANUAL_ATTESTATION');
 assert.equal(separate.ledger.orders[second.id].phase,'RESEARCH_QUEUE');
 assert.equal(separate.ledger.orders[second.id].transportAllowed,false);
 
+// Regression: a paid duplicate of an invalid project must stay on hold,
+// even when the operator confirms that the purchase was separate.
+const invalidDuplicateFields=project.map(f=>f.key==='municipality'?
+  {...f,text:{value:'Pottsville'}}:f);
+const invalidFirst=session({
+  id:'cs_live_pa_invalid_duplicate1',payment_intent:'pi_live_pa_invalid_duplicate1',
+  custom_fields:invalidDuplicateFields
+});
+const invalidSecond=session({
+  id:'cs_live_pa_invalid_duplicate2',payment_intent:'pi_live_pa_invalid_duplicate2',
+  created:Date.parse('2026-10-19T13:05:00Z')/1000,
+  custom_fields:structuredClone(invalidDuplicateFields)
+});
+const invalidDuplicates=core.evaluate({
+  ...snapshot([invalidFirst,invalidSecond]),checkedAt:LATER,
+  previousLedger:origin
+});
+assert.equal(invalidDuplicates.status,'READY');
+assert.equal(invalidDuplicates.ledger.orders[invalidFirst.id].phase,
+  'HOLD_PROJECT_DETAILS');
+assert.equal(invalidDuplicates.ledger.orders[invalidSecond.id].phase,
+  'HOLD_POSSIBLE_DUPLICATE');
+assert.equal(invalidDuplicates.ledger.orders[invalidSecond.id].projectValid,false);
+const unqualifiedRelease=recovery.resolveHold({
+  ledger:invalidDuplicates.ledger,anchor,sessionId:invalidSecond.id,
+  now:LATER,evidence:{
+    ...clarification,projectOverride:undefined,
+    separatePurchaseConfirmedByCustomer:true
+  }
+});
+assert.equal(unqualifiedRelease.status,'REVIEW');
+assert(unqualifiedRelease.failures.includes('PA_DUPLICATE_PROJECT_DETAILS_INVALID'));
+assert.equal(unqualifiedRelease.ledger,undefined);
+
+// A duplicate-resolution override is still customer input, so do not
+// allow invalid or markup-bearing scope to bypass the original intake gate.
+const invalidOverrideRelease=recovery.resolveHold({
+  ledger:duplicates.ledger,anchor,sessionId:second.id,
+  now:LATER,evidence:{
+    ...clarification,separatePurchaseConfirmedByCustomer:true,
+    projectOverride:{...correctedProject,
+      projectScope:'Install <script>unknown</script> kitchen equipment'}
+  }
+});
+assert.equal(invalidOverrideRelease.status,'REVIEW');
+assert(invalidOverrideRelease.failures.includes('PA_DUPLICATE_PROJECT_DETAILS_INVALID'));
+assert.equal(invalidOverrideRelease.ledger,undefined);
+
 async function main(){
   const emptyProvider=fakeProvider([]);
   const checkedLink=await poll.verifyLink('rk_live_fixture_secret_12345',emptyProvider.handler);
