@@ -59,6 +59,10 @@ function input(){
  assert.equal(out.receipt.externalSendCalls,0);
  assert.equal(out.receipt.verifiedBuyerPrecision,null);
  assert.equal(out.receipt.categoryCounts.POS,1);
+ assert.equal(out.receipt.categoryEvidenceCounts.POS.APPLICANT_CONTEXT_ONLY,1);
+ assert.equal(out.receipt.categoryEvidenceCounts.POS.RELATED_OFFICIAL_ACTIVITY,0);
+ assert.equal(out.receipt.categoryEvidenceCounts.POS.SOURCE_KEYWORD_CONTEXT,0);
+ assert(out.html.includes('0 keyword contexts'));
  assert.equal(out.receipt.displayedRowCount,8);
  assert.equal(out.receipt.distinctBusinessesDisplayed,1);
  assert.equal(out.receipt.manifestVersion,board.VERSION);
