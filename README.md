@@ -32,6 +32,14 @@ node build-site.js
 
 `node build-site.js` creates the exact deployable public artifact in `dist/`. The build allowlist excludes pipeline code, operational state, tests, internal model documents, and secrets.
 
+## Code release approval
+
+The repository uses **owner-authorized, automated-CI-gated code releases**. A separate
+human or independent code reviewer is **not required**. Source-accuracy, payment,
+data-privacy, scientific calibration and customer-send safeguards are separate
+controls and remain in force. See
+[Owner-authorized code release policy](operations/CODE_RELEASE_POLICY.md).
+
 ## Production boundaries
 
 - GitHub Pages is the only canonical public host.

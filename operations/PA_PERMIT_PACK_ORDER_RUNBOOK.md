@@ -23,7 +23,7 @@ The only scheduled write targets are state/pa-permit-orders.json and state/pa-pe
 
 Each paid Checkout is registered once with Stripe identifiers and a payment fingerprint. Incomplete or unsafe project descriptions are still registered but held for clarification. Distinct paid Checkouts for the same customer and identical project remain separate financial obligations, with the later order held for duplicate review. No silent deletion, merger, automatic refund or automatic email is allowed.
 
-The SHA-256 ledger seal and initial anchor detect accidental modifications; they cannot independently authenticate somebody with write access. GitHub history, access controls, and independent review remain essential.
+The SHA-256 ledger seal and initial anchor detect accidental modifications; they cannot independently authenticate somebody with write access. GitHub history, access controls, actual customer-evidence examination, separate report QC and independent provider/payment readback remain essential. **An independent source-code or PR reviewer is not required** under [the owner-authorized code release policy](CODE_RELEASE_POLICY.md); changing code approval does not authenticate an operator or release customer data.
 
 If either file is absent while its partner exists, if state is altered, if pagination is incomplete, or if an original paid Checkout disappears from a purportedly complete provider scan, the process stops without overwriting private state. Publishing uses normal non-force compare-and-swap.
 
