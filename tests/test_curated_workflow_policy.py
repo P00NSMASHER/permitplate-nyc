@@ -10,9 +10,29 @@ PUBLIC_EQUAL = 'test -n "$current_public" && test "$current_public" = "$GITHUB_S
 COMMIT = "Publish private state with scoped credentials"
 SECRET = "secrets.PERMITPLATE_STATE_TOKEN"
 
+# Every file that directly affects source collection, normalization, source
+# classification or the candidate graph must trigger main-only private
+# research refresh. A green public graph cannot refresh the private ledger.
+GRAPH_SOURCE_DEPENDENCIES = (
+    "pipeline/candidate-builder.js",
+    "pipeline/project-signal.js",
+    "pipeline/run-source-health.js",
+    "pipeline/socrata-reader.js",
+    "pipeline/timestamp.js",
+    "model-v7.js",
+    "operations/socrata-observer.js",
+    "operations/source-registry.js",
+)
+
 
 def verify(source):
     assert MAIN_ONLY in source
+    push = source.split("\n  push:\n", 1)[1].split("\n  pull_request:\n", 1)[0]
+    pr = source.split("\n  pull_request:\n", 1)[1].split("\npermissions:", 1)[0]
+    for dependency in GRAPH_SOURCE_DEPENDENCIES:
+        allowed = "      - '" + dependency + "'"
+        assert allowed in push, "Missing main push refresh trigger: " + dependency
+        assert allowed in pr, "Missing PR offline policy trigger: " + dependency
     assert "Admit exact current main before private credential" in source
     assert source.index("Admit exact current main before private credential") < source.index(SECRET)
     assert "test \"$GITHUB_REF\" = \"refs/heads/main\"" in source
@@ -65,6 +85,12 @@ class CuratedWorkflowPolicyTest(unittest.TestCase):
 
     def test_current_policy(self):
         verify(self.source)
+
+    def test_missing_graph_source_trigger_rejected(self):
+        trigger = "      - 'pipeline/candidate-builder.js'"
+        modified = self.source.replace(trigger, "", 1)
+        with self.assertRaises(AssertionError):
+            verify(modified)
 
     def test_branch_dispatch_rejected(self):
         with self.assertRaises(AssertionError):
