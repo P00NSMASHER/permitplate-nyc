@@ -10,6 +10,7 @@ const v4=require('./shadow-scoring-v4');
 const v3=require('./shadow-scoring-v3');
 const eventTime=require('./event-time');
 const categoryEvidence=require('./category-evidence');
+const curated=require('./founder-curated-offer');
 const profiles=require('./subscriber-profile');
 const materialChange=require('./material-change');
 
@@ -271,8 +272,11 @@ function validateSnapshot(snapshot) {
        !/^CAMIS:\d+$/.test(String(r?.entityId||''))||
        !/^INTERNAL-V4:[a-f0-9]{24}$/.test(String(r?.internalScoreId||''))||
        !profiles.BOROUGH_ORDER.includes(r?.borough)||
-       !categoryEvidence.knownUrls({camis:r?.camis,sourceSystems:['DOHMH'],
-         acceptedCorroboration:[]}).length ||
+       !curated.officialSourceUrl(r?.officialSourceUrl)||
+       !String(r?.eventSourceRecordId||'').startsWith(
+         r.eventBasis==='DOHMH_INSPECTION_DATE'?'DOHMH:'+r.camis+':':
+         r.eventBasis==='SLA_APPLICATION_RECEIVED_DATE'?'SLA_PENDING:':
+         r.eventBasis==='DOB_INITIAL_FILING_DATE'?'DOB_NOW:':'INVALID:')||
        CATEGORIES.some(k=>!Number.isInteger(r?.scores?.[k])||
          !Object.prototype.hasOwnProperty.call(CAPS,r?.categoryBases?.[k])||
          r.scores[k]<0||r.scores[k]>CAPS[r.categoryBases[k]]||
