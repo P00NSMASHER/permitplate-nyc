@@ -72,7 +72,9 @@ def verify(source):
         "state/nyc-v4-review-workbench.csv",
         "state/nyc-v4-review-workbench.html",
     ):
-        assert private_path in source[source.index(COMMIT):]
+        assert private_path in source[
+            source.index("Commit only private research state"):source.index(COMMIT)
+        ]
     assert "state/curated-research-ledger.json state/curated-current-graph.json" in source
     assert "state/identity-bridge-review.json state/identity-triage-history.json state/identity-bridge-review.csv state/identity-bridge-review.html" in source
     assert "node pipeline/identity-triage-history.test.js" in source
