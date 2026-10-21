@@ -3,6 +3,7 @@
 const assert = require('assert');
 const p = require('./project-signal');
 
+
 function record(overrides) {
   return Object.assign({
     jurisdiction:'NYC',
@@ -146,6 +147,7 @@ function record(overrides) {
   const sla = record({
     sourceSystem:'SLA_PENDING',
     sourceRecordId:'SLA_PENDING:1',
+    sourceUrl:'https://data.ny.gov/d/f8i8-k2gm',
     sourceEntityId:'SLA_APPLICATION:1',
     entityKeys:{applicationId:'1'},
     property:{address:'153 BOWERY'},
@@ -166,6 +168,20 @@ function record(overrides) {
   assert.equal(signal.sourceCount, 2);
   assert.deepEqual(signal.sourceSystems.sort(), ['DOHMH','SLA_PENDING']);
   assert.equal(signal.corroboration.accepted.length, 1);
+  assert.equal(signal.corroboration.accepted[0].sourceUrl, sla.sourceUrl);
+  // The category-review handoff must preserve the already corroborated
+  // official license URL. Otherwise genuine SLA activity is mislabeled
+  // "applicant-only", even when exact-name and premise checks passed.
+  const publicCandidate = {
+    entityId:'CAMIS:50100000',camis:'50100000',
+    sourceSystems:signal.sourceSystems,
+    acceptedCorroboration:signal.corroboration.accepted,
+    commercialEvidence:signal.commercialEvidence
+  };
+  const assessment=require('./category-evidence').classify(publicCandidate,'Insurance');
+  assert.equal(assessment.status,'RELATED_OFFICIAL_ACTIVITY');
+  assert(assessment.sourceUrls.includes(sla.sourceUrl));
+  assert.equal(assessment.manualReviewRequired,true);
   assert.equal(signal.corroboration.rejected.length, 1);
   assert.equal(signal.commercialEvidence.some((x) => x.sourceRecordId === unrelatedDob.sourceRecordId), false);
 }
