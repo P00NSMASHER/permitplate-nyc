@@ -52,8 +52,18 @@ function resolveHold(input){
   if(o.phase==='HOLD_PROJECT_DETAILS'){
     if(!core.projectHealth(project))return {
       status:'REVIEW',failures:['PA_HOLD_CORRECTED_PROJECT_INVALID']};
-  }else if(v.separatePurchaseConfirmedByCustomer!==true){
-    return {status:'REVIEW',failures:['PA_DUPLICATE_PURCHASE_STILL_UNRESOLVED']};
+  }else{
+    if(v.separatePurchaseConfirmedByCustomer!==true){
+      return {status:'REVIEW',failures:['PA_DUPLICATE_PURCHASE_STILL_UNRESOLVED']};
+    }
+    // A second paid Checkout is a separate financial obligation, but
+    // confirmation of a separate purchase is NOT project validation.
+    // In particular, both checkouts might carry the same invalid details.
+    // Validate the effective (original or customer-corrected) project
+    // before moving any held duplicate into the research queue.
+    if(!core.projectHealth(project===undefined?o.project:project)){
+      return {status:'REVIEW',failures:['PA_DUPLICATE_PROJECT_DETAILS_INVALID']};
+    }
   }
   const ledger=fulfil.mutate(data,data.sessionId,(draft,at)=>{
     draft.phase='RESEARCH_QUEUE';
