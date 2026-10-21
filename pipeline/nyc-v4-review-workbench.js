@@ -147,21 +147,22 @@ function renderCard(row,candidate,category){
 <a href="${escapeHtml(record)}" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">CAMIS inspections</a></p>
 <p class="review-note">Verify relevance, timing, and unmet needs independently. No buyer or outreach approval.</p></article>`;
 }
-function renderHtml(scores,byId,counts){
+function renderHtml(scores,byId,counts,evidenceCounts){
   const sections=scorer.CATEGORIES.map((category,i)=>{
     const id='category-'+category.toLowerCase().replace(/[^a-z0-9]+/g,'-');
     const rows=scores.researchRows.slice().sort(compare(category));
     const top=rows.slice(0,HTML_PREVIEW_PER_CATEGORY);
+    const basis=evidenceCounts[category];
     return `<section id="${id}" class="category" aria-labelledby="heading-${id}">
 <div class="section-title"><div><p class="eyebrow">0${i+1} / ${scorer.CATEGORIES.length}</p>
 <h2 id="heading-${id}">${escapeHtml(category)}</h2>
-<p class="section-explainer">Top ${top.length} of ${rows.length} source-dated research records. Private CSV contains all.</p></div>
+<p class="section-explainer">Top ${top.length} of ${rows.length} source-dated research records. Evidence: ${basis.SOURCE_KEYWORD_CONTEXT} keyword contexts, ${basis.RELATED_OFFICIAL_ACTIVITY} related official activity, ${basis.APPLICANT_CONTEXT_ONLY} general applicants. None establishes buyer need. The private CSV contains all.</p></div>
 <a href="#top">Back to top ↑</a></div>
 <div class="card-grid">${top.map(row=>renderCard(row,byId.get(row.entityId),category)).join('\n')}</div></section>`;
   }).join('\n');
   const nav=scorer.CATEGORIES.map(category=>{
     const id='category-'+category.toLowerCase().replace(/[^a-z0-9]+/g,'-');
-    return `<a href="#${id}">${escapeHtml(category)} <span>${counts[category]}</span></a>`;
+    return `<a href="#${id}">${escapeHtml(category)} <span>${evidenceCounts[category].RELATED_OFFICIAL_ACTIVITY} related-source contexts</span></a>`;
   }).join('');
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -226,24 +227,27 @@ function build(input){
   const checked=verify({graph,scores});
   if(!checked.valid)return reject(checked.failures);
   const byId=new Map(graph.candidates.map(c=>[c.entityId,c]));
-  const csvRows=[],counts={};
+  const csvRows=[],counts={},evidenceCounts={};
   for(const category of scorer.CATEGORIES){
     counts[category]=0;
+    evidenceCounts[category]={SOURCE_KEYWORD_CONTEXT:0,RELATED_OFFICIAL_ACTIVITY:0,APPLICANT_CONTEXT_ONLY:0};
     const records=scores.researchRows.slice().sort(compare(category));
     for(const row of records){
       csvRows.push(stableRow(row,byId.get(row.entityId),category));
       counts[category]++;
+      evidenceCounts[category][row.categoryBases[category]]++;
     }
   }
   const csv=CSV_HEADERS.map(csvCell).join(',')+'\n'+
     csvRows.map(row=>CSV_HEADERS.map(k=>csvCell(row[k])).join(',')).join('\n')+'\n';
-  const html=renderHtml(scores,byId,counts);
+  const html=renderHtml(scores,byId,counts,evidenceCounts);
   const receipt=seal({
     manifestVersion:VERSION,status:'REVIEW_READY',observedAt:scores.observedAt,
     graphDigest:graph.graphDigest,scoreFingerprint:scores.fingerprint,
     sourceScoreCount:scores.knownEventScoredCount,
     distinctBusinessesDisplayed:scores.researchRows.length,
     displayedRowCount:csvRows.length,categoryCounts:counts,
+    categoryEvidenceCounts:evidenceCounts,
     htmlPreviewPerCategory:HTML_PREVIEW_PER_CATEGORY,
     htmlSha256:hash(html),csvSha256:hash(csv),
     buyerOutcomesIndependentlyVerified:0,verifiedBuyerPrecision:null,
