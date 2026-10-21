@@ -140,7 +140,7 @@ function renderCard(row,candidate,category){
   const score=row.scores[category],basis=SOURCE_BASIS_LABELS[row.categoryBases[category]];
   return `<article class="case"><div class="case-heading"><h3>${escapeHtml(candidate.canonicalName||row.entityId)}</h3>
 <span class="number" aria-label="Heuristic source relevance score">${score}<small>heuristic</small></span></div>
-<p class="location">${escapeHtml(candidate.borough)} · ${escapeHtml(candidate.address)}</p>
+<p class="location">${escapeHtml(candidate.borough)} · ${escapeHtml(candidate.address)} · ${escapeHtml(row.entityId)}</p>
 <dl><div><dt>Official event</dt><dd>${escapeHtml(EVENT_LABELS[row.eventBasis])} · ${escapeHtml(row.eventDate)}</dd></div>
 <div><dt>Evidence</dt><dd>${escapeHtml(basis)}</dd></div></dl>
 <p class="source-links"><a href="${escapeHtml(source)}" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">Official evidence</a>
