@@ -384,6 +384,18 @@ for(const bad of [
   {...providerBase,from:'Wrong Sender <wrong@example.org>'},
   {...providerBase,to:[order.email,'another@example.org']},
   {...providerBase,bcc:['hidden@example.org']},
+  // Resend's recipient fields are arrays, never scalar or object fallbacks.
+  // The old array-only CC/BCC checks silently accepted extra recipients
+  // encoded in non-array forms, despite the exact approved report hash.
+  {...providerBase,cc:'unapproved-copy@example.org'},
+  {...providerBase,bcc:'secret-copy@example.org'},
+  {...providerBase,cc:{email:'unapproved-copy@example.org'}},
+  {...providerBase,bcc:{email:'secret-copy@example.org'}},
+  {...providerBase,to:order.email},
+  // A message with unexpected attachments is not the approved text-only
+  // delivery artifact, even when its text body matches byte-for-byte.
+  {...providerBase,attachments:[{filename:'extra.pdf'}]},
+  {...providerBase,attachments:'extra.pdf'},
   {...providerBase,html:'<p>Different material</p>'},
   {...providerBase,created_at:'2026-10-19 12:10:00.000000+00'},
   {...providerBase,created_at:'2026-10-19 15:25:00.000000+00'},
