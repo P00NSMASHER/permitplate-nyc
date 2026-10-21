@@ -227,4 +227,37 @@ const predecessorPrepermit = dohmh({
   assert.equal(first.graphDigest,second.graphDigest);
 }
 
+
+// Live October 21 NYC source replay found 70 DOHMH applicant entities whose
+// official borough is '0' (some carry out-of-city postal codes). Never infer
+// a NYC territory from ZIP or co-location, or offer these as customer leads.
+{
+  const invalid = dohmh({
+    camis:'50126672',dba:'Unknown Territory Fixture',boro:'0',
+    building:'10',street:'TEST ROAD',zipcode:'08512',
+    inspection_date:'1900-01-01T00:00:00.000',
+    record_date:'2026-10-20T06:00:27.000'
+  });
+  const normal = dohmh({
+    camis:'50126673',dba:'Valid Manhattan Fixture',boro:'Manhattan',
+    building:'22',street:'OTHER ROAD',zipcode:'10012',
+    inspection_date:'1900-01-01T00:00:00.000',
+    record_date:'2026-10-20T06:00:27.000'
+  });
+  const graph=builder.buildCurrentGraph({
+    dohmhBatch:observation('DOHMH',[invalid,normal]),
+    slaBatch:observation('SLA_PENDING',[],'VERIFIED_EMPTY'),
+    dobBatch:observation('DOB_NOW',[],'VERIFIED_EMPTY')
+  });
+  const held=graph.candidates.find(c=>c.camis==='50126672');
+  const good=graph.candidates.find(c=>c.camis==='50126673');
+  assert.equal(graph.graphState,'COMPLETE');
+  assert.equal(held.borough,'0'); // Preserve exact source fact.
+  assert.equal(held.deliverySuppressed,true);
+  assert(held.suppressionReasons.includes('NYC_BOROUGH_UNVERIFIED'));
+  assert.equal(require('./curated-research-ledger').eligibleCandidate(held),false);
+  assert.equal(good.deliverySuppressed,false);
+  assert.equal(graph.metrics.suppressedCount,1);
+}
+
 console.log('PermitPlate candidate graph regression tests passed.');
