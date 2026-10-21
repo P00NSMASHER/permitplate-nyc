@@ -3,6 +3,7 @@
 const crypto = require('crypto');
 const project = require('./project-signal');
 const materialChange = require('./material-change');
+const profiles = require('./subscriber-profile');
 const {timestampMs} = require('./timestamp');
 
 const CANDIDATE_BUILDER_VERSION = 'PermitPlate-candidate-builder-v1.0.0';
@@ -74,6 +75,11 @@ function buildDohmhCandidates(records) {
     const prePermits = relevant.filter(isPrePermit).sort(recordOrder);
     const applicants = relevant.filter(isApplicant).sort(recordOrder);
     const primaryRecord = prePermits[0] || applicants[0] || relevant[0];
+    const borough = bestNonblank(relevant, (record) =>
+      record.property && record.property.borough);
+    // A valid NYC territory must be explicit in the observed source.
+    // ZIP prefixes and shared premises cannot supply a missing borough.
+    const boroughVerified = profiles.BOROUGH_ORDER.includes(borough);
 
     const effectiveTimes = relevant.map((record) => timeMs(record.sourceEffectiveAt)).filter((x) => x !== null);
     const earliestMs = effectiveTimes.length ? Math.min(...effectiveTimes) : null;
@@ -85,7 +91,7 @@ function buildDohmhCandidates(records) {
       camis,
       canonicalName: bestNonblank(relevant, (record) => record.parties && record.parties.operatorName),
       address: bestNonblank(relevant, (record) => record.property && record.property.address),
-      borough: bestNonblank(relevant, (record) => record.property && record.property.borough),
+      borough,
       zip: bestNonblank(relevant, (record) => record.property && record.property.zip),
       bin: bestNonblank(relevant, (record) => record.property && record.property.bin),
       bbl: bestNonblank(relevant, (record) => record.property && record.property.bbl),
@@ -99,8 +105,8 @@ function buildDohmhCandidates(records) {
       dohmhRecordIds: relevant.map((record) => record.sourceRecordId),
       dohmhRecordCount: relevant.length,
       crossCamisOperationalConflicts: [],
-      deliverySuppressed: false,
-      suppressionReasons: []
+      deliverySuppressed: !boroughVerified,
+      suppressionReasons: boroughVerified ? [] : ['NYC_BOROUGH_UNVERIFIED']
     };
     candidates.push(candidate);
   }
