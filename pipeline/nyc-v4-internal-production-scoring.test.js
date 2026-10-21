@@ -107,6 +107,67 @@ function fixture(){
     detectionReceipts:[],scoreReceipts:[row],deliveredSignalKeys:[]
   });
   assert.equal(customer.signals.length,0);
+  // Even if a caller deliberately renames an internal-only score into the
+  // delivery planner's expected receipt field, production authorization is
+  // checked independently and must reject it.
+  const forgedCandidate={...f,
+    detectionReceiptId:'DET:INTERNAL-TO-CUSTOMER-PROBE',
+    scoreReceiptId:'SCORE:FORGED-INTERNAL'};
+  const fingerprint=delivery.candidateChangeFingerprint(forgedCandidate);
+  const probe=delivery.planCustomerDelivery({
+    graph:{graphState:'COMPLETE',graphDigest:r.graphDigest,candidates:[forgedCandidate]},
+    profile:{subscriberId:'local-no-send',baselineAt:'2026-10-18T00:00:00Z',
+      category:'Equipment',boroughs:['Manhattan'],minimumScore:0,starterSnapshotEnabled:false},
+    detectionReceipts:[{
+      receiptId:forgedCandidate.detectionReceiptId,entityId:f.entityId,
+      changeFingerprint:fingerprint,firstDetectedAt:NOW
+    }],
+    scoreReceipts:[{
+      ...row,scoreReceiptId:forgedCandidate.scoreReceiptId,graphDigest:r.graphDigest,
+      changeFingerprint:fingerprint
+    }],
+    deliveredSignalKeys:[]
+  });
+  assert.equal(probe.signals.length,0);
+  assert(probe.reviews.some(x=>x.reasons.includes('SCORE_NOT_PRODUCTION_AUTHORIZED')));
+}
+{
+  // Source-matched, same-premise/same-business pending SLA licensing provides
+  // dated RELATED_OFFICIAL_ACTIVITY, not category-specific purchase proof.
+  const input=fixture();
+  const license=adapters.normalizeSlaPendingRow({
+    application_id:'NYC-INTERNAL-V4-SLA-TEST',
+    dba:'PUBLIC RESTAURANT 59980102',
+    legalname:'PUBLIC RESTAURANT 59980102 LLC',
+    actual_address_of_premises:'20 UNINSPECTED WAY',
+    city:'NEW YORK',state_name:'NY',zip_code:'10001',
+    received_date:'2026-10-19T00:00:00.000',status:'Pending',
+    description:'Restaurant Wine'
+  },{observedAt:NOW});
+  input.batches.SLA_PENDING=observation('SLA_PENDING',[license]);
+  input.fullGraph=builder.buildCurrentGraph({
+    dohmhBatch:input.batches.DOHMH,
+    dobBatch:input.batches.DOB_NOW,
+    slaBatch:input.batches.SLA_PENDING,
+    reviewedIdentityBridges:[]
+  });
+  input.publicGraph.graphDigest=input.fullGraph.graphDigest;
+  input.publicGraph.candidates=input.fullGraph.candidates.map(current.publicCandidate);
+  input.publicGraph.sourceObservations.SLA_PENDING=input.batches.SLA_PENDING.observation;
+  const result=score.scoreSnapshot(input);
+  assert.equal(result.status,'ACTIVE_INTERNAL_PRODUCTION');
+  assert.equal(result.knownEventScoredCount,2);
+  const correlated=result.researchRows.find(x=>x.camis==='59980102');
+  assert(correlated);
+  assert.equal(correlated.eventBasis,'SLA_APPLICATION_RECEIVED_DATE');
+  assert.equal(correlated.eventDate,'2026-10-19');
+  assert.equal(correlated.categoryBases.Insurance,'RELATED_OFFICIAL_ACTIVITY');
+  assert(correlated.scores.Insurance<=54);
+  assert.equal(correlated.productionAuthorized,false);
+}
+{
+  const invalidAuthority={...score.OWNER_AUTHORIZATION,externalTransportAllowed:true};
+  assert.equal(score.validateOwnerAuthority(invalidAuthority).valid,false);
 }
 {
   const f=fixture();
