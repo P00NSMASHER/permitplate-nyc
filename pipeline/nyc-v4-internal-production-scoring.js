@@ -258,13 +258,42 @@ function validateSnapshot(snapshot) {
     failures.push('INTERNAL_SCORING_SCOPE_INVALID');
   }
   const rows=Array.isArray(s.researchRows)?s.researchRows:[];
+  const entityIds=new Set();
+  let prior=null;
+  for(const r of rows){
+    if(entityIds.has(r?.entityId))failures.push('INTERNAL_SCORING_DUPLICATE_ENTITY');
+    entityIds.add(r?.entityId);
+    if(r?.internalProductionAuthorized!==true||
+       r?.productionAuthorized!==false||r?.customerDeliveryAllowed!==false||
+       r?.buyerNeedVerified!==false||r?.confirmedOpening!==false||
+       r?.scoringVersion!==v4.SHADOW_SCORING_VERSION||
+       !eventTime.calendarDate(r?.eventDate)||
+       !/^CAMIS:\d+$/.test(String(r?.entityId||''))||
+       !/^INTERNAL-V4:[a-f0-9]{24}$/.test(String(r?.internalScoreId||''))||
+       !profiles.BOROUGH_ORDER.includes(r?.borough)||
+       !categoryEvidence.knownUrls({camis:r?.camis,sourceSystems:['DOHMH'],
+         acceptedCorroboration:[]}).length ||
+       CATEGORIES.some(k=>!Number.isInteger(r?.scores?.[k])||
+         !Object.prototype.hasOwnProperty.call(CAPS,r?.categoryBases?.[k])||
+         r.scores[k]<0||r.scores[k]>CAPS[r.categoryBases[k]]||
+         !/^[a-f0-9]{64}$/.test(r?.categoryEvidenceFingerprints?.[k]||''))||
+       Object.keys(r?.scores||{}).length!==CATEGORIES.length||
+       Object.keys(r?.categoryBases||{}).length!==CATEGORIES.length||
+       Object.keys(r?.categoryEvidenceFingerprints||{}).length!==CATEGORIES.length||
+       r.sourceRelevanceScoreCap!==Math.max(...Object.values(r.scores))){
+      failures.push('INTERNAL_SCORING_ROWS_INVALID');
+    }
+    if(prior&&(r.sourceRelevanceScoreCap>prior.sourceRelevanceScoreCap||
+        r.sourceRelevanceScoreCap===prior.sourceRelevanceScoreCap&&
+        (r.eventDate>prior.eventDate||
+         r.eventDate===prior.eventDate&&r.entityId<prior.entityId))){
+      failures.push('INTERNAL_SCORING_SORT_ORDER_INVALID');
+    }
+    prior=r;
+  }
   if(rows.length!==s.knownEventScoredCount||
-     rows.some(r=>r.internalProductionAuthorized!==true||
-       r.productionAuthorized!==false||r.customerDeliveryAllowed!==false||
-       r.buyerNeedVerified!==false||r.confirmedOpening!==false||
-       !Object.keys(r.scores||{}).every(k=>CATEGORIES.includes(k)&&
-         Number.isInteger(r.scores[k])&&r.scores[k]>=0&&r.scores[k]<=79)||
-       !Object.keys(r.categoryBases||{}).every(k=>CATEGORIES.includes(k)))){
+     Object.values(s.sourceBasisCounts||{}).reduce((a,n)=>a+Number(n||0),0)!==
+       rows.length*CATEGORIES.length){
     failures.push('INTERNAL_SCORING_ROWS_INVALID');
   }
   if(!Number.isInteger(s.candidateCount)||s.candidateCount<1||
