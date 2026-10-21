@@ -243,6 +243,22 @@ const research={
   claimsNoFurtherVerification:false
 };
 assert.deepEqual(fulfil.researchErrors(research,PAID),[]);
+// Test first: do not accept a source observation recorded AFTER the
+// researcher claims their packet was prepared (including future dates).
+const impossibleSource={
+  ...research,
+  sources:research.sources.map((source,index)=>index===0?
+    {...source,observedAt:'2026-10-20T14:01:00.000Z'}:source)
+};
+assert(fulfil.researchErrors(impossibleSource,PAID)
+  .includes('PA_RESEARCH_SOURCE_AFTER_PREPARATION'));
+const impossibleResearch=fulfil.submitResearch({
+  ledger:first.ledger,anchor,sessionId:SESSION,research:impossibleSource,
+  now:'2026-10-19T14:20:00.000Z'
+});
+assert.equal(impossibleResearch.status,'REVIEW');
+assert(impossibleResearch.failures.includes('PA_RESEARCH_SOURCE_AFTER_PREPARATION'));
+assert.equal(impossibleResearch.ledger,undefined);
 assert(fulfil.govUrl('https://www.pa.gov/agencies/dli.html'));
 assert(!fulfil.validUrl('http://localhost/secret'));
 assert(!fulfil.validUrl('https://127.0.0.1/password'));
