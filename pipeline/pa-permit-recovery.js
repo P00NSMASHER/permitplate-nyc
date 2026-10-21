@@ -38,8 +38,13 @@ function resolveHold(input){
     throw Error('PA_CASE_NOT_IN_RESOLVABLE_HOLD');
   }
   const v=data.evidence||{};
+  // A reviewer cannot establish a review that occurs after this operation's
+  // trusted ledger-write time, including when the remaining fields self-attest.
+  const at=core.iso(data.now);
+  if(!at||!core.iso(v.reviewedAt)||v.reviewedAt>at){
+    return {status:'REVIEW',failures:['PA_HOLD_REVIEW_FUTURE_OR_INVALID']};
+  }
   if(!fulfil.text(v.operatorId,3,64)||!/^[A-Za-z0-9_-]+$/.test(v.operatorId||'')||
-     !core.iso(v.reviewedAt)||
      v.reviewedAt<o.paidAt||
      !fulfil.text(v.supportEvidenceReference,12,250)||
      v.originalCustomerEvidenceInspected!==true||
