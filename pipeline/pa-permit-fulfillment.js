@@ -25,7 +25,8 @@ function researchErrors(x,paidAt){
   if(!text(x.researcherId,3,64)||!/^[A-Za-z0-9_-]+$/.test(x.researcherId||'')){
     errors.push('PA_RESEARCHER_ID_INVALID');
   }
-  if(!core.iso(x.preparedAt)||x.preparedAt<paidAt){
+  const preparedAt=core.iso(x.preparedAt);
+  if(!preparedAt||x.preparedAt<paidAt){
     errors.push('PA_RESEARCH_TIMESTAMP_INVALID');
   }
   for(const f of ['projectSummary','jurisdiction','authorityName','publicFeeNotes']){
@@ -36,10 +37,17 @@ function researchErrors(x,paidAt){
   }else{
     const seen=new Set();
     for(const s of x.sources){
+      const observedAt=core.iso(s?.observedAt);
       if(!validUrl(s?.url)||seen.has(s?.url)||!text(s?.sourceId,3,180)||
-         !text(s?.claim,20,900)||!core.iso(s?.observedAt)||
+         !text(s?.claim,20,900)||!observedAt||
          s.verifiedByHuman!==true){
         errors.push('PA_RESEARCH_SOURCE_UNVERIFIED');
+      }
+      // A claimed human inspection cannot occur after the packet was
+      // prepared. Reject impossible chronology before research is recorded
+      // or promoted to a customer-facing QC artifact.
+      if(preparedAt&&observedAt&&observedAt>preparedAt){
+        errors.push('PA_RESEARCH_SOURCE_AFTER_PREPARATION');
       }
       seen.add(s?.url);
     }
