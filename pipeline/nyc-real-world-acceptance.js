@@ -11,6 +11,7 @@ const independent = require('./independent-source-review');
 const categoryEvidence = require('./category-evidence');
 const scorer = require('./scoring');
 const shadow = require('./shadow-scoring-v3');
+const shadowV4 = require('./shadow-scoring-v4');
 
 const VERSION = 'PermitPlate-NYC-real-world-acceptance-v1.0.0';
 const KEYS = Object.freeze(['DOHMH', 'DOB_NOW', 'SLA_PENDING']);
@@ -89,13 +90,16 @@ function assessSnapshot(publicGraph, batches, graph) {
   const recordsById = shadow.sourceMap(allRecords);
   const stageCounts = {}, boroughCounts = {}, bestShadowFitCounts = {};
   const effectiveTimestampCounts = {};
+  const eventTimeStatuses = {}, eventTimeAgeBases = {}, v4BestFitCounts = {};
   const categoryStatus = Object.fromEntries(CATEGORIES.map(label => [label, {}]));
   const supportByEntity = new Map();
   const examples = [];
   let missingName = 0, missingAddress = 0, missingBorough = 0;
   let invalidBorough = 0, uninspectedPlaceholder = 0, misleadinglyRecentPlaceholder = 0;
   let suppressed = 0, shadowScored = 0, literalScored = 0, categoryKeywordEntities = 0;
-  let shadowFailed = 0, unsupportedCategoryPromotion = 0;
+  let shadowFailed = 0, v4Review = 0, v4Scored = 0;
+  let naiveRecencyInflation = 0, v4UnknownPlaceholder = 0;
+  let unsupportedCategoryPromotion = 0;
 
   const byPublicId = new Map(publicGraph.candidates.map(candidate => [candidate.entityId,candidate]));
   for (const candidate of entities) {
@@ -140,6 +144,26 @@ function assessSnapshot(publicGraph, batches, graph) {
       shadowScored++;
       inc(bestShadowFitCounts,scored.bestVendorFit);
     } else shadowFailed++;
+    const modern = shadowV4.computeShadowScores(candidate,recordsById,observedAt);
+    inc(eventTimeStatuses,modern.eventChronology?.status || 'MISSING');
+    inc(eventTimeAgeBases,modern.eventChronology?.eventDateBasis || 'MISSING');
+    if (modern.status === 'SHADOW_SCORED') {
+      v4Scored++;
+      inc(v4BestFitCounts,modern.bestVendorFit);
+    } else v4Review++;
+    // Only the legacy V3 scorer uses the DOHMH extract date as if it were
+    // a business event. The newer V4 event-time model must give UNKNOWN
+    // placeholder applicants zero recent-event points.
+    if (placeholder && modern.eventChronology?.status === 'UNKNOWN') {
+      v4UnknownPlaceholder++;
+      if (modern.eventChronology.recencyPoints !== 0) {
+        throw new Error('NYC_UNKNOWN_EVENT_WRONGLY_GRANTED_RECENCY');
+      }
+      if (scored.status === 'SHADOW_SCORED' &&
+          shadow.recency(scored.input.materialAgeDays) > 0) {
+        naiveRecencyInflation++;
+      }
+    }
     // An experimental numeric score never grants authority to publish it.
     if (scorer.resolveScoreAuthority(candidate).status === 'SCORED') literalScored++;
   }
@@ -222,6 +246,15 @@ function assessSnapshot(publicGraph, batches, graph) {
     scores:{
       experimentalShadowScored:shadowScored,
       shadowBestFitCounts:bestShadowFitCounts,
+      newerEventTimeShadowScored:v4Scored,
+      newerEventTimeShadowReview:v4Review,
+      newerEventTimeBestFitCounts:v4BestFitCounts,
+      newerEventTimeStatuses:eventTimeStatuses,
+      newerEventDateBases:eventTimeAgeBases,
+      placeholderApplicantsWithUnknownEventDate:v4UnknownPlaceholder,
+      legacyRecencyInflatedByExtractDate:naiveRecencyInflation,
+      legacyScoreVersionEvaluated:shadow.SHADOW_SCORING_VERSION,
+      modernScoreVersionEvaluated:shadowV4.SHADOW_SCORING_VERSION,
       validProductionScoreAuthority:literalScored,
       scoresPublished:0,
       buyerPrecision:null, buyerRecall:null, confirmedNewOpenings:null,
@@ -239,6 +272,7 @@ function assessSnapshot(publicGraph, batches, graph) {
       ...(!consistentGraph?['PUBLIC_AND_FULL_GRAPH_INCONSISTENT']:[]),
       ...(!researchSafe?['UNLINKED_RESEARCH_NOT_REVIEW_ONLY']:[]),
       ...(shadowFailed?['SHADOW_SCORING_INCOMPLETE']:[]),
+      ...(v4Review?['EVENT_TIME_V4_SHADOW_INCOMPLETE']:[]),
       ...(unsupportedCategoryPromotion?['CATEGORY_BYPASSED_MANUAL_REVIEW']:[])
     ],
     passed
