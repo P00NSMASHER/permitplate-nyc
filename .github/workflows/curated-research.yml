@@ -122,6 +122,8 @@ jobs:
           node-version: '22'
       - name: Test actual paid product with offline fixtures
         run: node pipeline/curated-product.test.js
+      - name: Verify no-send NYC internal production score boundary
+        run: node pipeline/nyc-v4-internal-production-scoring.test.js
       - name: Verify independent early-source discovery remains review-only
         run: node pipeline/independent-source-review.test.js
       - name: Verify full DOB scope and conflicting building identifiers
