@@ -178,6 +178,12 @@ function scoreSnapshot(input){
          'DOB_INITIAL_FILING_DATE'].includes(calc.eventChronology.eventDateBasis)){
       reviewHeldCount++;continue;
     }
+    // A dated source event must be bound to a current, accepted official URL
+    // for this same CAMIS; do not trust arbitrary sourceUrl on a raw row.
+    const eventUrl=calc.eventChronology.eventSourceUrl;
+    if(!eventUrl||!categoryEvidence.knownUrls(p).includes(eventUrl)){
+      reviewHeldCount++;continue;
+    }
     const scores={},categoryBases={},categoryEvidenceFingerprints={};
     let invalid=false;
     for(const category of CATEGORIES){
@@ -190,12 +196,12 @@ function scoreSnapshot(input){
       }
       categoryBases[category]=evidence.status;
       categoryEvidenceFingerprints[category]=evidence.evidenceFingerprint;
-      count(sourceBasisCounts,evidence.status);
       // An official source keyword is still NOT a purchase order. Non-category
       // applicant context cannot receive a 60+ "hot lead" score.
       scores[category]=Math.min(value,CAPS[evidence.status]);
     }
     if(invalid){reviewHeldCount++;continue;}
+    for(const basis of Object.values(categoryBases))count(sourceBasisCounts,basis);
     const core={
       scoringVersion:v4.SHADOW_SCORING_VERSION,
       entityId:c.entityId,camis:c.camis,
@@ -203,8 +209,7 @@ function scoreSnapshot(input){
       eventDate:calc.eventChronology.latestKnownEventDate,
       eventBasis:calc.eventChronology.eventDateBasis,
       eventSourceRecordId:calc.eventChronology.eventSourceRecordId,
-      officialSourceUrl:calc.eventChronology.eventSourceUrl||
-        categoryEvidence.primaryUrl(p),
+      officialSourceUrl:eventUrl,
       chronologyFingerprint:calc.eventChronology.fingerprint,
       sourceRelevanceScoreCap:Math.max(...Object.values(scores)),
       scores,categoryBases,categoryEvidenceFingerprints,
