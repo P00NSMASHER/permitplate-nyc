@@ -80,7 +80,9 @@ function input(){
 {
  assert.equal(board.escapeHtml('<img src=x onerror=alert(1)>'),
   '&lt;img src=x onerror=alert(1)&gt;');
- assert(board.csvCell('   =HYPERLINK("https://evil.test")').startsWith("'"));
+ // Quoted CSV begins with a double quote, but the decoded field starts
+ // with a protective apostrophe before the spreadsheet formula.
+ assert(/^"'\s*=HYPERLINK/.test(board.csvCell('   =HYPERLINK("https://evil.test")')));
  assert(board.csvCell('\t+2+2').startsWith("'"));
  assert(!board.csvCell('Cafe & Bakery').startsWith("'"));
  assert.throws(()=>board.trustedOfficialUrl('javascript:alert(1)'),/OFFICIAL_URL/);
