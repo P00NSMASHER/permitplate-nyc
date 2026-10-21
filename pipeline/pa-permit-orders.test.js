@@ -488,6 +488,20 @@ const invalidOverrideRelease=recovery.resolveHold({
 assert.equal(invalidOverrideRelease.status,'REVIEW');
 assert(invalidOverrideRelease.failures.includes('PA_DUPLICATE_PROJECT_DETAILS_INVALID'));
 assert.equal(invalidOverrideRelease.ledger,undefined);
+assert.equal(core.projectHealth({
+  ...correctedProject,
+  projectScope:'Install <script>unknown</script> kitchen equipment'
+}),false);
+
+// Re-sealing a contradictory private ledger is not authority to skip
+// validation of a corrected project already marked as reviewed.
+const unsafeEditedDuplicate=structuredClone(separate.ledger);
+unsafeEditedDuplicate.orders[second.id].projectOverride.projectScope=
+  'Install <script>unknown</script> kitchen equipment';
+const misleadingSeal=core.seal(unsafeEditedDuplicate);
+assert(core.validate(misleadingSeal).failures.includes(
+  'PA_EFFECTIVE_PROJECT_DETAILS_INVALID'));
+assert.equal(core.validate(separate.ledger).valid,true);
 
 async function main(){
   const emptyProvider=fakeProvider([]);
