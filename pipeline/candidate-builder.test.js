@@ -64,6 +64,27 @@ const predecessorPrepermit = dohmh({
   inspection_type:'Pre-permit (Non-operational) / Initial Inspection'
 });
 
+// Actual DOHMH October 21 snapshot repeated seven identical violation rows
+// for CAMIS 50186277. Publisher row count must remain intact, but the graph
+// must not count byte-identical facts twice as independent observations.
+{
+  const original=predecessorPrepermit;
+  const duplicate=structuredClone(original);
+  assert.equal(original.sourceRecordId,duplicate.sourceRecordId);
+  assert.equal(original.rawFactFingerprint,duplicate.rawFactFingerprint);
+  const publisherRows=[original,duplicate];
+  const candidates=builder.buildDohmhCandidates(publisherRows);
+  const baseline=builder.buildDohmhCandidates([original]);
+  assert.equal(publisherRows.length,2); // Source evidence never rewritten.
+  assert.equal(candidates.length,1);
+  assert.equal(candidates[0].dohmhRecordCount,1);
+  assert.deepEqual(candidates[0].dohmhRecordIds,[original.sourceRecordId]);
+  assert.deepEqual(candidates,baseline);
+  const spoofed={...duplicate,rawFactFingerprint:'f'.repeat(64)};
+  assert.throws(()=>builder.buildDohmhCandidates([original,spoofed]),
+    /DOHMH_SOURCE_RECORD_ID_COLLISION/);
+}
+
 {
   const candidates = builder.buildDohmhCandidates([currentApplicant, predecessorPrepermit]);
   assert.equal(candidates.length,2);
