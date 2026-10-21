@@ -109,7 +109,7 @@ function input(){
 }
 {
  const {graph,scores}=input();
- graph.candidates[0].deliverySuppressed=true;
+ graph.candidates.find(c=>c.entityId===scores.researchRows[0].entityId).deliverySuppressed=true;
  graph.artifactFingerprint=research.graphFingerprint(graph);
  const fail=board.build({graph,scores});
  assert.equal(fail.status,'REVIEW');
