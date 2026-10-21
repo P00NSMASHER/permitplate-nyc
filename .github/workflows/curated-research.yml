@@ -12,6 +12,9 @@ on:
       - 'pipeline/category-evidence.js'
       - 'pipeline/category-evidence.test.js'
       - 'pipeline/run-curated-research.js'
+      - 'pipeline/nyc-v4-internal-production-scoring.js'
+      - 'pipeline/nyc-v4-internal-production-scoring.test.js'
+      - 'scoring/nyc-v4-internal-owner-authorization.json'
       - 'pipeline/independent-source-review.js'
       - 'pipeline/independent-source-review.test.js'
       - 'pipeline/construction-scope-evidence.js'
@@ -59,6 +62,9 @@ on:
       - 'pipeline/category-evidence.js'
       - 'pipeline/category-evidence.test.js'
       - 'pipeline/run-curated-research.js'
+      - 'pipeline/nyc-v4-internal-production-scoring.js'
+      - 'pipeline/nyc-v4-internal-production-scoring.test.js'
+      - 'scoring/nyc-v4-internal-owner-authorization.json'
       - 'pipeline/independent-source-review.js'
       - 'pipeline/independent-source-review.test.js'
       - 'pipeline/construction-scope-evidence.js'
@@ -215,7 +221,7 @@ jobs:
           set -euo pipefail
           git -C "$PRIVATE_DIR" config user.name "PermitPlate Curated Research"
           git -C "$PRIVATE_DIR" config user.email "actions@users.noreply.github.com"
-          git -C "$PRIVATE_DIR" add -- state/curated-research-ledger.json state/curated-current-graph.json state/curated-baseline-anchor.json state/independent-source-review.json state/independent-source-history.json state/identity-bridge-review.json state/identity-triage-history.json state/identity-bridge-review.csv state/identity-bridge-review.html state/construction-validation-panel.json state/construction-validation-panel.csv state/construction-validation-summary.md state/construction-blind-reviewer.json state/construction-reserved-audit.json state/construction-blind-manifest.json research/construction-frozen-reference-v1
+          git -C "$PRIVATE_DIR" add -- state/curated-research-ledger.json state/curated-current-graph.json state/curated-baseline-anchor.json state/nyc-v4-internal-scores.json state/independent-source-review.json state/independent-source-history.json state/identity-bridge-review.json state/identity-triage-history.json state/identity-bridge-review.csv state/identity-bridge-review.html state/construction-validation-panel.json state/construction-validation-panel.csv state/construction-validation-summary.md state/construction-blind-reviewer.json state/construction-reserved-audit.json state/construction-blind-manifest.json research/construction-frozen-reference-v1
           if git -C "$PRIVATE_DIR" diff --cached --quiet; then
             echo "No private research changes."
             exit 0
