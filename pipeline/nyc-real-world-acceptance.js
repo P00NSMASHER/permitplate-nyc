@@ -27,6 +27,64 @@ const iso = value => {
   return Number.isFinite(parsed) ? new Date(parsed).toISOString() : null;
 };
 
+// This is a blind *source* adjudication kit. Its labels are intentionally null:
+// official filing activity is not proof of a new venue, unfilled vendor need,
+// procurement, buyer intent or a future opening.
+function dobConstructionReviewKit(research) {
+  const rows=Array.isArray(research?.items)?research.items:[];
+  const sourceRows=rows.filter(row=>row?.sourceSystem==='DOB_NOW' &&
+    row.constructionScope?.scopeClass==='SPECIFIC_COMPONENT_AND_ACTION');
+  const statusCounts={}, families=new Set(), siteKeys=new Set();
+  let explicitlyNewOrProposed=0, explicitlyExisting=0, identityReviewCandidates=0;
+  const cases=sourceRows.map(row=>{
+    const filing=String(row.sourceRecordId||'');
+    const name=filing.startsWith('DOB_NOW:')?filing.slice(8):filing;
+    const jobFamily=name.replace(/-[A-Z][0-9]+$/,'');
+    const excerpt=independent.safeExcerpt(row.sourceExcerpt);
+    const newText=/(?:new|proposed)\s+(?:restaurant|cafe|coffee\s+shop|commercial\s+kitchen)/i.test(excerpt);
+    const existingText=/(?:existing|exiting)\s+(?:restaurant|kitchen|eating|commercial\s+space)/i.test(excerpt);
+    inc(statusCounts,row.sourceStatus);
+    families.add(jobFamily);
+    siteKeys.add(String(row.borough||'')+'|'+independent.reviewKey({borough:row.borough,address:row.address}));
+    if(newText)explicitlyNewOrProposed++;
+    if(existingText)explicitlyExisting++;
+    if(row.needsIdentityReview)identityReviewCandidates++;
+    return {
+      sourceRecordId:filing,jobFamily,officialUrl:row.officialUrl,
+      borough:row.borough,address:row.address,
+      filingDate:iso(row.sourceEffectiveAt),filingStatus:row.sourceStatus,
+      descriptionExcerpt:excerpt,
+      sourceScopeClass:'SPECIFIC_COMPONENT_AND_ACTION',
+      possibleRelatedCamises:(row.possibleRelatedCamis||[]).length,
+      reviewOnly:true,customerDeliveryAllowed:false,
+      // No model prediction or manufactured real-world review label.
+      independentVenueTypeLabel:null,independentVendorNeedLabel:null,
+      confirmedProcurement:null,verifiedOpeningDate:null
+    };
+  });
+  const complete=research?.status==='REVIEW_ONLY' && research?.omittedByLimit===0;
+  return {
+    status:complete?'COMPLETE_REVIEW_KIT':'PARTIAL_REVIEW_KIT',
+    sourceOnly:true,blindToModelScore:true,
+    caseCount:cases.length,distinctJobFamilies:families.size,
+    distinctBoroughAddressPairs:siteKeys.size,
+    potentialSameJobFamilyExtraFilings:cases.length-families.size,
+    filingStatusCounts:statusCounts,
+    newOrProposedTextMentions:explicitlyNewOrProposed,
+    existingTextMentions:explicitlyExisting,
+    potentialIdentityReviewCount:identityReviewCandidates,
+    confirmedBuyerNeedCount:null,precision:null,recall:null,
+    independentHumanAdjudications:0,customerDeliveryAllowed:false,
+    cautions:[
+      'Approved is the official filing status, not a confirmed issued permit, opening, or purchase.',
+      'Descriptions mention work scope but do not establish whether equipment or services are still needed.',
+      'Identical job-number families or premises may describe multiple applications; they are not automatically distinct businesses.',
+      'These are review-only public-source excerpts, never customer-ready leads.'
+    ],
+    cases
+  };
+}
+
 function ageSummary(values, observedAt) {
   const now = Date.parse(observedAt);
   const summary = {last7d:0, days8to30:0, days31to90:0, older90d:0, future:0, unknown:0};
@@ -85,7 +143,8 @@ function assessSnapshot(publicGraph, batches, graph) {
     [key, sourceQuality(batches[key], observedAt)]));
   const entities = graph.candidates;
   const entityIds = new Set(entities.map(c => c.entityId));
-  const unlinked = independent.inspect({graph:publicGraph,batches,observedAt,limit:20});
+  const unlinked = independent.inspect({graph:publicGraph,batches,observedAt,limit:independent.MAX_ITEMS});
+  const dobKit=dobConstructionReviewKit(unlinked);
   const allRecords = KEYS.flatMap(key => batches[key].records);
   const recordsById = shadow.sourceMap(allRecords);
   const stageCounts = {}, boroughCounts = {}, bestShadowFitCounts = {};
@@ -198,7 +257,8 @@ function assessSnapshot(publicGraph, batches, graph) {
     entities.length === graph.metrics.candidateCount &&
     suppressed === graph.metrics.suppressedCount;
   const researchSafe = unlinked.status === 'REVIEW_ONLY' &&
-    unlinked.customerDeliveryAllowed === false && unlinked.externalSendCalls === 0;
+    unlinked.customerDeliveryAllowed === false && unlinked.externalSendCalls === 0 &&
+    dobKit.status === 'COMPLETE_REVIEW_KIT';
   const passed = sourcePassed && consistentGraph && researchSafe &&
     shadowFailed === 0 && unsupportedCategoryPromotion === 0;
 
@@ -234,6 +294,7 @@ function assessSnapshot(publicGraph, batches, graph) {
       sourceCounts:unlinked.sourceCounts || {},
       ignored:unlinked.ignored || {},
       constructionScope:unlinked.constructionScopeSummary || null,
+      blindDobConstructionReviewKit:dobKit,
       customerDeliveryAllowed:false,
       inspectFailures:unlinked.failures || []
     },
@@ -309,4 +370,4 @@ if (require.main===module) {
     process.exitCode=1;
   });
 }
-module.exports={VERSION,KEYS,CATEGORIES,ageSummary,sourceQuality,assessSnapshot,run};
+module.exports={VERSION,KEYS,CATEGORIES,dobConstructionReviewKit,ageSummary,sourceQuality,assessSnapshot,run};
