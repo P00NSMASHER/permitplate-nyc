@@ -243,5 +243,48 @@ function scoreSnapshot(input){
   };
   return {...body,fingerprint:hash(body)};
 }
+function validateSnapshot(snapshot) {
+  const s=snapshot||{},failures=[];
+  if(s.version!==VERSION||s.mode!==MODE||s.status!=='ACTIVE_INTERNAL_PRODUCTION'||
+     s.ownerAuthorizationId!==authority.authorizationId||
+     s.internalProductionAuthorized!==true||s.productionAuthorized!==false||
+     s.customerDeliveryAllowed!==false||s.externalSendCalls!==0||
+     s.privateResearchStateOnly!==true){
+    failures.push('INTERNAL_SCORING_SCOPE_INVALID');
+  }
+  const rows=Array.isArray(s.researchRows)?s.researchRows:[];
+  if(rows.length!==s.knownEventScoredCount||
+     rows.some(r=>r.internalProductionAuthorized!==true||
+       r.productionAuthorized!==false||r.customerDeliveryAllowed!==false||
+       r.buyerNeedVerified!==false||r.confirmedOpening!==false||
+       !Object.keys(r.scores||{}).every(k=>CATEGORIES.includes(k)&&
+         Number.isInteger(r.scores[k])&&r.scores[k]>=0&&r.scores[k]<=79)||
+       !Object.keys(r.categoryBases||{}).every(k=>CATEGORIES.includes(k)))){
+    failures.push('INTERNAL_SCORING_ROWS_INVALID');
+  }
+  if(!Number.isInteger(s.candidateCount)||s.candidateCount<1||
+     ![s.knownEventScoredCount,s.unknownEventHeldCount,s.suppressedCount,
+       s.excludedFitCount,s.reviewHeldCount].every(x=>Number.isInteger(x)&&x>=0)||
+     s.knownEventScoredCount+s.unknownEventHeldCount+s.suppressedCount+
+     s.excludedFitCount+s.reviewHeldCount!==s.candidateCount){
+    failures.push('INTERNAL_SCORING_COVERAGE_INVALID');
+  }
+  if(s.accuracy?.verifiedBuyerPrecision!==null||
+     s.accuracy?.verifiedBuyerRecall!==null||
+     s.accuracy?.independentBuyerLabels!==0||
+     s.accuracy?.verifiedSales!==0){
+    failures.push('INTERNAL_SCORING_ACCURACY_CLAIM_UNSUPPORTED');
+  }
+  if(!Array.isArray(s.failures)||s.failures.length||
+     !eventTime.instant(s.observedAt)||!s.graphDigest){
+    failures.push('INTERNAL_SCORING_PROVENANCE_INVALID');
+  }
+  const {fingerprint,...body}=s;
+  if(!/^[a-f0-9]{64}$/.test(fingerprint||'')||hash(body)!==fingerprint){
+    failures.push('INTERNAL_SCORING_FINGERPRINT_INVALID');
+  }
+  return {valid:failures.length===0,failures};
+}
+
 module.exports={VERSION,MODE,CATEGORIES,KEYS,CAPS,OWNER_AUTHORIZATION,stable,hash,
-  validateOwnerAuthority,verifiedSource,candidateComparable,scoreSnapshot};
+  validateOwnerAuthority,verifiedSource,candidateComparable,scoreSnapshot,validateSnapshot};
