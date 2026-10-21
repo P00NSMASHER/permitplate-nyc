@@ -16,9 +16,15 @@ Canonical site: <https://p00nsmasher.github.io/permitplate-nyc/>
 - seven-day first-payment refund window
 
 The launch offer is manually curated and does not depend on a model score.
-Automated scoring remains a research system and is not part of the customer
-promise. Signals are research starting points, not purchase intent, opening
-probability, or guaranteed leads.
+Owner-authorized V4 scoring runs inside the existing private research refresh
+to rank **source-dated, source-linked research records only**. Undated applicants,
+suppressed jurisdictions and disputed identities are held. Category evidence
+caps prohibit interpreting a contextual keyword as verified buying intent.
+**Customer-facing scored-lead delivery remains disabled**, and production buyer
+precision has not been independently established. See
+[NYC internal V4 scoring controls](operations/NYC_INTERNAL_V4_SCORING.md).
+Signals are research starting points, not purchase intent, opening probability,
+or guaranteed leads.
 
 ## Local verification
 
