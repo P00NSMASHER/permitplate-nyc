@@ -11,6 +11,7 @@ const v3=require('./shadow-scoring-v3');
 const eventTime=require('./event-time');
 const categoryEvidence=require('./category-evidence');
 const curated=require('./founder-curated-offer');
+const adapters=require('./source-adapters');
 const profiles=require('./subscriber-profile');
 const materialChange=require('./material-change');
 
@@ -182,7 +183,17 @@ function scoreSnapshot(input){
     // A dated source event must be bound to a current, accepted official URL
     // for this same CAMIS; do not trust arbitrary sourceUrl on a raw row.
     const eventUrl=calc.eventChronology.eventSourceUrl;
-    if(!eventUrl||!categoryEvidence.knownUrls(p).includes(eventUrl)){
+    const eventId=calc.eventChronology.eventSourceRecordId;
+    const sourceRecord=byId.get(eventId);
+    // The canonical adapter publishes dataset landing links, while the
+    // public candidate preview exposes a CAMIS-specific official GET URL.
+    // Both are acceptable ONLY when the exact verified event record binds
+    // to the expected official source dataset, not merely the right host.
+    const expectedLanding=adapters.SOURCE_CONFIGS[sourceRecord?.sourceSystem]?.landingUrl;
+    if(!eventUrl||!curated.officialSourceUrl(eventUrl)||
+       !sourceRecord||sourceRecord.sourceUrl!==eventUrl||
+       !(eventUrl===expectedLanding||
+         categoryEvidence.knownUrls(p).includes(eventUrl))){
       reviewHeldCount++;continue;
     }
     const scores={},categoryBases={},categoryEvidenceFingerprints={};
