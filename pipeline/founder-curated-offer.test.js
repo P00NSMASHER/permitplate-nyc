@@ -37,6 +37,21 @@ function validInput(){
 }
 
 {
+// Real DOHMH 1900 inspection placeholders are uninspected applicants,
+// not independently dated new permit filings. No raw stage may reach a
+// paid founder-curated HTML/CSV research brief as "JUST FILED".
+  const input=validInput();
+  input.signals[0].stage='JUST FILED';
+  const out=curated.buildCuratedBrief(input);
+  assert.equal(out.status,'READY');
+  assert.equal(out.signals[0].stage,'APPLICANT — NOT YET INSPECTED');
+  assert(out.csv.includes('APPLICANT — NOT YET INSPECTED'));
+  assert(out.html.includes('APPLICANT — NOT YET INSPECTED'));
+  assert(!out.csv.includes('JUST FILED'));
+  assert(!out.html.includes('JUST FILED'));
+}
+
+{
   const input=validInput();
   input.ownerReviewed=false;
   const out=curated.buildCuratedBrief(input);

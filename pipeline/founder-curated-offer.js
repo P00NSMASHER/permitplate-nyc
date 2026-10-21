@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto=require('crypto');
+const eventTime=require('./event-time');
 
 const OFFER_VERSION='PermitPlate-founder-curated-offer-v1.0.0';
 const LAUNCH_MODE='FOUNDER_CURATED_NO_SCORE_V1';
@@ -109,7 +110,7 @@ function normalizeSignal(input,index,failures){
   const businessName=text(signal.businessName);
   const address=text(signal.address);
   const borough=text(signal.borough);
-  const stage=text(signal.stage);
+  const stage=eventTime.customerStage(text(signal.stage));
   const whyItMatters=text(signal.whyItMatters);
   const sourceUpdatedAt=validInstant(signal.sourceUpdatedAt);
   const reviewedAt=validInstant(signal.reviewedAt);
