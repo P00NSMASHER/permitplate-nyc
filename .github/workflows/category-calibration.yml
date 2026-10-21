@@ -32,6 +32,10 @@ jobs:
         run: node pipeline/run-first-subscriber-canary.js verification-output/first-subscriber.json
       - name: Prepare score-blind review kit from complete public-source snapshot
         run: node pipeline/calibration-runner.js prepare verification-output/review-kit
+      - name: Verify blind DOB construction review kit schema (research PR only)
+        if: ${{ github.event_name == 'pull_request' && github.head_ref == 'research/nyc-live-benchmark-20261021' }}
+        run: node pipeline/nyc-real-world-acceptance.test.js
+
       - name: NYC independent public-source real-world acceptance (this research PR only)
         if: ${{ github.event_name == 'pull_request' && github.head_ref == 'research/nyc-live-benchmark-20261021' }}
         run: |
