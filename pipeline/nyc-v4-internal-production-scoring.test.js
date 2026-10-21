@@ -69,6 +69,11 @@ function fixture(){
   assert.equal(r.graphDigest,input.publicGraph.graphDigest);
   assert.equal(r.candidateCount,3);
   assert.equal(r.knownEventScoredCount,1);
+  assert.equal(score.validateSnapshot(r).valid,true);
+  const edited=JSON.parse(JSON.stringify(r));
+  edited.researchRows[0].scores.Equipment=100;
+  assert.equal(score.validateSnapshot(edited).valid,false);
+  assert(score.validateSnapshot(edited).failures.includes('INTERNAL_SCORING_FINGERPRINT_INVALID'));
   assert.equal(r.unknownEventHeldCount,1);
   assert.equal(r.suppressedCount,1);
   assert.equal(r.researchRows.length,1);
