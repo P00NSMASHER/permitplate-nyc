@@ -248,4 +248,56 @@ const predecessorPrepermit = dohmh({
   assert.equal(first.graphDigest,second.graphDigest);
 }
 
+
+// Real NYC DOHMH snapshot included 70 CAMIS entries with borough '0',
+// sometimes with non-NYC ZIPs. A ZIP code or shared premise is not verified
+// borough evidence. Unknown and contradictory original boroughs fail closed.
+{
+  const applicant=(camis,boro,zip,street)=>dohmh({
+    camis,dba:'Borough Source Test '+camis,
+    ...(boro===undefined?{}:{boro}),
+    building:'10',street,zipcode:zip,
+    inspection_date:'1900-01-01T00:00:00.000',
+    record_date:'2026-10-20T06:00:27.000'
+  });
+  const invalid=applicant('50126672','0','08512','UNVERIFIED ROAD');
+  const absent=applicant('50126674',undefined,'10012','NO BOROUGH ROAD');
+  const valid=applicant('50126673','Manhattan','10012','VALID ROAD');
+  const conflicting=applicant('50126675','Manhattan','10012','MIXED ROAD');
+  const contradictory=dohmh({
+    camis:'50126675',dba:'Borough Source Test 50126675',
+    boro:'Bronx',building:'10',street:'MIXED ROAD',zipcode:'10012',
+    inspection_date:'2026-10-17T00:00:00.000',
+    inspection_type:'Pre-permit (Non-operational) / Initial Inspection',
+    record_date:'2026-10-20T06:00:27.000'
+  });
+  const rows=[invalid,absent,valid,conflicting,contradictory];
+  const originalFacts=JSON.stringify(rows);
+  const graph=builder.buildCurrentGraph({
+    dohmhBatch:observation('DOHMH',rows),
+    slaBatch:observation('SLA_PENDING',[],'VERIFIED_EMPTY'),
+    dobBatch:observation('DOB_NOW',[],'VERIFIED_EMPTY')
+  });
+  assert.equal(graph.graphState,'COMPLETE');
+  assert.equal(graph.metrics.candidateCount,4);
+  assert.equal(graph.metrics.suppressedCount,3);
+  const byCamis=new Map(graph.candidates.map(x=>[x.camis,x]));
+  for(const camis of ['50126672','50126674','50126675']){
+    const x=byCamis.get(camis);
+    assert.equal(x.deliverySuppressed,true,camis);
+    assert(x.suppressionReasons.includes('NYC_BOROUGH_UNVERIFIED'),camis);
+    assert.equal(require('./curated-research-ledger').eligibleCandidate(x),false,camis);
+  }
+  const ambiguous=byCamis.get('50126675');
+  assert(ambiguous.suppressionReasons.includes('NYC_BOROUGH_CONFLICT'));
+  assert.equal(ambiguous.lifecycleStage,'HEALTH PRE-PERMIT');
+  assert.equal(byCamis.get('50126672').borough,'0'); // Preserve source fact.
+  assert.equal(byCamis.get('50126674').borough,null); // Never infer from ZIP.
+  const verified=byCamis.get('50126673');
+  assert.equal(verified.borough,'Manhattan');
+  assert.equal(verified.deliverySuppressed,false);
+  assert.deepEqual(verified.suppressionReasons,[]);
+  assert.equal(JSON.stringify(rows),originalFacts); // Do not change official rows.
+}
+
 console.log('PermitPlate candidate graph regression tests passed.');
