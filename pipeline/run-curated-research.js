@@ -7,6 +7,7 @@ const path = require('path');
 const {replay} = require('./run-current-graph');
 const {buildCurrentGraph} = require('./candidate-builder');
 const internalV4 = require('./nyc-v4-internal-production-scoring');
+const reviewBoard = require('./nyc-v4-review-workbench');
 const ledger = require('./curated-research-ledger');
 const independentReview=require('./independent-source-review');
 const independentHistory=require('./independent-source-history');
@@ -416,6 +417,22 @@ async function run(input) {
     return {status:'REVIEW',ready:false,
       failures:['PREVIOUS_PRIVATE_NYC_SCORE_SNAPSHOT_INVALID_OR_REWOUND']};
   }
+  // Build the operator's evidence-linked review board from the EXACT same
+  // private graph and V4 snapshot. Failure stops publication of all new
+  // private research artifacts; no new customer work is started.
+  const board=reviewBoard.build({graph:result.graph,scores});
+  if(board.status!=='READY_FOR_PRIVATE_HUMAN_REVIEW'||
+     board.customerDeliveryAllowed!==false||board.externalSendCalls!==0||
+     board.receipt?.ownerApproved!==false||
+     board.receipt?.scoreFingerprint!==scores.fingerprint){
+    return {status:'REVIEW',ready:false,failures:[
+      'NYC_PRIVATE_REVIEW_BOARD_NOT_VERIFIED',...(board.failures||[])
+    ]};
+  }
+  result.summary.internalReviewBoardVersion=reviewBoard.VERSION;
+  result.summary.internalReviewBoardCaseCount=board.receipt.sourceScoreCount;
+  result.summary.internalReviewBoardCategoryRows=board.receipt.displayedRowCount;
+  result.summary.internalReviewBoardFingerprint=board.receipt.fingerprint;
   result.summary.internalScoringMode=internalV4.MODE;
   result.summary.internalProductionScoringActive=true;
   result.summary.internalKnownEventResearchScores=scores.knownEventScoredCount;
@@ -426,6 +443,10 @@ async function run(input) {
   atomicJson(graphPath,result.graph);
   atomicJson(ledgerPath,result.ledger);
   atomicJson(scoreFile,scores);
+  // Private files only: scripts/forms/external assets are prohibited.
+  atomicJson(path.join(sourceDir,'nyc-v4-review-workbench-receipt.json'),board.receipt);
+  atomicText(path.join(sourceDir,'nyc-v4-review-workbench.csv'),board.csv);
+  atomicText(path.join(sourceDir,'nyc-v4-review-workbench.html'),board.html);
   if (!anchor) atomicJson(anchorPath,baselineAnchor(result.ledger));
   atomicJson(historyPath,advancedHistory.ledger);
   atomicJson(independentPath,annotated);
