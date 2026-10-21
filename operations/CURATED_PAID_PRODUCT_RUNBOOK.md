@@ -13,6 +13,21 @@ official-source brief (up to ten signals), or a no-matches note, within five
 business days and weekly thereafter. The first seven-day Starter Snapshot is
 optional. Do **not** promise an opening, guaranteed sale or exclusive lead.
 
+## Internal production V4 source-relevance scoring — not customer delivery
+
+The owner has authorized **private internal** V4 source-event relevance ranking
+under [the internal scoring runbook](NYC_INTERNAL_V4_SCORING.md). The existing
+daily `curated-research.yml` main-only workflow writes
+`state/nyc-v4-internal-scores.json` to the existing private state repository,
+with the same source snapshot and guarded Git writer. Its rankings are an
+operator research aid only. Records with unknown business-event dates or
+unverified NYC boroughs are held, and every category has source-evidence
+ceilings. **No source-relevance number is a verified buyer probability or a
+customer-authorized score receipt.** Founder-reviewed subscriber briefs remain
+source-specific and **NO SCORE**, with owner send authorization and provider
+readback unchanged. Do not convert an internal score into a paid scored feed
+without independent buyer validation and a separately accepted promotion.
+
 ## 1. Independent live research
 
 The `PermitPlate curated research (private)` workflow scans official NYC

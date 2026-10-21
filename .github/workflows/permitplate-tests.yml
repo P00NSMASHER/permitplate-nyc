@@ -202,5 +202,8 @@ jobs:
       - name: Run 47-case historical shadow scoring replay
         run: node pipeline/historical-shadow-score-benchmark.test.js
 
+      - name: Verify owner-authorized V4 internal production scores never enable customer transport
+        run: node pipeline/nyc-v4-internal-production-scoring.test.js
+
       - name: Run controlled scoring promotion policy regression
         run: node pipeline/scoring-policy.test.js

@@ -5,6 +5,8 @@
 const fs = require('fs');
 const path = require('path');
 const {replay} = require('./run-current-graph');
+const {buildCurrentGraph} = require('./candidate-builder');
+const internalV4 = require('./nyc-v4-internal-production-scoring');
 const ledger = require('./curated-research-ledger');
 const independentReview=require('./independent-source-review');
 const independentHistory=require('./independent-source-history');
@@ -386,8 +388,44 @@ async function run(input) {
   result.summary.independentScopeSemanticRebased=historyState.scopeSemanticRebasedCount||0;
   result.summary.independentLegacyScopeAlertCaveats=historyState.legacyScopeAlertCaveats||0;
   result.summary.independentHistoricalMigration=migrated;
+  // Same exact official source batches as the private research ledger: never
+  // refetch or score an unrelated source observation. Internal research scores
+  // are deliberately separate from customer score receipts and transport.
+  const fullGraph=buildCurrentGraph({
+    dohmhBatch:collected.batches.DOHMH,
+    dobBatch:collected.batches.DOB_NOW,
+    slaBatch:collected.batches.SLA_PENDING,
+    reviewedIdentityBridges:[]
+  });
+  const scores=internalV4.scoreSnapshot({
+    publicGraph:result.graph,fullGraph,batches:collected.batches,
+    observedAt:result.graph.observedAt
+  });
+  const scoreCheck=internalV4.validateSnapshot(scores);
+  if(!scoreCheck.valid){
+    return {status:'REVIEW',ready:false,failures:[
+      'NYC_INTERNAL_V4_PRODUCTION_SCORE_NOT_VERIFIED',
+      ...(scores.failures||[]),...scoreCheck.failures
+    ]};
+  }
+  const scoreFile=path.join(sourceDir,'nyc-v4-internal-scores.json');
+  const previousScores=readOptional(scoreFile);
+  if(previousScores&&(
+       !internalV4.validateSnapshot(previousScores).valid||
+       Date.parse(previousScores.observedAt)>Date.parse(scores.observedAt))){
+    return {status:'REVIEW',ready:false,
+      failures:['PREVIOUS_PRIVATE_NYC_SCORE_SNAPSHOT_INVALID_OR_REWOUND']};
+  }
+  result.summary.internalScoringMode=internalV4.MODE;
+  result.summary.internalProductionScoringActive=true;
+  result.summary.internalKnownEventResearchScores=scores.knownEventScoredCount;
+  result.summary.internalUnknownDateHeld=scores.unknownEventHeldCount;
+  result.summary.internalSuppressedHeld=scores.suppressedCount;
+  result.summary.internalScoreFingerprint=scores.fingerprint;
+  result.summary.customerScoredLeadReleaseAuthorized=false;
   atomicJson(graphPath,result.graph);
   atomicJson(ledgerPath,result.ledger);
+  atomicJson(scoreFile,scores);
   if (!anchor) atomicJson(anchorPath,baselineAnchor(result.ledger));
   atomicJson(historyPath,advancedHistory.ledger);
   atomicJson(independentPath,annotated);
