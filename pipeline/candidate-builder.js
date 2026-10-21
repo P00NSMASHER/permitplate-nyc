@@ -53,10 +53,28 @@ function normalizedAddress(value) { return norm(value); }
 
 function groupDohmhByCamis(records) {
   const groups = new Map();
+  const bySourceId = new Map();
   for (const record of records || []) {
     if (!record || record.sourceSystem !== 'DOHMH') continue;
     const camis = sourceCamis(record);
     if (!camis) continue;
+    const id = text(record.sourceRecordId);
+    if (id && bySourceId.has(id)) {
+      const earlier = bySourceId.get(id);
+      // The publisher can repeat an identical inspection/violation row.
+      // Keep its original row in the source receipt, but do not count it
+      // twice as independent evidence for this CAMIS candidate.
+      // Conflicting reuse of a stable ID must never be silently discarded.
+      if (!record.rawFactFingerprint || !earlier.rawFactFingerprint ||
+          record.rawFactFingerprint !== earlier.rawFactFingerprint ||
+          record.sourceEffectiveAt !== earlier.sourceEffectiveAt ||
+          record.eventType !== earlier.eventType ||
+          sourceCamis(earlier) !== camis) {
+        throw Error('DOHMH_SOURCE_RECORD_ID_COLLISION');
+      }
+      continue;
+    }
+    if (id) bySourceId.set(id, record);
     if (!groups.has(camis)) groups.set(camis, []);
     groups.get(camis).push(record);
   }
