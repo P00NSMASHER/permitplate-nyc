@@ -17,6 +17,9 @@ const STANDALONE_HEADERS="/*\n"+
   "  Content-Security-Policy: object-src 'none'; frame-ancestors 'none'; base-uri 'self'\n";
 
 const PUBLIC_FILES=Object.freeze([
+  "assets/brand/permitplate-emblem.webp",
+  "assets/brand/permitplate-favicon.png",
+  "assets/brand/native-brand-assets.json",
   "assets/brand/permitplate-600-20261022.webp",
   "assets/brand/permitplate-1200-20261022.webp",
   "assets/brand/permitplate-wordmark-20261022.webp",

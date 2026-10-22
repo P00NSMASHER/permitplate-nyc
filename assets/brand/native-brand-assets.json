@@ -1,0 +1,22 @@
+{
+  "permitplate": {
+    "emblem": "permitplate-emblem.webp",
+    "lockup": "permitplate-lockup.webp",
+    "favicon": "permitplate-favicon.png",
+    "source_sha256": "ce03e217bee3045345719896ed5f82c9cddc9a834866eb7d62d42755661ea7db",
+    "sizes": {
+      "permitplate-emblem.webp": {
+        "bytes": 127608,
+        "sha256": "5be8d986556ef4837b175c80905314c6ab69635e5ee932ae22535a2fc5ecddc7"
+      },
+      "permitplate-lockup.webp": {
+        "bytes": 129802,
+        "sha256": "e3470e84a4a4a6880d9b2cd9787fb1afbd38c6f8101f06cea02c0ae8da19337c"
+      },
+      "permitplate-favicon.png": {
+        "bytes": 98464,
+        "sha256": "724819bdfca589a50747f8301e915ad92029cd746e6441707c6f347ae993a4da"
+      }
+    }
+  }
+}
