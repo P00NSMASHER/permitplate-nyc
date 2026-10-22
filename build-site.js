@@ -120,6 +120,12 @@ function standaloneContent(file,source,siteBase){
   const escapedBase=siteBase.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   text=text.replace(new RegExp(escapedBase+'[^\\s"\'<>]*','g'),cleanHtmlUrl);
   if(file.endsWith('.html')){
+    if(file==='privacy.html'){
+      text=text.replace('Effective October 1, 2026','Effective October 22, 2026')
+        .replace('<h2 id="providers">3. Service providers</h2>',
+          '<h2 id="providers">3. Service providers</h2>\n'+
+          '      <p>This public website is hosted on Cloudflare Pages. See <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare’s privacy policy</a>.</p>');
+    }
     text=text.replace(/\b(href|action)=(["'])(\/[^"']*)\2/g,
       (match,attribute,quote,value)=>attribute+'='+quote+cleanHtmlUrl(value)+quote);
     const affiliation='<div class="shell retally-affiliation"><a href="'+GROUP_URL+'">Part of RETALLY Group</a></div>';

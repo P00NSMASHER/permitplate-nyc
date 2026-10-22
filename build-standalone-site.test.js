@@ -25,6 +25,8 @@ try{
   for(const item of original) assert.equal(site.sha256File(path.join(site.OUT,item.path)),item.sha256,'Default output changed: '+item.path);
   assert(!read('index.html').includes('Part of RETALLY Group'));
   assert(!fs.existsSync(path.join(site.OUT,'_headers')),'Default build must not emit Cloudflare headers');
+  assert(read('privacy.html').includes('Effective October 1, 2026'));
+  assert(!read('privacy.html').includes('This public website is hosted on Cloudflare Pages.'));
 
   process.env.CF_PAGES_COMMIT_SHA='a'.repeat(40);
   process.env.GITHUB_SHA='b'.repeat(40);
@@ -76,6 +78,19 @@ try{
   assert(read('welcome.html').includes('Viewing this page alone is not payment confirmation.'));
   assert(read('start.html').includes('$79'));
   assert(read('permit-pack.html').includes('Buy securely for $29'));
+
+  const hostingParagraph='<p>This public website is hosted on Cloudflare Pages. See <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare’s privacy policy</a>.</p>';
+  const privacy=read('privacy.html');
+  assert(privacy.includes(hostingParagraph),'Standalone privacy must disclose the actual public host');
+  assert(privacy.includes('Effective October 22, 2026'));
+  const proseText=html=>html.match(/<article class="prose">([\s\S]*?)<\/article>/)[1]
+    .replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
+  assert.equal(proseText(privacy.replace(hostingParagraph,'')),
+    proseText(fs.readFileSync(path.join(site.ROOT,'privacy.html'),'utf8')),
+    'Hosting disclosure must preserve all existing provider and data-handling commitments');
+  assert.equal(proseText(read('terms.html')),
+    proseText(fs.readFileSync(path.join(site.ROOT,'terms.html'),'utf8')),
+    'Standalone hosting must not alter the terms');
 
   for(const file of info.files){
     assert.equal(file.sha256,site.sha256File(path.join(site.OUT,file.path)));
