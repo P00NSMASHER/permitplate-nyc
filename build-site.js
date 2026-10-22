@@ -17,6 +17,13 @@ const STANDALONE_HEADERS="/*\n"+
   "  Content-Security-Policy: object-src 'none'; frame-ancestors 'none'; base-uri 'self'\n";
 
 const PUBLIC_FILES=Object.freeze([
+  "assets/brand/permitplate-600-20261022.webp",
+  "assets/brand/permitplate-1200-20261022.webp",
+  "assets/brand/permitplate-wordmark-20261022.webp",
+  "assets/brand/permitplate-social-20261022.png",
+  "assets/brand/permitplate-icon-20261022.png",
+  "assets/brand/approved-brand-assets.json",
+  "assets/brand/approved-brand-20261022.css",
   '404.html',
   'apple-touch-icon.png',
   'assets/fonts/familjen-grotesk-latin.woff2',
@@ -120,6 +127,9 @@ function standaloneContent(file,source,siteBase){
   const escapedBase=siteBase.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   text=text.replace(new RegExp(escapedBase+'[^\\s"\'<>]*','g'),cleanHtmlUrl);
   if(file.endsWith('.html')){
+    // Each responsive candidate is a URL; later srcset entries can follow commas.
+    text=text.replace(/\bsrcset=(["'])([^"']*)\1/g,(_match,quote,value)=>
+      'srcset='+quote+value.replace(/(^|,\s*)\/permitplate-nyc\//g,'$1/')+quote);
     if(file==='privacy.html'){
       text=text.replace('Effective October 1, 2026','Effective October 22, 2026')
         .replace('<h2 id="providers">3. Service providers</h2>',

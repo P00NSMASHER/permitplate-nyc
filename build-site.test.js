@@ -179,3 +179,5 @@ try{
 }finally{
   fs.rmSync(build.OUT,{recursive:true,force:true});
 }
+
+require("./approved-brand.test.js");
