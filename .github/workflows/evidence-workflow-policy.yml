@@ -1,0 +1,38 @@
+name: PermitPlate evidence workflow policy
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/source-health.yml'
+      - '.github/workflows/current-graph.yml'
+      - '.github/workflows/evidence-workflow-policy.yml'
+      - 'tests/evidence-workflow-policy.test.mjs'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/source-health.yml'
+      - '.github/workflows/current-graph.yml'
+      - '.github/workflows/evidence-workflow-policy.yml'
+      - 'tests/evidence-workflow-policy.test.mjs'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: permitplate-evidence-policy-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out exact candidate
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Enforce evidence workflow provenance
+        run: node --test tests/evidence-workflow-policy.test.mjs
