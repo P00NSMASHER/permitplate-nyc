@@ -10,6 +10,8 @@ on:
     paths:
       - 'pipeline/launch-readiness.js'
       - 'pipeline/run-launch-readiness.js'
+      - 'pipeline/refresh-launch-external-evidence.js'
+      - 'pipeline/refresh-launch-external-evidence.test.js'
       - 'pipeline/stripe-intake-readiness.js'
       - 'pipeline/stripe-intake-readiness.test.js'
       - 'pipeline/curated-stripe-onboarding.js'
@@ -41,6 +43,8 @@ on:
     paths:
       - 'pipeline/launch-readiness.js'
       - 'pipeline/run-launch-readiness.js'
+      - 'pipeline/refresh-launch-external-evidence.js'
+      - 'pipeline/refresh-launch-external-evidence.test.js'
       - 'pipeline/stripe-intake-readiness.js'
       - 'pipeline/stripe-intake-readiness.test.js'
       - 'pipeline/curated-stripe-onboarding.js'
@@ -90,6 +94,8 @@ jobs:
           node-version: '22'
       - name: Reject missing or stale Stripe intake monitoring
         run: node pipeline/stripe-intake-readiness.test.js
+      - name: Verify read-only external evidence renewal offline
+        run: node pipeline/refresh-launch-external-evidence.test.js
 
   launch-readiness:
     needs: policy
@@ -150,13 +156,25 @@ jobs:
           test -f "$PRIVATE_STATE_DIR/state/opportunity-ledger.json" || { echo "Private opportunity ledger is not initialized."; exit 1; }
 
       - name: Run live launch readiness controller against private state
-        run: node pipeline/run-launch-readiness.js pipeline/launch-readiness-result.json "$PRIVATE_STATE_DIR/state/detection-ledger.json" "$PRIVATE_STATE_DIR/state/opportunity-ledger.json"
+        env:
+          PERMITPLATE_REFRESH_EXTERNAL_EVIDENCE: 'true'
+          PERMITPLATE_STRIPE_READ_KEY: ${{ secrets.PERMITPLATE_STRIPE_READ_KEY }}
+        run: |
+          set -euo pipefail
+          remote_main="$(git ls-remote --exit-code origin refs/heads/main | awk '{print $1}')"
+          test -n "$remote_main" && test "$GITHUB_SHA" = "$remote_main"
+          node pipeline/run-launch-readiness.js pipeline/launch-readiness-result.json "$PRIVATE_STATE_DIR/state/detection-ledger.json" "$PRIVATE_STATE_DIR/state/opportunity-ledger.json"
+          remote_main="$(git ls-remote --exit-code origin refs/heads/main | awk '{print $1}')"
+          test -n "$remote_main" && test "$GITHUB_SHA" = "$remote_main"
 
       - name: Retain source-bound launch readiness evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: permitplate-launch-readiness-${{ github.sha }}
-          path: pipeline/launch-readiness-result.json
+          path: |
+            pipeline/launch-readiness-result.json
+            pipeline/launch-external-evidence-result.json
           if-no-files-found: warn
           retention-days: 30
+
