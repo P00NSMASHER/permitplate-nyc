@@ -110,7 +110,7 @@ try{
   assert.equal(start.split(STRIPE_URL).length-1,1);
   assert(start.includes('Continue to secure checkout'));
   assert(start.includes('First brief within 5 business days'));
-  assert(start.includes('7-day first-payment refund'));
+  assert(start.includes('7-day refund after first brief'));
   assert(start.includes('rel="noopener"'));
   assert(!start.includes('<form'));
 
@@ -201,3 +201,4 @@ try{
 }
 
 require("./approved-brand.test.js");
+require("./pipeline/paid-offer-contract.test.js");
