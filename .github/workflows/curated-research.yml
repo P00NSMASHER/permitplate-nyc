@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '12 14 * * *'
+  # Readiness follows this writer; include its inputs and the public-build files.
   push:
     branches: [main]
     paths:
@@ -56,6 +57,44 @@ on:
       - 'pipeline/run-curated-review-queue.js'
       - 'pipeline/curated-product.test.js'
       - '.github/workflows/curated-research.yml'
+      - 'pipeline/launch-readiness.js'
+      - 'pipeline/run-launch-readiness.js'
+      - 'pipeline/refresh-launch-external-evidence.js'
+      - 'pipeline/refresh-launch-external-evidence.test.js'
+      - 'pipeline/stripe-intake-readiness.js'
+      - 'pipeline/stripe-intake-readiness.test.js'
+      - 'pipeline/curated-stripe-onboarding.js'
+      - 'pipeline/run-curated-stripe-onboarding.js'
+      - '.github/workflows/stripe-onboarding.yml'
+      - 'pipeline/curated-production-readiness.js'
+      - 'pipeline/curated-production-readiness.test.js'
+      - 'pipeline/run-shadow-scoring-evaluation.js'
+      - 'pipeline/historical-shadow-score-benchmark.js'
+      - 'pipeline/scoring-policy.js'
+      - 'pipeline/run-first-subscriber-canary.js'
+      - 'pipeline/founder-curated-offer.js'
+      - 'pipeline/run-founder-curated-canary.js'
+      - 'operations/FOUNDER_CURATED_FULFILLMENT.md'
+      - 'release-manifest.json'
+      - 'pipeline/detection-ledger.js'
+      - 'pipeline/opportunity-ledger.js'
+      - 'verification/launch-external-evidence.json'
+      - 'build-site.js'
+      - 'tests/test_pilot_source_admission.py'
+      - '.github/workflows/launch-readiness.yml'
+      - '.github/workflows/detection-ledger.yml'
+      - '*.html'
+      - 'assets/**'
+      - 'favicon.svg'
+      - 'apple-touch-icon.png'
+      - 'og-card.png'
+      - 'site.css'
+      - 'site.js'
+      - 'manifest.webmanifest'
+      - 'robots.txt'
+      - 'sitemap.xml'
+      - 'tests/test_launch_refresh_sequence.py'
+
   pull_request:
     branches: [main]
     paths:
@@ -108,6 +147,43 @@ on:
       - 'pipeline/curated-product.test.js'
       - 'tests/test_curated_workflow_policy.py'
       - '.github/workflows/curated-research.yml'
+      - 'pipeline/launch-readiness.js'
+      - 'pipeline/run-launch-readiness.js'
+      - 'pipeline/refresh-launch-external-evidence.js'
+      - 'pipeline/refresh-launch-external-evidence.test.js'
+      - 'pipeline/stripe-intake-readiness.js'
+      - 'pipeline/stripe-intake-readiness.test.js'
+      - 'pipeline/curated-stripe-onboarding.js'
+      - 'pipeline/run-curated-stripe-onboarding.js'
+      - '.github/workflows/stripe-onboarding.yml'
+      - 'pipeline/curated-production-readiness.js'
+      - 'pipeline/curated-production-readiness.test.js'
+      - 'pipeline/run-shadow-scoring-evaluation.js'
+      - 'pipeline/historical-shadow-score-benchmark.js'
+      - 'pipeline/scoring-policy.js'
+      - 'pipeline/run-first-subscriber-canary.js'
+      - 'pipeline/founder-curated-offer.js'
+      - 'pipeline/run-founder-curated-canary.js'
+      - 'operations/FOUNDER_CURATED_FULFILLMENT.md'
+      - 'release-manifest.json'
+      - 'pipeline/detection-ledger.js'
+      - 'pipeline/opportunity-ledger.js'
+      - 'verification/launch-external-evidence.json'
+      - 'build-site.js'
+      - 'tests/test_pilot_source_admission.py'
+      - '.github/workflows/launch-readiness.yml'
+      - '.github/workflows/detection-ledger.yml'
+      - '*.html'
+      - 'assets/**'
+      - 'favicon.svg'
+      - 'apple-touch-icon.png'
+      - 'og-card.png'
+      - 'site.css'
+      - 'site.js'
+      - 'manifest.webmanifest'
+      - 'robots.txt'
+      - 'sitemap.xml'
+      - 'tests/test_launch_refresh_sequence.py'
 
 permissions:
   contents: read
@@ -156,6 +232,8 @@ jobs:
         run: node pipeline/identity-triage-history.test.js
       - name: Verify legacy identity disk-proof compatibility
         run: node pipeline/identity-receipt-recovery.test.js
+      - name: Verify post-refresh launch admission offline
+        run: python3 -m unittest discover -s tests -p 'test_launch_refresh_sequence.py' -v
       - name: Verify workflow policy
         run: python3 -m unittest discover -s tests -p 'test_curated_workflow_policy.py' -v
 
