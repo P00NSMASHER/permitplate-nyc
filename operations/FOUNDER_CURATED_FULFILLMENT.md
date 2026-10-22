@@ -13,8 +13,11 @@ paid customer promise.
 - Every included signal has at least one official source link and a short,
   plain-language explanation of why it may be worth researching.
 - If nothing credible matches that week, send a short no-matches note.
-- Cancel at period end through Stripe. The first payment is refundable when
-  requested within seven calendar days.
+- Cancel at period end through Stripe. The first payment is refundable before
+  the first brief/no-matches note is sent and for seven calendar days after its
+  provider-confirmed first send, not merely seven days after payment. A missed
+  five-business-day first-send deadline or undeliverable first message gives
+  the buyer a first-payment refund option.
 
 ## First-customer checklist
 

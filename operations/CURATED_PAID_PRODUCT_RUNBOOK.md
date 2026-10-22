@@ -8,9 +8,11 @@ owner-approved, provider-reconciled attempt.
 
 Stripe is authoritative for a completed subscription, the exact $79/month
 PermitPlate price, email, category, territory, Starter preference and
-subscription-created baseline. A new customer receives a founder-reviewed
-official-source brief (up to ten signals), or a no-matches note, within five
-business days and weekly thereafter. The first seven-day Starter Snapshot is
+subscription-created baseline. A new customer receives a founder-reviewed official-source brief (up to ten signals), or a no-matches note, sent within five
+business days and weekly thereafter. The first payment is refundable before
+the first send and during the following seven calendar days; if the first
+message does not arrive or the five-business-day first-send promise is missed,
+the customer may request a resend or first-payment refund. The first seven-day Starter Snapshot is
 optional. Do **not** promise an opening, guaranteed sale or exclusive lead.
 
 ## Internal production V4 source-relevance scoring — not customer delivery
