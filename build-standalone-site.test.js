@@ -42,7 +42,9 @@ try{
     "  Strict-Transport-Security: max-age=86400\n"+
     "  X-Content-Type-Options: nosniff\n"+
     "  Referrer-Policy: strict-origin-when-cross-origin\n"+
-    "  Content-Security-Policy: object-src 'none'; frame-ancestors 'none'; base-uri 'self'\n");
+    "  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()\n"+
+    "  X-Frame-Options: DENY\n"+
+    "  Content-Security-Policy: default-src 'self'; connect-src 'self' https://data.cityofnewyork.us; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests\n");
   assert(info.files.some(file=>file.path==='_headers'),'Header configuration must be fingerprinted');
 
   for(const file of site.PUBLIC_FILES.filter(name=>name.endsWith('.html'))){

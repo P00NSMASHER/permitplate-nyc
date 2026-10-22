@@ -71,7 +71,27 @@ try{
     }
   }
 
+  // Corporate labels must not send customers to the freight business.
+  for(const file of htmlFiles){
+    const html=fs.readFileSync(path.join(build.OUT,file),'utf8');
+    assert(!html.includes('https://www.retallyrecovery.com/permitplate/'),file+' uses the old umbrella catalogue');
+    assert(!html.includes('https://www.retallyrecovery.com/contact/?business=PermitPlate%20NYC'),file+' uses a legacy contact redirect');
+    assert(!/href="https:\/\/www\.retallyrecovery\.com\/"[^>]*>RETALLY Group<\/a>/i.test(html),file+' corporate link points to Freight');
+  }
+  const groupUrl='https://group.retallyrecovery.com/';
+  const announced=['index.html','field-notes.html','permit-pack.html','start.html'];
+  for(const file of announced){
+    assert(fs.readFileSync(path.join(build.OUT,file),'utf8').includes('href="'+groupUrl+'">RETALLY Group</a>'),
+      file+' announcement must link directly to group');
+  }
+
   const index=fs.readFileSync(path.join(build.OUT,'index.html'),'utf8');
+  const schema=(index.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)||[])[1];
+  assert(schema,'PermitPlate homepage needs structured service data');
+  const graph=JSON.parse(schema);
+  assert.equal(graph['@context'],'https://schema.org');
+  assert(graph['@graph'].some(n=>n['@type']==='Service'&&/restaurant/i.test(n.description)));
+  assert(graph['@graph'].some(n=>n['@type']==='WebSite'&&n.url===build.LEGACY_SITE_BASE));
   assert(index.includes('The right project.'));
   assert(index.includes('Founder-reviewed'));
   assert(index.includes('Up to 10'));
