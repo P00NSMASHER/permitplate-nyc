@@ -193,6 +193,9 @@ jobs:
       - name: Run versioned scoring and receipt regression
         run: node pipeline/scoring.test.js
 
+      - name: Run scoring readiness diagnostics regression
+        run: node pipeline/run-scoring-readiness.test.js
+
       - name: Run current-evidence shadow scoring regression
         run: node pipeline/shadow-scoring-v3.test.js
 
