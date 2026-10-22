@@ -48,7 +48,27 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.event_name == 'pull_request' && format('permitplate-pilot-policy-pr-{0}', github.event.pull_request.number) || format('permitplate-private-state-{0}', vars.PERMITPLATE_STATE_REPO) }}
+  # A rejected completion must never take the pending slot of a private writer.
+  # Route before scheduling; the exact-current-main guard still runs before secrets.
+  group: >-
+    ${{ github.event_name == 'pull_request' &&
+        format('permitplate-pilot-policy-pr-{0}', github.event.pull_request.number) ||
+        (github.ref == 'refs/heads/main' &&
+         (github.event_name == 'workflow_dispatch' ||
+          (github.event_name == 'workflow_run' &&
+           github.event.repository.full_name == github.repository &&
+           github.event.workflow_run.head_repository.full_name == github.repository &&
+           github.event.workflow_run.name == 'PermitPlate curated research (private)' &&
+           github.event.workflow_run.path == '.github/workflows/curated-research.yml' &&
+           github.event.workflow_run.status == 'completed' &&
+           github.event.workflow_run.conclusion == 'success' &&
+           (github.event.workflow_run.event == 'push' ||
+            github.event.workflow_run.event == 'schedule' ||
+            github.event.workflow_run.event == 'workflow_dispatch') &&
+           github.event.workflow_run.head_branch == 'main' &&
+           github.event.workflow_run.head_sha == github.sha))) &&
+        format('permitplate-private-state-{0}', vars.PERMITPLATE_STATE_REPO) ||
+        format('permitplate-launch-isolated-{0}', github.run_id) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
