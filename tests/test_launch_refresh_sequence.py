@@ -32,6 +32,40 @@ def actual_admission(source):
     return textwrap.dedent(code)
 
 
+def actual_concurrency_group(source, context):
+    """Evaluate the workflow's string/boolean expression, rejecting unknown syntax."""
+    block = source.split("\nconcurrency:\n", 1)[1].split("\njobs:\n", 1)[0]
+    expression = re.search(r"group:\s*(?:>-\s*)?\$\{\{(.*?)\}\}", block, re.S).group(1)
+    token = re.compile(r"\s+|'(?:[^']|'')*'|(?:github|vars)\.[A-Za-z0-9_.]+|format\b|&&|\|\||==|[(),]")
+    translated = []
+    position = 0
+    for match in token.finditer(expression):
+        if match.start() != position:
+            raise AssertionError("Unsupported concurrency expression syntax")
+        position = match.end()
+        value = match.group()
+        if value.isspace():
+            continue
+        if value.startswith("'"):
+            translated.append(repr(value[1:-1].replace("''", "'")))
+        elif value.startswith(("github.", "vars.")):
+            translated.append("lookup(" + repr(value) + ")")
+        else:
+            translated.append({"&&": "and", "||": "or", "format": "format_value"}.get(value, value))
+    if position != len(expression):
+        raise AssertionError("Unsupported concurrency expression suffix")
+
+    def lookup(path):
+        value = context
+        for part in path.split("."):
+            value = value.get(part, "") if isinstance(value, dict) else ""
+        return value
+
+    return eval(" ".join(translated), {"__builtins__": {}}, {
+        "lookup": lookup, "format_value": lambda template, *values: template.format(*values),
+    })
+
+
 def good_event():
     return {
         "repository": {"full_name": REPO},
@@ -62,6 +96,74 @@ class LaunchRefreshSequenceTests(unittest.TestCase):
             }
             with patch.dict(os.environ, environment), contextlib.redirect_stdout(io.StringIO()):
                 exec(compile(code, "launch-workflow-admission", "exec"), {})
+
+    def group(self, event=None, name="workflow_run", ref="refs/heads/main", run_id=12345):
+        return actual_concurrency_group(self.launch, {
+            "github": {"event_name": name, "ref": ref, "sha": SHA, "repository": REPO,
+                       "event": good_event() if event is None else event, "run_id": run_id},
+            "vars": {"PERMITPLATE_STATE_REPO": "P00NSMASHER/permitplate-state"},
+        })
+
+    def test_trusted_refresh_and_manual_main_keep_the_existing_private_lock(self):
+        expected = "permitplate-private-state-P00NSMASHER/permitplate-state"
+        for upstream in ("push", "schedule", "workflow_dispatch"):
+            with self.subTest(upstream=upstream):
+                event = good_event()
+                event["workflow_run"]["event"] = upstream
+                self.assertEqual(self.group(event), expected)
+        self.assertEqual(self.group({}, name="workflow_dispatch"), expected)
+
+    def test_cancelled_failed_or_incomplete_refresh_cannot_displace_a_private_writer(self):
+        for field, values in {
+            "conclusion": ("cancelled", "failure", "skipped", "timed_out", "neutral", None),
+            "status": ("queued", "in_progress", None),
+        }.items():
+            for value in values:
+                with self.subTest(field=field, value=value):
+                    event = good_event()
+                    event["workflow_run"][field] = value
+                    self.assertEqual(self.group(event), "permitplate-launch-isolated-12345")
+
+    def test_stale_wrong_workflow_or_non_main_refresh_uses_isolated_group(self):
+        for field, value in (("head_sha", "b" * 40), ("head_branch", "proposal"),
+                             ("name", "Other workflow"), ("path", ".github/workflows/other.yml")):
+            with self.subTest(field=field):
+                event = good_event()
+                event["workflow_run"][field] = value
+                self.assertEqual(self.group(event), "permitplate-launch-isolated-12345")
+
+    def test_fork_foreign_repo_and_untrusted_upstream_events_use_isolated_group(self):
+        for location in ("repository", "head_repository"):
+            with self.subTest(location=location):
+                event = good_event()
+                target = event if location == "repository" else event["workflow_run"]
+                target[location]["full_name"] = "untrusted/permitplate-nyc"
+                self.assertEqual(self.group(event), "permitplate-launch-isolated-12345")
+        for upstream in ("pull_request", "pull_request_target", "workflow_run", None):
+            with self.subTest(upstream=upstream):
+                event = good_event()
+                event["workflow_run"]["event"] = upstream
+                self.assertEqual(self.group(event), "permitplate-launch-isolated-12345")
+
+    def test_missing_provenance_or_untrusted_outer_event_uses_isolated_group(self):
+        for event in ({}, {"workflow_run": {}}, {"repository": {"full_name": REPO}}):
+            with self.subTest(event=event):
+                self.assertEqual(self.group(event), "permitplate-launch-isolated-12345")
+        for name in ("push", "schedule", "pull_request_target"):
+            with self.subTest(name=name):
+                self.assertEqual(self.group({}, name=name), "permitplate-launch-isolated-12345")
+        self.assertEqual(self.group({}, name="workflow_dispatch", ref="refs/heads/proposal"),
+                         "permitplate-launch-isolated-12345")
+        self.assertEqual(self.group(ref="refs/heads/proposal"), "permitplate-launch-isolated-12345")
+
+    def test_rejected_completions_are_isolated_per_run_and_pr_policy_keeps_its_group(self):
+        event = good_event()
+        event["workflow_run"]["conclusion"] = "cancelled"
+        self.assertEqual(self.group(event, run_id=98765), "permitplate-launch-isolated-98765")
+        self.assertNotEqual(self.group(event), self.group(event, run_id=98765))
+        self.assertEqual(self.group({"pull_request": {"number": 128}}, name="pull_request",
+                                    ref="refs/pull/128/merge"), "permitplate-pilot-policy-pr-128")
+        self.assertIn("cancel-in-progress: ${{ github.event_name == 'pull_request' }}", self.launch)
 
     def test_automatic_readiness_follows_refresh_without_an_independent_timer(self):
         trigger = self.launch.split("\non:\n", 1)[1].split("\npermissions:", 1)[0]
