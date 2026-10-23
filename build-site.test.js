@@ -81,8 +81,11 @@ try{
   const groupUrl='https://group.retallyrecovery.com/';
   const announced=['index.html','field-notes.html','permit-pack.html','start.html'];
   for(const file of announced){
-    assert(fs.readFileSync(path.join(build.OUT,file),'utf8').includes('href="'+groupUrl+'">RETALLY Group</a>'),
-      file+' announcement must link directly to group');
+    const html=fs.readFileSync(path.join(build.OUT,file),'utf8');
+    assert(html.includes('href="'+groupUrl+'"><img class="retally-wordmark"'),
+      file+' announcement must link directly to group with the approved wordmark');
+    assert(html.includes('alt="RETALLY" width="1619" height="257"'),
+      file+' must preserve the accessible company name');
   }
 
   const index=fs.readFileSync(path.join(build.OUT,'index.html'),'utf8');
