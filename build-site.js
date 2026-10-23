@@ -20,6 +20,7 @@ const STANDALONE_HEADERS="/*\n"+
 
 const PUBLIC_FILES=Object.freeze([
   "assets/brand/permitplate-emblem.webp",
+  "assets/brand/retally-wordmark-approved.png",
   "assets/brand/permitplate-favicon.png",
   "assets/brand/native-brand-assets.json",
   "assets/brand/permitplate-600-20261022.webp",
