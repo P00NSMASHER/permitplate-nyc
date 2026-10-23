@@ -315,3 +315,16 @@ h3{line-height:1.12}
 .checkout-card>.checkout-legal{margin:13px 0 0}
 .checkout-card>ul{margin:22px 0 0;padding:20px 0 0;border-top:1px solid rgba(255,255,255,.28)}
 @media(max-width:680px){.checkout-card>ul{gap:10px}.checkout-card li{font-size:14px}}
+
+/* First-party approved RETALLY corporate wordmark in context. */
+img.retally-wordmark{
+ display:inline-block!important;
+ height:.79em!important;width:auto!important;
+ max-width:min(100%,8em);box-sizing:content-box;
+ margin:0 .04em;padding:.075em .12em;
+ vertical-align:-.035em;object-fit:contain;
+ background:#fff;border:1px solid rgba(10,72,50,.12);
+ border-radius:.17em;box-shadow:0 1px 4px rgba(0,31,26,.10);
+}
+a img.retally-wordmark{pointer-events:none}
+@media print{img.retally-wordmark{box-shadow:none}}
