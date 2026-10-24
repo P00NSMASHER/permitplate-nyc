@@ -68,7 +68,12 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: '22'
+          node-version: '22.23.4'
+
+      - name: Enforce October 2026 patched Node.js baseline
+        run: |
+          node --version
+          node -e 'const [major,minor,patch]=process.versions.node.split(".").map(Number);if(major!==22 || minor<23 || (minor===23 && patch<4)) process.exit(1)'
 
       - name: Verify public deployment boundary
         run: node build-site.test.js

@@ -47,7 +47,7 @@ jobs:
       - name: Use pinned Node runtime
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: '22'
+          node-version: '22.23.4'
       - name: Test PA official public-source cases without release claims
         run: node pipeline/pa-real-official-evidence.test.js
       - name: Verify selected official PA municipality identity and ambiguity holds
@@ -90,7 +90,7 @@ jobs:
       - name: Use pinned Node runtime
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: '22'
+          node-version: '22.23.4'
       - name: Verify dedicated private state repository
         env:
           GH_TOKEN: ${{ secrets.PERMITPLATE_STATE_TOKEN }}

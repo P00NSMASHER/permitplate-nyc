@@ -23,7 +23,15 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '22.23.4'
+
+      - name: Enforce October 2026 patched Node.js baseline
+        run: |
+          node --version
+          node -e 'const [major,minor,patch]=process.versions.node.split(".").map(Number);if(major!==22 || minor<23 || (minor===23 && patch<4)) process.exit(1)'
+
+      - name: Reject unsupported and floating CI Node runtimes
+        run: python3 -m unittest discover -s tests -p 'test_node_security_workflow_policy.py' -v
 
       - name: Verify public deployment boundary
         run: node build-site.test.js
@@ -210,3 +218,9 @@ jobs:
 
       - name: Run controlled scoring promotion policy regression
         run: node pipeline/scoring-policy.test.js
+
+      - name: Verify exact Cloudflare Pages standalone publication build
+        run: |
+          node build-site.test.js
+          node build-standalone-site.test.js
+          node build-site.js --site-base https://permitplate.retallyrecovery.com/
