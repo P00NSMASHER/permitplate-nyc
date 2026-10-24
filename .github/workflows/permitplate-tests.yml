@@ -218,3 +218,9 @@ jobs:
 
       - name: Run controlled scoring promotion policy regression
         run: node pipeline/scoring-policy.test.js
+
+      - name: Verify exact Cloudflare Pages standalone publication build
+        run: |
+          node build-site.test.js
+          node build-standalone-site.test.js
+          node build-site.js --site-base https://permitplate.retallyrecovery.com/
