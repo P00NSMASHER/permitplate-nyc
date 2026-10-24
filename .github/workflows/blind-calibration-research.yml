@@ -39,7 +39,7 @@ jobs:
       - name: Pinned Node environment
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: '22'
+          node-version: '22.23.4'
       - name: Test blinded calibration source integrity and private outputs
         run: node --test pipeline/calibration.test.js pipeline/calibration-integrity.test.js pipeline/calibration-cli.test.js pipeline/calibration-focused.test.js
       - name: Defend private blind-calibration workflow
@@ -71,7 +71,7 @@ jobs:
       - name: Pinned Node environment
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: '22'
+          node-version: '22.23.4'
       - name: Verify dedicated private source repository
         env:
           GH_TOKEN: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
