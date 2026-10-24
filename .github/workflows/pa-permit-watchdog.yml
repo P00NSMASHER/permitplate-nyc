@@ -39,7 +39,7 @@ jobs:
       - name: Use pinned Node runtime
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: '22'
+          node-version: '22.23.4'
       - name: Verify independent PA heartbeat and no-customer-data output
         run: node pipeline/pa-permit-watchdog.test.js
       - name: Reject credential and private-state policy violations
@@ -70,7 +70,7 @@ jobs:
       - name: Use pinned Node runtime
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: '22'
+          node-version: '22.23.4'
       - name: Verify separate private state repository is authorized
         env:
           GH_TOKEN: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
