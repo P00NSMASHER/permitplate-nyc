@@ -53,7 +53,7 @@ for (const workflow of workflows) {
 
   test(`${workflow.path} keeps security-patched Node runtime`, () => {
     const source = readWorkflow(workflow.path);
-    assert.match(source, /node-version:\\s*'22\\.23\\.4'/);
+    assert.ok(source.includes("node-version: '22.23.4'"));
   });
 
   test(`${workflow.path} uses immutable action revisions`, () => {
