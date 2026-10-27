@@ -34,6 +34,15 @@ blocks ordinary repeat requests; it is not automatic identity authentication.
 One company using multiple domains must retain one canonical identity. All
 territory and category values must come from the supported paid-offer contract.
 
+Before admission, confirm that the available reviewed records support a useful
+rationale for this customer's actual vendor category and territory. General
+restaurant activity alone is not enough to promise a useful category match.
+If that rationale cannot be supported, hold the request or return no matches;
+keep the trial clock dormant until a genuinely useful report is available.
+Do not fill a report to start the clock. A useful rationale need not contain an
+exact category keyword, but it must explain the documented relevance and its
+limits without inventing buying intent, an open order or an opening date.
+
 Initialize a TEST registry for QA. LIVE admission is a separate operator action:
 
 ```sh
@@ -143,3 +152,32 @@ Current evidence proves source processing, exact official readback and tested
 no-send lifecycle controls. It does not establish live customer delivery,
 customer value, conversion, opening predictions or buyer intent. Keep admission
 supervised until those operational results have actually been recorded.
+
+## Explicit customer simulations
+
+Run the offline exercise with a saved current public graph and a new private
+output directory:
+
+```sh
+node pipeline/trial-customer-simulation.js /private/current-source-graph.json /private/new-test-simulation
+```
+
+It uses the actual trial renderer and reconciler for synthetic equipment and
+POS vendors, each with a starter and weekly report, a fictional observation
+timeline and TEST provider receipts. Genuine public restaurant fields can be
+copied unchanged from the input graph; that does not make the simulated
+monitoring events, owner judgments or customer opinions genuine.
+
+The HTML and subject visibly say TEST SIMULATION; every simulated CSV rationale
+is labeled TEST. Both reports show the free terms and separate optional $79
+membership. The output includes readable first/weekly HTML and CSV, synthetic
+persona assessments of source fidelity, territory, category relevance,
+uncertainty, next steps and upgrade terms, plus lifecycle results. Weak generic
+context may correctly produce a simulated decision to defer or decline.
+
+Explicit TEST/simulation review or source markers, including synthetic reviewer
+labels, are rejected before LIVE trial preparation and again at delivery
+recording. TEST records cannot supply authentic owner/provider approval. This
+exercise makes no provider calls, sends no messages, creates no billing, changes
+no real customer or private production state, and creates no commercial proof,
+independent human review or scoring-calibration labels.

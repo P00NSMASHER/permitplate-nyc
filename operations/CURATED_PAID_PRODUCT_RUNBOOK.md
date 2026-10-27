@@ -195,6 +195,12 @@ The original 70-case tuning and 30-case scoring holdout remain untouched.
 
 ## Independent full-scope construction diagnostic (not scored calibration)
 
+The current diagnostic preserves conflicting DOB publisher rows and excludes
+only demonstrably unused scope under the bounded
+[source-collision contract](DOB_COLLISION_QUARANTINE.md). Relevant, affirmative,
+historical or unproven references remain held; source completeness and the
+frozen reference are unchanged.
+
 The source refresh creates three additional **private** artifacts:
 `state/construction-validation-panel.json`,
 `state/construction-validation-panel.csv`, and

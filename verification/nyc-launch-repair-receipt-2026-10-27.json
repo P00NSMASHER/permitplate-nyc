@@ -1,0 +1,409 @@
+{
+  "version": "PermitPlate-launch-repair-receipt-v1.0.0",
+  "baseCommit": "8ae63673c6738cc5d17f2d93d26bab31393e49ca",
+  "compiledAt": "2026-10-27T14:53:35.234Z",
+  "executionScope": "LOCAL_QA_ONLY_NO_PRODUCTION_STATE_READ_OR_WRITE",
+  "publicSources": {
+    "observedAt": "2026-10-27T14:22:52.527Z",
+    "graphDigest": "5d4f2c681e55593d6abfa290b63311edd00a31d03f8a3a33a334291538b44e88",
+    "graphFingerprint": "a662295af0f0aabb1b52980bcae6e843336f132526312efee08dd46a60d8d523",
+    "graphValid": true,
+    "candidates": 4247,
+    "sources": {
+      "DOHMH": {
+        "state": "COMPLETE_NONEMPTY",
+        "sourceId": "nyc-open-data:43nn-pn8j",
+        "publisherCount": 5335,
+        "fetchedCount": 5335,
+        "cursorClosed": true,
+        "sourceFresh": true,
+        "observationId": "OBS:9cd62653fa31769ff6d0a29c",
+        "queryScope": {
+          "where": "inspection_date = '1900-01-01T00:00:00.000' OR (inspection_type like 'Pre-permit%' AND inspection_date >= '2026-09-27T00:00:00.000')",
+          "select": "camis,dba,boro,building,street,zipcode,phone,cuisine_description,inspection_date,action,violation_code,critical_flag,score,grade,grade_date,record_date,inspection_type,bin,bbl,latitude,longitude",
+          "order": "camis ASC, inspection_date ASC"
+        },
+        "queryScopeHash": "03461446132fe418cc763e70aca0433faedcbfec10b774b080c67bb16f8d85c4",
+        "rawPageHashes": [
+          "22fd6399b69d1151c56c2bb4e134fdd0ef19ebf5fd0110577cde63dc5e806122",
+          "0780fc0f1ce6075e73f67dee5761ec20e24934a0285c2c8c5763b59d05fdcc16",
+          "350407099be16f02531c045781d3bb452c8815ab1a353f92c926dc7f68544309"
+        ]
+      },
+      "DOB_NOW": {
+        "state": "COMPLETE_NONEMPTY",
+        "sourceId": "nyc-open-data:w9ak-ipjd",
+        "publisherCount": 5821,
+        "fetchedCount": 5821,
+        "cursorClosed": true,
+        "sourceFresh": true,
+        "observationId": "OBS:90095ecac4e20c31713bd647",
+        "queryScope": {
+          "where": "filing_date >= '2026-10-13T00:00:00.000'",
+          "select": "job_filing_number,filing_status,house_no,street_name,borough,block,lot,bin,job_description,initial_cost,owner_s_business_name,filing_date,work_on_floor,building_type",
+          "order": "job_filing_number ASC"
+        },
+        "queryScopeHash": "d433012402913b2c07b887d7f6ea3d83bc7e28d5bbc55b46378b2564e72cdd4e",
+        "rawPageHashes": [
+          "3187a13212c759961a31140f012d036e283d23da31c98596d611a81e6dd7f556",
+          "df4aeaefaa194451cc629190a1aa50d9cbc03731debb8f0b8aa3ef7fa120f1f3",
+          "59f8af2122d36d1bbad956dc93d867f429a56de394fa5c842450619e052f8300"
+        ]
+      },
+      "SLA_PENDING": {
+        "state": "COMPLETE_NONEMPTY",
+        "sourceId": "ny-open-data:f8i8-k2gm",
+        "publisherCount": 2959,
+        "fetchedCount": 2959,
+        "cursorClosed": true,
+        "sourceFresh": true,
+        "observationId": "OBS:9f5ad61f8b27283bb7b17972",
+        "queryScope": {
+          "select": "application_id,description,legalname,dba,actual_address_of_premises,additional_address_information,premises_county,city,state_name,zip_code,received_date,status,aka_address,georeference",
+          "order": "application_id ASC"
+        },
+        "queryScopeHash": "7fd0af535b9f9bf7741cfbe09bfc1f13a20e191a0689130b0a75f30ed0f6f9f0",
+        "rawPageHashes": [
+          "1301fafb5ff833ad5df36604259ccead049454cd2e42d7c1df5cf981b6a3ab0a",
+          "7a9f91e323a55a7b64d63a7cecb5ef360c1ca10596f0d5195097b6bde96c6c2a"
+        ]
+      }
+    }
+  },
+  "localCuratedRefresh": {
+    "status": "NO_NEW_ENTITIES",
+    "ready": true,
+    "ledgerValid": true,
+    "baselineInitializedAt": "2026-10-27T14:14:38.706Z",
+    "newlyObservedResearchCount": 0,
+    "verifiedMaterialChangeCount": 0,
+    "constructionCaseCount": 79,
+    "constructionOriginalCalibrationRowsRead": 0,
+    "sourceCollisionReceiptFingerprint": "507b41c0620f274086707857fa6c8f42f5a4dc850cbee4391a29a13f2f7398cc",
+    "collisions": [
+      {
+        "sourceRecordId": "DOB_NOW:B00772431-A5",
+        "disposition": "QUARANTINED_OUTSIDE_RESEARCH_SCOPE",
+        "publisherRowCount": 2,
+        "distinctVariantCount": 2,
+        "reasons": [],
+        "affirmativeOrUnknownReferenceCount": 0,
+        "typedNegativeReferenceCount": 2,
+        "variants": [
+          {
+            "rawFactFingerprint": "87594fdcd0a5bf63ca078b9550f39df1111625af4751a4b15a7f2c64823c3a10",
+            "recordFingerprint": "325cb05f9d092f3ada426935895d5d5a6257a8ab6ee04257b6e33771722b24a2",
+            "occurrences": 1
+          },
+          {
+            "rawFactFingerprint": "f44ed6a571e7c37ea68ba541980b3996e851e168dcebd5f17dd5b5319691d208",
+            "recordFingerprint": "5474838c6709539ea2ec703ac08a7078859ed10f4122c667cdc2211344df64c8",
+            "occurrences": 1
+          }
+        ],
+        "authoritativeVariantSelected": false
+      }
+    ],
+    "rawRowsRemoved": 0,
+    "sourceCountsModified": false,
+    "localFrozenReference": {
+      "originalObservedAt": "2026-10-27T14:14:38.706Z",
+      "reviewCases": 55,
+      "reservedCases": 24,
+      "anchorFingerprint": "172d12de2ea4a9b96152ca7a50358ff061c07496629238978827208d1e50553a",
+      "secondFreshRunRecreated": false,
+      "productionFrozenReferenceInspected": false
+    }
+  },
+  "customerSimulation": {
+    "simulationOnly": true,
+    "sourceInput": {
+      "kind": "CALLER_SUPPLIED_PUBLIC_SOURCE_GRAPH",
+      "observedAt": "2026-10-27T14:14:38.706Z",
+      "graphFingerprint": "53bcd6642b7e511ee976de610d789d3bf1be90ba5ab02e1b559d77c7d283df65",
+      "graphDigest": "5d4f2c681e55593d6abfa290b63311edd00a31d03f8a3a33a334291538b44e88",
+      "originalCandidateCount": 4247,
+      "graphIntegrityChecked": true,
+      "sourceFactsCopiedWithoutEditing": true,
+      "independentHumanSourceReview": false
+    },
+    "controls": {
+      "realCustomers": 0,
+      "realProviderCalls": 0,
+      "realMessagesSent": 0,
+      "realPaymentsCreated": 0,
+      "genuineIndependentReviews": 0,
+      "calibrationLabelsCreated": 0,
+      "scoringPromotionAuthorized": false,
+      "commercialProofEstablished": false
+    },
+    "scenarios": [
+      {
+        "category": "equipment",
+        "territory": "Manhattan",
+        "firstSignalCount": 2,
+        "weeklySignalCount": 2,
+        "timeline": {
+          "entireMonitoringTimelineIsFictional": true,
+          "firstAcceptedAt": "2026-10-27T17:16:38.706Z",
+          "weeklyAcceptedAt": "2026-11-03T19:16:38.706Z",
+          "expiresAt": "2026-11-10T17:16:38.706Z"
+        },
+        "lifecycle": {
+          "noMatchesStartsClock": false,
+          "earlyWeeklyUpdateBlocked": true,
+          "reportCount": 2,
+          "repeatedSignalCount": 0,
+          "secondReportExtendsTrial": false,
+          "expiredTrialBlocked": true,
+          "testReviewRejectedInLive": true,
+          "automaticBilling": false,
+          "realMessagesSent": 0,
+          "realPaymentsCreated": 0
+        },
+        "firstFeedback": {
+          "simulationOnly": true,
+          "reviewEnvironment": "TEST",
+          "reviewerKind": "AI_SIMULATED_CUSTOMER_PERSONA",
+          "persona": "NYC kitchen-equipment supplier",
+          "reviewedArtifactFingerprint": "e16cca362b24f09b3de39d73e4d60ec9719d1d921b0e58da8e3a31adde8153ad",
+          "criteria": {
+            "sourceAccuracy": {
+              "result": "MATCHES_INPUT_SNAPSHOT",
+              "assessment": "Names, premises, original source dates and official links are compared with the supplied public graph. Monitoring dates are intentionally simulated; this is not independent human authentication."
+            },
+            "territory": {
+              "result": "MATCH",
+              "assessment": "Every displayed address is in the requested Manhattan territory."
+            },
+            "categoryRelevance": {
+              "result": "LIMITED_RESEARCH_CONTEXT",
+              "assessment": "Licensing/applicant activity suggests a research starting point, but the report does not establish equipment specifications, procurement timing or an open order."
+            },
+            "uncertainty": {
+              "result": "CLEAR",
+              "assessment": "The brief separates official activity from buying intent and warns that publication dates are not opening dates."
+            },
+            "nextStep": {
+              "result": "ACTIONABLE_RESEARCH_STEP",
+              "assessment": "Open the source, verify the present operator and project stage, then qualify the relevant vendor need before treating this as a sales opportunity."
+            },
+            "upgradeTerms": {
+              "result": "CLEAR",
+              "assessment": "Fourteen days, two reports, five signals/report, no card or automatic conversion, and separate optional $79/month checkout are visible in the rendered report."
+            }
+          },
+          "simulatedUpgradeDecision": "DEFER_PENDING_CATEGORY_SPECIFIC_VALUE",
+          "actualSatisfactionMeasured": false,
+          "actualConversion": false,
+          "paymentCreated": false
+        },
+        "weeklyFeedback": {
+          "simulationOnly": true,
+          "reviewEnvironment": "TEST",
+          "reviewerKind": "AI_SIMULATED_CUSTOMER_PERSONA",
+          "persona": "NYC kitchen-equipment supplier",
+          "reviewedArtifactFingerprint": "96170936dabad8df6ce814c4aef350680424156e8d0976c6d66082723b5db196",
+          "criteria": {
+            "sourceAccuracy": {
+              "result": "MATCHES_INPUT_SNAPSHOT",
+              "assessment": "Names, premises, original source dates and official links are compared with the supplied public graph. Monitoring dates are intentionally simulated; this is not independent human authentication."
+            },
+            "territory": {
+              "result": "MATCH",
+              "assessment": "Every displayed address is in the requested Manhattan territory."
+            },
+            "categoryRelevance": {
+              "result": "LIMITED_RESEARCH_CONTEXT",
+              "assessment": "Licensing/applicant activity suggests a research starting point, but the report does not establish equipment specifications, procurement timing or an open order."
+            },
+            "uncertainty": {
+              "result": "CLEAR",
+              "assessment": "The brief separates official activity from buying intent and warns that publication dates are not opening dates."
+            },
+            "nextStep": {
+              "result": "ACTIONABLE_RESEARCH_STEP",
+              "assessment": "Open the source, verify the present operator and project stage, then qualify the relevant vendor need before treating this as a sales opportunity."
+            },
+            "upgradeTerms": {
+              "result": "CLEAR",
+              "assessment": "Fourteen days, two reports, five signals/report, no card or automatic conversion, and separate optional $79/month checkout are visible in the rendered report."
+            }
+          },
+          "simulatedUpgradeDecision": "DEFER_PENDING_CATEGORY_SPECIFIC_VALUE",
+          "actualSatisfactionMeasured": false,
+          "actualConversion": false,
+          "paymentCreated": false
+        }
+      },
+      {
+        "category": "pos",
+        "territory": "Manhattan",
+        "firstSignalCount": 2,
+        "weeklySignalCount": 2,
+        "timeline": {
+          "entireMonitoringTimelineIsFictional": true,
+          "firstAcceptedAt": "2026-10-27T17:16:38.706Z",
+          "weeklyAcceptedAt": "2026-11-03T19:16:38.706Z",
+          "expiresAt": "2026-11-10T17:16:38.706Z"
+        },
+        "lifecycle": {
+          "noMatchesStartsClock": false,
+          "earlyWeeklyUpdateBlocked": true,
+          "reportCount": 2,
+          "repeatedSignalCount": 0,
+          "secondReportExtendsTrial": false,
+          "expiredTrialBlocked": true,
+          "testReviewRejectedInLive": true,
+          "automaticBilling": false,
+          "realMessagesSent": 0,
+          "realPaymentsCreated": 0
+        },
+        "firstFeedback": {
+          "simulationOnly": true,
+          "reviewEnvironment": "TEST",
+          "reviewerKind": "AI_SIMULATED_CUSTOMER_PERSONA",
+          "persona": "NYC POS reseller",
+          "reviewedArtifactFingerprint": "c091a2f3bb8d1b905d7166569ef4e2c029ceb1825da5ad3dadaf295188f7802a",
+          "criteria": {
+            "sourceAccuracy": {
+              "result": "MATCHES_INPUT_SNAPSHOT",
+              "assessment": "Names, premises, original source dates and official links are compared with the supplied public graph. Monitoring dates are intentionally simulated; this is not independent human authentication."
+            },
+            "territory": {
+              "result": "MATCH",
+              "assessment": "Every displayed address is in the requested Manhattan territory."
+            },
+            "categoryRelevance": {
+              "result": "INSUFFICIENT_FOR_QUALIFIED_LEAD",
+              "assessment": "Restaurant and licensing activity alone does not establish POS installation, replacement or a decision maker. I would reject generic construction-only context as a qualified POS sales lead."
+            },
+            "uncertainty": {
+              "result": "CLEAR",
+              "assessment": "The brief separates official activity from buying intent and warns that publication dates are not opening dates."
+            },
+            "nextStep": {
+              "result": "ACTIONABLE_RESEARCH_STEP",
+              "assessment": "Open the source, verify the present operator and project stage, then qualify the relevant vendor need before treating this as a sales opportunity."
+            },
+            "upgradeTerms": {
+              "result": "CLEAR",
+              "assessment": "Fourteen days, two reports, five signals/report, no card or automatic conversion, and separate optional $79/month checkout are visible in the rendered report."
+            }
+          },
+          "simulatedUpgradeDecision": "DECLINE_GENERIC_CONTEXT",
+          "actualSatisfactionMeasured": false,
+          "actualConversion": false,
+          "paymentCreated": false
+        },
+        "weeklyFeedback": {
+          "simulationOnly": true,
+          "reviewEnvironment": "TEST",
+          "reviewerKind": "AI_SIMULATED_CUSTOMER_PERSONA",
+          "persona": "NYC POS reseller",
+          "reviewedArtifactFingerprint": "366b6caefbaf8e739e8363123172958758fa3c5b8915b5605b5bb6addef16ddf",
+          "criteria": {
+            "sourceAccuracy": {
+              "result": "MATCHES_INPUT_SNAPSHOT",
+              "assessment": "Names, premises, original source dates and official links are compared with the supplied public graph. Monitoring dates are intentionally simulated; this is not independent human authentication."
+            },
+            "territory": {
+              "result": "MATCH",
+              "assessment": "Every displayed address is in the requested Manhattan territory."
+            },
+            "categoryRelevance": {
+              "result": "INSUFFICIENT_FOR_QUALIFIED_LEAD",
+              "assessment": "Restaurant and licensing activity alone does not establish POS installation, replacement or a decision maker. I would reject generic construction-only context as a qualified POS sales lead."
+            },
+            "uncertainty": {
+              "result": "CLEAR",
+              "assessment": "The brief separates official activity from buying intent and warns that publication dates are not opening dates."
+            },
+            "nextStep": {
+              "result": "ACTIONABLE_RESEARCH_STEP",
+              "assessment": "Open the source, verify the present operator and project stage, then qualify the relevant vendor need before treating this as a sales opportunity."
+            },
+            "upgradeTerms": {
+              "result": "CLEAR",
+              "assessment": "Fourteen days, two reports, five signals/report, no card or automatic conversion, and separate optional $79/month checkout are visible in the rendered report."
+            }
+          },
+          "simulatedUpgradeDecision": "DECLINE_GENERIC_CONTEXT",
+          "actualSatisfactionMeasured": false,
+          "actualConversion": false,
+          "paymentCreated": false
+        }
+      }
+    ],
+    "renderedFiles": [
+      {
+        "path": "equipment-first.html",
+        "bytes": 3852,
+        "sha256": "cd7c080d5f6ea43985ef179808f621467c7f2690d5d7868642185537e2d161eb"
+      },
+      {
+        "path": "equipment-first.csv",
+        "bytes": 1597,
+        "sha256": "912bc3a494b74637d93c82e070eb3a4d6fc6f3a2596244dbbd56c97758c017ac"
+      },
+      {
+        "path": "equipment-weekly.html",
+        "bytes": 3907,
+        "sha256": "21093005962a785137ca498ad9f8b10b5241e8c944313a1572b51664b05112ca"
+      },
+      {
+        "path": "equipment-weekly.csv",
+        "bytes": 1651,
+        "sha256": "8dcf180d74cedac9e8dc6c58594f34efeec60c41090d00d80f8a0bc282b478fd"
+      },
+      {
+        "path": "pos-first.html",
+        "bytes": 3848,
+        "sha256": "45ec24814d9f8ded8b789ad7be8ae5ec42164a601fb2c0392c16ac54145f791d"
+      },
+      {
+        "path": "pos-first.csv",
+        "bytes": 1599,
+        "sha256": "098c74b100f9c14e8851814113b6f60955cfe401c93364a8c6caae00e451f439"
+      },
+      {
+        "path": "pos-weekly.html",
+        "bytes": 3903,
+        "sha256": "bec6454cf622965f41ac379944e6fdffa03dec6e4d405fc5e18e1162e517365b"
+      },
+      {
+        "path": "pos-weekly.csv",
+        "bytes": 1653,
+        "sha256": "cbd1fa4be07d92ba04b8b9aa968df073233665a6bfa7e9aafc8cd44ff5f00162"
+      },
+      {
+        "path": "README.md",
+        "bytes": 2867,
+        "sha256": "112a5436182c1f0db5a363ae5e12b8b4194faa87deedf1dfde4e3d2e615b23c2"
+      }
+    ]
+  },
+  "releaseBoundary": {
+    "productionPrivateRefreshStillRequired": true,
+    "realCustomerDeliveryProven": false,
+    "realCustomerSatisfactionProven": false,
+    "scoredCustomerPromotionAuthorized": false,
+    "liveCustomerReviewsSimulated": false
+  },
+  "finalReportPolish": {
+    "previousReviewedCommit": "8e1c040b79b4c95271950393fee97332d3d04c32",
+    "admissionRequiresUsefulCategoryRationale": true,
+    "noUsefulMatchLeavesClockDormant": true,
+    "sourceFactsChanged": false,
+    "reviewedClaimsChanged": false,
+    "csvBytesChanged": false,
+    "simulatedUpgradeDecisionsChanged": false,
+    "renderedHtmlChange": "Remove only the redundant sentence-ending period after the founder rationale",
+    "retestedSuites": [
+      "founder-curated-offer",
+      "free-trial",
+      "trial-customer-simulation",
+      "curated-product"
+    ]
+  }
+}

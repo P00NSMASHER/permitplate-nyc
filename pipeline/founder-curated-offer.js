@@ -175,6 +175,8 @@ function buildCuratedBrief(input){
   const recipientEmail=validEmail(data.recipientEmail);
   const preparedAt=validInstant(data.preparedAt);
   const reviewer=text(data.reviewer);
+  const trialEnvironment=data.trialEnvironment==null?null:text(data.trialEnvironment);
+  if(trialEnvironment&&!['TEST','LIVE'].includes(trialEnvironment))failures.push('TRIAL_ENVIRONMENT_INVALID');
   if(!subscriptionId) failures.push('SUBSCRIPTION_ID_MISSING');
   if(!recipientEmail) failures.push('RECIPIENT_EMAIL_INVALID');
   if(!preparedAt) failures.push('PREPARED_AT_INVALID');
@@ -229,28 +231,31 @@ function buildCuratedBrief(input){
     signal.whatChanged?
       `<p style="margin:0 0 6px"><strong>What changed:</strong> ${htmlEscape(signal.whatChanged)}</p>`:'',
     signal.categoryEvidenceBasis?
-      `<p style="margin:0 0 6px;font-size:13px"><strong>Category context:</strong> ${htmlEscape(signal.categoryEvidenceBasis==='SOURCE_KEYWORD_CONTEXT'?'Official source text contains category-related terms':signal.categoryEvidenceBasis==='RELATED_OFFICIAL_ACTIVITY'?'Related official filing context; no exact category keyword match':'General restaurant applicant context; no exact category keyword match')}. <strong>Founder assessment:</strong> ${htmlEscape(signal.categoryFitRationale)}. <a href="${htmlEscape(signal.categoryOfficialUrl)}">Reviewed official source</a></p>`:'',
+      `<p style="margin:0 0 6px;font-size:13px"><strong>Category context:</strong> ${htmlEscape(signal.categoryEvidenceBasis==='SOURCE_KEYWORD_CONTEXT'?'Official source text contains category-related terms':signal.categoryEvidenceBasis==='RELATED_OFFICIAL_ACTIVITY'?'Related official filing context; no exact category keyword match':'General restaurant applicant context; no exact category keyword match')}. <strong>Founder assessment:</strong> ${htmlEscape(signal.categoryFitRationale)}${/[.!?…]$/.test(signal.categoryFitRationale)?'':'.'} <a href="${htmlEscape(signal.categoryOfficialUrl)}">Reviewed official source</a></p>`:'',
     `<p style="margin:0 0 6px;font-size:13px">Source record date: ${htmlEscape(signal.sourceUpdatedAt)} · Reviewed: ${htmlEscape(signal.reviewedAt)}</p>`,
     `<p style="margin:0;font-size:13px">${signal.sourceUrls.map((url,i)=>`<a href="${htmlEscape(url)}">official source ${i+1}</a>`).join(' · ')}</p>`,
     '</article>'
   ].join('')).join('');
   const empty=signals.length===0;
-  const subject=empty?
+  const subject=(trialEnvironment==='TEST'?'[TEST SIMULATION] ':'')+(empty?
     `PermitPlate NYC — no matching updates — ${date}`:
-    `PermitPlate NYC — ${signals.length} reviewed ${signals.length===1?'signal':'signals'} — ${date}`;
+    `PermitPlate NYC — ${signals.length} reviewed ${signals.length===1?'signal':'signals'} — ${date}`);
   const html=[
     '<div style="font-family:Arial,sans-serif;max-width:720px;line-height:1.5;color:#211d1b">',
+    trialEnvironment==='TEST'?'<p style="padding:12px;background:#fff0cd;border:2px solid #775600"><strong>TEST SIMULATION — not a real customer report.</strong> Customer, reviewer judgments, monitoring chronology and provider events are simulated. No message was sent and no charge was created.</p>':'',
     '<h2 style="margin-bottom:6px">PermitPlate NYC</h2>',
     empty?'<p>No matching changes passed review this week.</p>':
       `<p>${signals.length} founder-reviewed ${signals.length===1?'signal':'signals'} for your selected category and territory.</p>`,
     signalHtml,
     '<p style="margin-top:18px;font-size:13px">First-observed dates refer to PermitPlate monitoring, not necessarily the original application or opening. Source record dates can reflect administrative publication or extraction. Research starting points, not purchase intent or guaranteed leads. Verify the official record before outreach.</p>',
+    trialEnvironment?'<p style="font-size:13px"><strong>Your free trial:</strong> One category and NYC territory, a starter brief and one weekly update, up to five signals per report. Your 14 days start with the first useful report sent successfully; an empty report does not start the clock. No card, automatic charge or automatic paid upgrade. Continue only by choosing a separate <a href="https://permitplate.retallyrecovery.com/start">$79/month membership</a>.</p>':'',
     '</div>'
   ].join('');
   const core={
     offerVersion:OFFER_VERSION,launchMode:LAUNCH_MODE,subscriptionId,
     recipientEmail,preparedAt,reviewer,preferences,
-    signals,subject,csv,html
+    signals,subject,csv,html,
+    ...(trialEnvironment?{trialEnvironment}: {})
   };
   const artifactFingerprint=sha256(stableStringify(core));
   return {

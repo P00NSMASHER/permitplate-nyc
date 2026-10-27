@@ -8,6 +8,7 @@ const independentHistory=require('./independent-source-history');
 const independentReview=require('./independent-source-review');
 const identityReview=require('./identity-bridge-review');
 const scopeEvidence=require('./construction-scope-evidence');
+const sourceCollisions=require('./dob-source-collisions');
 const {csvCell}=require('./identity-review-workbench');
 
 const VERSION='PermitPlate-construction-source-diagnostic-v1.0.0';
@@ -55,16 +56,14 @@ function build(input){
   const data=input||{},fails=validateSource(data);
   if(fails.length)return {status:'REVIEW',version:VERSION,failures:fails,
     customerDeliveryAllowed:false,productionAuthorized:false};
-  const dobRows=data.batches.DOB_NOW.records;
-  const byId=new Map();
-  for(const rec of dobRows){
-    if(rec.sourceSystem!=='DOB_NOW'||byId.has(rec.sourceRecordId)){
-      return {status:'REVIEW',version:VERSION,
-        failures:['CONSTRUCTION_DUPLICATE_OR_INVALID_PUBLISHER_ROW'],
-        customerDeliveryAllowed:false,productionAuthorized:false};
-    }
-    byId.set(rec.sourceRecordId,rec);
-  }
+  const collisionCheck=sourceCollisions.assess({batch:data.batches.DOB_NOW,
+    graph:data.graph,independent:data.independent,identities:data.identities,
+    protectedReferences:data.protectedReferences});
+  if(collisionCheck.status==='REVIEW')return {status:'REVIEW',version:VERSION,
+    failures:['CONSTRUCTION_DUPLICATE_OR_INVALID_PUBLISHER_ROW',...collisionCheck.failures],
+    sourceCollisionReceipt:collisionCheck.receipt||null,
+    customerDeliveryAllowed:false,productionAuthorized:false};
+  const byId=collisionCheck.byId;
   const hypotheticals=new Map();
   for(const proposal of data.identities.proposals){
     for(const id of proposal.sourceRecordIds||[]){
@@ -169,6 +168,7 @@ function build(input){
     sourceGraphFingerprint:data.graph.artifactFingerprint,
     privateSourceReceiptFingerprint:data.independent.artifactFingerprint,
     privateIdentityReceiptFingerprint:data.identities.artifactFingerprint,
+    sourceCollisionReceipt:collisionCheck.receipt,
     officialDataset:'NYC_DOB_NOW_JOB_APPLICATION_FILINGS',
     sourcePopulationDescription:'Unlinked, currently in-window, NYC restaurant-related DOB filings from the exact complete source observation; this is a selected research population, not random customers.',
     category:CATEGORY,
@@ -251,6 +251,12 @@ function report(panel){
     '',
     '| Property | Count |','|---|---:|',
     '| Official unlinked DOB filing records | '+panel.filings+' |',
+    ...(panel.sourceCollisionReceipt?[
+      '| Publisher rows retained in the complete DOB observation | '+panel.sourceCollisionReceipt.fetchedRowCount+' |',
+      '| Ambiguous IDs quarantined outside this research scope | '+panel.sourceCollisionReceipt.quarantinedIdCount+' |',
+      '| Ambiguous publisher rows preserved in conflict receipts | '+panel.sourceCollisionReceipt.quarantinedRowCount+' |',
+      '| Raw publisher rows removed | 0 |'
+    ]:[]),
     '| Distinct official job-number roots (grouping only) | '+panel.uniqueJobNumberRoots+' |',
     '| Source descriptions longer than old 180-char preview | '+panel.officialRowsWithScopeBeyond180+' |',
     '| Broad category-context rule matches | '+panel.equipmentBroadSourceTextRules+' |',
@@ -262,6 +268,7 @@ function report(panel){
     '| Original scoring holdout rows accessed | 0 |',
     '',
     'The full official job-description field is preserved in the private JSON and CSV.',
+    'Any quarantined filing remains unresolved; every source variant and typed negative reference is preserved in the private sourceCollisionReceipt. No filing status is selected.',
     'The accompanying two rule decisions are deterministic diagnostics, not real independent reviewers.',
     'Building BIN/BBL matches or conflicts are reference evidence requiring manual review.',
     'The original Equipment 70 tuning + 30 holdout cohort was never read or rewritten.',

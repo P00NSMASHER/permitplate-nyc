@@ -127,18 +127,31 @@ function prepareTrial(input) {
   let access;
   try{access=trials.access(data.trialRegistry,data.trialId,data.preparedAt);}
   catch(error){return reject([error.message]);}
+  // Test source histories and persona judgments are useful QA, never live
+  // documentary review. Reject their explicit provenance before packaging.
+  const simulationMarked=value=>Boolean(value&&(value.simulationOnly===true||
+    value.reviewEnvironment==='TEST'||value.environment==='TEST'));
+  const simulationInput=simulationMarked(data)||simulationMarked(data.graph)||
+    simulationMarked(data.sourceProvenance)||
+    (Array.isArray(data.reviews)?data.reviews:[]).some(review=>simulationMarked(review)||simulationMarked(review?.categoryReview))||
+    /(?:SYNTHETIC|SIMULATED|TEST[_ -](?:ONLY|FIXTURE|PERSONA))/i.test(String(data.reviewer||''));
+  if(data.trialRegistry.environment==='LIVE'&&simulationInput){
+    return reject(['TRIAL_SIMULATED_REVIEW_NOT_LIVE']);
+  }
   const result=prepareForCustomer({
     ...data,deliveredSignalKeys:access.deliveredSignalKeys
-  },access,access.preferences,trials.MAX_SIGNALS);
+  },access,access.preferences,trials.MAX_SIGNALS,{trialEnvironment:data.trialRegistry.environment});
   const prepared={...result,trialId:data.trialId,
     trialRegistryFingerprint:data.trialRegistry.registryFingerprint,
     trialEnvironment:data.trialRegistry.environment,
+    reviewEnvironment:data.trialRegistry.environment,
+    simulationOnly:data.trialRegistry.environment==='TEST'||simulationInput,
     paymentRequired:false,automaticBilling:false};
   prepared.trialPreparationFingerprint=trials.preparationFingerprint(prepared);
   return prepared;
 }
 
-function prepareForCustomer(data,activated,prefs,maxSignals) {
+function prepareForCustomer(data,activated,prefs,maxSignals,briefContext={}) {
   const preparedAt=research.instant(data.preparedAt);
   if(!preparedAt)return reject(['PREPARED_AT_INVALID']);
   const customer = activated.profile;
@@ -311,7 +324,8 @@ function prepareForCustomer(data,activated,prefs,maxSignals) {
     reviewer:String(data.reviewer).trim(),
     ownerReviewed:true,
     preferences:prefs,
-    signals
+    signals,
+    ...briefContext
   });
   if (!['READY','NO_MATCHES'].includes(brief.status)) {
     return reject(['CURATED_BRIEF_REVIEW_REQUIRED',...(brief.failures||[])]);

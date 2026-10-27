@@ -24,6 +24,8 @@ on:
       - 'pipeline/construction-scope-evidence.test.js'
       - 'pipeline/construction-validation-panel.js'
       - 'pipeline/construction-validation-panel.test.js'
+      - 'pipeline/dob-source-collisions.js'
+      - 'pipeline/dob-source-collisions.test.js'
       - 'pipeline/construction-blind-diagnostic.js'
       - 'pipeline/construction-frozen-reference.js'
       - 'pipeline/construction-reviewer-worksheet.js'
@@ -115,6 +117,8 @@ on:
       - 'pipeline/construction-scope-evidence.test.js'
       - 'pipeline/construction-validation-panel.js'
       - 'pipeline/construction-validation-panel.test.js'
+      - 'pipeline/dob-source-collisions.js'
+      - 'pipeline/dob-source-collisions.test.js'
       - 'pipeline/construction-blind-diagnostic.js'
       - 'pipeline/construction-frozen-reference.js'
       - 'pipeline/construction-reviewer-worksheet.js'
@@ -222,6 +226,8 @@ jobs:
         run: node pipeline/nyc-million-bin-real-case.test.js
       - name: Verify separate full-scope DOB diagnostic does not inspect scoring holdout
         run: node pipeline/construction-validation-panel.test.js
+      - name: Keep ambiguous DOB variants and quarantine only proven unused scope
+        run: node pipeline/dob-source-collisions.test.js
       - name: Verify premise-root grouped construction reviewer and reserved audit separation
         run: node pipeline/construction-blind-diagnostic.test.js
       - name: Verify first-observation history across repeated scans

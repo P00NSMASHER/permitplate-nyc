@@ -244,8 +244,10 @@ async function run(input) {
   }
   const independentPath=path.join(path.dirname(ledgerPath),'independent-source-review.json');
   const historyPath=path.join(path.dirname(ledgerPath),'independent-source-history.json');
+  const previousIndependentHistory=readOptional(historyPath);
+  const previousIndependentReview=readOptional(independentPath);
   const historyState=prepareIndependentHistory(
-    readOptional(historyPath),readOptional(independentPath),independent
+    previousIndependentHistory,previousIndependentReview,independent
   );
   if(!historyState.ready)return historyState;
   const {advancedHistory,annotated,migrated}=historyState;
@@ -268,8 +270,9 @@ async function run(input) {
   }
   const identityPath=path.join(path.dirname(ledgerPath),'identity-bridge-review.json');
   const identityHistoryPath=path.join(path.dirname(ledgerPath),'identity-triage-history.json');
+  const previousIdentityReview=readOptional(identityPath);
   const triage=prepareIdentityHistory(
-    readOptional(identityHistoryPath),readOptional(identityPath),identity
+    readOptional(identityHistoryPath),previousIdentityReview,identity
   );
   if(!triage.ready)return triage;
   // The rich DOB diagnostic is compiled from the SAME independently verified
@@ -277,6 +280,13 @@ async function run(input) {
   const scopeDiagnostic=constructionPanel.build({
     graph:result.graph,batches:collected.batches,
     independent:annotated,identities:triage.annotated,
+    // An ambiguous filing cannot disappear from protected history or the
+    // original source panel merely because today's scope classifier skips it.
+    // No reviewer judgments, reserved audit, or scoring holdout are read here.
+    protectedReferences:{previousLedger:previous,previousIndependentHistory,
+      previousIndependentReview,previousIdentityReview,
+      previousDiagnosticCases:formerParts.panel?.cases||[],
+      frozenSourceCases:frozenParts.panel?.cases||[]},
     observedAt:result.graph.observedAt
   });
   if(scopeDiagnostic.status!=='SOURCE_RICH_DIAGNOSTIC_ONLY'||
@@ -357,6 +367,10 @@ async function run(input) {
   result.summary.constructionDiagnosticSpecificComponentAndAction=scopeDiagnostic.equipmentSpecificComponentAndActionRules;
   result.summary.constructionDiagnosticHumanReviewers=0;
   result.summary.constructionDiagnosticHoldoutRead=0;
+  result.summary.constructionCollisionIds=scopeDiagnostic.sourceCollisionReceipt.collisionIdCount;
+  result.summary.constructionQuarantinedOutOfScopeIds=scopeDiagnostic.sourceCollisionReceipt.quarantinedIdCount;
+  result.summary.constructionQuarantinedPublisherRows=scopeDiagnostic.sourceCollisionReceipt.quarantinedRowCount;
+  result.summary.constructionRawPublisherRowsRemoved=0;
   // Static human workbench has no approval endpoint, scripts, remote assets,
   // email transport, or public CI artifact. All output stays in private Git.
   const workbench=identityWorkbench.render(triage.annotated);
