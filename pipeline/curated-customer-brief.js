@@ -111,6 +111,36 @@ function prepare(input) {
   if (activated.status !== 'ACTIVE') {
     return reject(['CUSTOMER_NOT_ACTIVE',...(activated.failures || [])]);
   }
+  const prefs={
+    category:stripe.customFieldValue(data.session,'category'),
+    territory:stripe.customFieldValue(data.session,'territory'),
+    starter:stripe.customFieldValue(data.session,'starter')
+  };
+  return prepareForCustomer(data,activated,prefs,curated.MAX_SIGNALS);
+}
+
+// The free lane validates its own private admission receipt. It never invents
+// an active/paid Stripe subscription or grants transport permission.
+function prepareTrial(input) {
+  const data=input||{};
+  const trials=require('./free-trial');
+  let access;
+  try{access=trials.access(data.trialRegistry,data.trialId,data.preparedAt);}
+  catch(error){return reject([error.message]);}
+  const result=prepareForCustomer({
+    ...data,deliveredSignalKeys:access.deliveredSignalKeys
+  },access,access.preferences,trials.MAX_SIGNALS);
+  const prepared={...result,trialId:data.trialId,
+    trialRegistryFingerprint:data.trialRegistry.registryFingerprint,
+    trialEnvironment:data.trialRegistry.environment,
+    paymentRequired:false,automaticBilling:false};
+  prepared.trialPreparationFingerprint=trials.preparationFingerprint(prepared);
+  return prepared;
+}
+
+function prepareForCustomer(data,activated,prefs,maxSignals) {
+  const preparedAt=research.instant(data.preparedAt);
+  if(!preparedAt)return reject(['PREPARED_AT_INVALID']);
   const customer = activated.profile;
   const graph = data.graph || {};
   const graphCheck = research.checkGraph(graph);
@@ -130,15 +160,11 @@ function prepare(input) {
   }
   if (failures.length) return reject(failures);
 
-  // Stripe is the sole authority for recipient, category, territory, starter
-  // choice and subscription-created baseline. The review cannot override them.
-  const category = stripe.customFieldValue(data.session,'category');
-  const territory = stripe.customFieldValue(data.session,'territory');
-  const starter = stripe.customFieldValue(data.session,'starter');
-  const prefs = {category,territory,starter};
+  // The paid wrapper obtains these from Stripe; the free wrapper obtains them
+  // from the validated private trial registry. Reviews cannot override either.
   const reviewedItems = Array.isArray(data.reviews) ? data.reviews : null;
   if (!reviewedItems) return reject(['CURATED_REVIEWS_ARRAY_REQUIRED']);
-  if (reviewedItems.length > curated.MAX_SIGNALS) {
+  if (reviewedItems.length > maxSignals) {
     return reject(['CURATED_REVIEW_LIMIT_EXCEEDED']);
   }
   if (!String(data.reviewer || '').trim() || data.ownerReviewed !== true) {
@@ -317,6 +343,7 @@ function prepare(input) {
     subscriberId:activated.subscriptionId,
     profileFingerprint:activated.profileFingerprint,
     sourceGraphDigest:graph.graphDigest,
+    sourceObservedAt:graph.observedAt,
     sourceArtifactFingerprint:graph.artifactFingerprint,
     ledgerFingerprint:data.ledger.ledgerFingerprint,
     baselineAt:customer.baselineAt,
@@ -332,5 +359,5 @@ function prepare(input) {
 
 module.exports = {
   VERSION,EXPECTED_PRICE_ID,MAX_SOURCE_AGE_MS,STARTER_WINDOW_MS,
-  digest,candidateIdentity,primaryUrl,section,eventForEntry,signalKey,prepare
+  digest,candidateIdentity,primaryUrl,section,eventForEntry,signalKey,prepare,prepareTrial
 };

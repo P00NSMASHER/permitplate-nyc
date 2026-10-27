@@ -1,7 +1,7 @@
 # PermitPlate NYC business model
 
 Version: 9.0  
-Updated: September 23, 2026
+Updated: October 27, 2026
 
 ## Product promise
 
@@ -41,9 +41,23 @@ scope.
 - A no-matches note when nothing credible qualifies.
 - Optional, separately labeled seven-day Starter Snapshot.
 - Cancellation at period end through Stripe.
-- Full refund of the first payment when requested within seven calendar days.
+- First payment refundable before the first send and through seven calendar
+  days after the provider-confirmed first brief or no-matches note; missed or
+  undeliverable first reports are handled under the published refund policy.
 
 Keep one self-serve tier until real customer use supports different packaging.
+
+## Bounded free trial pilot
+
+A supervised request is available before paid membership. The operator checks
+the business identity, supported category/territory and ability to deliver a
+useful report. Admission is limited to 10 businesses, one trial per business.
+Two reports contain up to five reviewed signals each. The 14-day period starts
+at the first authorized, provider-accepted nonempty send; the next report is
+eligible after seven days. Empty results do not start the clock, and current
+baseline rows are not misrepresented as newly observed activity. There is no
+card requirement or automatic upgrade. The existing $79 paid plan is separate.
+See `operations/FREE_TRIAL_PILOT.md` for the private state and provenance rules.
 
 ## What the customer receives
 
@@ -71,7 +85,9 @@ remains a research system and is not part of the launch offer.
 
 ## Stripe-authoritative onboarding
 
-Stripe Checkout is the payment and preference authority. It collects:
+Stripe Checkout is the paid membership's payment and preference authority.
+Free trial preferences come from a separately approved private trial record;
+they never fabricate a paid Stripe receipt. Paid Checkout collects:
 
 1. checkout email and business name;
 2. one supported vendor category;

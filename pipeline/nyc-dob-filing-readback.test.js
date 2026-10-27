@@ -35,6 +35,19 @@ assert.equal(verifier.officialTarget({
 }),null);
 assert.equal(verifier.excerpt('a'.repeat(179)+' '),'a'.repeat(179));
 async function main(){
+  const neverFetch=async()=>{throw Error('NO_NETWORK_ALLOWED')};
+  for(const [input,now,reason] of [
+    [report([]),'2026-10-27T13:00:00Z','NO_CASES_TO_VERIFY'],
+    [report([base,base]),'2026-10-27T13:00:00Z','DUPLICATE_CASE_IDENTITY'],
+    [{...report(),observedAt:'2099-01-01T00:00:00Z'},'2026-10-27T13:00:00Z','READBACK_TIME_INVALID'],
+    [{...report(),observedAt:'2026-02-30T00:00:00Z'},'2026-10-27T13:00:00Z','READBACK_TIME_INVALID'],
+    [report(),'invalid','READBACK_TIME_INVALID']
+  ]){
+    const refused=await verifier.verify(input,neverFetch,now);
+    assert.equal(refused.passed,false);
+    assert.equal(refused.secondApiGetCalls,0);
+    assert.equal(refused.issues[0].reason,reason);
+  }
   let calls=0;
   const provider=async(url,opts)=>{
     calls++;
@@ -83,6 +96,6 @@ async function main(){
   assert.equal(refused.passed,false);
   assert.equal(refused.secondApiGetCalls,0);
   assert.equal(refused.issues[0].reason,'REVIEW_KIT_INCOMPLETE_OR_UNSAFE');
-  console.log('NYC 35-file official readback: strict publisher, exact identity, time/status/text and NO SEND controls passed.');
+  console.log('NYC official readback: nonempty unique cases, strict publisher, chronology, exact identity, status/text and NO SEND controls passed.');
 }
 main().catch(e=>{console.error(e.stack);process.exitCode=1});

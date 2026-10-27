@@ -5,6 +5,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const VERSION='PermitPlate-NYC-DOB-second-readback-v1.0.0';
 const MAX_CASES=300;
+const {instant}=require('./provider-reconciliation');
 function excerpt(value){
   return String(value??'').replace(/[\x00-\x1f\x7f]/g,' ')
     .replace(/\s+/g,' ').trim().slice(0,180).trimEnd();
@@ -39,6 +40,19 @@ async function verify(report,fetchImpl=fetch,now=new Date().toISOString()){
     secondApiGetCalls:0,customerProfilesRead:0,privateStateRead:false,
     buyerNeedVerified:false,independentHumanLabels:0,customerMessagesSent:0
   };
+  const observed=instant(report?.observedAt),verified=instant(now);
+  if(observed===null||verified===null||observed>verified){
+    output.issues.push({reason:'READBACK_TIME_INVALID'});
+    return {...output,passed:false};
+  }
+  if(items.length===0){
+    output.issues.push({reason:'NO_CASES_TO_VERIFY'});
+    return {...output,passed:false};
+  }
+  if(new Set(items.map(item=>item?.sourceRecordId)).size!==items.length){
+    output.issues.push({reason:'DUPLICATE_CASE_IDENTITY'});
+    return {...output,passed:false};
+  }
   if(!eligible){
     output.issues.push({reason:'REVIEW_KIT_INCOMPLETE_OR_UNSAFE'});
     return {...output,passed:false};
