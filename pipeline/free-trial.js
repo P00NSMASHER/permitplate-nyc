@@ -143,6 +143,8 @@ function recordDelivery(registry,trialId,prepared,evidence,attestation){
   required(prepared?.status==='READY_FOR_OWNER_REVIEW'&&prepared.signalCount>0&&prepared.signalCount<=MAX_SIGNALS,
     'TRIAL_NONEMPTY_REVIEWED_BRIEF_REQUIRED');
   required(prepared.trialPreparationFingerprint===preparationFingerprint(prepared),'TRIAL_PREPARATION_FINGERPRINT_INVALID');
+  if(registry.environment==='LIVE')required(prepared.simulationOnly!==true&&
+    prepared.reviewEnvironment!=='TEST','TRIAL_SIMULATED_REVIEW_NOT_LIVE');
   if(registry.environment==='LIVE')required(evidence?.providerObservation?.evidenceKind==='PROVIDER_READBACK',
     'TRIAL_LIVE_PROVIDER_READBACK_REQUIRED');
   required(prepared.trialId===trialId&&prepared.trialEnvironment===registry.environment&&
@@ -152,7 +154,7 @@ function recordDelivery(registry,trialId,prepared,evidence,attestation){
   const rebuilt=offer.buildCuratedBrief({subscriptionId:prepared.brief.subscriptionId,
     recipientEmail:prepared.brief.recipientEmail,preparedAt:prepared.brief.preparedAt,
     reviewer:prepared.brief.reviewer,ownerReviewed:true,preferences:trial.preferences,
-    signals:prepared.brief.signals});
+    signals:prepared.brief.signals,trialEnvironment:registry.environment});
   required(rebuilt.status==='READY'&&rebuilt.artifactFingerprint===prepared.brief.artifactFingerprint&&
     rebuilt.messageFingerprint===prepared.brief.messageFingerprint&&rebuilt.signalCount===prepared.signalCount&&
     rebuilt.html===prepared.brief.html&&rebuilt.csv===prepared.brief.csv&&rebuilt.subject===prepared.brief.subject&&

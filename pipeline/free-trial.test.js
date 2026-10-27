@@ -46,7 +46,8 @@ function fixture(enrolled=enrollment(),count=1){
       sourceUrl:category.primaryUrl(item),rationale:'Synthetic applicant context for testing evidence-bound research; no equipment need is established.'},
     whyItMatters:'Synthetic official-record fixture used to exercise the research workflow.'}));
   return {...enrolled,input:{trialRegistry:enrolled.registry,trialId:enrolled.trialId,
-    graph:current,ledger:next.ledger,reviews,reviewer:'SYNTHETIC_OWNER_FIXTURE',ownerReviewed:true,preparedAt:PREPARED}};
+    graph:current,ledger:next.ledger,reviews,reviewEnvironment:'TEST',simulationOnly:true,
+    reviewer:'SYNTHETIC_OWNER_FIXTURE',ownerReviewed:true,preparedAt:PREPARED}};
 }
 function evidence(prepared){
   const at=minutes=>new Date(Date.parse(prepared.brief.preparedAt)+minutes*60000).toISOString();
@@ -71,6 +72,10 @@ test('free trial admits one reviewed business without fabricating a Stripe subsc
   assert.equal(ready.signalCount,1);assert.equal(ready.automaticBilling,false);
   assert.equal(ready.paymentRequired,false);assert.equal(ready.externalSendCalls,0);
   assert.equal(ready.transportAllowed,false);
+  assert.match(ready.brief.subject,/^\[TEST SIMULATION\]/);
+  assert.match(ready.brief.html,/TEST SIMULATION — not a real customer report/);
+  assert.match(ready.brief.html,/No card, automatic charge or automatic paid upgrade/);
+  assert.match(ready.brief.html,/\$79\/month membership/);
   const access=trials.access(f.registry,f.trialId,PREPARED);
   assert.equal(access.profile.stripeSubscriptionId,null);
   assert.equal(access.profile.priceId,null);assert.equal(access.profile.maxSignals,5);
@@ -127,11 +132,28 @@ test('mismatched recipient, source artifact, chronology and TEST provider proof 
       {...ev,providerObservation:{...ev.providerObservation,...mutation}},attestation));
   }
   const live=fixture(enrollment('LIVE')),liveReady=customer.prepareTrial(live.input);
-  assert.throws(()=>trials.recordDelivery(live.registry,live.trialId,liveReady,evidence(liveReady),attestation),
+  assert.equal(liveReady.status,'REVIEW');
+  assert(liveReady.failures.includes('TRIAL_SIMULATED_REVIEW_NOT_LIVE'));
+  assert.throws(()=>trials.recordDelivery(live.registry,live.trialId,ready,ev,attestation),
     /TRIAL_PROVIDER_PROVENANCE_REQUIRED/);
   const altered=structuredClone(ready);altered.brief.html+='<p>Unreviewed claim</p>';
   // HTML is hashed separately in the accepted artifact; text mutation must fail.
   assert.throws(()=>trials.recordDelivery(f.registry,f.trialId,altered,ev,attestation));
+});
+test('explicit TEST source and persona markers are rejected before LIVE brief preparation',()=>{
+  const live=fixture(enrollment('LIVE'));
+  const base={...live.input,reviewEnvironment:undefined,simulationOnly:undefined,reviewer:'Owner'};
+  for(const marker of [{reviewEnvironment:'TEST'},{simulationOnly:true},
+    {sourceProvenance:{environment:'TEST'}},{graph:{...base.graph,simulationOnly:true}},
+    {reviews:base.reviews.map(r=>({...r,reviewEnvironment:'TEST'}))},
+    {reviews:base.reviews.map(r=>({...r,categoryReview:{...r.categoryReview,simulationOnly:true}}))},
+    {reviewer:'SYNTHETIC_OWNER_FIXTURE'}]){
+    const result=customer.prepareTrial({...base,...marker});
+    assert.equal(result.status,'REVIEW');
+    assert(result.failures.includes('TRIAL_SIMULATED_REVIEW_NOT_LIVE'));
+  }
+  const testPrepared=customer.prepareTrial(fixture().input);
+  assert.equal(testPrepared.reviewEnvironment,'TEST');assert.equal(testPrepared.simulationOnly,true);
 });
 test('tampered state and cancellation fail closed; source references cannot create a clock',()=>{
   const f=enrollment(),tampered=structuredClone(f.registry);

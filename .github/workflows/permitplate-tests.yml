@@ -177,6 +177,12 @@ jobs:
       - name: Verify bounded no-card trial admission, source gates and exact provider activation
         run: node pipeline/free-trial.test.js
 
+      - name: Verify labeled customer simulations cannot create commercial proof or LIVE approvals
+        run: node pipeline/trial-customer-simulation.test.js
+
+      - name: Verify source collision quarantine preserves complete publisher evidence
+        run: node pipeline/dob-source-collisions.test.js
+
       - name: Verify trial email-draft request and both publication targets
         run: node trial-request.test.js
 

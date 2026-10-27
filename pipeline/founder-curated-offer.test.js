@@ -60,6 +60,21 @@ function validInput(){
 }
 
 {
+  for(const ending of ['', '.', '?', '!']){
+    const input=validInput();
+    const rationale='Verify the current equipment need before treating this as a sales opportunity'+ending;
+    Object.assign(input.signals[0],{categoryEvidenceBasis:'APPLICANT_CONTEXT_ONLY',
+      categoryFitRationale:rationale,
+      categoryOfficialUrl:input.signals[0].sourceUrls[0]});
+    const out=curated.buildCuratedBrief(input);
+    assert.equal(out.status,'READY');
+    assert(out.html.includes('<strong>Founder assessment:</strong> '+rationale+(ending?'':'.')+' <a '));
+    assert.equal(out.signals[0].categoryFitRationale,rationale,'rendering must not rewrite the reviewed claim');
+    assert(!out.html.includes('opportunity..'));
+  }
+}
+
+{
   const input=validInput();
   input.signals[0].score=100;
   const out=curated.buildCuratedBrief(input);
