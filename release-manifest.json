@@ -32,9 +32,20 @@
     "delivery": "Weekly; first brief within five business days; a no-matches note is sent when nothing credible qualifies",
     "max_signals_per_brief": 10,
     "starter_snapshot": "Optional, clearly labeled, up to 10 still-active records first detected during the prior seven days",
-    "refund": "First subscription payment refundable within seven calendar days",
+    "refund": "First subscription payment refundable before first send and through seven calendar days after the provider-confirmed first brief or no-matches note",
     "limitations": "Research starting points only; no scores, purchase-intent, opening-probability, exclusivity, or outcome guarantee"
   },
-  "release_stage": "Founder-curated first-customer launch",
+  "free_trial": {
+    "public_entry": "trial.html",
+    "admission": "Supervised scope review after customer sends an email request",
+    "cohort_limit": 10,
+    "max_signals_per_report": 5,
+    "max_reports": 2,
+    "duration_days": 14,
+    "clock_start": "First authorized, provider-accepted nonempty report",
+    "card_required": false,
+    "automatic_upgrade": false
+  },
+  "release_stage": "Founder-curated first-customer launch with supervised trial request",
   "commercial_proof": "Not claimed until a real paid subscriber, provider-backed delivery, and next-run duplicate suppression are verified"
 }

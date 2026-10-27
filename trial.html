@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://data.cityofnewyork.us; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="theme-color" content="#190b12" />
+  <meta name="description" content="Request a supervised 14-day PermitPlate trial for your NYC territory. Source-linked restaurant research, no card and no automatic paid upgrade." />
+  <title>Try your territory free — PermitPlate NYC</title>
+  <link rel="canonical" href="https://p00nsmasher.github.io/permitplate-nyc/trial.html" />
+  <link rel="icon" href="/permitplate-nyc/assets/brand/permitplate-favicon.png" type="image/png" />
+  <link rel="stylesheet" href="/permitplate-nyc/site.css" />
+  <link rel="stylesheet" href="/permitplate-nyc/assets/brand/approved-brand-20261022.css?v=3" />
+</head>
+<body class="checkout-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="announcement">14-day supervised pilot · No card required · No automatic paid upgrade</div>
+  <nav class="nav" aria-label="Main navigation"><div class="shell navin">
+    <a class="brand approved-brand-header native-header" href="/permitplate-nyc/"><img class="approved-brand-image native-brand-icon" src="/permitplate-nyc/assets/brand/permitplate-emblem.webp" width="624" height="649" alt="PermitPlate by RETALLY" decoding="async" /><span class="native-brand-text"><strong>Permit<span>Plate</span></strong><small>by <img class="retally-wordmark" src="/permitplate-nyc/assets/brand/retally-wordmark-approved.png" alt="RETALLY" width="1619" height="257" decoding="async" /></small></span></a>
+    <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="trial-menu" data-menu-toggle><span></span><span></span><span></span></button>
+    <div class="navlinks" id="trial-menu" data-menu><a href="/permitplate-nyc/">Home</a><a href="/permitplate-nyc/sample.html">Sample</a><a href="/permitplate-nyc/methodology.html">Method</a><a href="/permitplate-nyc/start.html">$79/month membership</a></div>
+  </div></nav>
+  <main id="main" class="checkout-wrap"><div class="shell checkout-grid">
+    <section class="checkout-copy">
+      <div class="eyebrow">See what is useful for your business</div>
+      <h1>Try your territory free for 14 days.</h1>
+      <p>Tell us what you sell and where you work. We check the scope, then prepare a short, source-linked restaurant research brief for your business.</p>
+      <ul class="trial-benefits">
+        <li>One vendor category and one NYC territory.</li>
+        <li>A starter brief and one weekly update, with up to five reviewed signals per report.</li>
+        <li>Official links, record context and a clear explanation of why each item may matter.</li>
+      </ul>
+      <p class="trial-note">Your 14 days start when the first useful report is sent successfully. A no-matches note does not start the clock. If we cannot support your scope, we will tell you before starting.</p>
+      <p>One trial per business. This supervised pilot is limited to 10 businesses. Public records are research starting points; they do not establish buying intent or guarantee leads.</p>
+      <p><strong>Continue only if you choose.</strong> The paid membership is $79/month for weekly briefs with up to 10 matching signals. The free trial never converts automatically.</p>
+    </section>
+    <section class="checkout-card trial-card" aria-labelledby="request-title">
+      <div class="price-label">Request a place in the pilot</div>
+      <h2 id="request-title">What should we research?</h2>
+      <p>We confirm fit and availability by email. Preparing this request does not enroll or charge you.</p>
+      <form data-trial-request>
+        <label for="trial-business">Business name</label><input id="trial-business" name="businessName" autocomplete="organization" minlength="2" maxlength="160" required />
+        <label for="trial-website">Business website</label><input id="trial-website" name="website" type="url" placeholder="https://yourbusiness.com" autocomplete="url" maxlength="300" required />
+        <label for="trial-category">Vendor category</label><select id="trial-category" name="category" required>
+          <option value="">Choose one</option><option value="equipment">Kitchen equipment</option><option value="hoodfire">Hood and fire</option><option value="pos">POS and payments</option><option value="insurance">Insurance</option><option value="waste">Waste</option><option value="pest">Pest control</option><option value="linen">Linen</option><option value="distribution">Food distribution</option>
+        </select>
+        <label for="trial-territory">NYC territory</label><select id="trial-territory" name="territory" required>
+          <option value="">Choose one</option><option value="AllNYC">All NYC</option><option value="Manhattan">Manhattan</option><option value="Brooklyn">Brooklyn</option><option value="Queens">Queens</option><option value="Bronx">Bronx</option><option value="StatenIsland">Staten Island</option><option value="ManhattanBrooklyn">Manhattan and Brooklyn</option><option value="ManhattanQueens">Manhattan and Queens</option><option value="BrooklynQueens">Brooklyn and Queens</option><option value="ManhattanBronx">Manhattan and Bronx</option><option value="ManhattanBrooklynQueens">Manhattan, Brooklyn and Queens</option><option value="BrooklynStatenIsland">Brooklyn and Staten Island</option>
+        </select>
+        <button class="button button-primary button-wide" type="submit">Prepare my free-trial request</button>
+      </form>
+      <p data-trial-status role="status" aria-live="polite"></p>
+      <a class="button button-dark button-wide" data-trial-email hidden>Review and send email request</a>
+      <div data-trial-fallback hidden><label for="trial-email-body">Prefer webmail? Copy this request and email jay@retallyrecovery.com.</label><textarea id="trial-email-body" data-trial-body readonly rows="8"></textarea></div>
+      <p class="checkout-legal">This page prepares an email draft on your device. Nothing is submitted until you send it from your email app. Read the <a href="/permitplate-nyc/privacy.html">privacy notice</a> and <a href="/permitplate-nyc/terms.html#free-trial">trial terms</a>.</p>
+      <noscript><p>Email <a href="mailto:jay@retallyrecovery.com?subject=PermitPlate%20free-trial%20request">jay@retallyrecovery.com</a> with your business name, website, vendor category and NYC territory to request the free pilot.</p></noscript>
+    </section>
+  </div></main>
+  <footer class="footer"><div class="shell footer-bottom"><a href="https://group.retallyrecovery.com/">PermitPlate · RETALLY Group</a><a href="/permitplate-nyc/sample.html">See the sample brief</a><a href="/permitplate-nyc/terms.html">Terms</a><a href="mailto:jay@retallyrecovery.com">Contact</a></div></footer>
+  <script src="/permitplate-nyc/site.js" defer></script><script src="/permitplate-nyc/trial-request.js" defer></script>
+</body>
+</html>

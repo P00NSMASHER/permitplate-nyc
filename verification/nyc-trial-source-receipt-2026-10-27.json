@@ -1,0 +1,129 @@
+{
+  "receiptVersion": "PermitPlate-trial-source-validation-v1",
+  "sourceBaselineCommit": "5445686a3c0a9b3a3c4822934b0faa1f3c76b36d",
+  "observedAt": "2026-10-27T13:37:07.070Z",
+  "sourceAcceptancePassed": true,
+  "sources": {
+    "DOHMH": {
+      "dataset": "nyc-open-data:43nn-pn8j",
+      "state": "COMPLETE_NONEMPTY",
+      "freshnessVerified": true,
+      "transportOk": true,
+      "cursorClosed": true,
+      "publisherCount": 5335,
+      "fetchedCount": 5335,
+      "sourceCountMatches": true,
+      "missingRecordIds": 0,
+      "duplicateRecordIds": 0,
+      "futureEffectiveDates": 0,
+      "observationId": "OBS:4b1c7c9353a947fcd97b1adb",
+      "sourceUpdatedAt": "2026-10-26T22:10:01.000Z",
+      "officialScopeHash": "03461446132fe418cc763e70aca0433faedcbfec10b774b080c67bb16f8d85c4",
+      "complete": true
+    },
+    "DOB_NOW": {
+      "dataset": "nyc-open-data:w9ak-ipjd",
+      "state": "COMPLETE_NONEMPTY",
+      "freshnessVerified": true,
+      "transportOk": true,
+      "cursorClosed": true,
+      "publisherCount": 5821,
+      "fetchedCount": 5821,
+      "sourceCountMatches": true,
+      "missingRecordIds": 0,
+      "duplicateRecordIds": 1,
+      "futureEffectiveDates": 0,
+      "observationId": "OBS:46ca07f2509ef80dd9a5a622",
+      "sourceUpdatedAt": "2026-10-26T20:29:26.000Z",
+      "officialScopeHash": "d433012402913b2c07b887d7f6ea3d83bc7e28d5bbc55b46378b2564e72cdd4e",
+      "complete": true
+    },
+    "SLA_PENDING": {
+      "dataset": "ny-open-data:f8i8-k2gm",
+      "state": "COMPLETE_NONEMPTY",
+      "freshnessVerified": true,
+      "transportOk": true,
+      "cursorClosed": true,
+      "publisherCount": 2959,
+      "fetchedCount": 2959,
+      "sourceCountMatches": true,
+      "missingRecordIds": 0,
+      "duplicateRecordIds": 0,
+      "futureEffectiveDates": 0,
+      "observationId": "OBS:c4cb5b78d69c5d36e8dc608f",
+      "sourceUpdatedAt": "2026-10-27T00:32:51.000Z",
+      "officialScopeHash": "7fd0af535b9f9bf7741cfbe09bfc1f13a20e191a0689130b0a75f30ed0f6f9f0",
+      "complete": true
+    }
+  },
+  "graph": {
+    "graphState": "COMPLETE",
+    "digest": "5d4f2c681e55593d6abfa290b63311edd00a31d03f8a3a33a334291538b44e88",
+    "candidates": 4247,
+    "suppressed": 172,
+    "stageCounts": {
+      "JUST FILED": 3918,
+      "HEALTH PRE-PERMIT": 329
+    },
+    "boroughCounts": {
+      "0": 75,
+      "Manhattan": 1879,
+      "Staten Island": 134,
+      "Brooklyn": 1051,
+      "Queens": 861,
+      "Bronx": 247
+    },
+    "missingName": 1,
+    "invalidBorough": 75,
+    "uninspectedPlaceholderCandidates": 3918,
+    "uninspectedPlaceholderWithRecentRecordDate": 3918,
+    "dateSemanticsWarning": "DOHMH 1900 inspection placeholders and record_date updates do not prove new restaurant openings or application dates."
+  },
+  "dobReviewKit": {
+    "caseCount": 36,
+    "distinctJobFamilies": 35,
+    "distinctBoroughAddressPairs": 34,
+    "filingStatusCounts": {
+      "Pending Prof Cert QA Assignment": 2,
+      "Pending Plan Examiner Assignment": 3,
+      "Pending CPE/ACPE Assignment": 4,
+      "Prof Cert QA Review": 3,
+      "Plan Examiner Review": 10,
+      "Approved": 12,
+      "OnHold-NoGoodCheck": 1,
+      "Permit Entire": 1
+    },
+    "customerDeliveryAllowed": false,
+    "independentHumanAdjudications": 0
+  },
+  "independentSecondApiReadback": {
+    "version": "PermitPlate-NYC-DOB-second-readback-v1.0.0",
+    "sourceObservedAt": "2026-10-27T13:37:07.070Z",
+    "verifiedAt": "2026-10-27T13:38:13.422Z",
+    "expectedCases": 36,
+    "confirmedCases": 36,
+    "matchedFilingStatus": 36,
+    "matchedFilingDate": 36,
+    "matchedDescriptionExcerpt": 36,
+    "issues": [],
+    "secondApiGetCalls": 36,
+    "customerProfilesRead": 0,
+    "privateStateRead": false,
+    "buyerNeedVerified": false,
+    "independentHumanLabels": 0,
+    "customerMessagesSent": 0,
+    "passed": true
+  },
+  "sourceAcceptanceSha256": "e42516523c8545dddf9d981715c93788426c99f10ba2ac60c4cf899d565789f0",
+  "readbackSha256": "c1c61a2178683ba7d18bc224c7379e63dd2343a5112ba4013f75f21847edc83b",
+  "customerDeliveryVerified": false,
+  "buyerNeedVerified": false,
+  "trialCustomersEnrolled": 0,
+  "customerMessagesSent": 0,
+  "limitations": [
+    "Complete source retrieval and exact filing readback do not establish vendor demand or a restaurant opening.",
+    "DOB source contains one repeated record identity among 5821 source rows; source rows are not distinct leads.",
+    "75 candidate borough values are invalid and one name is missing; customer eligibility and owner review remain required.",
+    "The first unproxied local run failed transport and was rejected; explicit environment proxy use produced the successful current run."
+  ]
+}

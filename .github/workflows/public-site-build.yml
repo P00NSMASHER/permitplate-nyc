@@ -23,6 +23,8 @@ on:
       - 'sample.html'
       - 'site.css'
       - 'site.js'
+      - 'trial.html'
+      - 'trial-request.js'
       - 'start.html'
       - 'sitemap.xml'
       - 'terms.html'

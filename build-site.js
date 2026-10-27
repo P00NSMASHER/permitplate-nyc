@@ -65,6 +65,8 @@ const PUBLIC_FILES=Object.freeze([
   'start.html',
   'sitemap.xml',
   'terms.html',
+  'trial.html',
+  'trial-request.js',
   'welcome.html'
 ]);
 
@@ -137,8 +139,7 @@ function standaloneContent(file,source,siteBase){
     text=text.replace(/\bsrcset=(["'])([^"']*)\1/g,(_match,quote,value)=>
       'srcset='+quote+value.replace(/(^|,\s*)\/permitplate-nyc\//g,'$1/')+quote);
     if(file==='privacy.html'){
-      text=text.replace('Effective October 1, 2026','Effective October 22, 2026')
-        .replace('<h2 id="providers">3. Service providers</h2>',
+      text=text.replace('<h2 id="providers">3. Service providers</h2>',
           '<h2 id="providers">3. Service providers</h2>\n'+
           '      <p>This public website is hosted on Cloudflare Pages. See <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare’s privacy policy</a>.</p>');
     }
