@@ -2,6 +2,7 @@
 
 const assert=require('assert');
 const readiness=require('./launch-readiness');
+const runner=require('./run-launch-readiness');
 const detection=require('./detection-ledger');
 const opportunity=require('./opportunity-ledger');
 
@@ -141,6 +142,31 @@ function external(overrides){
 }
 
 {
+  const input=internalInput({
+    launchMode:'FOUNDER_CURATED_NO_SCORE_V1',
+    curatedCanary:curatedCanary(),
+    curatedFulfillmentRunbookPresent:true,
+    curatedResearch:{valid:false,failures:['CURATED_SNAPSHOT_NOT_CURRENT_SOURCE_GRAPH']}
+  });
+  const out=readiness.evaluateLaunchReadiness(input);
+  assert.equal(out.internalReady,false);
+  assert.equal(out.firstCustomerOperationallyReady,false);
+  assert(out.internalFailures.includes('curatedPrivateResearchCurrent'));
+  assert(out.recommendedNextActions.includes('REPAIR_OR_REFRESH_PRIVATE_CURATED_RESEARCH'));
+  assert.deepEqual(out.curatedResearch.failures,['CURATED_SNAPSHOT_NOT_CURRENT_SOURCE_GRAPH']);
+}
+{
+  const input=internalInput({
+    launchMode:'FOUNDER_CURATED_NO_SCORE_V1',
+    curatedCanary:curatedCanary(),
+    curatedFulfillmentRunbookPresent:true,
+    curatedResearch:null
+  });
+  const out=readiness.evaluateLaunchReadiness(input);
+  assert(out.internalFailures.includes('curatedPrivateResearchCurrent'));
+}
+
+{
   const out=readiness.evaluateLaunchReadiness(internalInput({
     launchMode:'FOUNDER_CURATED_NO_SCORE_V1',
     curatedCanary:curatedCanary({scoreFree:false}),
@@ -183,6 +209,18 @@ function internalInput(overrides){
     detectionLedger:boot.ledger,
     opportunityLedger:opportunity.emptyLedger('2026-09-21T17:00:00Z'),
     subscriberCanary:subscriberCanary(),
+    curatedResearch:{
+      valid:true,failures:[],
+      graphDigest:'graph-launch-1',
+      observedAt:'2026-09-21T17:30:00Z',
+      candidateCount:2,
+      sourceAgeMs:1800000
+    },
+    stripeIntake:{
+      valid:true,failures:[],monitoringEnabled:true,
+      lastPrivateReadbackAt:'2026-09-21T17:30:00Z',
+      lastPrivateReadbackAgeMs:1800000
+    },
     publicBuildFailures:[],
     currentPublicSourceFingerprint:'public-source-fp',
     externalEvidence:external(),
@@ -399,6 +437,69 @@ function internalInput(overrides){
   const a=readiness.evaluateLaunchReadiness(internalInput());
   const b=readiness.evaluateLaunchReadiness(JSON.parse(JSON.stringify(internalInput())));
   assert.equal(a.readinessFingerprint,b.readinessFingerprint);
+}
+
+
+{
+  const out=readiness.evaluateLaunchReadiness(internalInput({
+    launchMode:'FOUNDER_CURATED_NO_SCORE_V1',
+    curatedCanary:curatedCanary(),
+    curatedFulfillmentRunbookPresent:true,
+    externalEvidence:readyExternal(),
+    stripeIntake:{
+      valid:false,failures:['STRIPE_INTAKE_SCHEDULE_NOT_ENABLED'],
+      monitoringEnabled:false,lastPrivateReadbackAt:null,
+      lastPrivateReadbackAgeMs:null
+    }
+  }));
+  assert.equal(out.internalReady,true);
+  assert.equal(out.firstCustomerOperationallyReady,false);
+  assert.equal(out.commerciallyProven,false);
+  assert.equal(out.launchState,'EXTERNAL_INTEGRATION_BLOCKED');
+  assert.equal(out.externalGates.stripeIntakeMonitoringVerified,false);
+  assert(out.firstCustomerExternalFailures.includes('stripeIntakeMonitoringVerified'));
+  assert.equal(out.criticalPathClass,'EXTERNAL_INTEGRATION');
+  assert(out.recommendedNextActions.includes(
+    'ENABLE_AND_VERIFY_READ_ONLY_STRIPE_SUBSCRIBER_POLL'));
+  assert.deepEqual(out.stripeIntake.failures,['STRIPE_INTAKE_SCHEDULE_NOT_ENABLED']);
+  assert.equal(out.commercialProofFailures.length,3);
+  assert.equal(runner.shouldFailJob(out),true);
+}
+{
+  const out=readiness.evaluateLaunchReadiness(internalInput({
+    launchMode:'FOUNDER_CURATED_NO_SCORE_V1',
+    curatedCanary:curatedCanary(),
+    curatedFulfillmentRunbookPresent:true,
+    externalEvidence:readyExternal(),
+    stripeIntake:{
+      valid:false,failures:['STRIPE_INTAKE_PROVIDER_READBACK_STALE_OR_MISSING'],
+      monitoringEnabled:true,lastPrivateReadbackAt:'2026-09-19T10:30:00.000Z',
+      lastPrivateReadbackAgeMs:201600000
+    }
+  }));
+  assert.equal(out.firstCustomerOperationallyReady,false);
+  assert(out.firstCustomerExternalFailures.includes('stripeIntakeMonitoringVerified'));
+}
+{
+  const out=readiness.evaluateLaunchReadiness(internalInput({
+    launchMode:'FOUNDER_CURATED_NO_SCORE_V1',
+    curatedCanary:curatedCanary(),
+    curatedFulfillmentRunbookPresent:true,
+    externalEvidence:readyExternal()
+  }));
+  assert.equal(out.firstCustomerOperationallyReady,true);
+  assert.equal(out.stripeIntake.monitoringEnabled,true);
+  assert.equal(out.externalGates.stripeIntakeMonitoringVerified,true);
+  assert.equal(runner.shouldFailJob(out),false);
+  assert.equal(out.commerciallyProven,false);
+}
+
+
+{
+  const out=readiness.evaluateLaunchReadiness(internalInput({
+    graph:graph('PARTIAL')
+  }));
+  assert.equal(runner.shouldFailJob(out),true);
 }
 
 console.log('PermitPlate launch readiness controller tests passed.');

@@ -1,0 +1,107 @@
+name: PermitPlate PA independent order watchdog
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 2,5,8,11,14,17,20,23 * * *'
+  push:
+    branches: [main]
+    paths:
+      - 'pipeline/run-pa-permit-watchdog.js'
+      - 'pipeline/pa-permit-watchdog.test.js'
+      - 'tests/test_pa_permit_watchdog_policy.py'
+      - '.github/workflows/pa-permit-watchdog.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'pipeline/run-pa-permit-watchdog.js'
+      - 'pipeline/pa-permit-watchdog.test.js'
+      - 'tests/test_pa_permit_watchdog_policy.py'
+      - '.github/workflows/pa-permit-watchdog.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('permitplate-pa-watch-pr-{0}', github.event.pull_request.number) || format('permitplate-private-state-{0}', vars.PERMITPLATE_STATE_REPO) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out tested source without credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Use pinned Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.4'
+      - name: Verify independent PA heartbeat and no-customer-data output
+        run: node pipeline/pa-permit-watchdog.test.js
+      - name: Reject credential and private-state policy violations
+        run: python3 -m unittest discover -s tests -p 'test_pa_permit_watchdog_policy.py' -v
+
+  watchdog:
+    needs: policy
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    env:
+      STATE_REPO: ${{ vars.PERMITPLATE_STATE_REPO }}
+      PRIVATE_DIR: ${{ github.workspace }}/.private-state
+    steps:
+      - name: Check out exact current main without credential persistence
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Admit exact current main before loading any private credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = 'refs/heads/main'
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          current="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          test -n "$current" && test "$current" = "$GITHUB_SHA"
+      - name: Use pinned Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.4'
+      - name: Verify separate private state repository is authorized
+        env:
+          GH_TOKEN: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$STATE_REPO" && test -n "$GH_TOKEN"
+          test "$STATE_REPO" != "$GITHUB_REPOSITORY"
+          test "$(gh api "repos/$STATE_REPO" --jq '.visibility')" = "private"
+      - name: Read private PA order state with nonpersistent credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: ${{ vars.PERMITPLATE_STATE_REPO }}
+          token: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
+          ref: main
+          path: .private-state
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Recheck exact current main before private state analysis
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          current="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          test -n "$current" && test "$current" = "$GITHUB_SHA"
+      - name: Independently check the last live PA readback and outstanding cases
+        env:
+          PERMITPLATE_PA_ORDER_INTAKE_ENABLED: ${{ vars.PERMITPLATE_PA_ORDER_INTAKE_ENABLED }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node pipeline/run-pa-permit-watchdog.js \
+            "$PRIVATE_DIR/state/pa-permit-orders.json" \
+            "$PRIVATE_DIR/state/pa-permit-anchor.json"

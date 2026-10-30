@@ -14,6 +14,8 @@ const SOURCE_CONFIGS = Object.freeze({
     datasetName: 'DOHMH New York City Restaurant Inspection Results',
     landingUrl: 'https://data.cityofnewyork.us/d/43nn-pn8j',
     apiUrl: 'https://data.cityofnewyork.us/resource/43nn-pn8j.json',
+    termsUrl: 'https://data.cityofnewyork.us/stories/s/Terms-of-Use/k9k7-3cje',
+    useConditions: 'NYC_OPEN_DATA_TERMS',
     entityKeyFields: ['camis'],
     recordFields: [
       'camis','dba','boro','building','street','zipcode','phone','cuisine_description',
@@ -29,11 +31,13 @@ const SOURCE_CONFIGS = Object.freeze({
     datasetName: 'DOB NOW: Build – Job Application Filings',
     landingUrl: 'https://data.cityofnewyork.us/d/w9ak-ipjd',
     apiUrl: 'https://data.cityofnewyork.us/resource/w9ak-ipjd.json',
+    termsUrl: 'https://data.cityofnewyork.us/stories/s/Terms-of-Use/k9k7-3cje',
+    useConditions: 'NYC_OPEN_DATA_TERMS',
     entityKeyFields: ['job_filing_number','bin','block','lot'],
     recordFields: [
       'job_filing_number','filing_status','house_no','street_name','borough',
       'block','lot','bin','job_description','initial_cost','owner_s_business_name',
-      'filing_date','work_on_floor'
+      'filing_date','work_on_floor','building_type'
     ]
   }),
   SLA_PENDING: Object.freeze({
@@ -44,10 +48,12 @@ const SOURCE_CONFIGS = Object.freeze({
     datasetName: 'Current SLA Pending Licenses',
     landingUrl: 'https://data.ny.gov/d/f8i8-k2gm',
     apiUrl: 'https://data.ny.gov/resource/f8i8-k2gm.json',
+    termsUrl: 'https://data.ny.gov/dataset/OPEN-NY-Terms-Of-Use/77gx-ii52',
+    useConditions: 'OPEN_NY_TERMS_LAWFUL_USE',
     entityKeyFields: ['application_id'],
     recordFields: [
       'application_id','description','legalname','dba','actual_address_of_premises',
-      'additional_address_information','city','state_name','zip_code','received_date',
+      'additional_address_information','premises_county','city','state_name','zip_code','received_date',
       'status','aka_address','georeference'
     ]
   })
@@ -218,6 +224,7 @@ function normalizeSlaPendingRow(row, context) {
     property: {
       address: normalizedAddress([r.actual_address_of_premises]),
       unit: nullableText(r.additional_address_information),
+      county: nullableText(r.premises_county),
       city: nullableText(r.city),
       state: nullableText(r.state_name),
       zip: nullableText(r.zip_code)
@@ -237,11 +244,65 @@ function normalizeRow(sourceKey, row, context) {
   throw new Error(`Unknown sourceKey: ${sourceKey}`);
 }
 
+function buildSourceProvenance(config) {
+  if (!config || typeof config !== 'object') {
+    throw new Error('Source config is required for provenance');
+  }
+
+  const required = [
+    'sourceId', 'datasetName', 'agency', 'landingUrl',
+    'apiUrl', 'termsUrl', 'useConditions'
+  ];
+  for (const field of required) {
+    if (!text(config[field])) throw new Error(`Source provenance missing ${field}`);
+  }
+
+  let policy;
+  if (config.sourceId.startsWith('nyc-open-data:')) {
+    policy = {
+      host: 'data.cityofnewyork.us',
+      useConditions: 'NYC_OPEN_DATA_TERMS'
+    };
+  } else if (config.sourceId.startsWith('ny-open-data:')) {
+    policy = {
+      host: 'data.ny.gov',
+      useConditions: 'OPEN_NY_TERMS_LAWFUL_USE'
+    };
+  } else {
+    throw new Error(`Unsupported official source provenance: ${config.sourceId}`);
+  }
+
+  for (const field of ['landingUrl', 'apiUrl', 'termsUrl']) {
+    let url;
+    try {
+      url = new URL(config[field]);
+    } catch (error) {
+      throw new Error(`Source provenance invalid ${field}`);
+    }
+    if (url.protocol !== 'https:' || url.hostname !== policy.host) {
+      throw new Error(`Source provenance ${field} must use official host ${policy.host}`);
+    }
+  }
+
+  if (config.useConditions !== policy.useConditions) {
+    throw new Error(`Source provenance use conditions mismatch for ${config.sourceId}`);
+  }
+
+  return {
+    sourceId: config.sourceId,
+    datasetName: config.datasetName,
+    agency: config.agency,
+    landingUrl: config.landingUrl,
+    apiUrl: config.apiUrl,
+    termsUrl: config.termsUrl,
+    useConditions: config.useConditions
+  };
+}
+
 function configFingerprint(config) {
   return sha256(stableStringify({
     pipelineVersion: PIPELINE_VERSION,
-    sourceId: config.sourceId,
-    apiUrl: config.apiUrl,
+    sourceProvenance: buildSourceProvenance(config),
     entityKeyFields: config.entityKeyFields,
     recordFields: config.recordFields
   }));
@@ -259,6 +320,7 @@ function buildSourceObservation(sourceKey, input) {
   const config = SOURCE_CONFIGS[sourceKey];
   if (!config) throw new Error(`Unknown sourceKey: ${sourceKey}`);
   const inData = input || {};
+  const sourceProvenance = buildSourceProvenance(config);
   const rawPages = Array.isArray(inData.rawPages) ? inData.rawPages : [];
   const rows = Array.isArray(inData.rows) ? inData.rows : [];
   const observedFields = Array.from(new Set(
@@ -272,6 +334,7 @@ function buildSourceObservation(sourceKey, input) {
     (queryScope ? sha256(stableStringify(queryScope)) : null);
   const receipt = {
     sourceId: config.sourceId,
+    sourceProvenance,
     connectorConfigHash: configFingerprint(config),
     queryFingerprint,
     queryScopeHash: queryFingerprint,
@@ -321,6 +384,7 @@ module.exports = {
   normalizeDobNowRow,
   normalizeSlaPendingRow,
   normalizeRow,
+  buildSourceProvenance,
   buildSourceObservation,
   normalizeBatch
 };

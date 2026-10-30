@@ -11,11 +11,18 @@ const firstSubscriber=require('./run-first-subscriber-canary');
 const publicBuild=require('../build-site');
 const readiness=require('./launch-readiness');
 const curatedCanary=require('./run-founder-curated-canary');
+const curatedProduction=require('./curated-production-readiness');
+const stripeIntakeReadiness=require('./stripe-intake-readiness');
+const externalRefresh=require('./refresh-launch-external-evidence');
 
-const RUNNER_VERSION='PermitPlate-launch-readiness-runner-v1.1.0';
+const RUNNER_VERSION='PermitPlate-launch-readiness-runner-v1.3.0';
 
 function readJson(filePath){
   return JSON.parse(fs.readFileSync(filePath,'utf8'));
+}
+function readOptionalPrivateJson(filePath){
+  try {return readJson(filePath);}
+  catch(error){return null;} // Missing, malformed and inaccessible state must fail closed.
 }
 function promotionEvidenceFrom(current,historicalResult){
   return {
@@ -62,7 +69,26 @@ async function run(options){
 
   const detectionLedger=readJson(detectionPath);
   const opportunityLedger=readJson(opportunityPath);
-  const externalEvidence=readJson(externalEvidencePath);
+  const curatedStateDir=path.dirname(detectionPath);
+  const curatedResearch=curatedProduction.evaluate({
+    snapshot:readOptionalPrivateJson(path.join(curatedStateDir,'curated-current-graph.json')),
+    ledger:readOptionalPrivateJson(path.join(curatedStateDir,'curated-research-ledger.json')),
+    anchor:readOptionalPrivateJson(path.join(curatedStateDir,'curated-baseline-anchor.json')),
+    currentGraphDigest:graph.graphDigest,
+    evaluatedAt:observedAt
+  });
+  // A green public Checkout receipt does not mean paid customers are being
+  // checked. Require a private provider-readback heartbeat and an opted-in
+  // recurring poll before claiming first-customer operational readiness.
+  const stripeIntake=stripeIntakeReadiness.evaluate({
+    monitoringEnabled:opts.stripeIntakeMonitoringEnabled===true ||
+      process.env.PERMITPLATE_STRIPE_ONBOARDING_ENABLED==='true',
+    ledger:readOptionalPrivateJson(path.join(
+      curatedStateDir,'curated-onboarding-ledger.json')),
+    anchor:readOptionalPrivateJson(path.join(
+      curatedStateDir,'curated-onboarding-anchor.json')),
+    evaluatedAt:observedAt
+  });
   const subscriberCanary=firstSubscriber.run();
   const founderCuratedCanary=curatedCanary.run();
   const manifest=readJson(path.join(__dirname,'..','release-manifest.json'));
@@ -71,6 +97,17 @@ async function run(options){
   );
   const publicBuildFailures=publicBuild.validateAllowlist();
   const currentPublicSourceFingerprint=readiness.publicSourceFingerprint();
+  const refreshEnabled=opts.refreshExternalEvidence===true;
+  const externalEvidence=refreshEnabled?await externalRefresh.refresh({
+    key:opts.stripeReadKey,sourceCommit:opts.sourceCommit
+  }):readJson(externalEvidencePath);
+  // Public-source collection precedes provider verification. Evaluate freshness
+  // at completion so a genuinely new receipt is not mistaken for future data.
+  const evaluatedAt=refreshEnabled?new Date().toISOString():observedAt;
+  if(refreshEnabled&&opts.externalEvidenceOutputPath){
+    fs.writeFileSync(opts.externalEvidenceOutputPath,
+      JSON.stringify(externalEvidence,null,2)+'\n');
+  }
 
   const result=readiness.evaluateLaunchReadiness({
     graph,
@@ -81,12 +118,14 @@ async function run(options){
     opportunityLedger,
     subscriberCanary,
     curatedCanary:founderCuratedCanary,
+    curatedResearch,
+    stripeIntake,
     launchMode:manifest.checkout&&manifest.checkout.launch_mode,
     curatedFulfillmentRunbookPresent,
     publicBuildFailures,
     currentPublicSourceFingerprint,
     externalEvidence,
-    evaluatedAt:observedAt
+    evaluatedAt
   });
 
   return Object.assign({
@@ -101,15 +140,32 @@ async function run(options){
   },result);
 }
 
+function shouldFailJob(result){
+  if(result?.internalReady!==true)return true;
+  // The founder-curated public Checkout path can accept money. A missing
+  // private paid-customer polling heartbeat is a material operational fault,
+  // not merely an advisory external-evidence warning.
+  return result.launchMode===readiness.CURATED_LAUNCH_MODE &&
+    Array.isArray(result.firstCustomerExternalFailures) &&
+    result.firstCustomerExternalFailures.includes('stripeIntakeMonitoringVerified');
+}
+
 async function main(){
   const outputPath=process.argv[2]||
     path.join(__dirname,'launch-readiness-result.json');
   const detectionPath=process.argv[3]||undefined;
   const opportunityPath=process.argv[4]||undefined;
-  const result=await run({detectionPath,opportunityPath});
+  const result=await run({detectionPath,opportunityPath,
+    refreshExternalEvidence:process.env.PERMITPLATE_REFRESH_EXTERNAL_EVIDENCE==='true',
+    stripeReadKey:process.env.PERMITPLATE_STRIPE_READ_KEY,
+    sourceCommit:process.env.GITHUB_SHA,
+    externalEvidenceOutputPath:path.join(__dirname,'launch-external-evidence-result.json')});
   fs.writeFileSync(outputPath,JSON.stringify(result,null,2)+'\n');
   console.log(JSON.stringify(result,null,2));
-  if(!result.internalReady) process.exitCode=1;
+  if(shouldFailJob(result)) {
+    console.error('PERMITPLATE_PAID_INTAKE_OR_INTERNAL_READINESS_BLOCKED');
+    process.exitCode=1;
+  }
 }
 
 if(require.main===module){
@@ -120,5 +176,7 @@ module.exports={
   RUNNER_VERSION,
   readJson,
   promotionEvidenceFrom,
+  shouldFailJob,
   run
 };
+
