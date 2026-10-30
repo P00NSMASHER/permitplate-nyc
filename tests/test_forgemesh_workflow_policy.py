@@ -40,6 +40,8 @@ def validate_policy(source: str) -> None:
     assert source.count(CHECKOUT) == 2
     assert source.count("persist-credentials: false") == 2
     assert UPLOAD in source
+    assert "node-version: '22.23.4'" in source
+    assert "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020" in source
     assert "actions/checkout@v4" not in source
     assert "actions/upload-artifact@v4" not in source
     assert "forgemesh-pa-entity-preflight-${{ github.sha }}" in source

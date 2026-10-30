@@ -2,7 +2,23 @@
 
 PermitPlate converts selected official NYC restaurant applicant, licensing, buildout, pre-permit, and material-change records into source-linked research briefs for restaurant vendors.
 
-Canonical site: <https://p00nsmasher.github.io/permitplate-nyc/>
+Company site: <https://permitplate.retallyrecovery.com/> (Cloudflare Pages).
+The established GitHub Pages site remains available separately at
+<https://p00nsmasher.github.io/permitplate-nyc/>. Each host has its own
+`build-info.json`; verify the actual host's commit when checking a release.
+
+## PermitPlate 2.0 customer-facing brief
+
+The production founder-curated report builder now publishes an action-first decision summary,
+per-signal verification guidance, an evidence appendix and matching CSV guidance without
+changing founder approval or source admission controls. Its production offer mode remains
+`FOUNDER_CURATED_NO_SCORE_V1`; no automated buying-intent rankings are shipped.
+
+The public [2.0 NYC case study](https://permitplate.retallyrecovery.com/case-study)
+uses actual historical DOB filing IDs for a renovation at 532 Neptune Avenue, and
+identifies source/tenant-identity limitations. A downloadable text report and a
+browser print/save-PDF option show the output. This is a demonstration, not
+a qualified customer lead or a live customer delivery.
 
 ## Customer offer
 
@@ -13,28 +29,65 @@ Canonical site: <https://p00nsmasher.github.io/permitplate-nyc/>
 - optional labeled seven-day Starter Snapshot, capped at 10
 - a no-matches note when nothing credible qualifies
 - cancel at period end through the Stripe customer portal
-- seven-day first-payment refund window
+- first-payment refund through seven calendar days after the first brief or
+  no-matches message is sent; see the full first-delivery policy
+
+## Free trial pilot
+
+`trial.html` accepts a request by preparing a local email draft. It does not
+submit an intake, enroll a customer, create a subscription or start billing.
+The operator confirms scope before admitting up to 10 businesses, one trial
+per business, using the private no-send trial workflow.
+
+- One category and NYC territory; two reports with up to five reviewed signals each.
+- Fourteen days begin at the first nonempty, authorized, provider-accepted send.
+- A no-matches note and initial research baseline never start the clock.
+- A separate explicit paid checkout is required to continue.
+- Trial source accuracy, actual founder review and send authorization gates are
+  the same as the paid research lane.
+
+See [trial operation](operations/FREE_TRIAL_PILOT.md) and the
+[October 27 real-source validation](verification/NYC_TRIAL_READINESS_2026-10-27.md).
 
 The launch offer is manually curated and does not depend on a model score.
-Automated scoring remains a research system and is not part of the customer
-promise. Signals are research starting points, not purchase intent, opening
-probability, or guaranteed leads.
+Owner-authorized V4 scoring runs inside the existing private research refresh
+to rank **source-dated, source-linked research records only**. Undated applicants,
+suppressed jurisdictions and disputed identities are held. Category evidence
+caps prohibit interpreting a contextual keyword as verified buying intent.
+**Customer-facing scored-lead delivery remains disabled**, and production buyer
+precision has not been independently established. See
+[NYC internal V4 scoring controls](operations/NYC_INTERNAL_V4_SCORING.md).
+Signals are research starting points, not purchase intent, opening probability,
+or guaranteed leads.
 
 ## Local verification
 
 Requires Node.js 22 or newer.
 
 ```sh
-node --test
-node build-site.test.js
+node --test --test-concurrency=1 model-v7.test.js build-site.test.js build-standalone-site.test.js operations/*.test.js pipeline/*.test.js trial-request.test.js
 node build-site.js
 ```
 
+Run the two build tests sequentially: both intentionally verify the shared
+`dist/` deployment directory. Bare `node --test` also discovers the separate
+x402 live-network/tooling scripts and may run those build tests concurrently;
+it is not the deterministic NYC product check above.
+
 `node build-site.js` creates the exact deployable public artifact in `dist/`. The build allowlist excludes pipeline code, operational state, tests, internal model documents, and secrets.
+
+## Code release approval
+
+The repository uses **owner-authorized, automated-CI-gated code releases**. A separate
+human or independent code reviewer is **not required**. Source-accuracy, payment,
+data-privacy, scientific calibration and customer-send safeguards are separate
+controls and remain in force. See
+[Owner-authorized code release policy](operations/CODE_RELEASE_POLICY.md).
 
 ## Production boundaries
 
-- GitHub Pages is the only canonical public host.
+- The company host uses Cloudflare Pages; the established GitHub Pages artifact
+  is built separately. Both use the same explicit public-file allowlist.
 - Stripe Checkout is the payment and preference authority when paid enrollment is open.
 - Operational detection and opportunity ledgers belong in a dedicated private repository.
 - Customer artifacts require explicit owner send authorization and provider reconciliation.

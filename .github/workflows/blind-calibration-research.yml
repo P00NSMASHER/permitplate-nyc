@@ -1,0 +1,176 @@
+name: PermitPlate real-source blind calibration kit (private)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '33 15 * * 1'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/blind-calibration-research.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/blind-calibration-research.yml'
+      - 'tests/test_blind_calibration_workflow_policy.py'
+      - 'pipeline/calibration-runner.js'
+      - 'pipeline/calibration-cohort.js'
+      - 'pipeline/calibration-evaluation.js'
+      - 'pipeline/calibration-workbench.js'
+      - 'pipeline/calibration-focused.test.js'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('permitplate-calibration-pr-{0}',github.event.pull_request.number) || format('permitplate-private-state-{0}', vars.PERMITPLATE_STATE_REPO) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact source without persisted credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Pinned Node environment
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.4'
+      - name: Test blinded calibration source integrity and private outputs
+        run: node --test pipeline/calibration.test.js pipeline/calibration-integrity.test.js pipeline/calibration-cli.test.js pipeline/calibration-focused.test.js
+      - name: Defend private blind-calibration workflow
+        run: python3 -m unittest discover -s tests -p 'test_blind_calibration_workflow_policy.py' -v
+
+  prepare-private-cohort:
+    needs: policy
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      STATE_REPO: ${{ vars.PERMITPLATE_STATE_REPO }}
+      PRIVATE_DIR: ${{ github.workspace }}/.private-state
+      CALIBRATION_DIR: ${{ github.workspace }}/.private-state/research/blind-calibration/${{ github.run_id }}
+    steps:
+      - name: Check out immutable current main without credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Admit exact current main before private credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/main"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          current="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          test -n "$current" && test "$current" = "$GITHUB_SHA"
+      - name: Pinned Node environment
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.4'
+      - name: Verify dedicated private source repository
+        env:
+          GH_TOKEN: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$STATE_REPO" && test -n "${GH_TOKEN:-}"
+          test "$STATE_REPO" != "$GITHUB_REPOSITORY"
+          test "$(gh api "repos/$STATE_REPO" --jq '.visibility')" = "private"
+      - name: Check out private state without persisted credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: ${{ vars.PERMITPLATE_STATE_REPO }}
+          token: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
+          ref: main
+          path: .private-state
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Prepare actual NYC blind evidence research, NO_SEND
+        shell: bash
+        run: |
+          set -euo pipefail
+          node pipeline/calibration-runner.js prepare "$CALIBRATION_DIR" Equipment
+      - name: Verify sealed cohort, blinded reviewer packet, and blocked promotion
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          'use strict';
+          const fs=require('node:fs'),path=require('node:path');
+          const cohort=require('./pipeline/calibration-cohort');
+          const root=process.env.CALIBRATION_DIR;
+          const read=p=>JSON.parse(fs.readFileSync(path.join(root,p),'utf8'));
+          const summary=read('summary.json');
+          const operator=read('operator/cohort.json');
+          const packet=read('reviewer/review-packet.json');
+          const blocked=read('operator/label-readiness.json');
+          cohort.validateCohort(operator);
+          if(!cohort.verify(packet)||packet.cohortFingerprint!==operator.fingerprint||
+              packet.phase!=='TUNING'||packet.isSynthetic!==false||
+              packet.cards.some(card=>'predictions' in card||'scores' in card||
+                'v3' in card||'v4' in card)||
+              blocked.status!=='BLOCKED'||summary.productionAuthorized!==false||
+              operator.categories.length!==1||operator.categories[0]!=='Equipment'||
+              operator.counts.benchmark!==100||operator.counts.tuning!==70||
+              operator.counts.holdout!==30||operator.counts.diagnostic!==0||
+              packet.cards.length!==70||summary.reviewScope!=='ONE_CATEGORY_INDEPENDENT_REVIEW'||
+              summary.productionStateWrites!==0||summary.externalSendCalls!==0||
+              summary.passed!==true||summary.holdoutReleased!==false||
+              operator.sourceRevision!==process.env.GITHUB_SHA){
+            throw Error('LIVE_BLIND_CALIBRATION_BOUNDARY_FAILED');
+          }
+          console.log(JSON.stringify({
+            status:'REAL_SOURCE_BLIND_REVIEW_AWAITING_INDEPENDENT_LABELS',
+            cohortId:summary.cohortId,
+            graphCandidates:summary.counts.graphCandidates,
+            benchmarkCases:summary.counts.benchmark,
+            firstReviewerCases:packet.cards.length,
+            category:operator.categories[0],
+            hiddenHoldoutCases:operator.counts.holdout,
+            labelState:blocked.status,
+            productionAuthorized:false,
+            externalSendCalls:0
+          }));
+          NODE
+      - name: Recheck exact current main after research before private commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          current="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          test -n "$current" && test "$current" = "$GITHUB_SHA"
+      - name: Stage only private calibration packet and pointer
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$PRIVATE_DIR/research/blind-calibration"
+          printf '{"runId":"%s","sourceSha":"%s","reviewStatus":"AWAITING_REAL_INDEPENDENT_LABELS","productionAuthorized":false,"customerContacted":false}\n' \
+            "$GITHUB_RUN_ID" "$GITHUB_SHA" > "$PRIVATE_DIR/research/blind-calibration/LATEST.json"
+          git -C "$PRIVATE_DIR" config user.name "PermitPlate Blind Calibration"
+          git -C "$PRIVATE_DIR" config user.email "actions@users.noreply.github.com"
+          git -C "$PRIVATE_DIR" add -- "research/blind-calibration/$GITHUB_RUN_ID" \
+            research/blind-calibration/LATEST.json
+          git -C "$PRIVATE_DIR" commit -m "research: current blind calibration packet ($GITHUB_RUN_ID)"
+      - name: Publish only protected private calibration evidence
+        env:
+          GH_TOKEN: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${GH_TOKEN:-}"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          current="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          test -n "$current" && test "$current" = "$GITHUB_SHA"
+          gh auth setup-git
+          remote_head="$(git -C "$PRIVATE_DIR" ls-remote origin refs/heads/main | cut -f1)"
+          parent="$(git -C "$PRIVATE_DIR" rev-parse HEAD^)"
+          test "$remote_head" = "$parent" || {
+            echo "Private state moved; refuse stale calibration writer" >&2
+            exit 1
+          }
+          git -C "$PRIVATE_DIR" push origin HEAD:main

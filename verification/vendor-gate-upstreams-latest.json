@@ -1,12 +1,12 @@
 {
-  "checkedAt": "2026-10-02T14:54:44.773Z",
+  "checkedAt": "2026-10-30T21:55:17.241Z",
   "mode": "zero-spend-direct-upstream-readiness",
   "appdeployDependency": false,
   "checks": {
     "paRegistry": {
       "ok": true,
       "status": 200,
-      "latencyMs": 595,
+      "latencyMs": 629,
       "rowCount": 5,
       "sample": [
         {
@@ -43,7 +43,7 @@
     "census": {
       "ok": true,
       "status": 200,
-      "latencyMs": 200,
+      "latencyMs": 482,
       "input": "600 North Second Street, Suite 401, Harrisburg, PA 17101",
       "matchedAddress": "600 N 2ND ST, HARRISBURG, PA, 17101",
       "coordinates": {
@@ -57,15 +57,15 @@
       "ok": true,
       "sdn": {
         "status": 200,
-        "latencyMs": 1746,
-        "bytes": 5728772,
-        "sha256": "4297a36558e1a73053460d37d7fa8eba83b2668dd2a72be1dc7c263a2d389b59"
+        "latencyMs": 1042,
+        "bytes": 5750799,
+        "sha256": "5f240bed79d504e7a54788b4cd1c7f84e6afa56cd4778653b70b0771b6a8509d"
       },
       "alt": {
         "status": 200,
-        "latencyMs": 1336,
-        "bytes": 1065703,
-        "sha256": "8f395a60e00b77891a0b1acc12401b829beb51304efbdc5e4f440cae16654ef2"
+        "latencyMs": 966,
+        "bytes": 1064299,
+        "sha256": "b0e2811fbb49ba6e9941a497e6b05fa2c9037b45ae7923196a01e2363a402259"
       },
       "source": "U.S. Treasury OFAC Sanctions List Service"
     },
@@ -82,21 +82,21 @@
     "sec": {
       "ok": true,
       "tickerMapStatus": 200,
-      "tickerMapLatencyMs": 43,
+      "tickerMapLatencyMs": 49,
       "cik": "0000320193",
       "submissionsStatus": 200,
-      "submissionsLatencyMs": 42,
-      "recentFormCount": 1001,
+      "submissionsLatencyMs": 43,
+      "recentFormCount": 1000,
       "source": "U.S. Securities and Exchange Commission EDGAR",
       "error": null
     },
     "treasury": {
       "ok": true,
       "status": 200,
-      "latencyMs": 406,
+      "latencyMs": 549,
       "rowCount": 100,
-      "latestRecordDate": "2026-08-31",
-      "totalMarketableRate": "3.475",
+      "latestRecordDate": "2026-09-30",
+      "totalMarketableRate": "3.518",
       "source": "U.S. Treasury Fiscal Data — Average Interest Rates on U.S. Treasury Securities",
       "error": null
     }

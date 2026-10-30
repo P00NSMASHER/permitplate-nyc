@@ -260,6 +260,10 @@ function buildProjectSignal(primary, evidenceRecords, options) {
       accepted: evidence.map((item) => ({
         sourceRecordId: item.sourceRecordId,
         sourceSystem: item.sourceSystem,
+        // Preserve original authenticated source URL for downstream
+        // category provenance; stripping it makes genuine matched SLA
+        // licenses appear to be applicant-only context.
+        sourceUrl: item.sourceUrl,
         confidence: item.result.confidence,
         reasons: item.result.reasons
       })),

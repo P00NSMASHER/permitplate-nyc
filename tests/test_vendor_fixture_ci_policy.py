@@ -32,7 +32,7 @@ class VendorFixtureCiPolicyTests(unittest.TestCase):
     def test_setup_node_is_pinned_and_original_tests_are_kept(self):
         s = self.text
         self.assertIn("actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020", s)
-        self.assertIn("node-version: '22'", s)
+        self.assertIn("node-version: '22.23.4'", s)
         for command in (
             "node scripts/test-floot-vendor-gate-demo-wrapper.mjs",
             "node scripts/test-vendor-intake-gate-core.mjs",

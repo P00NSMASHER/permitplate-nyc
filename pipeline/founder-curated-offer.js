@@ -1,8 +1,9 @@
 'use strict';
 
 const crypto=require('crypto');
+const eventTime=require('./event-time');
 
-const OFFER_VERSION='PermitPlate-founder-curated-offer-v1.0.0';
+const OFFER_VERSION='PermitPlate-founder-curated-offer-v2.0.0';
 const LAUNCH_MODE='FOUNDER_CURATED_NO_SCORE_V1';
 const MAX_SIGNALS=10;
 const CATEGORY_VALUES=Object.freeze([
@@ -14,8 +15,10 @@ const TERRITORY_VALUES=Object.freeze([
   'ManhattanBrooklynQueens','BrooklynStatenIsland'
 ]);
 const CSV_HEADERS=Object.freeze([
-  'Signal Key','Business','Address','Borough','Stage','Why It Matters',
-  'Source Updated','PermitPlate Reviewed','Official Source URLs'
+  'Signal Key','Signal Section','Event Type','Event Observed by PermitPlate',
+  'Business','Address','Borough','Stage','What Changed','Why It Matters','Next Verification Step',
+  'Category Evidence Basis','Category Fit Review','Category Official Source',
+  'Source Record Date','PermitPlate Reviewed','Official Source URLs'
 ]);
 
 function stableStringify(value){
@@ -107,10 +110,18 @@ function normalizeSignal(input,index,failures){
   const businessName=text(signal.businessName);
   const address=text(signal.address);
   const borough=text(signal.borough);
-  const stage=text(signal.stage);
+  const stage=eventTime.customerStage(text(signal.stage));
   const whyItMatters=text(signal.whyItMatters);
   const sourceUpdatedAt=validInstant(signal.sourceUpdatedAt);
   const reviewedAt=validInstant(signal.reviewedAt);
+  const section=text(signal.section);
+  const firstObservedAt=signal.firstObservedAt==null?null:validInstant(signal.firstObservedAt);
+  const eventKind=text(signal.eventKind);
+  const eventId=text(signal.eventId);
+  const whatChanged=text(signal.whatChanged);
+  const categoryEvidenceBasis=text(signal.categoryEvidenceBasis);
+  const categoryFitRationale=text(signal.categoryFitRationale);
+  const categoryOfficialUrl=text(signal.categoryOfficialUrl);
   const urls=Array.isArray(signal.sourceUrls)?signal.sourceUrls.map(text).filter(Boolean):[];
 
   if(!signalKey) failures.push(prefix+'_KEY_MISSING');
@@ -122,14 +133,55 @@ function normalizeSignal(input,index,failures){
   if(whyItMatters.length>220) failures.push(prefix+'_WHY_TOO_LONG');
   if(!sourceUpdatedAt) failures.push(prefix+'_SOURCE_UPDATED_INVALID');
   if(!reviewedAt) failures.push(prefix+'_REVIEWED_AT_INVALID');
+  if(section&&!['NORMAL','STARTER'].includes(section)) failures.push(prefix+'_SECTION_INVALID');
+  if(section&&!firstObservedAt) failures.push(prefix+'_FIRST_OBSERVATION_REQUIRED');
+  if(signal.firstObservedAt!=null&&!firstObservedAt) failures.push(prefix+'_FIRST_OBSERVATION_INVALID');
+  if(firstObservedAt&&reviewedAt&&firstObservedAt>reviewedAt) failures.push(prefix+'_OBSERVATION_AFTER_REVIEW');
+  if(eventKind&&!['NEW_OBSERVATION','MATERIAL_CHANGE'].includes(eventKind)) {
+    failures.push(prefix+'_EVENT_KIND_INVALID');
+  }
+  if(eventKind==='MATERIAL_CHANGE'&&(!/^MAT:[a-f0-9]{24}$/.test(eventId)||
+    !whatChanged)) failures.push(prefix+'_MATERIAL_EVENT_REVIEW_INCOMPLETE');
+  if(whatChanged.length>220) failures.push(prefix+'_WHAT_CHANGED_TOO_LONG');
+  const hasCategoryReview=Boolean(categoryEvidenceBasis||categoryFitRationale||categoryOfficialUrl);
+  if(hasCategoryReview){
+    if(!['SOURCE_KEYWORD_CONTEXT','RELATED_OFFICIAL_ACTIVITY','APPLICANT_CONTEXT_ONLY']
+      .includes(categoryEvidenceBasis)) failures.push(prefix+'_CATEGORY_BASIS_INVALID');
+    if(categoryFitRationale.length<30||categoryFitRationale.length>220){
+      failures.push(prefix+'_CATEGORY_REVIEW_INVALID');
+    }
+    if(!officialSourceUrl(categoryOfficialUrl)){
+      failures.push(prefix+'_CATEGORY_SOURCE_INVALID');
+    }
+  }
   if(!urls.length) failures.push(prefix+'_SOURCE_URL_MISSING');
   if(urls.some((url)=>!officialSourceUrl(url))) failures.push(prefix+'_SOURCE_URL_NOT_OFFICIAL');
 
   return {
     signalKey,businessName,address,borough,stage,whyItMatters,
+    section:firstObservedAt?section:null,firstObservedAt,eventKind,eventId,whatChanged,
+    categoryEvidenceBasis,categoryFitRationale,categoryOfficialUrl,
     sourceUpdatedAt,reviewedAt,sourceUrls:Array.from(new Set(urls)).sort()
   };
 }
+
+const CATEGORY_LABELS=Object.freeze({
+  pos:'POS or payments',insurance:'insurance',equipment:'equipment',hoodfire:'hood/fire',
+  waste:'waste and hauling',pest:'pest control',linen:'linen',distribution:'food distribution'
+});
+// A useful follow-up is generated from already founder-reviewed facts. It does
+// not declare a buyer need or introduce another customer approval requirement.
+function nextVerificationStep(signal,category){
+  const categoryLabel=CATEGORY_LABELS[category]||'vendor services';
+  if(signal.categoryEvidenceBasis==='SOURCE_KEYWORD_CONTEXT')
+    return 'Open the official filing and confirm the exact scope, current status, operator identity and who can approve '+categoryLabel+' purchases.';
+  if(signal.categoryEvidenceBasis==='RELATED_OFFICIAL_ACTIVITY')
+    return 'Confirm the related activity belongs to this operator and premises before investigating '+categoryLabel+' requirements.';
+  if(signal.categoryEvidenceBasis==='APPLICANT_CONTEXT_ONLY')
+    return 'Verify the operator and actual business stage first; the applicant record alone does not establish '+categoryLabel+' needs.';
+  return 'Check the current official record, operator identity and stage before deciding whether '+categoryLabel+' research is warranted.';
+}
+
 function buildCuratedBrief(input){
   const data=input||{};
   const failures=[];
@@ -141,6 +193,8 @@ function buildCuratedBrief(input){
   const recipientEmail=validEmail(data.recipientEmail);
   const preparedAt=validInstant(data.preparedAt);
   const reviewer=text(data.reviewer);
+  const trialEnvironment=data.trialEnvironment==null?null:text(data.trialEnvironment);
+  if(trialEnvironment&&!['TEST','LIVE'].includes(trialEnvironment))failures.push('TRIAL_ENVIRONMENT_INVALID');
   if(!subscriptionId) failures.push('SUBSCRIPTION_ID_MISSING');
   if(!recipientEmail) failures.push('RECIPIENT_EMAIL_INVALID');
   if(!preparedAt) failures.push('PREPARED_AT_INVALID');
@@ -163,12 +217,20 @@ function buildCuratedBrief(input){
 
   const rows=signals.map((signal)=>({
     'Signal Key':signal.signalKey,
+    'Signal Section':signal.section||'',
+    'Event Type':signal.eventKind||'',
+    'Event Observed by PermitPlate':signal.firstObservedAt||'',
     'Business':signal.businessName,
     'Address':signal.address,
     'Borough':signal.borough,
     'Stage':signal.stage,
+    'What Changed':signal.whatChanged||'',
     'Why It Matters':signal.whyItMatters,
-    'Source Updated':signal.sourceUpdatedAt,
+    'Next Verification Step':nextVerificationStep(signal,preferences.category),
+    'Category Evidence Basis':signal.categoryEvidenceBasis||'',
+    'Category Fit Review':signal.categoryFitRationale||'',
+    'Category Official Source':signal.categoryOfficialUrl||'',
+    'Source Record Date':signal.sourceUpdatedAt,
     'PermitPlate Reviewed':signal.reviewedAt,
     'Official Source URLs':signal.sourceUrls.join(' | ')
   }));
@@ -179,26 +241,46 @@ function buildCuratedBrief(input){
     `<h3 style="margin:0 0 6px">${index+1}. ${htmlEscape(signal.businessName)}</h3>`,
     `<p style="margin:0 0 6px">${htmlEscape(signal.address)} · ${htmlEscape(signal.borough)}</p>`,
     `<p style="margin:0 0 6px"><strong>${htmlEscape(signal.stage)}</strong> — ${htmlEscape(signal.whyItMatters)}</p>`,
+    signal.eventKind==='MATERIAL_CHANGE'?
+      `<p style="margin:0 0 6px"><strong>${signal.section==='STARTER'?'Starter Snapshot · ':''}Material change</strong> · observed by PermitPlate: ${htmlEscape(signal.firstObservedAt)}</p>`:
+      signal.section==='STARTER'?
+      `<p style="margin:0 0 6px"><strong>Starter Snapshot</strong> · first observed by PermitPlate: ${htmlEscape(signal.firstObservedAt)}</p>`:
+      signal.section==='NORMAL'?
+      `<p style="margin:0 0 6px"><strong>New observation</strong> · first observed by PermitPlate: ${htmlEscape(signal.firstObservedAt)}</p>`:'',
+    signal.whatChanged?
+      `<p style="margin:0 0 6px"><strong>What changed:</strong> ${htmlEscape(signal.whatChanged)}</p>`:'',
+    `<p style="margin:0 0 8px;background:#f3f6ee;padding:10px 12px;border-left:3px solid #0e4a47"><strong>Next verification:</strong> ${htmlEscape(nextVerificationStep(signal,preferences.category))}</p>`,
+    signal.categoryEvidenceBasis?
+      `<p style="margin:0 0 6px;font-size:13px"><strong>Category context:</strong> ${htmlEscape(signal.categoryEvidenceBasis==='SOURCE_KEYWORD_CONTEXT'?'Official source text contains category-related terms':signal.categoryEvidenceBasis==='RELATED_OFFICIAL_ACTIVITY'?'Related official filing context; no exact category keyword match':'General restaurant applicant context; no exact category keyword match')}. <strong>Founder assessment:</strong> ${htmlEscape(signal.categoryFitRationale)}${/[.!?…]$/.test(signal.categoryFitRationale)?'':'.'} <a href="${htmlEscape(signal.categoryOfficialUrl)}">Reviewed official source</a></p>`:'',
+    `<p style="margin:0 0 6px;font-size:13px">Source record date: ${htmlEscape(signal.sourceUpdatedAt)} · Reviewed: ${htmlEscape(signal.reviewedAt)}</p>`,
     `<p style="margin:0;font-size:13px">${signal.sourceUrls.map((url,i)=>`<a href="${htmlEscape(url)}">official source ${i+1}</a>`).join(' · ')}</p>`,
     '</article>'
   ].join('')).join('');
   const empty=signals.length===0;
-  const subject=empty?
+  const subject=(trialEnvironment==='TEST'?'[TEST SIMULATION] ':'')+(empty?
     `PermitPlate NYC — no matching updates — ${date}`:
-    `PermitPlate NYC — ${signals.length} reviewed ${signals.length===1?'signal':'signals'} — ${date}`;
+    `PermitPlate NYC — ${signals.length} reviewed ${signals.length===1?'signal':'signals'} — ${date}`);
   const html=[
     '<div style="font-family:Arial,sans-serif;max-width:720px;line-height:1.5;color:#211d1b">',
-    '<h2 style="margin-bottom:6px">PermitPlate NYC</h2>',
+    trialEnvironment==='TEST'?'<p style="padding:12px;background:#fff0cd;border:2px solid #775600"><strong>TEST SIMULATION — not a real customer report.</strong> Customer, reviewer judgments, monitoring chronology and provider events are simulated. No message was sent and no charge was created.</p>':'',
+    '<h2 style="margin-bottom:6px">PermitPlate NYC · Decision brief 2.0</h2>',
+    `<p style="margin:0 0 8px;color:#555;font-size:13px">Category: ${htmlEscape(preferences.category)} · Territory: ${htmlEscape(preferences.territory)} · Prepared: ${date}</p>`,
+    '<div style="padding:13px 15px;border-left:4px solid #0e4a47;background:#eff4f0;margin-bottom:16px"><strong>Decision:</strong> Research the reviewed records below. Verify source status, operator identity and vendor fit before any outreach. This is not a list of confirmed buyers.</div>',
     empty?'<p>No matching changes passed review this week.</p>':
       `<p>${signals.length} founder-reviewed ${signals.length===1?'signal':'signals'} for your selected category and territory.</p>`,
     signalHtml,
-    '<p style="margin-top:18px;font-size:13px">Research starting points, not purchase intent or guaranteed leads. Verify the official record before outreach.</p>',
+    !empty?'<section style="margin-top:24px;padding-top:12px;border-top:2px solid #0e4a47"><h3 style="margin:0 0 10px">Evidence appendix</h3><p style="font-size:13px;margin:0 0 12px">Each entry below preserves the official source, its record date and the review time. Source data may change after this report.</p>'+
+      signals.map((signal,index)=>'<p style="font-size:13px"><strong>'+ (index+1)+'. '+htmlEscape(signal.businessName)+'</strong> · Source record: '+htmlEscape(signal.sourceUpdatedAt)+' · Reviewed: '+htmlEscape(signal.reviewedAt)+'<br>'+
+        signal.sourceUrls.map((url,i)=>'<a href="'+htmlEscape(url)+'">Official source '+(i+1)+'</a>').join(' · ')+'</p>').join('')+'</section>':'',
+    '<p style="margin-top:18px;font-size:13px">First-observed dates refer to PermitPlate monitoring, not necessarily the original application or opening. Source record dates can reflect administrative publication or extraction. Research starting points, not purchase intent or guaranteed leads. Verify the official record before outreach.</p>',
+    trialEnvironment?'<p style="font-size:13px"><strong>Your free trial:</strong> One category and NYC territory, a starter brief and one weekly update, up to five signals per report. Your 14 days start with the first useful report sent successfully; an empty report does not start the clock. No card, automatic charge or automatic paid upgrade. Continue only by choosing a separate <a href="https://permitplate.retallyrecovery.com/start">$79/month membership</a>.</p>':'',
     '</div>'
   ].join('');
   const core={
     offerVersion:OFFER_VERSION,launchMode:LAUNCH_MODE,subscriptionId,
     recipientEmail,preparedAt,reviewer,preferences,
-    signals,subject,csv,html
+    signals,subject,csv,html,
+    ...(trialEnvironment?{trialEnvironment}: {})
   };
   const artifactFingerprint=sha256(stableStringify(core));
   return {
@@ -213,5 +295,5 @@ module.exports={
   OFFER_VERSION,LAUNCH_MODE,MAX_SIGNALS,CATEGORY_VALUES,TERRITORY_VALUES,CSV_HEADERS,
   stableStringify,sha256,text,validEmail,validInstant,officialSourceUrl,
   forbiddenKey,forbiddenClaim,inspectForbidden,validatePreferences,
-  escapeCsv,toCsv,htmlEscape,normalizeSignal,buildCuratedBrief
+  escapeCsv,toCsv,htmlEscape,normalizeSignal,nextVerificationStep,buildCuratedBrief
 };

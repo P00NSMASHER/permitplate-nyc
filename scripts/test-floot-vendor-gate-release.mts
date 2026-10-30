@@ -1,10 +1,22 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
-import {
-  handle,
-  paymentDocument,
-  runVendorGate,
-} from '../docs/pa-entity-floot-release/vendor-intake-gate_GET.ts'
+import * as vendorGateModule from '../docs/pa-entity-floot-release/vendor-intake-gate_GET.ts'
+
+// Node 22 can load a .ts file through CommonJS interop when no package
+// "type" is declared. Resolve the actual export object without weakening
+// payment, settlement, or review-decision assertions below.
+const endpoint = typeof vendorGateModule.handle === 'function'
+  ? vendorGateModule
+  : vendorGateModule.default
+if (
+  !endpoint ||
+  typeof endpoint.handle !== 'function' ||
+  typeof endpoint.paymentDocument !== 'function' ||
+  typeof endpoint.runVendorGate !== 'function'
+) {
+  throw new Error('Vendor gate endpoint exports unavailable')
+}
+const { handle, paymentDocument, runVendorGate } = endpoint
 
 const endpointPath =
   'docs/pa-entity-floot-release/vendor-intake-gate_GET.ts'

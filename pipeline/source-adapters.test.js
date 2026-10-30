@@ -53,6 +53,7 @@ const a = require('./source-adapters');
     job_description:'Interior renovation for eating and drinking establishment',
     initial_cost:'$173,900.00',
     owner_s_business_name:'EXAMPLE OWNER LLC',
+    building_type:'Commercial',
     filing_date:'2026-09-17T00:00:00.000'
   }, {observedAt:'2026-09-21T13:30:00Z'});
   assert.equal(row.sourceRecordId, 'DOB_NOW:M00692498-P1');
@@ -60,6 +61,7 @@ const a = require('./source-adapters');
   assert.equal(row.entityKeys.bin, '1000001');
   assert.equal(row.property.address, '153 BOWERY');
   assert.equal(row.facts.initial_cost_number, 173900);
+  assert.equal(row.facts.building_type,'Commercial');
 }
 
 {
@@ -70,6 +72,7 @@ const a = require('./source-adapters');
     dba:'EXAMPLE',
     actual_address_of_premises:'153 BOWERY',
     additional_address_information:'GROUND FLOOR',
+    premises_county:'New York',
     city:'NEW YORK',
     state_name:'NY',
     zip_code:'10002',
@@ -79,6 +82,8 @@ const a = require('./source-adapters');
   assert.equal(row.sourceEntityId, 'SLA_APPLICATION:NA-0000-26-123456');
   assert.equal(row.property.address, '153 BOWERY');
   assert.equal(row.property.unit, 'GROUND FLOOR');
+  assert.equal(row.property.county,'New York');
+  assert.equal(row.facts.premises_county,'New York');
   assert.equal(row.parties.dba, 'EXAMPLE');
   assert.equal(row.eventType, 'SLA_PENDING_LICENSE');
 }
@@ -213,6 +218,73 @@ const a = require('./source-adapters');
   });
   assert.equal(a1.observationId, a2.observationId);
 }
+
+
+{
+  const receipt = a.buildSourceObservation('DOHMH', {
+    observedAt:'2026-10-30T08:50:00Z',
+    queryScope:{where:"record_date >= '2026-10-29'"},
+    sourceFresh:true,
+    transportOk:true,
+    intendedFullScope:true,
+    publisherCount:1,
+    cursorClosed:true,
+    schemaFields:['camis','record_date'],
+    rawPages:['[{"camis":"1"}]'],
+    rows:[{camis:'1', record_date:'2026-10-30'}]
+  });
+  assert.deepEqual(receipt.sourceProvenance, {
+    sourceId:'nyc-open-data:43nn-pn8j',
+    datasetName:'DOHMH New York City Restaurant Inspection Results',
+    agency:'NYC DOHMH',
+    landingUrl:'https://data.cityofnewyork.us/d/43nn-pn8j',
+    apiUrl:'https://data.cityofnewyork.us/resource/43nn-pn8j.json',
+    termsUrl:'https://data.cityofnewyork.us/stories/s/Terms-of-Use/k9k7-3cje',
+    useConditions:'NYC_OPEN_DATA_TERMS'
+  });
+}
+
+{
+  const receipt = a.buildSourceObservation('SLA_PENDING', {
+    observedAt:'2026-10-30T08:50:00Z',
+    queryScope:{where:"received_date >= '2026-10-29'"},
+    sourceFresh:true,
+    transportOk:true,
+    intendedFullScope:true,
+    publisherCount:0,
+    cursorClosed:true,
+    schemaFields:['application_id','received_date'],
+    rawPages:['[]'],
+    rows:[]
+  });
+  assert.equal(
+    receipt.sourceProvenance.termsUrl,
+    'https://data.ny.gov/dataset/OPEN-NY-Terms-Of-Use/77gx-ii52'
+  );
+  assert.equal(receipt.sourceProvenance.useConditions, 'OPEN_NY_TERMS_LAWFUL_USE');
+}
+
+
+
+assert.throws(
+  () => a.buildSourceProvenance(Object.assign({}, a.SOURCE_CONFIGS.DOHMH, {
+    apiUrl:'https://example.com/resource/43nn-pn8j.json'
+  })),
+  /must use official host data\.cityofnewyork\.us/
+);
+assert.throws(
+  () => a.buildSourceProvenance(Object.assign({}, a.SOURCE_CONFIGS.DOB_NOW, {
+    termsUrl:null
+  })),
+  /missing termsUrl/
+);
+assert.throws(
+  () => a.buildSourceProvenance(Object.assign({}, a.SOURCE_CONFIGS.SLA_PENDING, {
+    useConditions:'NYC_OPEN_DATA_TERMS'
+  })),
+  /use conditions mismatch/
+);
+
 
 assert.throws(() => a.normalizeDohmhRow({dba:'missing-id'}), /missing CAMIS/);
 assert.throws(() => a.normalizeDobNowRow({filing_status:'Approved'}), /missing job_filing_number/);
