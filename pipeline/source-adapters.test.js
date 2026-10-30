@@ -265,6 +265,27 @@ const a = require('./source-adapters');
 }
 
 
+
+assert.throws(
+  () => a.buildSourceProvenance(Object.assign({}, a.SOURCE_CONFIGS.DOHMH, {
+    apiUrl:'https://example.com/resource/43nn-pn8j.json'
+  })),
+  /must use official host data\.cityofnewyork\.us/
+);
+assert.throws(
+  () => a.buildSourceProvenance(Object.assign({}, a.SOURCE_CONFIGS.DOB_NOW, {
+    termsUrl:null
+  })),
+  /missing termsUrl/
+);
+assert.throws(
+  () => a.buildSourceProvenance(Object.assign({}, a.SOURCE_CONFIGS.SLA_PENDING, {
+    useConditions:'NYC_OPEN_DATA_TERMS'
+  })),
+  /use conditions mismatch/
+);
+
+
 assert.throws(() => a.normalizeDohmhRow({dba:'missing-id'}), /missing CAMIS/);
 assert.throws(() => a.normalizeDobNowRow({filing_status:'Approved'}), /missing job_filing_number/);
 assert.throws(() => a.normalizeSlaPendingRow({status:'Pending'}), /missing application_id/);
