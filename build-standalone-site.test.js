@@ -75,6 +75,13 @@ try{
   checkReference(manifest.icons[0].src,'index.html');
   assert.equal(JSON.parse(read('release-manifest.json')).deployment.provider,'Cloudflare Pages');
   assert(read('sitemap.xml').includes(site.STANDALONE_SITE_BASE+'permit-pack</loc>'));
+  assert(read('sitemap.xml').includes(site.STANDALONE_SITE_BASE+'case-study</loc>'));
+  assert(read('index.html').includes('href="/case-study"'));
+  assert(read('case-study.html').includes('href="/samples/permitplate-2-sora.txt"'));
+  assert(read('case-study.html').includes('href="/trial"'));
+  assert(read('case-study.html').includes('src="/case-study.js"'));
+  assert(!read('case-study.html').includes('href="/permitplate-nyc/'));
+  assert(read('case-study.html').includes('Evidence appendix'));
   assert(!read('sitemap.xml').includes('.html</loc>'));
   assert(read('robots.txt').includes(site.STANDALONE_SITE_BASE+'sitemap.xml'));
   assert(read('welcome.html').includes('Viewing this page alone is not payment confirmation.'));

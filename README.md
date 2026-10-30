@@ -7,6 +7,19 @@ The established GitHub Pages site remains available separately at
 <https://p00nsmasher.github.io/permitplate-nyc/>. Each host has its own
 `build-info.json`; verify the actual host's commit when checking a release.
 
+## PermitPlate 2.0 customer-facing brief
+
+The production founder-curated report builder now publishes an action-first decision summary,
+per-signal verification guidance, an evidence appendix and matching CSV guidance without
+changing founder approval or source admission controls. Its production offer mode remains
+`FOUNDER_CURATED_NO_SCORE_V1`; no automated buying-intent rankings are shipped.
+
+The public [2.0 NYC case study](https://permitplate.retallyrecovery.com/case-study)
+uses actual historical DOB filing IDs for a renovation at 532 Neptune Avenue, and
+identifies source/tenant-identity limitations. A downloadable text report and a
+browser print/save-PDF option show the output. This is a demonstration, not
+a qualified customer lead or a live customer delivery.
+
 ## Customer offer
 
 - $79/month through Stripe-hosted Checkout

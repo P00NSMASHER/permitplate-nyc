@@ -118,4 +118,22 @@ function validInput(){
   assert(out.transportPreflight.failures.includes('OWNER_AUTHORIZATION_MISSING'));
 }
 
+
+{
+  const input=validInput();
+  input.signals[0].categoryEvidenceBasis='SOURCE_KEYWORD_CONTEXT';
+  input.signals[0].categoryFitRationale='Official source text supports a research question, not a buyer commitment.';
+  input.signals[0].categoryOfficialUrl=input.signals[0].sourceUrls[0];
+  const out=curated.buildCuratedBrief(input);
+  assert.equal(out.status,'READY');
+  assert(out.csv.includes('Next Verification Step'));
+  assert(out.csv.includes('exact scope, current status, operator identity'));
+  assert(out.html.includes('Decision brief 2.0'));
+  assert(out.html.includes('Next verification:'));
+  assert(out.html.includes('Evidence appendix'));
+  assert(out.html.includes('not a list of confirmed buyers'));
+  assert.equal(out.signalCount,1);
+  assert.equal(out.signals[0].whyItMatters,input.signals[0].whyItMatters);
+  assert.equal(out.launchMode,'FOUNDER_CURATED_NO_SCORE_V1');
+}
 console.log('PermitPlate founder-curated offer tests passed.');
