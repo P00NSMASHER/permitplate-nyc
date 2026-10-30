@@ -19,5 +19,13 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+      - name: Select October 2026 patched Node.js runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.4'
+      - name: Reject unpatched Node.js runtime
+        run: |
+          node --version
+          node -e 'const [major,minor,patch]=process.versions.node.split(".").map(Number);if(major!==22 || minor<23 || (minor===23 && patch<4)) process.exit(1)'
       - name: Verify atomic Floot patches exactly match tested fixtures
         run: node scripts/verify-pa-entity-floot-patches.mjs

@@ -1,0 +1,377 @@
+'use strict';
+
+// Real paid product: source-bound founder-curated customer brief preparation.
+// No model scores, customer email delivery, or payment mutations occur here.
+const crypto = require('crypto');
+const stripe = require('./stripe-subscriber');
+const profiles = require('./subscriber-profile');
+const curated = require('./founder-curated-offer');
+const categoryEvidence=require('./category-evidence');
+const research = require('./curated-research-ledger');
+const delivery = require('./delivery-plan');
+const transport = require('./transport-authorization');
+
+const VERSION = 'PermitPlate-curated-customer-brief-v1.0.0';
+const EXPECTED_PRICE_ID = 'price_1UFjcWDPW8riWrxQhnrPX6nc';
+const MAX_SOURCE_AGE_MS = 24 * 60 * 60 * 1000;
+const STARTER_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
+function digest(data) {
+  return crypto.createHash('sha256').update(research.stable(data)).digest('hex');
+}
+function candidateIdentity(candidate) {
+  const c = candidate || {};
+  return digest({
+    entityId:c.entityId || null,
+    canonicalName:c.canonicalName || null,
+    address:c.address || null,
+    borough:c.borough || null,
+    lifecycleStage:c.lifecycleStage || null,
+    sourceLatestEffectiveAt:c.sourceLatestEffectiveAt || null,
+    deliverySuppressed:c.deliverySuppressed === true,
+    crossCamisOperationalConflicts:c.crossCamisOperationalConflicts || [],
+    materialityFingerprint:c.materiality&&c.materiality.fingerprint||null
+  });
+}
+function primaryUrl(candidate) {
+  const camis = String(candidate && candidate.camis || '');
+  if (!/^[0-9]+$/.test(camis)) throw new Error('CAMIS_REQUIRED');
+  return 'https://data.cityofnewyork.us/resource/43nn-pn8j.json?camis=' +
+    encodeURIComponent(camis);
+}
+function section(firstObservedAt, baselineAt, starterEnabled, initializedAt) {
+  const event = Date.parse(firstObservedAt);
+  const baseline = Date.parse(baselineAt);
+  const initialization = Date.parse(initializedAt);
+  if (!Number.isFinite(event) || !Number.isFinite(baseline) ||
+      !Number.isFinite(initialization)) return null;
+  // Monitoring initialization is not evidence that an existing restaurant is
+  // a newly filed application. Keep the founding baseline out of all reports.
+  if (event <= initialization) return null;
+  if (event >= baseline) return 'NORMAL';
+  if (starterEnabled && event >= baseline - STARTER_WINDOW_MS) return 'STARTER';
+  return null;
+}
+function eventForEntry(entry,baselineAt,starterEnabled,initializedAt) {
+  if(!entry||entry.presenceState!=='PRESENT') return null;
+  const events=[];
+  const initialized=Date.parse(initializedAt);
+  const first=Date.parse(entry.firstObservedAt);
+  if(Number.isFinite(initialized)&&Number.isFinite(first)&&first>initialized) {
+    events.push({
+      kind:'NEW_OBSERVATION',
+      eventId:'OBS:'+digest({entityId:entry.entityId,observedAt:entry.firstObservedAt}).slice(0,24),
+      observedAt:entry.firstObservedAt,changeReasons:[]
+    });
+  }
+  const material=entry.lastMaterialEvent;
+  if(research.validMaterialEvent(material) &&
+      entry.materiality && entry.materiality.fingerprint===material.toFingerprint &&
+      Number.isFinite(initialized) && Date.parse(material.observedAt)>initialized) {
+    events.push({
+      kind:'MATERIAL_CHANGE',eventId:material.eventId,
+      observedAt:material.observedAt,changeReasons:material.changeReasons.slice()
+    });
+  }
+  events.sort((a,b)=>b.observedAt.localeCompare(a.observedAt)||
+    a.eventId.localeCompare(b.eventId));
+  const latest=events[0];
+  if(!latest) return null;
+  const group=section(latest.observedAt,baselineAt,starterEnabled,initializedAt);
+  return group ? {...latest,section:group} : null;
+}
+function signalKey(subscriptionId, entry, event) {
+  if(event && event.kind==='MATERIAL_CHANGE'){
+    return 'curated:mat:'+digest({subscriptionId,eventId:event.eventId}).slice(0,32);
+  }
+  // Preserve all original first-observation keys for delivery dedupe.
+  return 'curated:' + digest({
+    subscriptionId,entityId:entry.entityId,firstObservedAt:entry.firstObservedAt
+  }).slice(0,32);
+}
+function reject(failures, extra = {}) {
+  return {
+    runnerVersion:VERSION,
+    status:'REVIEW',
+    failures:[...new Set(failures)].sort(),
+    transportAllowed:false,
+    ...extra
+  };
+}
+function prepare(input) {
+  const data = input || {};
+  const preparedAt = research.instant(data.preparedAt);
+  if (!preparedAt) return reject(['PREPARED_AT_INVALID']);
+
+  const activated = stripe.profileFromCheckout({
+    session:data.session,
+    subscription:data.subscription,
+    expectedPriceId:EXPECTED_PRICE_ID
+  });
+  if (activated.status !== 'ACTIVE') {
+    return reject(['CUSTOMER_NOT_ACTIVE',...(activated.failures || [])]);
+  }
+  const prefs={
+    category:stripe.customFieldValue(data.session,'category'),
+    territory:stripe.customFieldValue(data.session,'territory'),
+    starter:stripe.customFieldValue(data.session,'starter')
+  };
+  return prepareForCustomer(data,activated,prefs,curated.MAX_SIGNALS);
+}
+
+// The free lane validates its own private admission receipt. It never invents
+// an active/paid Stripe subscription or grants transport permission.
+function prepareTrial(input) {
+  const data=input||{};
+  const trials=require('./free-trial');
+  let access;
+  try{access=trials.access(data.trialRegistry,data.trialId,data.preparedAt);}
+  catch(error){return reject([error.message]);}
+  // Test source histories and persona judgments are useful QA, never live
+  // documentary review. Reject their explicit provenance before packaging.
+  const simulationMarked=value=>Boolean(value&&(value.simulationOnly===true||
+    value.reviewEnvironment==='TEST'||value.environment==='TEST'));
+  const simulationInput=simulationMarked(data)||simulationMarked(data.graph)||
+    simulationMarked(data.sourceProvenance)||
+    (Array.isArray(data.reviews)?data.reviews:[]).some(review=>simulationMarked(review)||simulationMarked(review?.categoryReview))||
+    /(?:SYNTHETIC|SIMULATED|TEST[_ -](?:ONLY|FIXTURE|PERSONA))/i.test(String(data.reviewer||''));
+  if(data.trialRegistry.environment==='LIVE'&&simulationInput){
+    return reject(['TRIAL_SIMULATED_REVIEW_NOT_LIVE']);
+  }
+  const result=prepareForCustomer({
+    ...data,deliveredSignalKeys:access.deliveredSignalKeys
+  },access,access.preferences,trials.MAX_SIGNALS,{trialEnvironment:data.trialRegistry.environment});
+  const prepared={...result,trialId:data.trialId,
+    trialRegistryFingerprint:data.trialRegistry.registryFingerprint,
+    trialEnvironment:data.trialRegistry.environment,
+    reviewEnvironment:data.trialRegistry.environment,
+    simulationOnly:data.trialRegistry.environment==='TEST'||simulationInput,
+    paymentRequired:false,automaticBilling:false};
+  prepared.trialPreparationFingerprint=trials.preparationFingerprint(prepared);
+  return prepared;
+}
+
+function prepareForCustomer(data,activated,prefs,maxSignals,briefContext={}) {
+  const preparedAt=research.instant(data.preparedAt);
+  if(!preparedAt)return reject(['PREPARED_AT_INVALID']);
+  const customer = activated.profile;
+  const graph = data.graph || {};
+  const graphCheck = research.checkGraph(graph);
+  const ledgerCheck = research.validate(data.ledger);
+  const failures = [...graphCheck.failures,...ledgerCheck.failures];
+
+  if (graph.graphDigest !== (data.ledger && data.ledger.graphDigest) ||
+      graph.observedAt !== (data.ledger && data.ledger.observedAt)) {
+    failures.push('CURATED_LEDGER_GRAPH_MISMATCH');
+  }
+  const sourceAge = Date.parse(preparedAt) - Date.parse(graph.observedAt);
+  if (!Number.isFinite(sourceAge) || sourceAge < 0 || sourceAge > MAX_SOURCE_AGE_MS) {
+    failures.push('CURATED_SOURCE_SNAPSHOT_STALE');
+  }
+  if (Date.parse(preparedAt) < Date.parse(customer.baselineAt)) {
+    failures.push('CURATED_REPORT_BEFORE_SUBSCRIPTION');
+  }
+  if (failures.length) return reject(failures);
+
+  // The paid wrapper obtains these from Stripe; the free wrapper obtains them
+  // from the validated private trial registry. Reviews cannot override either.
+  const reviewedItems = Array.isArray(data.reviews) ? data.reviews : null;
+  if (!reviewedItems) return reject(['CURATED_REVIEWS_ARRAY_REQUIRED']);
+  if (reviewedItems.length > maxSignals) {
+    return reject(['CURATED_REVIEW_LIMIT_EXCEEDED']);
+  }
+  if (!String(data.reviewer || '').trim() || data.ownerReviewed !== true) {
+    return reject(['CURATED_OWNER_REVIEW_REQUIRED']);
+  }
+
+  const candidateIndex = new Map(graph.candidates.map(item => [item.entityId,item]));
+  const seenReviews = new Set();
+  const delivered = Array.isArray(data.deliveredSignalKeys) ?
+    new Set(data.deliveredSignalKeys.map(String)) : null;
+  if (!delivered) return reject(['CURATED_DELIVERED_KEYS_ARRAY_REQUIRED']);
+  const selected = [];
+  const excluded = [];
+
+  for (const review of reviewedItems) {
+    const id = String(review && review.entityId || '');
+    const prefix = 'REVIEW:' + id + ':';
+    if (!id || seenReviews.has(id)) {
+      failures.push('CURATED_DUPLICATE_OR_MISSING_REVIEW_ID');
+      continue;
+    }
+    seenReviews.add(id);
+    const candidate = candidateIndex.get(id);
+    const entry = data.ledger.entries[id];
+    if (!candidate || !entry || entry.presenceState !== 'PRESENT') {
+      failures.push(prefix + 'ENTITY_NOT_CURRENT');
+      continue;
+    }
+    if (!research.eligibleCandidate(candidate)) {
+      failures.push(prefix + 'SUPPRESSED_OR_AMBIGUOUS');
+      continue;
+    }
+    if (!customer.boroughs.includes(candidate.borough)) {
+      failures.push(prefix + 'BOROUGH_NOT_SUBSCRIBED');
+      continue;
+    }
+    if (!customer.categories.includes(profiles.canonicalCategory(review.category))) {
+      failures.push(prefix + 'CATEGORY_NOT_SUBSCRIBED');
+      continue;
+    }
+    // A checkout category label alone does not establish category relevance.
+    // Require an independent explicit owner assessment bound to the current
+    // accepted official sources, including for applicant-only context.
+    const fit=categoryEvidence.validateFounderReview(
+      candidate,review.category,review.categoryReview
+    );
+    if(!fit.valid) {
+      failures.push(...fit.failures.map(code=>prefix+code));
+      continue;
+    }
+    if (review.ownerReviewed !== true ||
+        !String(review.whyItMatters || '').trim() ||
+        !String(review.reviewedAt || '').trim()) {
+      failures.push(prefix + 'OWNER_REVIEW_INCOMPLETE');
+      continue;
+    }
+    const reviewedAt = research.instant(review.reviewedAt);
+    if (!reviewedAt || reviewedAt < graph.observedAt || reviewedAt > preparedAt) {
+      failures.push(prefix + 'REVIEW_TIME_INVALID');
+      continue;
+    }
+    if (review.candidateFingerprint !== candidateIdentity(candidate)) {
+      failures.push(prefix + 'REVIEW_SOURCE_IDENTITY_DRIFT');
+      continue;
+    }
+    if (curated.inspectForbidden(review).length) {
+      failures.push(prefix + 'PROHIBITED_PAID_OFFER_CLAIM');
+      continue;
+    }
+    const sourceUpdatedAt = research.instant(candidate.sourceLatestEffectiveAt);
+    if (!sourceUpdatedAt || sourceUpdatedAt > graph.observedAt) {
+      failures.push(prefix + 'SOURCE_TIME_INVALID');
+      continue;
+    }
+    const event=eventForEntry(
+      entry,customer.baselineAt,customer.starterSnapshotEnabled,
+      data.ledger.initializedAt
+    );
+    if (!event) {
+      excluded.push({entityId:id,reason:
+        Date.parse(entry.firstObservedAt)<=Date.parse(data.ledger.initializedAt)&&
+        !entry.lastMaterialEvent ?
+        'BASELINE_EXISTING_NOT_A_NEW_OBSERVATION':'OUTSIDE_SUBSCRIBER_BASELINE'});
+      continue;
+    }
+    if (review.eventId && review.eventId!==event.eventId) {
+      failures.push(prefix + 'EVENT_IDENTITY_MISMATCH');
+      continue;
+    }
+    if (review.eventKind && review.eventKind!==event.kind) {
+      failures.push(prefix + 'EVENT_TYPE_MISMATCH');
+      continue;
+    }
+    const whatChanged=String(review.whatChanged||'').trim();
+    if(event.kind==='MATERIAL_CHANGE' &&
+        (review.eventId!==event.eventId || !whatChanged || whatChanged.length>220)) {
+      failures.push(prefix + 'MATERIAL_EVENT_REVIEW_INCOMPLETE');
+      continue;
+    }
+    const key = signalKey(activated.subscriptionId,entry,event);
+    if (delivered.has(key)) {
+      excluded.push({entityId:id,reason:'ALREADY_DELIVERED'});
+      continue;
+    }
+    selected.push({
+      signalKey:key,
+      section:event.section,
+      firstObservedAt:event.observedAt,
+      eventKind:event.kind,
+      eventId:event.eventId,
+      whatChanged:event.kind==='MATERIAL_CHANGE'?whatChanged:null,
+      businessName:candidate.canonicalName,
+      address:candidate.address,
+      borough:candidate.borough,
+      stage:candidate.lifecycleStage,
+      whyItMatters:review.whyItMatters,
+      category:fit.category,
+      categoryEvidenceBasis:fit.basis,
+      categoryFitRationale:fit.rationale,
+      categoryOfficialUrl:fit.sourceUrl,
+      sourceUpdatedAt,
+      reviewedAt,
+      sourceUrls:[primaryUrl(candidate)]
+    });
+  }
+  if (failures.length) return reject(failures,{
+    subscriberId:activated.subscriptionId,
+    excludedCount:excluded.length
+  });
+
+  // Keep normal events before optional starter context, with stable ties.
+  selected.sort((a,b) =>
+    (a.section === b.section ? 0 : a.section === 'NORMAL' ? -1 : 1) ||
+    b.firstObservedAt.localeCompare(a.firstObservedAt) ||
+    a.signalKey.localeCompare(b.signalKey)
+  );
+  // Preserve NORMAL/STARTER classification and genuine first-observation
+  // timestamps through CSV and HTML; never relabel an extraction as a filing.
+  const signals = selected.map(signal => ({...signal}));
+  const brief = curated.buildCuratedBrief({
+    subscriptionId:activated.subscriptionId,
+    recipientEmail:customer.recipientEmail,
+    preparedAt,
+    reviewer:String(data.reviewer).trim(),
+    ownerReviewed:true,
+    preferences:prefs,
+    signals,
+    ...briefContext
+  });
+  if (!['READY','NO_MATCHES'].includes(brief.status)) {
+    return reject(['CURATED_BRIEF_REVIEW_REQUIRED',...(brief.failures||[])]);
+  }
+  const attempt = delivery.createDeliveryAttempt({
+    status:'READY',
+    planFingerprint:brief.artifactFingerprint,
+    signals:brief.signalKeys.map(key=>({signalKey:key}))
+  },customer.recipientEmail);
+  const artifact = {
+    status:'READY',artifactFingerprint:brief.artifactFingerprint,
+    signalKeys:brief.signalKeys
+  };
+  const message = {
+    status:'READY',messageFingerprint:brief.messageFingerprint,
+    signalKeys:brief.signalKeys
+  };
+  const preflight = transport.validateTransportAuthorization({
+    artifact,message,attempt,authorization:null,now:preparedAt
+  });
+  if (preflight.allowed !== false ||
+      !preflight.failures.includes('OWNER_AUTHORIZATION_MISSING')) {
+    throw new Error('CURATED_NO_SEND_BOUNDARY_FAILED');
+  }
+  return {
+    runnerVersion:VERSION,
+    status:brief.status === 'READY' ? 'READY_FOR_OWNER_REVIEW' : 'NO_MATCHES_REVIEW',
+    failures:[],
+    subscriberId:activated.subscriptionId,
+    profileFingerprint:activated.profileFingerprint,
+    sourceGraphDigest:graph.graphDigest,
+    sourceObservedAt:graph.observedAt,
+    sourceArtifactFingerprint:graph.artifactFingerprint,
+    ledgerFingerprint:data.ledger.ledgerFingerprint,
+    baselineAt:customer.baselineAt,
+    signalCount:brief.signalCount,
+    excluded,
+    brief,
+    attempt,
+    transportPreflight:preflight,
+    transportAllowed:false,
+    externalSendCalls:0
+  };
+}
+
+module.exports = {
+  VERSION,EXPECTED_PRICE_ID,MAX_SOURCE_AGE_MS,STARTER_WINDOW_MS,
+  digest,candidateIdentity,primaryUrl,section,eventForEntry,signalKey,prepare,prepareTrial
+};

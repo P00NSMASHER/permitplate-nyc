@@ -1,0 +1,21 @@
+/* RETALLY NATIVE WEB BRAND / integrated instead of white logo tiles */
+a.brand.approved-brand-header.native-header{display:inline-flex;flex:0 1 auto;align-items:center;justify-content:flex-start;gap:10px;width:auto;max-width:100%;min-width:0;height:auto;border:0;border-radius:0;padding:0;margin:0;background:transparent;box-shadow:none;text-decoration:none;white-space:normal;line-height:1.04}
+a.brand.native-header img.native-brand-icon{display:block;flex:0 0 56px;width:56px;min-width:56px;height:56px;max-height:56px;object-fit:contain;background:transparent;filter:drop-shadow(0 3px 7px rgba(3,133,90,.23))}
+a.brand.native-header .native-brand-text{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:4px;min-width:0;line-height:1.04}
+a.brand.native-header .native-brand-text strong{font-family:Arial,system-ui,sans-serif;font-weight:800;font-size:24px;letter-spacing:-.065em;white-space:nowrap;color:#142a26}
+a.brand.native-header .native-brand-text strong span{color:#068c61}
+a.brand.native-header .native-brand-text small{display:block;border:0;border-radius:0;margin:0;padding:0;color:#52746a;font:700 9px/1.15 Arial,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap}
+a.brand.native-header:hover img.native-brand-icon{filter:drop-shadow(0 4px 9px rgba(7,175,116,.33))}
+.approved-brand-hero.native-hero{position:relative;display:flex;align-items:center;justify-content:flex-start;width:128px;max-width:min(35vw,140px);height:auto;margin:0 0 15px;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;overflow:visible}
+.approved-brand-hero.native-hero img.native-hero-emblem{display:block;position:relative;width:100%;height:auto;max-height:134px;object-fit:contain;background:transparent;filter:drop-shadow(0 9px 16px rgba(0,154,108,.26))}
+.capture-site a.brand.native-header .native-brand-text strong,.capture-footer a.brand.native-header .native-brand-text strong{color:#f5fff9}
+.capture-site a.brand.native-header .native-brand-text strong span{color:#49e6ad}
+.capture-site a.brand.native-header .native-brand-text small{color:#b8d5ca}
+.capture-site a.brand.native-header img.native-brand-icon{flex-basis:54px;width:54px;min-width:54px;height:54px;max-height:54px}
+.capture-site .approved-brand-hero.native-hero{width:126px}
+.footer a.brand.native-header .native-brand-text strong{color:#f8fffa}
+.footer a.brand.native-header .native-brand-text strong span{color:#4be2ad}
+.footer a.brand.native-header .native-brand-text small{color:#bbd5ca}
+@media(max-width:600px){a.brand.native-header img.native-brand-icon{flex-basis:46px;width:46px;min-width:46px;height:46px;max-height:46px}a.brand.native-header .native-brand-text strong{font-size:21px}a.brand.native-header .native-brand-text small{font-size:8px}.approved-brand-hero.native-hero{width:102px;margin-bottom:15px}.capture-site a.brand.native-header img.native-brand-icon{flex-basis:45px;width:45px;min-width:45px;height:45px;max-height:45px}}
+@media(max-width:360px){a.brand.native-header img.native-brand-icon,.capture-site a.brand.native-header img.native-brand-icon{flex-basis:40px;width:40px;min-width:40px;height:40px;max-height:40px}a.brand.native-header .native-brand-text strong{font-size:18px}a.brand.native-header{gap:7px}}
+@media(prefers-reduced-motion:reduce){a.brand.native-header img.native-brand-icon{transition:none}}
