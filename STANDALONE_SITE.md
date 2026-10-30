@@ -35,6 +35,11 @@ private trial operations remain excluded. Headers include HSTS, MIME sniffing
 protection, referrer policy and the restrictive CSP declared in `build-site.js`.
 The default GitHub Pages artifact does not generate `_headers`.
 
+The 2.0 public allowlist includes `case-study.html`, its print CSS and no-network
+print script, plus the downloadable historical `samples/permitplate-2-sora.txt`.
+The publication and customer data boundaries are unchanged. Verify both
+`/case-study` and `/samples/permitplate-2-sora.txt` on live Cloudflare Pages.
+
 ## Acceptance and rollback
 
 Run the build command, then verify the custom hostname, `/start`, `/permit-pack`, policies, fonts/images, a nested missing URL, the Group link, and `/build-info.json`. Check checkout destinations without buying, submitting intake, or treating the welcome URL as payment evidence. Confirm that the manifest revision matches the Cloudflare deployment commit and that the existing GitHub Pages site still works.

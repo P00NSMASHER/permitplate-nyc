@@ -338,3 +338,6 @@ img.retally-wordmark{
 }
 a img.retally-wordmark{pointer-events:none}
 @media print{img.retally-wordmark{box-shadow:none}}
+
+/* PermitPlate 2.0 public discovery block */
+.v2-teaser{background:#dfe8da;padding:70px 0;border-block:1px solid #c2d3c8}.v2-teaser-grid{display:grid;grid-template-columns:1.1fr .9fr;align-items:center;gap:55px}.v2-teaser h2{margin:14px 0 18px;font-size:clamp(40px,4.4vw,61px)}.v2-teaser p{max-width:560px}.v2-teaser-note{font-size:13px;color:#5c6256}.v2-teaser-action{padding:30px;border:1px solid #b7c2b0;background:#fffaf1;border-radius:20px;display:grid;gap:12px}.v2-teaser-action span{font-size:13px;color:#52675e}.v2-teaser-action .v2-teaser-label{letter-spacing:.13em;color:#6d1834;font-size:11px;font-weight:800}.v2-teaser-action strong{font:500 28px var(--display)}.v2-teaser-action .button{justify-self:start}.v2-sample-banner{display:flex;justify-content:space-between;align-items:center;gap:25px;background:#e4f1e3;border:1px solid #bad0be;border-radius:20px;padding:22px;margin:24px 0}.v2-sample-banner strong{font-size:20px}.v2-sample-banner p{margin:6px 0 0;font-size:14px;max-width:650px}.v2-sample-banner .button{flex-shrink:0}@media(max-width:760px){.v2-teaser-grid{grid-template-columns:1fr;gap:25px}.v2-sample-banner{display:block}.v2-sample-banner .button{margin-top:16px}}

@@ -1,0 +1,83 @@
+PERMITPLATE NYC | DECISION BRIEF 2.0
+REAL-PUBLIC-SOURCE HISTORICAL EXAMPLE | 30 OCTOBER 2026
+CASE: 532 NEPTUNE AVENUE, BROOKLYN
+RESEARCH ONLY. NOT A VERIFIED BUYER OR CURRENT SALES LEAD.
+
+EXECUTIVE DECISION
+RESEARCH FURTHER, WITH IDENTITY HOLD.
+The public DOB record family includes an October 8, 2026 restaurant
+renovation description naming "Sora By Masuta" and kitchen equipment.
+A separate building filing discusses a commercial kitchen exhaust hood.
+Those facts can inform vendor research, but do not establish an open
+purchase order, purchasing authority, opening date, or a shared operator.
+Do not contact anyone on this demonstration alone.
+
+01. EQUIPMENT RESEARCH | INVESTIGATE ORIGINAL SCOPE
+WHAT THE SOURCES SHOW:
+DOB filing B01415135-S1 and B01415135-S2 are dated October 8, 2026.
+The published project description references a restaurant interior
+renovation, kitchen equipment, lighting, finishes and bathroom work.
+These are filings within one job family, not two independent buyers.
+WHY IT MATTERS:
+For an equipment vendor, the scope is relevant enough to investigate.
+NEXT VERIFICATION:
+Read both original job records, check filing/permit status and scope,
+verify the legal operator and tenant, and identify who owns procurement.
+NO CLAIM: No unplaced equipment order or vendor interest is proven.
+
+02. HOOD / FIRE RESEARCH | LINKAGE NOT ESTABLISHED
+WHAT THE SOURCES SHOW:
+DOB filing B01353208-P1 dated September 17, 2026 is described in a
+public filing-history mirror as a commercial kitchen exhaust-hood
+installation at the same building.
+WHY IT MATTERS:
+A hood contractor may want to examine the scope.
+NEXT VERIFICATION:
+Check the original record and confirm it concerns the same tenant/project
+before grouping with the Sora-named renovation. Same building does not
+establish same buyer.
+
+03. ENTITY AND PREMISES | HOLD AUTOMATIC MERGE
+WHAT THE SOURCES SHOW:
+The product's October 19 source-identity regression records a DOHMH
+record CAMIS 50189702 and DOB filings B01415135-S1/S2 at this address
+with a matching BBL but a DOHMH BIN placeholder.
+NEXT VERIFICATION:
+Resolve premises and operator identity manually with current official
+records. Do not equate a restaurant applicant with the filing's buyer.
+NO CLAIM: Cross-agency identity or delivery eligibility is not approved.
+
+NEXT ACTIONS
+1. Open all linked NYC DOB records and confirm latest status and scope.
+2. Match building, tenant, operator, and legal name with independent evidence.
+3. Qualify whether this is relevant to the chosen vendor category.
+4. Only then consider legitimate outreach, subject to owner review and
+   specific recipient/send authorization in the private customer workflow.
+
+EVIDENCE APPENDIX (PUBLIC SOURCES)
+NYC DOB NOW official dataset:
+https://data.cityofnewyork.us/d/w9ak-ipjd
+B01415135-S1 official API:
+https://data.cityofnewyork.us/resource/w9ak-ipjd.json?job_filing_number=B01415135-S1
+B01415135-S2 official API:
+https://data.cityofnewyork.us/resource/w9ak-ipjd.json?job_filing_number=B01415135-S2
+B01353208-P1 official API:
+https://data.cityofnewyork.us/resource/w9ak-ipjd.json?job_filing_number=B01353208-P1
+DOHMH CAMIS 50189702 official API:
+https://data.cityofnewyork.us/resource/43nn-pn8j.json?camis=50189702
+Building filing-history mirror (not the official publisher):
+https://buildnyc.ai/building/532-neptune-avenue-brooklyn-3426198
+
+PROVENANCE AND LIMITS
+A source-identity regression in permitplate-nyc rechecked identifying
+fields on October 19, 2026. Public filing-history descriptions have
+also been compared, but the current publisher's complete attachments
+and commercial operator/buyer identity have not been authenticated
+for this example. Administrative status can change. This document is
+a transparent historical product demonstration, not a founder-cleared
+live customer report or permission to deliver. No lead conversion, ROI,
+opening date, independent customer review, or customer purchase is claimed.
+
+A supervised PermitPlate trial requires separate business admission,
+source review, and explicit authorized delivery. A request does not
+start the 14-day trial; the first accepted nonempty report does.

@@ -50,6 +50,18 @@ try{
     assert.equal(fs.existsSync(path.join(build.OUT,forbidden)),false,forbidden+' leaked into dist');
   }
 
+  const sample2=fs.readFileSync(path.join(build.OUT,'case-study.html'),'utf8');
+  const source2=fs.readFileSync(path.join(build.OUT,'samples/permitplate-2-sora.txt'),'utf8');
+  const home2=fs.readFileSync(path.join(build.OUT,'index.html'),'utf8');
+  assert(home2.includes('/permitplate-nyc/case-study.html'));
+  assert(sample2.includes('B01415135-S1')&&sample2.includes('B01415135-S2'));
+  assert(sample2.includes('B01353208-P1')&&sample2.includes('CAMIS 50189702'));
+  assert(sample2.includes('Next action')&&sample2.includes('Evidence appendix'));
+  assert(sample2.includes('not a live lead')&&sample2.includes('not a government publisher'));
+  assert(sample2.includes('data-print-report')&&sample2.includes('samples/permitplate-2-sora.txt'));
+  assert(source2.includes('NO CLAIM')&&source2.includes('PROVENANCE AND LIMITS'));
+  assert(source2.includes('data.cityofnewyork.us/resource/w9ak-ipjd.json'));
+  assert(build.PUBLIC_FILES.includes('case-study.js')&&build.PUBLIC_FILES.includes('case-study.css'));
   const htmlFiles=build.PUBLIC_FILES.filter((name)=>name.endsWith('.html'));
   for(const file of htmlFiles){
     const html=fs.readFileSync(path.join(build.OUT,file),'utf8');
