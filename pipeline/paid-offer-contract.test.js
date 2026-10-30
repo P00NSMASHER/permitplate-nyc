@@ -1,0 +1,21 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'..');
+const read=n=>fs.readFileSync(path.join(root,n),'utf8');
+const home=read('index.html'),start=read('start.html'),terms=read('terms.html'),refunds=read('refunds.html');
+assert(refunds.includes('seven calendar days after that first message'));
+assert(refunds.includes('does not start at checkout'));
+assert(refunds.includes('not sent within five business days'));
+assert(refunds.includes('message does not reach you'));
+assert(terms.includes('prepared and sent within five business days'));
+assert(terms.includes('rather than seven days after the charge'));
+assert(home.includes('First payment refundable through 7 days after first brief is sent'));
+assert(home.includes('seven calendar days after that first message is sent'));
+assert(start.includes('Seven-day refund after the first brief or no-matches note is sent'));
+assert(!refunds.includes('within seven calendar days after the charge'));
+assert(start.includes('https://buy.stripe.com/4gM28r1cL81x8dF9Xj9sk02'));
+assert(home.includes('no-matches note') && start.includes('$79'));
+const readiness=read('pipeline/launch-readiness.js');
+for(const k of ['realPaidSubscriberEndToEndVerified','providerBackedDeliveryVerified','nextRunDuplicateSuppressionVerifiedForRealSubscriber'])
+  assert(readiness.includes(k),k);
+console.log('PermitPlate first-brief refund clock, checkout promises and real customer gates verified.');

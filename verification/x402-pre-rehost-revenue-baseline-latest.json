@@ -1,0 +1,62 @@
+{
+  "checkedAt": "2026-10-02T17:10:10.011Z",
+  "mode": "pre_rehost_zero_spend_revenue_baseline",
+  "zeroSpend": true,
+  "paymentSent": false,
+  "portfolioResources": 8,
+  "payai": {
+    "bestMatch": {
+      "resource": "https://pa-entity-x402.floot.app/_api/pa-entity-one",
+      "settlementsLast24h": 1,
+      "settlementsLast7d": 1,
+      "settlementsLast30d": 1,
+      "uniqueBuyersBucket": "1-9"
+    },
+    "enriched": {
+      "resource": "https://pa-entity-x402.floot.app/_api/pa-business",
+      "settlementsLast24h": 0
+    },
+    "vendorGate": {
+      "resource": "https://pa-entity-x402.floot.app/_api/vendor-intake-gate",
+      "settlementsLast24h": 0
+    },
+    "sec": {
+      "resource": "https://pa-entity-x402.floot.app/_api/sec-filings",
+      "settlementsLast24h": 0
+    },
+    "census": {
+      "resource": "https://pa-entity-x402.floot.app/_api/us-address-geocode",
+      "settlementsLast24h": 0
+    },
+    "ofac": {
+      "resource": "https://pa-entity-x402.floot.app/_api/ofac-sdn-screen",
+      "settlementsLast24h": 0
+    },
+    "rdap": {
+      "resource": "https://pa-entity-x402.floot.app/_api/domain-rdap",
+      "settlementsLast24h": 0
+    },
+    "treasury": {
+      "resource": "https://pa-entity-x402.floot.app/_api/treasury-average-rates",
+      "settlementsLast24h": 0
+    }
+  },
+  "observedSettlement": {
+    "resource": "https://pa-entity-x402.floot.app/_api/pa-entity-one",
+    "amountUsdc": 0.001,
+    "transactionHash": "0x17985b16137ff8aef95641be06424a5fa4e9edacc6ade5aaf0a58d523ad1cd73",
+    "payer": "0x7e6b6556322c4e26c567a867964ac793f5ee2b1c",
+    "timestamp": "2026-10-02T06:44:33.000Z",
+    "classification": "external_unattributed"
+  },
+  "attribution": {
+    "resourceSpecificSettlementsObservedLast24h": 1,
+    "observedGrossSettlementValueUsdLast24h": 0.001,
+    "verifiedCustomerRevenueUsdLast24h": 0,
+    "unresolvedSettlementsLast24h": 1,
+    "bestMatchState": "external_unattributed",
+    "vendorGateState": "no_settlement_observed",
+    "countAsCustomerRevenue": false
+  },
+  "rule": "Only exact-resource settlements with verified customer provenance count as third-party revenue. Unknown external payers, probes/verifiers, self/internal activity and seller-funded tests remain excluded."
+}

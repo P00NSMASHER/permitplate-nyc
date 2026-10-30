@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "startedAt": "2026-10-03T17:10:19.901Z",
+  "origin": "https://pa-entity-x402.floot.app",
+  "purpose": "Add exact request JSON Schemas to verified NoHumans listings without changing endpoints or verification history.",
+  "source": "docs/pa-entity-floot-recovery/x402-services.json",
+  "publicHealth": {
+    "agent402": {
+      "status": 200,
+      "toolCount": 8,
+      "paidToolCount": 8,
+      "health": 1,
+      "routable": true
+    }
+  },
+  "updates": [
+    {
+      "id": "sec-recent-filings",
+      "listingId": "ad7cbe88-c81",
+      "endpoint": "https://pa-entity-x402.floot.app/_api/sec-filings",
+      "before": {
+        "status": "verified",
+        "hasRequestSchema": false,
+        "probeCount": 3,
+        "probesPassed": 3
+      },
+      "patchStatus": 200,
+      "responseNote": null,
+      "after": {
+        "status": "verified",
+        "hasRequestSchema": true,
+        "probeCount": 3,
+        "probesPassed": 3,
+        "requestSchema": {
+          "type": "object",
+          "properties": {
+            "ticker": {
+              "type": "string",
+              "maxLength": 12
+            },
+            "cik": {
+              "type": "string",
+              "maxLength": 10
+            },
+            "form": {
+              "type": "string",
+              "maxLength": 20
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 25,
+              "default": 10
+            }
+          },
+          "additionalProperties": false,
+          "anyOf": [
+            {
+              "required": [
+                "ticker"
+              ]
+            },
+            {
+              "required": [
+                "cik"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "ofac-sdn-screen",
+      "listingId": "e74bb774-9e2",
+      "endpoint": "https://pa-entity-x402.floot.app/_api/ofac-sdn-screen",
+      "before": {
+        "status": "verified",
+        "hasRequestSchema": false,
+        "probeCount": 3,
+        "probesPassed": 3
+      },
+      "patchStatus": 200,
+      "responseNote": null,
+      "after": {
+        "status": "verified",
+        "hasRequestSchema": true,
+        "probeCount": 3,
+        "probesPassed": 3,
+        "requestSchema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 160
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10,
+              "default": 5
+            },
+            "minScore": {
+              "type": "integer",
+              "minimum": 70,
+              "maximum": 100,
+              "default": 85
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "security": {
+    "credentialType": "directory edit token only",
+    "paymentHeadersSent": false,
+    "paymentSignatureSent": false,
+    "paidRetryAttempted": false,
+    "spendUsd": 0
+  },
+  "ok": true,
+  "completedAt": "2026-10-03T17:10:24.398Z"
+}

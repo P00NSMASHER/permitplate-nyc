@@ -1,5 +1,7 @@
 # Agentic.ai Resubmission Package — Pennsylvania Vendor Intake Gate
 
+> **DEPRECATED HISTORICAL PACKAGE — DO NOT SEND OR USE FOR REVIEW.** The AppDeploy URLs below are historical and currently unavailable. The canonical unsent review source is `docs/agentic-ai-vendor-gate-resubmission-draft.md`; after Floot + Agent402 acceptance, `scripts/finalize-agentic-ai-vendor-gate-draft.mjs` generates the evidence-complete Floot-targeted copy.
+
 _Status: prepared, **do not send yet**_
 
 ## Why this exists

@@ -3,19 +3,64 @@ name: PA Entity directory status
 
 on:
   push:
+    branches: [main]
     paths:
       - '.github/workflows/pa-entity-directory-status.yml'
+      - 'tests/test_pa_entity_directory_status_workflow_policy.py'
+  pull_request:
+    paths:
+      - '.github/workflows/pa-entity-directory-status.yml'
+      - 'tests/test_pa_entity_directory_status_workflow_policy.py'
   workflow_dispatch:
 
-permissions:
-  contents: write
+permissions: {}
+
+# Only one latest-receipt writer may commit to main at a time.
+concurrency:
+  group: pa-entity-directory-status-main
+  cancel-in-progress: false
 
 jobs:
+  policy:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check out exact candidate without credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Reject stale-main and persisted-credential writers
+        run: python3 -m unittest discover -s tests -p 'test_pa_entity_directory_status_workflow_policy.py' -v
+
   check:
+    needs: policy
+    # Never write a branch-triggered or branch-dispatched snapshot onto main.
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out exact admitted main source without credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Admit exact current main before external collection
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = 'refs/heads/main' || { echo 'Directory status requires main.'; exit 1; }
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA" || { echo 'Checked-out source is not the event SHA.'; exit 1; }
+          remote_main="$(git ls-remote --exit-code origin refs/heads/main | awk '{print $1}')"
+          test -n "$remote_main" || { echo 'Unable to resolve current main.'; exit 1; }
+          test "$GITHUB_SHA" = "$remote_main" || { echo 'Event SHA is not exact current main.'; exit 1; }
 
       - name: Capture zero-spend directory snapshot
         shell: bash
@@ -27,6 +72,13 @@ jobs:
           import urllib.parse
           import urllib.request
           from datetime import datetime, timezone
+          from scripts.pa_entity_directory_bounding import (
+              MAX_RESPONSE_BYTES,
+              OversizedDirectoryResponse,
+              assert_snapshot_size,
+              find_matching_dicts,
+              load_bounded_json,
+          )
 
           APP = 'https://api-v2.appdeploy.ai/app/pa-entity-lookup-x402-4fbm4s'
           FLOOT = 'https://pa-entity-x402.floot.app'
@@ -46,18 +98,28 @@ jobs:
               )
               try:
                   with urllib.request.urlopen(req, timeout=timeout) as res:
-                      raw = res.read().decode('utf-8', errors='replace')
+                      try:
+                          data = load_bounded_json(res)
+                      except OversizedDirectoryResponse:
+                          # Source is unverified, NOT a verified negative match.
+                          return {
+                              'ok': False,
+                              'status': res.status,
+                              'url': url,
+                              'error': 'response_too_large',
+                              'response_byte_limit': MAX_RESPONSE_BYTES,
+                          }
                       return {
                           'ok': True,
                           'status': res.status,
                           'url': url,
-                          'data': json.loads(raw),
+                          'data': data,
                       }
               except Exception as exc:
                   status = getattr(exc, 'code', None)
                   body = None
                   try:
-                      body = exc.read().decode('utf-8', errors='replace')[:4000]
+                      body = exc.read(4000).decode('utf-8', errors='replace')
                   except Exception:
                       pass
                   return {
@@ -71,23 +133,15 @@ jobs:
           def query_url(base, params):
               return base + '?' + urllib.parse.urlencode(params)
 
-          def find_matching_dicts(value, needles, path=''):
-              hits = []
-              if isinstance(value, dict):
-                  blob = json.dumps(value, sort_keys=True).lower()
-                  if any(n.lower() in blob for n in needles):
-                      hits.append({'path': path or '/', 'record': value})
-                  for key, child in value.items():
-                      hits.extend(find_matching_dicts(child, needles, path + '/' + str(key)))
-              elif isinstance(value, list):
-                  for index, child in enumerate(value):
-                      hits.extend(find_matching_dicts(child, needles, path + '/' + str(index)))
-              return hits
-
           checked_at = datetime.now(timezone.utc).isoformat()
           snapshot = {
               'checked_at': checked_at,
               'mode': 'read_only_zero_spend',
+              'evidence_schema': 'bounded-v1',
+              'evidence_note': (
+                  'Directory matches retain selected direct fields only. '
+                  'Oversized upstream responses remain unverified, not absent.'
+              ),
               'attribution_rule': (
                   'Do not count shared-wallet payer fields, probes, self-tests, '
                   'registrations, or seller-funded activity as endpoint revenue.'
@@ -268,7 +322,13 @@ jobs:
               json.dump(snapshot, handle, indent=2, sort_keys=True)
               handle.write('\n')
 
+          # Prevent a runaway public Git blob even if a provider changes shape.
+          receipt_size = assert_snapshot_size(
+              'verification/pa-entity-directory-status-latest.json'
+          )
+
           print(json.dumps({
+              'receipt_bytes': receipt_size,
               'checked_at': checked_at,
               '402index_vendor_ok': idx['vendor_service'].get('ok'),
               'nohumans_vendor_search_ok': snapshot['nohumans']['vendor_discovery'].get('ok'),
@@ -280,17 +340,17 @@ jobs:
 
       - name: Commit refreshed receipt
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           SNAPSHOT='verification/pa-entity-directory-status-latest.json'
-          cp "$SNAPSHOT" /tmp/pa-entity-directory-status-latest.json
 
-          # Other read-only verification lanes may commit while this job runs.
-          # Refresh to the latest main first, then restore only this generated
-          # receipt so a concurrent bot commit cannot make the push non-FF.
-          git fetch origin main
-          git reset --hard origin/main
-          cp /tmp/pa-entity-directory-status-latest.json "$SNAPSHOT"
+          # Refuse to transplant a receipt collected by older source onto a
+          # newer main commit. A later run can safely recollect if main moves.
+          remote_main="$(git ls-remote --exit-code origin refs/heads/main | awk '{print $1}')"
+          test -n "$remote_main" || { echo 'Unable to resolve current main.'; exit 1; }
+          test "$GITHUB_SHA" = "$remote_main" || { echo 'Main moved during collection.'; exit 1; }
 
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
@@ -300,4 +360,7 @@ jobs:
             exit 0
           fi
           git commit -m 'chore: refresh PA x402 directory status'
-          git push origin HEAD:main
+          remote_main="$(git ls-remote --exit-code origin refs/heads/main | awk '{print $1}')"
+          test "$GITHUB_SHA" = "$remote_main" || { echo 'Main moved before push.'; exit 1; }
+          git -c credential.helper='!f() { echo username=x-access-token; echo "password=$GH_TOKEN"; }; f' \
+            push origin HEAD:refs/heads/main

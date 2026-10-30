@@ -1,6 +1,6 @@
 {
-  "evidenceVersion": "PermitPlate-external-launch-evidence-v1.3.0",
-  "observedAt": "2026-09-23T14:15:03Z",
+  "evidenceVersion": "PermitPlate-external-launch-evidence-v1.4.0",
+  "observedAt": "2026-10-19T19:32:59.068Z",
   "stripe": {
     "account": "acct_1UFCRjDPW8riWrxQ",
     "paymentLinkId": "plink_1UG3RUDPW8riWrxQpZwHExK2",
@@ -17,22 +17,42 @@
     "customerPortalConfigurationId": "bpc_1UIjo3DPW8riWrxQI0WUAWaU",
     "customerPortalActiveVerified": true,
     "customerPortalCancellationMode": "at_period_end",
-    "reason": "Live Stripe verification at 2026-09-23T14:15:03Z confirmed that the $79 monthly Payment Link is active, uses Managed Payments with automatic tax, captures business name plus the required category, territory, and Starter Snapshot preferences, and redirects successful purchases to the PermitPlate welcome page. The default live customer portal remains active with billing updates, invoice history, and cancellation at period end."
+    "reason": "Fresh read-only Stripe GETs on 2026-10-19 verified that live account acct_1UFCRjDPW8riWrxQ exposes active, livemode PermitPlate Payment Link plink_1UG3RUDPW8riWrxQpZwHExK2 with required category, territory and starter dropdown custom fields and plan metadata monthly_79; billing portal bpc_1UIjo3DPW8riWrxQI0WUAWaU is live, active, default, and allows subscription cancellation at period end. These are actual provider responses, not simulated payments or customer-delivery confirmation. No billing mutation or customer contact was performed."
   },
   "githubPages": {
     "canonicalUrl": "https://p00nsmasher.github.io/permitplate-nyc/",
     "enabled": true,
-    "verifiedPublicBuildCommit": "1424b6a1874324e6c30a9c55e30162e76636b51c",
-    "verifiedPublicSourceFingerprint": "764639f85e9ebd6b27fe82a5d1450705a772ebe511be2bdd8806e50c85c1c921",
-    "liveVerifiedCommit": "1424b6a1874324e6c30a9c55e30162e76636b51c",
-    "livePublicSourceFingerprint": "764639f85e9ebd6b27fe82a5d1450705a772ebe511be2bdd8806e50c85c1c921",
+    "verifiedPublicBuildCommit": "d5e7cf8585933fd5ce45d5efe2b88bbc1e6b9238",
+    "verifiedPublicSourceFingerprint": "27b3e47291a10d8ae3205aa700f3b1e579b0118e803917e5890ce2d45be78e1b",
+    "liveVerifiedCommit": "d5e7cf8585933fd5ce45d5efe2b88bbc1e6b9238",
+    "livePublicSourceFingerprint": "27b3e47291a10d8ae3205aa700f3b1e579b0118e803917e5890ce2d45be78e1b",
     "productionDeployVerified": true,
-    "reason": "GitHub Pages is configured with GitHub Actions as its source. PermitPlate GitHub Pages run 35867761517 completed successfully, and the live build-info.json returned commit 1424b6a1874324e6c30a9c55e30162e76636b51c with public-source fingerprint 764639f85e9ebd6b27fe82a5d1450705a772ebe511be2bdd8806e50c85c1c921. The redesigned site and live checkout handoff were also visually verified."
+    "reason": "Read-only production GET of https://p00nsmasher.github.io/permitplate-nyc/build-info.json verified HTTP 200, sourceCommit d5e7cf8585933fd5ce45d5efe2b88bbc1e6b9238, publicSourceFingerprint 27b3e47291a10d8ae3205aa700f3b1e579b0118e803917e5890ce2d45be78e1b, 36 allowlisted files and builtAt 2026-10-20T02:41:32.256Z. Independent live GETs also confirmed HTTP 200 on the homepage, NYC subscription page, PA Permit Pack, new Field Notes, sample, and welcome page. GitHub Pages deployment run https://github.com/P00NSMASHER/permitplate-nyc/actions/runs/39360261205 passed build-and-deploy, postpublication exact commit and SHA-256 public-source fingerprint verification. Checkout and price were unchanged. This is evidence of this released static website, not paid customer delivery, conversion, independent scored-lead approval or real PA Permit Pack fulfillment.",
+    "observedAt": "2026-10-20T02:44:19.907Z"
   },
   "customerProof": {
     "realPaidSubscriberEndToEndVerified": false,
     "providerBackedDeliveryVerified": false,
     "nextRunDuplicateSuppressionVerifiedForRealSubscriber": false,
-    "reason": "No real paid PermitPlate subscriber has completed provider-backed delivery/reconciliation yet."
+    "reason": "No verified genuine paid-customer onboarding, provider-backed real delivery and subsequent no-duplicate replay have all been independently proven. Those commercial proof gates remain false; this receipt does not invent a payment or human/customer activity."
+  },
+  "sourceAudit": {
+    "observedAt": "2026-10-19T19:27:21.629Z",
+    "sourceHealthRun": "https://github.com/P00NSMASHER/permitplate-nyc/actions/runs/39311110744",
+    "currentGraphRun": "https://github.com/P00NSMASHER/permitplate-nyc/actions/runs/39311110658",
+    "sourceCounts": {
+      "DOHMH": 5426,
+      "DOB_NOW": 5957,
+      "SLA_PENDING": 2914
+    },
+    "sourceStates": {
+      "DOHMH": "COMPLETE_NONEMPTY",
+      "DOB_NOW": "COMPLETE_NONEMPTY",
+      "SLA_PENDING": "COMPLETE_NONEMPTY"
+    },
+    "graphState": "COMPLETE",
+    "candidateCount": 4250,
+    "graphDigest": "ac8e978ff425f9f9df5c5f5875223d78ef7309d1742820f274bb8da3ac6459a5",
+    "reason": "Production NYC source-health and current-graph GitHub Actions completed successfully on exact public main on October 19, 2026. Their logged source counters and graph receipt are preserved here; this source-only verification is independent of experimental scored authorization."
   }
 }

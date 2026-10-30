@@ -1,0 +1,31 @@
+{
+  "checkedAt": "2026-10-02T17:48:33Z",
+  "headSha": "60cdad9f8ee00e1d2ed9c8d5fb180b679ce404dc",
+  "workflow": {
+    "name": "Test post-rehost ops safety",
+    "runId": 37043199741,
+    "conclusion": "success"
+  },
+  "guards": {
+    "postRehostSafety": "pass",
+    "manifestBeforeAgent402Registration": "pass",
+    "agent402RouteFieldCompatibility": "pass",
+    "agent402BeforeMarketplaceRepair": "pass"
+  },
+  "agent402ObservedSchema": {
+    "routeField": "route",
+    "toolsCap": 500,
+    "currentToolCount": 2,
+    "expectedPostRehostMinimumPaidTools": 8
+  },
+  "mutationOrder": [
+    "Verify public Floot 8-route portfolio",
+    "Register/read back Agent402",
+    "Require Agent402 health=1, routable=true, paidToolCount>=8, vendor gate visible",
+    "Only then mutate Market402 and 402 Index for six changed routes",
+    "Keep NoHumans read-only under zero-spend policy",
+    "Generate Agentic.ai ready copy only from green public + Agent402 receipts",
+    "Do not auto-send Agentic.ai submission"
+  ],
+  "revenueRule": "Directory registration, probes, self-tests and seller-funded activity are not customer revenue."
+}

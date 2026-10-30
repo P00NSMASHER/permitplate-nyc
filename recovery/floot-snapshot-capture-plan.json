@@ -1,0 +1,68 @@
+{
+  "formatVersion": 1,
+  "preparedAt": "2026-10-02",
+  "projectId": "b69a3ee6-eb01-430d-aa51-da2fc7beeac4",
+  "productionOrigin": "https://pa-entity-x402.floot.app",
+  "normalBatches": [
+    {
+      "id": "baseline-pa",
+      "paths": [
+        "endpoints/pa-business_GET.ts",
+        "endpoints/pa-business_GET.schema.ts",
+        "endpoints/pa-entity-one_GET.ts",
+        "endpoints/pa-entity-one_GET.schema.ts"
+      ]
+    },
+    {
+      "id": "large-discovery",
+      "paths": [
+        "static/openapi.json",
+        "static/.well-known/x402"
+      ]
+    },
+    {
+      "id": "x402-aliases",
+      "paths": [
+        "static/.well-known/x402.json",
+        "static/.well-known/x402-services.json",
+        "static/.well-known/x402-catalog.json"
+      ]
+    },
+    {
+      "id": "agent-text",
+      "paths": [
+        "static/llms.txt",
+        "static/llms-full.txt",
+        "static/skill.txt",
+        "static/.well-known/x402-service.json"
+      ]
+    },
+    {
+      "id": "small-public-metadata",
+      "paths": [
+        "static/.well-known/security.txt",
+        "static/sitemap.xml",
+        "static/robots.txt"
+      ]
+    }
+  ],
+  "unexpectedPreexistingRule": {
+    "candidateTargets": "all 14 recovery endpoint/schema targets from deployment queue",
+    "action": "Capture every candidate that appears in fresh projectPaths before any write.",
+    "batching": "Use additional bounded read_files calls; one unexpectedly large endpoint per call is always safe.",
+    "conservativeMaximumAdditionalBatches": 14
+  },
+  "requirements": [
+    "Fresh Floot list_files must run first.",
+    "All 16 normal baseline paths must exist in projectPaths.",
+    "Every normal batch response must return every requested file in full; omitted files require an additional read before any write.",
+    "Any unexpectedly preexisting recovery target must be captured with exact content before any write.",
+    "Raw capture must record projectId, projectVersion, productionOrigin, capturedAt, full projectPaths, and captured file contents.",
+    "Build and validate the normalized snapshot, then build and commit the rollback plan before the first Floot write."
+  ],
+  "actionBudget": {
+    "normalReadBatches": 5,
+    "conservativeMaximumAdditionalBatches": 14,
+    "absoluteMaximumReadBatches": 19
+  }
+}

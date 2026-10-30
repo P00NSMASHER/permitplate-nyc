@@ -11,7 +11,7 @@ The detailed service map is maintained here:
 
 ## Current availability
 
-As of October 2, 2026, the two Floot Pennsylvania raw routes are healthy. The AppDeploy-hosted vendor-intake gate and other AppDeploy x402 APIs are being intercepted by an AppDeploy `temporarily-unavailable` hosting state rather than reaching seller code. Track incident #38 and direct Floot rehost #39. Do not count the AppDeploy routes as currently buyer-available until the external zero-spend verifier is green again.
+As of October 2, 2026, the two Floot Pennsylvania raw routes are healthy. AppDeploy Support confirmed the AppDeploy-hosted routes are credit-gated because the weekly allowance is exhausted; the allowance resets October 5 at 00:00 UTC and discovery paths are not exempt. No paid top-up/upgrade is authorized. Track incident #38 and direct Floot rehost #39. Do not count the AppDeploy routes as currently buyer-available until the external zero-spend verifier is green again.
 
 ## Current paid products
 

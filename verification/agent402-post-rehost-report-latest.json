@@ -1,0 +1,51 @@
+{
+  "checkedAt": "2026-10-03T16:38:38.262Z",
+  "zeroSpend": true,
+  "paymentSent": false,
+  "origin": "https://pa-entity-x402.floot.app",
+  "ok": true,
+  "failures": [],
+  "observations": {
+    "manifest": {
+      "status": 200,
+      "x402Version": 2,
+      "resourceCount": 8
+    },
+    "registration": {
+      "status": 200,
+      "listed": true,
+      "displayName": null,
+      "toolCount": null,
+      "networks": null,
+      "routable": null,
+      "health": null,
+      "documentsReread": true,
+      "routesRechecked": true,
+      "routesProbed": 8
+    },
+    "readback": {
+      "status": 200,
+      "origin": "https://pa-entity-x402.floot.app",
+      "displayName": "Agent Data Tools x402",
+      "toolCount": 8,
+      "paidToolCount": 8,
+      "health": 1,
+      "routable": true,
+      "routerDispatchEligible": false,
+      "routerDispatchReason": "settlement_required",
+      "toolsReturned": 8,
+      "vendorGateMatches": 1,
+      "paths": [
+        "/_api/domain-rdap",
+        "/_api/ofac-sdn-screen",
+        "/_api/pa-business",
+        "/_api/pa-entity-one",
+        "/_api/sec-filings",
+        "/_api/treasury-average-rates",
+        "/_api/us-address-geocode",
+        "/_api/vendor-intake-gate"
+      ]
+    }
+  },
+  "note": "routerDispatchEligible may remain false with settlement_required until genuine third-party settlement history exists; this check does not self-fund settlement."
+}

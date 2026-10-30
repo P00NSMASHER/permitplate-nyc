@@ -5,7 +5,10 @@ on:
     paths:
       - 'verification/pa-entity-directory-status-latest.json'
       - 'verification/x402-revenue-attribution-rules.json'
+      - 'recovery/x402-portfolio-target.json'
+      - 'scripts/capture-x402-floot-revenue-snapshot.mjs'
       - 'scripts/classify-x402-revenue.mjs'
+      - 'scripts/test-x402-revenue-attribution.mjs'
       - '.github/workflows/x402-revenue-attribution.yml'
   workflow_dispatch:
 
@@ -21,25 +24,62 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22.23.4'
+
+      - name: Test attribution safety
+        run: node scripts/test-x402-revenue-attribution.mjs
+
+      - name: Capture fresh verified eight-route revenue evidence
+        id: capture
+        continue-on-error: true
+        shell: bash
+        env:
+          REPORT_PATH: x402-floot-revenue-snapshot-ci.json
+        run: |
+          for attempt in 1 2 3; do
+            if node scripts/capture-x402-floot-revenue-snapshot.mjs; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              echo "Fresh revenue capture attempt $attempt failed; retrying read-only checks."
+              sleep 5
+            fi
+          done
+          exit 1
 
       - name: Classify settlement provenance
-        run: node scripts/classify-x402-revenue.mjs
+        if: steps.capture.outcome == 'success'
+        run: >
+          node scripts/classify-x402-revenue.mjs
+          x402-floot-revenue-snapshot-ci.json
+          verification/x402-revenue-attribution-rules.json
+          x402-revenue-attribution-ci.json
+          recovery/x402-portfolio-target.json
 
-      - name: Commit attribution receipt
+      - name: Preserve last verified attribution if fresh capture is unavailable
+        if: steps.capture.outcome != 'success'
+        run: >
+          echo "Fresh verified eight-route revenue evidence was unavailable;
+          leaving the committed snapshot and attribution unchanged."
+
+      - name: Commit fresh evidence and attribution receipt
+        if: steps.capture.outcome == 'success'
         shell: bash
         run: |
           set -euo pipefail
+          SNAPSHOT='verification/x402-floot-revenue-snapshot-latest.json'
           RECEIPT='verification/x402-revenue-attribution-latest.json'
-          cp "$RECEIPT" /tmp/x402-revenue-attribution-latest.json
+          cp x402-floot-revenue-snapshot-ci.json /tmp/x402-floot-revenue-snapshot-latest.json
+          cp x402-revenue-attribution-ci.json /tmp/x402-revenue-attribution-latest.json
 
           git fetch origin main
           git reset --hard origin/main
+          cp /tmp/x402-floot-revenue-snapshot-latest.json "$SNAPSHOT"
           cp /tmp/x402-revenue-attribution-latest.json "$RECEIPT"
 
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add "$RECEIPT"
+          git add "$SNAPSHOT" "$RECEIPT"
           if git diff --cached --quiet; then
             echo 'Revenue attribution receipt unchanged.'
             exit 0

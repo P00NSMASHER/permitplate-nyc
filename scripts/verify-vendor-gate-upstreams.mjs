@@ -206,6 +206,111 @@ async function main() {
     };
   }
 
+
+  // SEC EDGAR ticker map + authoritative submissions feed.
+  {
+    const tickerMap = await fetchJson(
+      'https://www.sec.gov/files/company_tickers.json',
+      {
+        headers: {
+          accept: 'application/json',
+          'user-agent':
+            'permitplate-x402-rehost-readiness/1.0 https://pa-entity-x402.floot.app',
+        },
+      }
+    );
+
+    const rows =
+      tickerMap.json && typeof tickerMap.json === 'object'
+        ? Object.values(tickerMap.json)
+        : [];
+    const apple = rows.find(
+      (row) => String(row?.ticker ?? '').toUpperCase() === 'AAPL'
+    );
+    const cik = apple?.cik_str == null
+      ? null
+      : String(apple.cik_str).replace(/\D/g, '').padStart(10, '0');
+
+    let submissions = null;
+    if (cik) {
+      submissions = await fetchJson(
+        'https://data.sec.gov/submissions/CIK' + cik + '.json',
+        {
+          headers: {
+            accept: 'application/json',
+            'user-agent':
+              'permitplate-x402-rehost-readiness/1.0 https://pa-entity-x402.floot.app',
+          },
+        }
+      );
+    }
+
+    const recentForms = Array.isArray(submissions?.json?.filings?.recent?.form)
+      ? submissions.json.filings.recent.form
+      : [];
+
+    report.checks.sec = {
+      ok:
+        tickerMap.ok &&
+        cik === '0000320193' &&
+        submissions?.ok === true &&
+        recentForms.length > 0,
+      tickerMapStatus: tickerMap.status,
+      tickerMapLatencyMs: tickerMap.latencyMs,
+      cik,
+      submissionsStatus: submissions?.status ?? null,
+      submissionsLatencyMs: submissions?.latencyMs ?? null,
+      recentFormCount: recentForms.length,
+      source: 'U.S. Securities and Exchange Commission EDGAR',
+      error: tickerMap.jsonError ?? submissions?.jsonError ?? null,
+    };
+  }
+
+  // U.S. Treasury Fiscal Data average-interest-rates feed.
+  {
+    const url = new URL(
+      'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/avg_interest_rates'
+    );
+    url.searchParams.set(
+      'fields',
+      'record_date,security_type_desc,security_desc,avg_interest_rate_amt'
+    );
+    url.searchParams.set('sort', '-record_date');
+    url.searchParams.set('page[size]', '100');
+
+    const result = await fetchJson(url.toString(), {
+      headers: {
+        accept: 'application/json',
+        'user-agent':
+          'permitplate-x402-rehost-readiness/1.0 https://pa-entity-x402.floot.app',
+      },
+    });
+    const rows = Array.isArray(result.json?.data) ? result.json.data : [];
+    const recordDate = rows[0]?.record_date ?? null;
+    const totalMarketable = rows.find(
+      (row) =>
+        row?.record_date === recordDate &&
+        String(row?.security_desc ?? '').toLowerCase() === 'total marketable'
+    );
+
+    report.checks.treasury = {
+      ok:
+        result.ok &&
+        typeof recordDate === 'string' &&
+        rows.length > 0 &&
+        totalMarketable != null,
+      status: result.status,
+      latencyMs: result.latencyMs,
+      rowCount: rows.length,
+      latestRecordDate: recordDate,
+      totalMarketableRate:
+        totalMarketable?.avg_interest_rate_amt ?? null,
+      source:
+        'U.S. Treasury Fiscal Data — Average Interest Rates on U.S. Treasury Securities',
+      error: result.jsonError,
+    };
+  }
+
   const entries = Object.entries(report.checks);
   report.summary = {
     passed: entries.filter(([, value]) => value.ok).length,

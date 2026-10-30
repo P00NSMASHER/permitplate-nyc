@@ -20,8 +20,9 @@ Authoritative incident-recovery inputs:
 
 - `docs/floot-rehost-implementation-map.md`
 - `docs/floot-x402-consolidation-plan.md`
-- `recovery/x402-rehost-core.mjs`
-- `recovery/x402-rehost-core.mjs` — authoritative shared data + decision core
+- `recovery/x402-rehost-core.mjs` — authoritative shared public-data core
+- `recovery/vendor-intake-gate-core.mjs` — authoritative fail-closed vendor decision core
+- `recovery/pa-registry-rehost-core.mjs` — host-independent PA registry helper for recovery testing/adaptation
 - `recovery/x402-payment-core.mjs` — host-independent payment/challenge core
 - `recovery/x402-paid-operation.mjs` — verify → execute → settle state machine
 - staged Floot-native gate: `docs/pa-entity-floot-release/vendor-intake-gate_GET.ts`

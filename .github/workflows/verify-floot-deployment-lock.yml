@@ -1,0 +1,41 @@
+name: Verify Floot deployment lock
+
+on:
+  push:
+    paths:
+      - 'verification/floot-deployment-queue-latest.json'
+      - 'docs/pa-entity-floot-recovery/deploy-map.json'
+      - 'scripts/verify-floot-deployment-lock.mjs'
+      - 'verification/floot-static-rollback-public-latest.json'
+      - 'scripts/validate-floot-static-rollback-public.mjs'
+      - 'scripts/build-floot-pre-rehost-snapshot.mjs'
+      - 'scripts/test-floot-pre-rehost-snapshot-builder.mjs'
+      - 'scripts/validate-floot-pre-rehost-snapshot.mjs'
+      - 'scripts/build-floot-rollback-plan.mjs'
+      - 'scripts/test-floot-rollback-plan-builder.mjs'
+      - '.github/workflows/verify-floot-deployment-lock.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.4'
+      - name: Verify immutable Floot deployment source lock
+        run: node scripts/verify-floot-deployment-lock.mjs
+
+      - name: Verify public static rollback receipt
+        run: node scripts/validate-floot-static-rollback-public.mjs
+
+      - name: Test pre-rehost snapshot builder
+        run: node scripts/test-floot-pre-rehost-snapshot-builder.mjs
+
+      - name: Test rollback plan generator
+        run: node scripts/test-floot-rollback-plan-builder.mjs

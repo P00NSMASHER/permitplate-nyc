@@ -1,0 +1,48 @@
+{
+  "checkedAt": "2026-10-02T15:02:17.160Z",
+  "origin": "https://pa-entity-x402.floot.app",
+  "workflowRunId": 37024084131,
+  "artifactId": 11234189072,
+  "artifactDigest": "sha256:610e967e05046458675b198a2c71a2ab1fe264d31aa28afc209f32ac7495d52f",
+  "expectedState": "two-route PA seller before eight-route recovery",
+  "discovery": {
+    "root": 200,
+    "wellKnownX402": 200,
+    "wellKnownX402ContentType": "application/octet-stream",
+    "wellKnownX402Json": 200,
+    "wellKnownX402Services": 200,
+    "wellKnownX402Service": 200,
+    "wellKnownX402Catalog": 200,
+    "securityTxt": 200,
+    "openapi": 200,
+    "llms": 200,
+    "llmsFull": 200,
+    "skill": 200,
+    "sitemap": 200,
+    "robots": 200
+  },
+  "paidRoutes": {
+    "paEntityOne": {
+      "status": 402,
+      "paymentRequired": true
+    },
+    "paBusiness": {
+      "status": 402,
+      "paymentRequired": true
+    }
+  },
+  "futureRoutesBeforeRecovery": {
+    "vendorIntakeGate": 404,
+    "vendorIntakeDemo": 404,
+    "secFilings": 404,
+    "usAddressGeocode": 404,
+    "ofacSdnScreen": 404,
+    "domainRdap": 404,
+    "treasuryAverageRates": 404
+  },
+  "assertions": {
+    "healthyExistingPaidRoutes": 2,
+    "futureRoutesCurrentlyLive": 0,
+    "publicBaselineWorkflow": "success"
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "startedAt": "2026-10-03T03:29:24.647Z",
+  "checkedAt": "2026-10-03T03:29:47.284Z",
+  "origin": "https://pa-entity-x402.floot.app",
+  "zeroSpend": true,
+  "paymentSent": false,
+  "publicGreen": true,
+  "directoryRegistrationRequested": false,
+  "paidRoutes": [
+    {
+      "id": "pa-best-match",
+      "url": "https://pa-entity-x402.floot.app/_api/pa-entity-one?q=OpenAI",
+      "status": 402,
+      "ok": true,
+      "failures": []
+    },
+    {
+      "id": "pa-enriched-search",
+      "url": "https://pa-entity-x402.floot.app/_api/pa-business?q=OpenAI&limit=3",
+      "status": 402,
+      "ok": true,
+      "failures": []
+    },
+    {
+      "id": "vendor-intake-gate",
+      "url": "https://pa-entity-x402.floot.app/_api/vendor-intake-gate?name=OpenAI%20OpCo&address=600%20North%20Second%20Street%2C%20Suite%20401%2C%20Harrisburg%2C%20PA%2017101&domain=openai.com",
+      "status": 402,
+      "ok": true,
+      "failures": []
+    },
+    {
+      "id": "sec-recent-filings",
+      "url": "https://pa-entity-x402.floot.app/_api/sec-filings?ticker=AAPL&form=10-K&limit=3",
+      "status": 402,
+      "ok": true,
+      "failures": []
+    },
+    {
+      "id": "census-geocoder",
+      "url": "https://pa-entity-x402.floot.app/_api/us-address-geocode?address=4600%20Silver%20Hill%20Rd%2C%20Washington%2C%20DC%2020233",
+      "status": 402,
+      "ok": true,
+      "failures": []
+    },
+    {
+      "id": "ofac-sdn-screen",
+      "url": "https://pa-entity-x402.floot.app/_api/ofac-sdn-screen?name=VLADIMIR%20PUTIN&limit=3&minScore=85",
+      "status": 402,
+      "ok": true,
+      "failures": []
+    },
+    {
+      "id": "domain-rdap",
+      "url": "https://pa-entity-x402.floot.app/_api/domain-rdap?domain=example.com",
+      "status": 402,
+      "ok": true,
+      "failures": []
+    },
+    {
+      "id": "treasury-average-rates",
+      "url": "https://pa-entity-x402.floot.app/_api/treasury-average-rates?security=Total%20Marketable",
+      "status": 402,
+      "ok": true,
+      "failures": []
+    }
+  ],
+  "fixtures": [
+    {
+      "id": "vendor-proceed",
+      "url": "https://pa-entity-x402.floot.app/_api/vendor-intake-demo?case=proceed",
+      "status": 200,
+      "decision": "proceed",
+      "triggers": [],
+      "ok": true,
+      "failures": []
+    },
+    {
+      "id": "vendor-address-review",
+      "url": "https://pa-entity-x402.floot.app/_api/vendor-intake-demo?case=address_mismatch",
+      "status": 200,
+      "decision": "human_review",
+      "triggers": [
+        "registered_address_differs"
+      ],
+      "ok": true,
+      "failures": []
+    },
+    {
+      "id": "vendor-domain-review",
+      "url": "https://pa-entity-x402.floot.app/_api/vendor-intake-demo?case=domain_mismatch",
+      "status": 200,
+      "decision": "human_review",
+      "triggers": [
+        "domain_name_not_aligned"
+      ],
+      "ok": true,
+      "failures": []
+    }
+  ],
+  "discovery": {
+    "manifestStatus": 200,
+    "openapiStatus": 200,
+    "manifestResourceCount": 8,
+    "openapiPathCount": 8,
+    "sameOrigin": true,
+    "missingManifestPaths": [],
+    "missingOpenApiPaths": [],
+    "ok": true
+  },
+  "agent402": null,
+  "agent402Accepted": false,
+  "marketplaces": null,
+  "marketplacesSkippedReason": null,
+  "accountingNote": "Verification, directory registration, self-tests, probes, and seller-funded activity are not third-party revenue."
+}

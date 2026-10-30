@@ -1,5 +1,7 @@
 # Pennsylvania Vendor Intake Gate x402
 
+> **CURRENT STATUS — historical AppDeploy endpoint unavailable.** The executable AppDeploy URL below is retained for release history only and must not be used for new buyer/reviewer traffic. The replacement same-origin route is staged as `https://pa-entity-x402.floot.app/_api/vendor-intake-gate` but is **not live until the guarded Floot rehost is published and verified**. Use `docs/agentic-ai-vendor-gate-resubmission-draft.md` for the canonical unsent review package.
+
 A pay-per-call, fail-closed decision tool for prospective Pennsylvania vendors inside an autonomous agent loop.
 
 ## Product

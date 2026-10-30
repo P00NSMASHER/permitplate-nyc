@@ -16,6 +16,22 @@ Locked deployment map:
 
 `docs/pa-entity-floot-recovery/deploy-map.json`
 
+Machine-readable pre-write snapshot batches:
+
+`recovery/floot-snapshot-capture-plan.json`
+
+Validate that capture plan with `node scripts/validate-floot-snapshot-capture-plan.mjs` before using it.
+
+Immutable execution queue:
+
+`verification/floot-deployment-queue-latest.json`
+
+The execution queue pins:
+- branch: `floot-recovery-lock-2026-10-02`
+- commit: `ceb21b651764ffaa0c893f4e725eccce0c10ba5f`
+
+**Fetch every deployment source from that pinned branch/commit, never mutable `main`.** Blob SHA + byte-size checks in the queue remain authoritative even if `main` receives unrelated documentation or verification commits.
+
 Current target:
 
 - 8 paid x402 resources
@@ -93,34 +109,61 @@ The locked map contains 26 writes.
 Expected actions after the free-plan reset:
 
 - 1 `list_files`
-- 1 guide read if required
+- 5 normal bounded `read_files` snapshot batches (per `ROLLBACK.md`)
+- up to 14 additional single/bounded reads only in the pathological case that every normally-new recovery endpoint/schema file already exists
+- 1 multi-guide read: `get_guides` for `floot-overview` + `publishing` with the project id
 - 26 sequential file writes
 - 1 typecheck
 - 1 project test run
+- 1 named checkpoint after the staged release is green
 - 1 publish
 - 1 publish-status check
 
-Expected core total: **32 Floot actions**, comfortably below the 100-action daily allowance.
+Expected normal total: **37 Floot actions without a guide, 38 with one guide**. Absolute conservative worst case: **51 without a guide, 52 with one guide**. All remain comfortably below the 100-action daily allowance.
 
 Keep writes serialized and carry the returned project version forward when the write tool exposes it. Do not make concurrent writes against one expected version.
 
 ## Write procedure
 
 1. Fresh `list_files`.
-2. Record:
+2. In one Floot action, read both `floot-overview` and `publishing` guides with the project id before the first code change.
+3. Record:
    - current project version
    - existing endpoint/static paths
    - published metadata
-3. Compare the four preserved PA files against the current live project; do not rewrite them.
-4. Re-read `deploy-map.json` and confirm its source hashes are still green in CI.
-5. For each map entry in order:
-   - fetch exact GitHub source bytes from the recorded source path
+4. Start the mandatory rollback snapshot from `docs/pa-entity-floot-recovery/ROLLBACK.md`. **Rollback Batch 1 is the single authoritative read of the four preserved PA files**; use those same returned bytes both for preservation verification and for the rollback snapshot. Do not perform a duplicate PA read.
+5. Continue rollback Batches 2–5, identify every deployment target already present, and capture any unexpectedly preexisting recovery endpoint/schema target before mutation.
+6. Re-read `verification/floot-deployment-queue-latest.json` and `deploy-map.json`.
+7. Run `scripts/verify-floot-deployment-lock.mjs`; abort before any write if the pinned branch moved, any of the 26 source blob hashes/sizes drifted, or current `main` modified a locked source.
+8. Persist the normalized rollback snapshot and deterministic rollback plan to unique versioned paths under `verification/` before the first Floot write. If the GitHub create/commit races with another bot commit, retry the **identical artifact bytes** against the refreshed GitHub head; do not recapture or alter Floot solely because of a GitHub non-fast-forward/conflict. If an artifact for the same Floot project version already exists from an interrupted attempt, reuse it only when project version, pinned source commit, captured file hashes, and preexisting/absent target classification match exactly; otherwise abort before any Floot write. The first Floot `write_file` must still use the captured Floot project version as `expected_version`, so any real project-side concurrent edit fails closed.
+9. For each queue entry in order:
+   - fetch exact GitHub source bytes from pinned commit `ceb21b651764ffaa0c893f4e725eccce0c10ba5f` at the recorded source path
    - write complete content to the mapped Floot target path
    - use current Floot project version as `expected_version` when supported
    - carry forward the returned version
-6. Run Floot typecheck.
-7. Run Floot tests.
-8. Do not publish if either fails.
+10. Run Floot typecheck.
+11. Run Floot tests.
+12. Do not publish if either fails.
+13. Create one checkpoint titled `x402 eight-route rehost staged` with the pinned source commit and pre-write Floot version in the description.
+14. Publish once.
+
+## Interruption-safe resume protocol
+
+The deployment source is frozen at branch `floot-recovery-lock-2026-10-02`, commit `ceb21b651764ffaa0c893f4e725eccce0c10ba5f`.
+
+If execution is interrupted during the 26 writes:
+
+1. **Do not restart at write 1.**
+2. Call `list_files` once to get the current Floot version and tree.
+3. Identify the highest ordered deploy-map target that is already present with the expected mapped size/content.
+4. For any uncertain boundary file, read that one Floot file and compare it against the locked GitHub source/blob SHA.
+5. Resume with the **next unfinished map entry** using the freshly returned Floot version as `expected_version`.
+6. Continue serialized writes from there.
+7. Run the full typecheck/tests before publish regardless of where the interruption occurred.
+
+Never overwrite the four preserved PA baseline files as part of a resume.
+
+A deployment progress template is stored at `verification/floot-deployment-progress-template.json`; it is bookkeeping only and is not part of the runtime release.
 
 ## Pre-publish content checks
 

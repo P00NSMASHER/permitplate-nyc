@@ -1,0 +1,58 @@
+{
+  "checkedAt": "2026-10-02T17:02:28.130Z",
+  "sourceHead": "b24a55bebc3a1e9651d08ae9e4095a47fb2a066a",
+  "zeroSpend": true,
+  "paymentSent": false,
+  "flootProjectId": "b69a3ee6-eb01-430d-aa51-da2fc7beeac4",
+  "productionOrigin": "https://pa-entity-x402.floot.app",
+  "immutableLock": {
+    "ok": true,
+    "sourceBranch": "floot-recovery-lock-2026-10-02",
+    "sourceCommit": "ceb21b651764ffaa0c893f4e725eccce0c10ba5f",
+    "mainCommitsAheadOfLock": 115,
+    "lockedWrites": 26,
+    "bundledWrites": 26,
+    "lockedSourcesChangedOnMain": 0
+  },
+  "rollbackAndOpsSafety": {
+    "windowsRollbackTooling": "pass",
+    "snapshotBuilderRoundTrip": "pass",
+    "rollbackPlanBuilder": "pass",
+    "postdeployGuard": "pass",
+    "agent402ManifestGuard": "pass",
+    "marketplaceAgent402Guard": "pass",
+    "postRehostOpsSafety": "pass",
+    "finalExit": 0
+  },
+  "exactReleaseLiveUpstreams": {
+    "passed": 6,
+    "total": 6,
+    "facilitatorNetworkCalls": 0,
+    "realUpstreamCalls": 16,
+    "treasury": "pass",
+    "rdap": "pass",
+    "census": "pass",
+    "sec": "pass",
+    "ofac": "pass",
+    "vendorGateRealPaCensusOfacRdap": "pass"
+  },
+  "publicFlootBaseline": {
+    "staticFilesPassed": 12,
+    "staticFilesTotal": 12,
+    "paidRoutesPassed": 2,
+    "paidRoutesTotal": 2,
+    "manifestResourceCount": 2,
+    "manifestOk": true,
+    "green": true
+  },
+  "goNoGo": "GO after fresh post-reset Floot list_files + mandatory rollback snapshot",
+  "remainingPreWriteRequirements": [
+    "Fresh Floot list_files after 18:00 UTC reset.",
+    "Classify all 26 deployment targets as preexisting or absent.",
+    "Capture mandatory 16 current Floot source files in five bounded read_files batches.",
+    "Capture any unexpectedly preexisting recovery endpoint/schema targets.",
+    "Build and validate durable pre-rehost rollback snapshot.",
+    "Build and commit deterministic rollback plan.",
+    "Re-run immutable source lock check before first write."
+  ]
+}

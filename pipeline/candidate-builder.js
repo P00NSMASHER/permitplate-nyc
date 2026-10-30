@@ -3,6 +3,7 @@
 const crypto = require('crypto');
 const project = require('./project-signal');
 const materialChange = require('./material-change');
+const profiles = require('./subscriber-profile');
 const {timestampMs} = require('./timestamp');
 
 const CANDIDATE_BUILDER_VERSION = 'PermitPlate-candidate-builder-v1.0.0';
@@ -53,10 +54,28 @@ function normalizedAddress(value) { return norm(value); }
 
 function groupDohmhByCamis(records) {
   const groups = new Map();
+  const bySourceId = new Map();
   for (const record of records || []) {
     if (!record || record.sourceSystem !== 'DOHMH') continue;
     const camis = sourceCamis(record);
     if (!camis) continue;
+    const id = text(record.sourceRecordId);
+    if (id && bySourceId.has(id)) {
+      const earlier = bySourceId.get(id);
+      // The publisher can repeat an identical inspection/violation row.
+      // Keep its original row in the source receipt, but do not count it
+      // twice as independent evidence for this CAMIS candidate.
+      // Conflicting reuse of a stable ID must never be silently discarded.
+      if (!record.rawFactFingerprint || !earlier.rawFactFingerprint ||
+          record.rawFactFingerprint !== earlier.rawFactFingerprint ||
+          record.sourceEffectiveAt !== earlier.sourceEffectiveAt ||
+          record.eventType !== earlier.eventType ||
+          sourceCamis(earlier) !== camis) {
+        throw Error('DOHMH_SOURCE_RECORD_ID_COLLISION');
+      }
+      continue;
+    }
+    if (id) bySourceId.set(id, record);
     if (!groups.has(camis)) groups.set(camis, []);
     groups.get(camis).push(record);
   }
@@ -74,6 +93,15 @@ function buildDohmhCandidates(records) {
     const prePermits = relevant.filter(isPrePermit).sort(recordOrder);
     const applicants = relevant.filter(isApplicant).sort(recordOrder);
     const primaryRecord = prePermits[0] || applicants[0] || relevant[0];
+    const borough = bestNonblank(relevant, (record) =>
+      record.property && record.property.borough);
+    // Every published nonblank borough for this CAMIS must agree on one
+    // explicit NYC borough. Neither ZIP nor a shared address proves
+    // jurisdiction, and conflicting government rows need human review.
+    const boroughFacts = [...new Set(relevant.map((record) =>
+      text(record && record.property && record.property.borough)).filter(Boolean))];
+    const boroughVerified = boroughFacts.length === 1 &&
+      profiles.BOROUGH_ORDER.includes(boroughFacts[0]);
 
     const effectiveTimes = relevant.map((record) => timeMs(record.sourceEffectiveAt)).filter((x) => x !== null);
     const earliestMs = effectiveTimes.length ? Math.min(...effectiveTimes) : null;
@@ -85,7 +113,7 @@ function buildDohmhCandidates(records) {
       camis,
       canonicalName: bestNonblank(relevant, (record) => record.parties && record.parties.operatorName),
       address: bestNonblank(relevant, (record) => record.property && record.property.address),
-      borough: bestNonblank(relevant, (record) => record.property && record.property.borough),
+      borough,
       zip: bestNonblank(relevant, (record) => record.property && record.property.zip),
       bin: bestNonblank(relevant, (record) => record.property && record.property.bin),
       bbl: bestNonblank(relevant, (record) => record.property && record.property.bbl),
@@ -99,8 +127,11 @@ function buildDohmhCandidates(records) {
       dohmhRecordIds: relevant.map((record) => record.sourceRecordId),
       dohmhRecordCount: relevant.length,
       crossCamisOperationalConflicts: [],
-      deliverySuppressed: false,
-      suppressionReasons: []
+      deliverySuppressed: !boroughVerified,
+      suppressionReasons: boroughVerified ? [] : [
+        'NYC_BOROUGH_UNVERIFIED',
+        ...(boroughFacts.length > 1 ? ['NYC_BOROUGH_CONFLICT'] : [])
+      ]
     };
     candidates.push(candidate);
   }

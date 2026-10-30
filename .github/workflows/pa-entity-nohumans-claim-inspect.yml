@@ -1,21 +1,71 @@
 name: inspect PA Entity nohumans claim flow
 
+# Live third-party observations may run only from repository main.
+# Pull requests run policy tests WITHOUT contacting NoHumans.
 on:
   push:
+    branches: [main]
     paths:
       - '.github/workflows/pa-entity-nohumans-claim-inspect.yml'
+      - 'tests/test_nohumans_claim_workflow_policy.py'
+  pull_request:
+    paths:
+      - '.github/workflows/pa-entity-nohumans-claim-inspect.yml'
+      - 'tests/test_nohumans_claim_workflow_policy.py'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: inspect-nohumans-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  inspect:
+  policy:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 3
     steps:
-      - name: Read claim instructions
+      - name: Check out exact candidate without persisted credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Validate no-send and main-only claim inspector
+        run: python3 -m unittest discover -s tests -p 'test_nohumans_claim_workflow_policy.py' -v
+
+  inspect:
+    needs: policy
+    if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions: {}
+    steps:
+      - name: Observe fixed public claim endpoints without disclosing payload
         shell: bash
         run: |
           set -euo pipefail
-          for id in 958fd262-287 9f2f7a33-cb2; do
-            echo "=== $id ==="
-            curl -sS -i "https://api.nohumans.directory/v1/listings/$id/claim" | head -c 16000
-            echo
+          umask 077
+          body="$(mktemp)"
+          trap 'rm -f "$body"' EXIT
+          for listing_id in 958fd262-287 9f2f7a33-cb2; do
+            # Untrusted response headers/body are never logged or committed.
+            status="$(curl --request GET --proto '=https' --tlsv1.2               --silent --show-error --connect-timeout 5 --max-time 12               --header 'Accept: application/json'               --output "$body" --write-out '%{http_code}'               "https://api.nohumans.directory/v1/listings/$listing_id/claim")"
+            if [[ "$status" != '200' ]]; then
+              echo "PUBLIC_CLAIM_GET_UNVERIFIED: non-200 HTTP status for allowlisted listing."
+              exit 1
+            fi
+            size="$(wc -c < "$body")"
+            if (( size < 2 || size > 32768 )); then
+              echo "PUBLIC_CLAIM_GET_UNVERIFIED: response size outside strict bound."
+              exit 1
+            fi
+            # Validate structure while never echoing response text or headers.
+            python3 - "$body" <<'PY'
+          import json, sys
+          with open(sys.argv[1], "r", encoding="utf-8") as source:
+              data=json.load(source)
+          if not isinstance(data, (dict,list)):
+              raise SystemExit("PUBLIC_CLAIM_GET_UNVERIFIED: unexpected JSON shape")
+          PY
+            digest="$(sha256sum "$body" | cut -d' ' -f1)"
+            printf 'Source listing=%s GET=200 bytes=%s sha256=%s no_claim_submitted=true\n'               "$listing_id" "$size" "$digest"
           done

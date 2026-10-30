@@ -7,16 +7,55 @@ on:
         description: Production origin
         required: false
         default: https://pa-entity-x402.floot.app
+      register_directories:
+        description: Explicitly authorize external x402scan and Agent402 registration
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: permitplate-directory-mutations
+  cancel-in-progress: false
 
 jobs:
   verify:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
-      - uses: actions/checkout@v4
+      - name: Admit fixed origin and exact production main
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/main"
+          CURRENT="$(git ls-remote --exit-code "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/main | cut -f1)"
+          test -n "$CURRENT" && test "$CURRENT" = "$EXPECTED_SHA" || { echo "Stale or unauthorized production source." >&2; exit 1; }
+      - name: Require fixed production origin
+        env:
+          ORIGIN: ${{ inputs.origin }}
+        run: test "$ORIGIN" = 'https://pa-entity-x402.floot.app'
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
 
+      - name: Select October 2026 patched Node.js runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.4'
+      - name: Reject unpatched Node.js runtime
+        run: |
+          node --version
+          node -e 'const [major,minor,patch]=process.versions.node.split(".").map(Number);if(major!==22 || minor<23 || (minor===23 && patch<4)) process.exit(1)'
       - name: Verify production externally
-        run: node scripts/verify-pa-entity-production.mjs "${{ inputs.origin }}"
+        run: node scripts/verify-pa-entity-production.mjs "$ORIGIN"
+        env:
+          ORIGIN: ${{ inputs.origin }}
 
       - name: Require both AgentCash paid routes
         shell: bash
@@ -27,6 +66,34 @@ jobs:
           npx -y @agentcash/discovery@latest discover "$ORIGIN" | tee /tmp/agentcash.txt
           grep -E '/_api/pa-business.*0\.005000.*\[x402\]' /tmp/agentcash.txt
           grep -E '/_api/pa-entity-one.*0\.001000.*\[x402\]' /tmp/agentcash.txt
+
+  register:
+    name: Explicitly approved production directory registration
+    needs: verify
+    if: inputs.register_directories == true && github.ref == 'refs/heads/main'
+    environment: permitplate-directory-approval
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Admit fixed origin and exact production main
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/main"
+          CURRENT="$(git ls-remote --exit-code "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/main | cut -f1)"
+          test -n "$CURRENT" && test "$CURRENT" = "$EXPECTED_SHA" || { echo "Stale or unauthorized production source." >&2; exit 1; }
+      - name: Require fixed production origin
+        env:
+          ORIGIN: ${{ inputs.origin }}
+        run: test "$ORIGIN" = 'https://pa-entity-x402.floot.app'
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
 
       - name: Refresh x402scan origin
         shell: bash

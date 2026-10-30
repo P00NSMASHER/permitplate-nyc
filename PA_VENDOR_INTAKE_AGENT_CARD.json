@@ -1,6 +1,6 @@
 {
   "name": "Pennsylvania Vendor Intake Gate x402",
-  "description": "Fail-closed Pennsylvania vendor-intake decision tool for autonomous agents. Returns proceed or human_review with typed PA registry, Census address, OFAC candidate-screen, and authoritative RDAP evidence.",
+  "description": "HISTORICAL/UNAVAILABLE AppDeploy agent-card artifact. Do not use for runtime discovery. Replacement Floot vendor-intake route is staged but not live until guarded rehost verification completes. Fail-closed Pennsylvania vendor-intake decision tool for autonomous agents. Returns proceed or human_review with typed PA registry, Census address, OFAC candidate-screen, and authoritative RDAP evidence.",
   "url": "https://pa-entity-lookup-x402-4fbm4s.v2.appdeploy.ai/",
   "version": "1.1.0",
   "capabilities": {
@@ -55,5 +55,10 @@
     "Census matching does not prove physical presence or control of an address",
     "RDAP registration and vendor-name alignment do not prove domain ownership or control",
     "brand/domain heuristics are conservative and can intentionally send legitimate vendors to human review"
-  ]
+  ],
+  "status": "historical-unavailable",
+  "deprecated": true,
+  "runtimeAvailable": false,
+  "replacementTarget": "https://pa-entity-x402.floot.app/_api/vendor-intake-gate",
+  "replacementStatus": "staged-not-yet-published"
 }
