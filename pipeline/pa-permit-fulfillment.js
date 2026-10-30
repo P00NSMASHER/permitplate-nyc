@@ -25,7 +25,8 @@ function researchErrors(x,paidAt){
   if(!text(x.researcherId,3,64)||!/^[A-Za-z0-9_-]+$/.test(x.researcherId||'')){
     errors.push('PA_RESEARCHER_ID_INVALID');
   }
-  if(!core.iso(x.preparedAt)||x.preparedAt<paidAt){
+  const preparedAt=core.iso(x.preparedAt);
+  if(!preparedAt||x.preparedAt<paidAt){
     errors.push('PA_RESEARCH_TIMESTAMP_INVALID');
   }
   for(const f of ['projectSummary','jurisdiction','authorityName','publicFeeNotes']){
@@ -36,10 +37,17 @@ function researchErrors(x,paidAt){
   }else{
     const seen=new Set();
     for(const s of x.sources){
+      const observedAt=core.iso(s?.observedAt);
       if(!validUrl(s?.url)||seen.has(s?.url)||!text(s?.sourceId,3,180)||
-         !text(s?.claim,20,900)||!core.iso(s?.observedAt)||
+         !text(s?.claim,20,900)||!observedAt||
          s.verifiedByHuman!==true){
         errors.push('PA_RESEARCH_SOURCE_UNVERIFIED');
+      }
+      // A claimed human inspection cannot occur after the packet was
+      // prepared. Reject impossible chronology before research is recorded
+      // or promoted to a customer-facing QC artifact.
+      if(preparedAt&&observedAt&&observedAt>preparedAt){
+        errors.push('PA_RESEARCH_SOURCE_AFTER_PREPARATION');
       }
       seen.add(s?.url);
     }
@@ -185,7 +193,10 @@ function verifiedDelivery(data){
     throw Error('PA_DELIVERY_AWAITING_PROVIDER_MESSAGE_ID');
   }
   const response=data.providerResponse||{},msg=order.delivery;
-  const to=Array.isArray(response.to)?response.to:[response.to];
+  // Resend's retrieved recipient lists are arrays. A non-array CC/BCC
+  // must not silently bypass the single-customer delivery requirement.
+  const to=response.to;
+  const noExtras=list=>list==null||(Array.isArray(list)&&list.length===0);
   const createdAt=providerCreatedAt(response.created_at);
   const providerMs=Date.parse(createdAt||'');
   const acceptedMs=Date.parse(msg.sentAt);
@@ -198,15 +209,17 @@ function verifiedDelivery(data){
     providerMs>=Date.parse(order.paidAt)&&
     Math.abs(providerMs-acceptedMs)<=10*60*1000&&
     providerMs<=checkedMs;
-  if(response.id!==msg.messageId||to.length!==1||
+  if(response.id!==msg.messageId||!Array.isArray(to)||to.length!==1||
      String(to[0]).toLowerCase()!==order.email||
      response.from!==msg.sender||
      !['delivered','opened','clicked'].includes(response.last_event)||
      !withinSendWindow||
      response.subject!==msg.subject||
      (response.html!=null&&response.html!=='')||
-     (Array.isArray(response.cc)&&response.cc.length>0)||
-     (Array.isArray(response.bcc)&&response.bcc.length>0)||
+     !noExtras(response.cc)||!noExtras(response.bcc)||
+     // Approved PA delivery is text-only, without hidden recipients or
+     // an additional attachment not included in the reviewed report hash.
+     !noExtras(response.attachments)||
      typeof response.text!=='string'||core.sha(response.text)!==msg.reportFingerprint){
     return {status:'REVIEW',failures:['PA_PROVIDER_DELIVERY_NOT_INDEPENDENTLY_VERIFIED']};
   }

@@ -2,73 +2,73 @@ name: PermitPlate launch readiness
 
 on:
   workflow_dispatch:
-  schedule:
-    # Run after the daily 14:12 UTC private research refresh.
-    - cron: '7 15 * * *'
-  push:
+  # Automatic readiness must follow a committed, verified private refresh.
+  # The existing research schedule owns cadence; manual checks stay read-only.
+  workflow_run:
+    workflows: ['PermitPlate curated research (private)']
+    types: [completed]
     branches: [main]
+  pull_request:
     paths:
       - 'pipeline/launch-readiness.js'
       - 'pipeline/run-launch-readiness.js'
+      - 'pipeline/refresh-launch-external-evidence.js'
+      - 'pipeline/refresh-launch-external-evidence.test.js'
       - 'pipeline/stripe-intake-readiness.js'
       - 'pipeline/stripe-intake-readiness.test.js'
       - 'pipeline/curated-stripe-onboarding.js'
       - 'pipeline/run-curated-stripe-onboarding.js'
       - '.github/workflows/stripe-onboarding.yml'
+      - 'pipeline/run-source-health.js'
+      - 'pipeline/candidate-builder.js'
+      - 'pipeline/run-shadow-scoring-evaluation.js'
+      - 'pipeline/historical-shadow-score-benchmark.js'
+      - 'pipeline/scoring-policy.js'
+      - 'pipeline/run-first-subscriber-canary.js'
+      - 'pipeline/founder-curated-offer.js'
+      - 'pipeline/run-founder-curated-canary.js'
+      - 'operations/FOUNDER_CURATED_FULFILLMENT.md'
+      - 'release-manifest.json'
+      - 'pipeline/detection-ledger.js'
+      - 'pipeline/opportunity-ledger.js'
+      - 'verification/launch-external-evidence.json'
+      - 'build-site.js'
+      - 'tests/test_pilot_source_admission.py'
+      - '.github/workflows/launch-readiness.yml'
+      - '.github/workflows/detection-ledger.yml'
       - 'pipeline/curated-production-readiness.js'
       - 'pipeline/curated-production-readiness.test.js'
       - 'pipeline/curated-research-ledger.js'
       - 'pipeline/run-curated-research.js'
       - 'pipeline/run-current-graph.js'
-      - 'pipeline/run-source-health.js'
-      - 'pipeline/candidate-builder.js'
-      - 'pipeline/run-shadow-scoring-evaluation.js'
-      - 'pipeline/historical-shadow-score-benchmark.js'
-      - 'pipeline/scoring-policy.js'
-      - 'pipeline/run-first-subscriber-canary.js'
-      - 'pipeline/founder-curated-offer.js'
-      - 'pipeline/run-founder-curated-canary.js'
-      - 'operations/FOUNDER_CURATED_FULFILLMENT.md'
-      - 'release-manifest.json'
-      - 'pipeline/detection-ledger.js'
-      - 'pipeline/opportunity-ledger.js'
-      - 'verification/launch-external-evidence.json'
-      - 'build-site.js'
-      - 'tests/test_pilot_source_admission.py'
-      - '.github/workflows/launch-readiness.yml'
-      - '.github/workflows/detection-ledger.yml'
-  pull_request:
-    paths:
-      - 'pipeline/launch-readiness.js'
-      - 'pipeline/run-launch-readiness.js'
-      - 'pipeline/stripe-intake-readiness.js'
-      - 'pipeline/stripe-intake-readiness.test.js'
-      - 'pipeline/curated-stripe-onboarding.js'
-      - 'pipeline/run-curated-stripe-onboarding.js'
-      - '.github/workflows/stripe-onboarding.yml'
-      - 'pipeline/run-source-health.js'
-      - 'pipeline/candidate-builder.js'
-      - 'pipeline/run-shadow-scoring-evaluation.js'
-      - 'pipeline/historical-shadow-score-benchmark.js'
-      - 'pipeline/scoring-policy.js'
-      - 'pipeline/run-first-subscriber-canary.js'
-      - 'pipeline/founder-curated-offer.js'
-      - 'pipeline/run-founder-curated-canary.js'
-      - 'operations/FOUNDER_CURATED_FULFILLMENT.md'
-      - 'release-manifest.json'
-      - 'pipeline/detection-ledger.js'
-      - 'pipeline/opportunity-ledger.js'
-      - 'verification/launch-external-evidence.json'
-      - 'build-site.js'
-      - 'tests/test_pilot_source_admission.py'
-      - '.github/workflows/launch-readiness.yml'
-      - '.github/workflows/detection-ledger.yml'
+      - 'tests/test_launch_refresh_sequence.py'
+      - '.github/workflows/curated-research.yml'
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.event_name == 'pull_request' && format('permitplate-pilot-policy-pr-{0}', github.event.pull_request.number) || format('permitplate-private-state-{0}', vars.PERMITPLATE_STATE_REPO) }}
+  # A rejected completion must never take the pending slot of a private writer.
+  # Route before scheduling; the exact-current-main guard still runs before secrets.
+  group: >-
+    ${{ github.event_name == 'pull_request' &&
+        format('permitplate-pilot-policy-pr-{0}', github.event.pull_request.number) ||
+        (github.ref == 'refs/heads/main' &&
+         (github.event_name == 'workflow_dispatch' ||
+          (github.event_name == 'workflow_run' &&
+           github.event.repository.full_name == github.repository &&
+           github.event.workflow_run.head_repository.full_name == github.repository &&
+           github.event.workflow_run.name == 'PermitPlate curated research (private)' &&
+           github.event.workflow_run.path == '.github/workflows/curated-research.yml' &&
+           github.event.workflow_run.status == 'completed' &&
+           github.event.workflow_run.conclusion == 'success' &&
+           (github.event.workflow_run.event == 'push' ||
+            github.event.workflow_run.event == 'schedule' ||
+            github.event.workflow_run.event == 'workflow_dispatch') &&
+           github.event.workflow_run.head_branch == 'main' &&
+           github.event.workflow_run.head_sha == github.sha))) &&
+        format('permitplate-private-state-{0}', vars.PERMITPLATE_STATE_REPO) ||
+        format('permitplate-launch-isolated-{0}', github.run_id) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -84,16 +84,20 @@ jobs:
 
       - name: Verify pilot private-state trust boundaries
         run: python3 -m unittest discover -s tests -p 'test_pilot_source_admission.py' -v
+      - name: Verify trusted refresh-to-readiness admission offline
+        run: python3 -m unittest discover -s tests -p 'test_launch_refresh_sequence.py' -v
       - name: Set up pinned Node for fail-closed intake policy
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: '22'
+          node-version: '22.23.4'
       - name: Reject missing or stale Stripe intake monitoring
         run: node pipeline/stripe-intake-readiness.test.js
+      - name: Verify read-only external evidence renewal offline
+        run: node pipeline/refresh-launch-external-evidence.test.js
 
   launch-readiness:
     needs: policy
-    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') }}
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -117,10 +121,55 @@ jobs:
           test -n "$remote_main" || { echo "Unable to resolve current main."; exit 1; }
           test "$GITHUB_SHA" = "$remote_main" || { echo "Event SHA is not exact current main."; exit 1; }
 
+      - name: Admit trusted refresh completion before private credential
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+
+          if os.environ["GITHUB_REF"] != "refs/heads/main":
+              raise SystemExit("Launch source is not main.")
+          event_name = os.environ["GITHUB_EVENT_NAME"]
+          if event_name == "workflow_dispatch":
+              print("Manual read-only readiness admitted after exact-main verification.")
+          elif event_name == "workflow_run":
+              try:
+                  with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as source:
+                      event = json.load(source)
+              except (OSError, ValueError):
+                  raise SystemExit("Missing or invalid upstream workflow provenance.")
+              if not isinstance(event, dict):
+                  raise SystemExit("Invalid upstream workflow provenance.")
+              run = event.get("workflow_run")
+              repository = event.get("repository")
+              if not isinstance(run, dict) or not isinstance(repository, dict):
+                  raise SystemExit("Missing upstream workflow provenance.")
+              head_repository = run.get("head_repository")
+              if not isinstance(head_repository, dict):
+                  raise SystemExit("Missing upstream source repository.")
+              trusted = (
+                  repository.get("full_name") == os.environ["GITHUB_REPOSITORY"]
+                  and head_repository.get("full_name") == os.environ["GITHUB_REPOSITORY"]
+                  and run.get("name") == "PermitPlate curated research (private)"
+                  and run.get("path") == ".github/workflows/curated-research.yml"
+                  and run.get("status") == "completed"
+                  and run.get("conclusion") == "success"
+                  and run.get("event") in {"push", "schedule", "workflow_dispatch"}
+                  and run.get("head_branch") == "main"
+                  and run.get("head_sha") == os.environ["GITHUB_SHA"]
+              )
+              if not trusted:
+                  raise SystemExit("Upstream refresh is not a successful same-repository exact-main run.")
+              print("Verified private refresh completion admitted for exact current main.")
+          else:
+              raise SystemExit("Untrusted launch workflow event.")
+          PY
+
       - name: Set up Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: '22'
+          node-version: '22.23.4'
 
       - name: Require private durable state
         env:
@@ -150,13 +199,24 @@ jobs:
           test -f "$PRIVATE_STATE_DIR/state/opportunity-ledger.json" || { echo "Private opportunity ledger is not initialized."; exit 1; }
 
       - name: Run live launch readiness controller against private state
-        run: node pipeline/run-launch-readiness.js pipeline/launch-readiness-result.json "$PRIVATE_STATE_DIR/state/detection-ledger.json" "$PRIVATE_STATE_DIR/state/opportunity-ledger.json"
+        env:
+          PERMITPLATE_REFRESH_EXTERNAL_EVIDENCE: 'true'
+          PERMITPLATE_STRIPE_READ_KEY: ${{ secrets.PERMITPLATE_STRIPE_READ_KEY }}
+        run: |
+          set -euo pipefail
+          remote_main="$(git ls-remote --exit-code origin refs/heads/main | awk '{print $1}')"
+          test -n "$remote_main" && test "$GITHUB_SHA" = "$remote_main"
+          node pipeline/run-launch-readiness.js pipeline/launch-readiness-result.json "$PRIVATE_STATE_DIR/state/detection-ledger.json" "$PRIVATE_STATE_DIR/state/opportunity-ledger.json"
+          remote_main="$(git ls-remote --exit-code origin refs/heads/main | awk '{print $1}')"
+          test -n "$remote_main" && test "$GITHUB_SHA" = "$remote_main"
 
       - name: Retain source-bound launch readiness evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: permitplate-launch-readiness-${{ github.sha }}
-          path: pipeline/launch-readiness-result.json
+          path: |
+            pipeline/launch-readiness-result.json
+            pipeline/launch-external-evidence-result.json
           if-no-files-found: warn
           retention-days: 30

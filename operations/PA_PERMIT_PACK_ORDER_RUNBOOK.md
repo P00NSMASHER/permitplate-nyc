@@ -23,7 +23,7 @@ The only scheduled write targets are state/pa-permit-orders.json and state/pa-pe
 
 Each paid Checkout is registered once with Stripe identifiers and a payment fingerprint. Incomplete or unsafe project descriptions are still registered but held for clarification. Distinct paid Checkouts for the same customer and identical project remain separate financial obligations, with the later order held for duplicate review. No silent deletion, merger, automatic refund or automatic email is allowed.
 
-The SHA-256 ledger seal and initial anchor detect accidental modifications; they cannot independently authenticate somebody with write access. GitHub history, access controls, and independent review remain essential.
+The SHA-256 ledger seal and initial anchor detect accidental modifications; they cannot independently authenticate somebody with write access. GitHub history, access controls, actual customer-evidence examination, separate report QC and independent provider/payment readback remain essential. **An independent source-code or PR reviewer is not required** under [the owner-authorized code release policy](CODE_RELEASE_POLICY.md); changing code approval does not authenticate an operator or release customer data.
 
 If either file is absent while its partner exists, if state is altered, if pagination is incomplete, or if an original paid Checkout disappears from a purportedly complete provider scan, the process stops without overwriting private state. Publishing uses normal non-force compare-and-swap.
 
@@ -47,6 +47,7 @@ The draft is not evidence. It includes real customer details and must never go i
 - A real researcher alias and preparation timestamp.
 - Actual project interpretation, jurisdiction, authority and fee limits.
 - At least two separate cited sources with IDs, URLs, timestamps and specific facts. At least one must be a government source.
+- Each source's actual `observedAt` must be on or before the packet's `preparedAt`. Do not future-date or backfill a source observation to make a packet appear more current. The validator refuses impossible chronology, and timestamps alone do not prove genuine independent human inspection.
 - Two applicable actions supported by those sources and at least one unresolved issue.
 - No guarantee of permit approval, project applicability, legal advice, or government endorsement.
 
@@ -100,12 +101,15 @@ For optional independent verification, provide a separately authorized local PER
 
     node pipeline/pa-permit-case-transaction.js verify-delivery PRIVATE_STATE_ROOT cs_LIVE_SESSION - EXPECTED_CURRENT_LEDGER_FINGERPRINT
 
-The validator issues only HTTPS GET to Resend for the message and checks the exact one-recipient delivery, approved sender, message ID, subject and SHA-256 of the original reviewed plain-text report. The documented created_at date may contain an explicit timezone offset and microseconds; the readback accepts those formats with a ten-minute send-time correlation window. Last events delivered, opened and clicked constitute provider delivery-status evidence, **not** evidence that a real human read or acted on the report. Bounces, complaints, unexpected HTML versions, CC/BCC recipients, forged/mismatched timestamps, sender mismatches and changed contents fail closed. A separate Resend credential and genuine provider receipt remain unverified for real customers.
+The validator issues only HTTPS GET to Resend for the message and checks the exact one-recipient delivery, approved sender, message ID, subject and SHA-256 of the original reviewed plain-text report. The documented created_at date may contain an explicit timezone offset and microseconds; the readback accepts those formats with a ten-minute send-time correlation window. Last events delivered, opened and clicked constitute provider delivery-status evidence, **not** evidence that a real human read or acted on the report. Bounces, complaints, unexpected HTML versions, CC/BCC recipients, forged/mismatched timestamps, sender mismatches and changed contents fail closed. **Provider `to` must be a one-element recipient array, while `cc`, `bcc` and `attachments` may only be absent, null or empty arrays.** Unexpected scalar/object values and nonempty attachments cannot prove the approved text-only customer delivery, even if its plain-text digest matches. A separate Resend credential and genuine provider receipt remain unverified for real customers.
 
 ## Duplicate, hold and recovery rules
 
 - Repeated PA provider scans never create a second order for the same Checkout.
 - Separate paid sessions for the same project are flagged as possible duplicate charges, never discarded.
+- A customer-confirmed separate purchase does **not** validate project details. Before releasing any duplicate hold, independently review the effective original or customer-corrected municipality, address and scope. An invalid original or malformed override remains held; do not set `projectValid=true` by attestation alone.
+- Manual project corrections must satisfy the same text limits, canonicalization, jurisdiction ambiguity checks, and no-markup/no-URL rules as original paid Checkout input. Private ledger readback rechecks corrected projects even if its SHA-256 seal was recomputed. This text verification is **not** boundary geocoding or verified permit authority.
+- A hold-release review timestamp must be a valid UTC instant between the actual paid order time and the current operation time. Future-dated self-attestations remain on hold.
 - Research, QC and delivery progress are preserved during each recheck.
 - No transport retry is automatic; a timeout requires independent provider reconciliation to avoid double sending.
 - A provider-verified delivery becomes terminal for sending; tampering or changed Checkout identity stops intake.

@@ -243,6 +243,22 @@ const research={
   claimsNoFurtherVerification:false
 };
 assert.deepEqual(fulfil.researchErrors(research,PAID),[]);
+// Test first: do not accept a source observation recorded AFTER the
+// researcher claims their packet was prepared (including future dates).
+const impossibleSource={
+  ...research,
+  sources:research.sources.map((source,index)=>index===0?
+    {...source,observedAt:'2026-10-20T14:01:00.000Z'}:source)
+};
+assert(fulfil.researchErrors(impossibleSource,PAID)
+  .includes('PA_RESEARCH_SOURCE_AFTER_PREPARATION'));
+const impossibleResearch=fulfil.submitResearch({
+  ledger:first.ledger,anchor,sessionId:SESSION,research:impossibleSource,
+  now:'2026-10-19T14:20:00.000Z'
+});
+assert.equal(impossibleResearch.status,'REVIEW');
+assert(impossibleResearch.failures.includes('PA_RESEARCH_SOURCE_AFTER_PREPARATION'));
+assert.equal(impossibleResearch.ledger,undefined);
 assert(fulfil.govUrl('https://www.pa.gov/agencies/dli.html'));
 assert(!fulfil.validUrl('http://localhost/secret'));
 assert(!fulfil.validUrl('https://127.0.0.1/password'));
@@ -368,6 +384,18 @@ for(const bad of [
   {...providerBase,from:'Wrong Sender <wrong@example.org>'},
   {...providerBase,to:[order.email,'another@example.org']},
   {...providerBase,bcc:['hidden@example.org']},
+  // Resend's recipient fields are arrays, never scalar or object fallbacks.
+  // The old array-only CC/BCC checks silently accepted extra recipients
+  // encoded in non-array forms, despite the exact approved report hash.
+  {...providerBase,cc:'unapproved-copy@example.org'},
+  {...providerBase,bcc:'secret-copy@example.org'},
+  {...providerBase,cc:{email:'unapproved-copy@example.org'}},
+  {...providerBase,bcc:{email:'secret-copy@example.org'}},
+  {...providerBase,to:order.email},
+  // A message with unexpected attachments is not the approved text-only
+  // delivery artifact, even when its text body matches byte-for-byte.
+  {...providerBase,attachments:[{filename:'extra.pdf'}]},
+  {...providerBase,attachments:'extra.pdf'},
   {...providerBase,html:'<p>Different material</p>'},
   {...providerBase,created_at:'2026-10-19 12:10:00.000000+00'},
   {...providerBase,created_at:'2026-10-19 15:25:00.000000+00'},
@@ -418,6 +446,17 @@ const clarification={
   originalCustomerEvidenceInspected:true,ownerAttestation:true,
   projectOverride:correctedProject
 };
+// Adversarial audit: a future review timestamp cannot be backdated into
+// today's private state by a self-attesting operator.
+const futureAttestation=recovery.resolveHold({
+  ledger:hold.ledger,anchor,sessionId:SESSION,
+  now:LATER,evidence:{
+    ...clarification,reviewedAt:'2026-10-21T14:12:00.000Z'
+  }
+});
+assert.equal(futureAttestation.status,'REVIEW');
+assert(futureAttestation.failures.includes('PA_HOLD_REVIEW_FUTURE_OR_INVALID'));
+assert.equal(futureAttestation.ledger,undefined);
 const recovered=recovery.resolveHold({
   ledger:hold.ledger,anchor,sessionId:SESSION,
   now:LATER,evidence:clarification
@@ -440,6 +479,68 @@ const separate=recovery.resolveHold({
 assert.equal(separate.status,'RESEARCH_QUEUE_AFTER_MANUAL_ATTESTATION');
 assert.equal(separate.ledger.orders[second.id].phase,'RESEARCH_QUEUE');
 assert.equal(separate.ledger.orders[second.id].transportAllowed,false);
+
+// Regression: a paid duplicate of an invalid project must stay on hold,
+// even when the operator confirms that the purchase was separate.
+const invalidDuplicateFields=project.map(f=>f.key==='municipality'?
+  {...f,text:{value:'Pottsville'}}:f);
+const invalidFirst=session({
+  id:'cs_live_pa_invalid_duplicate1',payment_intent:'pi_live_pa_invalid_duplicate1',
+  custom_fields:invalidDuplicateFields
+});
+const invalidSecond=session({
+  id:'cs_live_pa_invalid_duplicate2',payment_intent:'pi_live_pa_invalid_duplicate2',
+  created:Date.parse('2026-10-19T13:05:00Z')/1000,
+  custom_fields:structuredClone(invalidDuplicateFields)
+});
+const invalidDuplicates=core.evaluate({
+  ...snapshot([invalidFirst,invalidSecond]),checkedAt:LATER,
+  previousLedger:origin
+});
+assert.equal(invalidDuplicates.status,'READY');
+assert.equal(invalidDuplicates.ledger.orders[invalidFirst.id].phase,
+  'HOLD_PROJECT_DETAILS');
+assert.equal(invalidDuplicates.ledger.orders[invalidSecond.id].phase,
+  'HOLD_POSSIBLE_DUPLICATE');
+assert.equal(invalidDuplicates.ledger.orders[invalidSecond.id].projectValid,false);
+const unqualifiedRelease=recovery.resolveHold({
+  ledger:invalidDuplicates.ledger,anchor,sessionId:invalidSecond.id,
+  now:LATER,evidence:{
+    ...clarification,projectOverride:undefined,
+    separatePurchaseConfirmedByCustomer:true
+  }
+});
+assert.equal(unqualifiedRelease.status,'REVIEW');
+assert(unqualifiedRelease.failures.includes('PA_DUPLICATE_PROJECT_DETAILS_INVALID'));
+assert.equal(unqualifiedRelease.ledger,undefined);
+
+// A duplicate-resolution override is still customer input, so do not
+// allow invalid or markup-bearing scope to bypass the original intake gate.
+const invalidOverrideRelease=recovery.resolveHold({
+  ledger:duplicates.ledger,anchor,sessionId:second.id,
+  now:LATER,evidence:{
+    ...clarification,separatePurchaseConfirmedByCustomer:true,
+    projectOverride:{...correctedProject,
+      projectScope:'Install <script>unknown</script> kitchen equipment'}
+  }
+});
+assert.equal(invalidOverrideRelease.status,'REVIEW');
+assert(invalidOverrideRelease.failures.includes('PA_DUPLICATE_PROJECT_DETAILS_INVALID'));
+assert.equal(invalidOverrideRelease.ledger,undefined);
+assert.equal(core.projectHealth({
+  ...correctedProject,
+  projectScope:'Install <script>unknown</script> kitchen equipment'
+}),false);
+
+// Re-sealing a contradictory private ledger is not authority to skip
+// validation of a corrected project already marked as reviewed.
+const unsafeEditedDuplicate=structuredClone(separate.ledger);
+unsafeEditedDuplicate.orders[second.id].projectOverride.projectScope=
+  'Install <script>unknown</script> kitchen equipment';
+const misleadingSeal=core.seal(unsafeEditedDuplicate);
+assert(core.validate(misleadingSeal).failures.includes(
+  'PA_EFFECTIVE_PROJECT_DETAILS_INVALID'));
+assert.equal(core.validate(separate.ledger).valid,true);
 
 async function main(){
   const emptyProvider=fakeProvider([]);

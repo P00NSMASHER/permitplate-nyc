@@ -24,7 +24,7 @@ assert(manifest.customer_contract.delivery.includes('five business days'));
 assert(index.includes('Start for $79/month'));
 assert(index.toLowerCase().includes('weekly founder-reviewed brief'));
 assert(index.toLowerCase().includes('up to 10 matching signals'));
-assert(index.includes('7-day first-payment refund'));
+assert(index.includes('First payment refundable through 7 days after first brief is sent'));
 assert(index.includes('/permitplate-nyc/start.html'));
 assert(!index.includes(stripeUrl));
 
@@ -36,7 +36,7 @@ assert(start.indexOf('Continue to secure checkout')<start.indexOf('<ul>'),
 assert(start.includes('One vendor category'));
 assert(start.includes('One NYC territory'));
 assert(start.toLowerCase().includes('weekly founder-reviewed brief'));
-assert(start.includes('7-day first-payment refund'));
+assert(start.includes('7-day refund after first brief'));
 assert(!start.includes('paused'));
 assert(!start.includes('No payment'));
 assert(!start.includes('<form'));
@@ -51,8 +51,8 @@ assert(!sample.includes('<td>100</td>'));
 assert(methodology.includes('paid brief does not use or show a model score'));
 assert(methodology.includes('at least one direct official source link'));
 assert(terms.includes('weekly brief contains up to 10 matching signals'));
-assert(terms.includes('prepared within five business days'));
-assert(refunds.includes('within seven calendar days'));
+assert(terms.includes('prepared and sent within five business days'));
+assert(refunds.includes('for seven calendar days after that first message'));
 
 for(const stale of [
   'Request launch access','Self-serve checkout remains paused','No payment collected yet',

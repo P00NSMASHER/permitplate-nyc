@@ -5,6 +5,9 @@
 const fs = require('fs');
 const path = require('path');
 const {replay} = require('./run-current-graph');
+const {buildCurrentGraph} = require('./candidate-builder');
+const internalV4 = require('./nyc-v4-internal-production-scoring');
+const reviewBoard = require('./nyc-v4-review-workbench');
 const ledger = require('./curated-research-ledger');
 const independentReview=require('./independent-source-review');
 const independentHistory=require('./independent-source-history');
@@ -241,8 +244,10 @@ async function run(input) {
   }
   const independentPath=path.join(path.dirname(ledgerPath),'independent-source-review.json');
   const historyPath=path.join(path.dirname(ledgerPath),'independent-source-history.json');
+  const previousIndependentHistory=readOptional(historyPath);
+  const previousIndependentReview=readOptional(independentPath);
   const historyState=prepareIndependentHistory(
-    readOptional(historyPath),readOptional(independentPath),independent
+    previousIndependentHistory,previousIndependentReview,independent
   );
   if(!historyState.ready)return historyState;
   const {advancedHistory,annotated,migrated}=historyState;
@@ -265,8 +270,9 @@ async function run(input) {
   }
   const identityPath=path.join(path.dirname(ledgerPath),'identity-bridge-review.json');
   const identityHistoryPath=path.join(path.dirname(ledgerPath),'identity-triage-history.json');
+  const previousIdentityReview=readOptional(identityPath);
   const triage=prepareIdentityHistory(
-    readOptional(identityHistoryPath),readOptional(identityPath),identity
+    readOptional(identityHistoryPath),previousIdentityReview,identity
   );
   if(!triage.ready)return triage;
   // The rich DOB diagnostic is compiled from the SAME independently verified
@@ -274,6 +280,13 @@ async function run(input) {
   const scopeDiagnostic=constructionPanel.build({
     graph:result.graph,batches:collected.batches,
     independent:annotated,identities:triage.annotated,
+    // An ambiguous filing cannot disappear from protected history or the
+    // original source panel merely because today's scope classifier skips it.
+    // No reviewer judgments, reserved audit, or scoring holdout are read here.
+    protectedReferences:{previousLedger:previous,previousIndependentHistory,
+      previousIndependentReview,previousIdentityReview,
+      previousDiagnosticCases:formerParts.panel?.cases||[],
+      frozenSourceCases:frozenParts.panel?.cases||[]},
     observedAt:result.graph.observedAt
   });
   if(scopeDiagnostic.status!=='SOURCE_RICH_DIAGNOSTIC_ONLY'||
@@ -354,6 +367,10 @@ async function run(input) {
   result.summary.constructionDiagnosticSpecificComponentAndAction=scopeDiagnostic.equipmentSpecificComponentAndActionRules;
   result.summary.constructionDiagnosticHumanReviewers=0;
   result.summary.constructionDiagnosticHoldoutRead=0;
+  result.summary.constructionCollisionIds=scopeDiagnostic.sourceCollisionReceipt.collisionIdCount;
+  result.summary.constructionQuarantinedOutOfScopeIds=scopeDiagnostic.sourceCollisionReceipt.quarantinedIdCount;
+  result.summary.constructionQuarantinedPublisherRows=scopeDiagnostic.sourceCollisionReceipt.quarantinedRowCount;
+  result.summary.constructionRawPublisherRowsRemoved=0;
   // Static human workbench has no approval endpoint, scripts, remote assets,
   // email transport, or public CI artifact. All output stays in private Git.
   const workbench=identityWorkbench.render(triage.annotated);
@@ -386,8 +403,64 @@ async function run(input) {
   result.summary.independentScopeSemanticRebased=historyState.scopeSemanticRebasedCount||0;
   result.summary.independentLegacyScopeAlertCaveats=historyState.legacyScopeAlertCaveats||0;
   result.summary.independentHistoricalMigration=migrated;
+  // Same exact official source batches as the private research ledger: never
+  // refetch or score an unrelated source observation. Internal research scores
+  // are deliberately separate from customer score receipts and transport.
+  const fullGraph=buildCurrentGraph({
+    dohmhBatch:collected.batches.DOHMH,
+    dobBatch:collected.batches.DOB_NOW,
+    slaBatch:collected.batches.SLA_PENDING,
+    reviewedIdentityBridges:[]
+  });
+  const scores=internalV4.scoreSnapshot({
+    publicGraph:result.graph,fullGraph,batches:collected.batches,
+    observedAt:result.graph.observedAt
+  });
+  const scoreCheck=internalV4.validateSnapshot(scores);
+  if(!scoreCheck.valid){
+    return {status:'REVIEW',ready:false,failures:[
+      'NYC_INTERNAL_V4_PRODUCTION_SCORE_NOT_VERIFIED',
+      ...(scores.failures||[]),...scoreCheck.failures
+    ]};
+  }
+  const scoreFile=path.join(sourceDir,'nyc-v4-internal-scores.json');
+  const previousScores=readOptional(scoreFile);
+  if(previousScores&&(
+       !internalV4.validateSnapshot(previousScores).valid||
+       Date.parse(previousScores.observedAt)>Date.parse(scores.observedAt))){
+    return {status:'REVIEW',ready:false,
+      failures:['PREVIOUS_PRIVATE_NYC_SCORE_SNAPSHOT_INVALID_OR_REWOUND']};
+  }
+  // Build the operator's evidence-linked review board from the EXACT same
+  // private graph and V4 snapshot. Failure stops publication of all new
+  // private research artifacts; no new customer work is started.
+  const board=reviewBoard.build({graph:result.graph,scores});
+  if(board.status!=='READY_FOR_PRIVATE_HUMAN_REVIEW'||
+     board.customerDeliveryAllowed!==false||board.externalSendCalls!==0||
+     board.receipt?.ownerApproved!==false||
+     board.receipt?.scoreFingerprint!==scores.fingerprint){
+    return {status:'REVIEW',ready:false,failures:[
+      'NYC_PRIVATE_REVIEW_BOARD_NOT_VERIFIED',...(board.failures||[])
+    ]};
+  }
+  result.summary.internalReviewBoardVersion=reviewBoard.VERSION;
+  result.summary.internalReviewBoardCaseCount=board.receipt.sourceScoreCount;
+  result.summary.internalReviewBoardCategoryRows=board.receipt.displayedRowCount;
+  result.summary.internalReviewBoardFingerprint=board.receipt.fingerprint;
+  result.summary.internalScoringMode=internalV4.MODE;
+  result.summary.internalProductionScoringActive=true;
+  result.summary.internalKnownEventResearchScores=scores.knownEventScoredCount;
+  result.summary.internalUnknownDateHeld=scores.unknownEventHeldCount;
+  result.summary.internalSuppressedHeld=scores.suppressedCount;
+  result.summary.internalScoreFingerprint=scores.fingerprint;
+  result.summary.customerScoredLeadReleaseAuthorized=false;
   atomicJson(graphPath,result.graph);
   atomicJson(ledgerPath,result.ledger);
+  atomicJson(scoreFile,scores);
+  // Private files only: scripts/forms/external assets are prohibited.
+  atomicJson(path.join(sourceDir,'nyc-v4-review-workbench-receipt.json'),board.receipt);
+  atomicText(path.join(sourceDir,'nyc-v4-review-workbench.csv'),board.csv);
+  atomicText(path.join(sourceDir,'nyc-v4-review-workbench.html'),board.html);
   if (!anchor) atomicJson(anchorPath,baselineAnchor(result.ledger));
   atomicJson(historyPath,advancedHistory.ledger);
   atomicJson(independentPath,annotated);

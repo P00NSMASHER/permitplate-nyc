@@ -37,5 +37,13 @@ jobs:
           EXPECTED='af59379dd3bacc5966107b5ffdde6bce16a26936'
           ACTUAL="$(git hash-object verification/floot-static-rollback-public-latest.json)"
           test "$ACTUAL" = "$EXPECTED" || { echo 'Immutable historical baseline modified' >&2; exit 1; }
+      - name: Select October 2026 patched Node.js runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.4'
+      - name: Reject unpatched Node.js runtime
+        run: |
+          node --version
+          node -e 'const [major,minor,patch]=process.versions.node.split(".").map(Number);if(major!==22 || minor<23 || (minor===23 && patch<4)) process.exit(1)'
       - name: Verify original baseline payloads without HTTP or credentials
         run: node scripts/test-floot-rollback-baseline.mjs

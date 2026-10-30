@@ -39,6 +39,16 @@ button,input{font:inherit}
 .button:hover{transform:translateY(-2px)}
 .button-primary{background:var(--pear);color:var(--ink);box-shadow:0 12px 28px rgba(217,255,98,.18)}
 .button-primary:hover{box-shadow:0 18px 36px rgba(217,255,98,.28)}
+[hidden]{display:none!important}
+.trial-card h2{font-size:32px;margin:12px 0 16px}
+.trial-card .price-label{color:var(--pear)}
+.trial-card form{display:grid;gap:10px;margin-top:24px}
+.trial-card label{font-weight:700;margin-top:8px}
+.trial-card input,.trial-card select,.trial-card textarea{width:100%;min-height:48px;padding:12px;border:1px solid #b8aaa9;border-radius:8px;background:#fffaf1;color:#190b12;font:inherit}
+.trial-card [data-trial-fallback]{margin-top:20px}
+.trial-card button{margin-top:18px}
+.trial-benefits{padding-left:22px;line-height:1.7}
+.trial-note{border-left:3px solid var(--wine);padding-left:18px}
 .button-dark{background:var(--ink);color:var(--paper);box-shadow:0 12px 28px rgba(25,11,18,.18)}
 .button-line{border-color:rgba(255,255,255,.28);color:white;background:rgba(255,255,255,.05)}
 .button-small{min-height:42px;padding-inline:18px;font-size:13px;background:var(--ink);color:var(--paper)}
@@ -315,3 +325,19 @@ h3{line-height:1.12}
 .checkout-card>.checkout-legal{margin:13px 0 0}
 .checkout-card>ul{margin:22px 0 0;padding:20px 0 0;border-top:1px solid rgba(255,255,255,.28)}
 @media(max-width:680px){.checkout-card>ul{gap:10px}.checkout-card li{font-size:14px}}
+
+/* First-party approved RETALLY corporate wordmark in context. */
+img.retally-wordmark{
+ display:inline-block!important;
+ height:.79em!important;width:auto!important;
+ max-width:min(100%,8em);box-sizing:content-box;
+ margin:0 .04em;padding:.075em .12em;
+ vertical-align:-.035em;object-fit:contain;
+ background:#fff;border:1px solid rgba(10,72,50,.12);
+ border-radius:.17em;box-shadow:0 1px 4px rgba(0,31,26,.10);
+}
+a img.retally-wordmark{pointer-events:none}
+@media print{img.retally-wordmark{box-shadow:none}}
+
+/* PermitPlate 2.0 public discovery block */
+.v2-teaser{background:#dfe8da;padding:70px 0;border-block:1px solid #c2d3c8}.v2-teaser-grid{display:grid;grid-template-columns:1.1fr .9fr;align-items:center;gap:55px}.v2-teaser h2{margin:14px 0 18px;font-size:clamp(40px,4.4vw,61px)}.v2-teaser p{max-width:560px}.v2-teaser-note{font-size:13px;color:#5c6256}.v2-teaser-action{padding:30px;border:1px solid #b7c2b0;background:#fffaf1;border-radius:20px;display:grid;gap:12px}.v2-teaser-action span{font-size:13px;color:#52675e}.v2-teaser-action .v2-teaser-label{letter-spacing:.13em;color:#6d1834;font-size:11px;font-weight:800}.v2-teaser-action strong{font:500 28px var(--display)}.v2-teaser-action .button{justify-self:start}.v2-sample-banner{display:flex;justify-content:space-between;align-items:center;gap:25px;background:#e4f1e3;border:1px solid #bad0be;border-radius:20px;padding:22px;margin:24px 0}.v2-sample-banner strong{font-size:20px}.v2-sample-banner p{margin:6px 0 0;font-size:14px;max-width:650px}.v2-sample-banner .button{flex-shrink:0}@media(max-width:760px){.v2-teaser-grid{grid-template-columns:1fr;gap:25px}.v2-sample-banner{display:block}.v2-sample-banner .button{margin-top:16px}}

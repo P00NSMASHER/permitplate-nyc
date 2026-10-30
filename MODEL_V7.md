@@ -44,7 +44,9 @@ Operational ledgers belong in the private state repository described in `operati
 
 ## Stripe subscriber activation
 
-The production path applies only after the launch-readiness controller authorizes paid enrollment. While readiness is blocked, the Payment Link and public payable CTA remain inactive. The eventual production path is:
+The paid production path is governed by the launch-readiness controller. The
+published site currently links to the established paid Checkout. A public CTA
+is not itself evidence of a successful customer lifecycle. Paid activation requires:
 
 - completed PermitPlate Stripe Checkout;
 - expected Payment Link and price;
@@ -58,7 +60,18 @@ Activation fails closed on wrong link, wrong mode, incomplete or unpaid checkout
 
 ## Subscriber artifacts
 
-Artifacts are deterministic from the subscriber profile, opportunity ledger, and delivered keys. Normal and Starter items have distinct key namespaces. Starter items must already exist in opportunity state, remain active, fall within seven days, and stay within the limit of 10. Total signals are capped at 25.
+The founder-curated launch artifacts are deterministic from the verified profile,
+current source graph, private research ledger and founder's source-bound review.
+Paid reports are capped at 10; free trial reports at five. The older scored
+artifact module's 25-item capacity is research infrastructure and does not
+change the customer offer. Starter items must represent real observations
+after monitoring initialization, remain current and fall within seven days.
+
+The no-card trial lane uses `free-trial.js` and `prepareTrial()` rather than a
+manufactured Stripe subscription. It preserves source, review, transport and
+provider evidence checks. The trial clock starts only at a nonempty accepted
+send; no-match or merely prepared reports cannot activate it. Private state is
+updated with an expected fingerprint and exclusive local transaction lock.
 
 Report and CSV use the same ordered signal keys. CSV formula-like values are neutralized. Customer-facing content separates observed source facts from PermitPlate interpretation.
 
@@ -74,9 +87,14 @@ Caller-supplied FINALIZED state cannot authorize delivery. Provider evidence mus
 
 `build-site.js` copies an explicit allowlist to `dist/`. Backend pipeline code, operational files, state, tests, model documents, Netlify files, and secrets are excluded.
 
-The canonical site is GitHub Pages at `https://p00nsmasher.github.io/permitplate-nyc/`. The Pages workflow builds the artifact, deploys it, and verifies live `build-info.json` against the source commit and aggregate public-source fingerprint.
+The company site is `https://permitplate.retallyrecovery.com/` on Cloudflare
+Pages. The established GitHub Pages artifact remains at
+`https://p00nsmasher.github.io/permitplate-nyc/`. Both hosts expose build identity
+and file fingerprints; check the actual destination independently.
 
-All local absolute links must remain under `/permitplate-nyc/`. The public conversion regression ensures no payable Stripe URL is present while launch readiness is blocked. When paid enrollment is later authorized, the release procedure must restore the Payment Link only after its required Stripe preferences and exact public build are reverified.
+Source absolute links remain under `/permitplate-nyc/`; the standalone build
+rewrites them to clean hostname-root routes. The public conversion regression
+preserves the existing paid Checkout and explicit draft-only free request.
 
 ## Readiness states
 

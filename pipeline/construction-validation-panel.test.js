@@ -44,6 +44,7 @@ function fixture(opts={}){
       received_date:'2026-10-18T00:00:00.000',status:'Pending'
     },context)]
   };
+  source.DOB_NOW.push(...(opts.extraDobRows||[]).map(row=>adapter.normalizeDobNowRow(row,context)));
   const observations={},batches={};
   for(const key of research.REQUIRED_SOURCES){
     const obs={
@@ -81,7 +82,7 @@ function fixture(opts={}){
   assert.equal(annotated.status,'REVIEW_ONLY');
   const hypotheses=identity.prepare({graph,batches,independent:annotated,observedAt:NOW});
   assert.equal(hypotheses.status,'REVIEW_ONLY');
-  return {graph,batches,independent:annotated,
+  return {graph,batches,independent:annotated,protectedReferences:opts.protectedReferences||{},
     identities:hypotheses,observedAt:NOW};
 }
 const input=fixture();
@@ -121,7 +122,8 @@ assert.equal(form.status,'SOURCE_RICH_DIAGNOSTIC_ONLY');
 assert(diagnostic.csv(form).includes("'=HYPERLINK"));
 const poisoned=fixture();
 poisoned.batches.DOB_NOW.records[0].facts.job_description+=' FAKE OFFICIAL FILING TEXT';
-assert(diagnostic.build(poisoned).failures.includes('CONSTRUCTION_REVIEW_ROW_SOURCE_MISMATCH'));
+assert(diagnostic.build(poisoned).failures.includes('DOB_COLLISION_SOURCE_ROW_INVALID'),
+  'altered raw facts now fail before the selected-case source binding check');
 const wrongReceipt=fixture();
 wrongReceipt.independent.items[0].sourceExcerpt='FAKE CHANGED PRIVATE SCOPE';
 assert.equal(diagnostic.build(wrongReceipt).status,'REVIEW');
@@ -136,4 +138,20 @@ capped.independent.omittedByLimit=1;
 assert(diagnostic.build(capped).failures.includes('CONSTRUCTION_PRIVATE_REVIEW_CAPPED'));
 assert.throws(()=>diagnostic.csv({}),/VERIFIED_PRIVATE_CONSTRUCTION_DIAGNOSTIC_REQUIRED/);
 assert.throws(()=>diagnostic.report({}),/VERIFIED_PRIVATE_CONSTRUCTION_DIAGNOSTIC_REQUIRED/);
+const unrelated={job_filing_number:'B00772431-A5',borough:'Brooklyn',
+  house_no:'200',street_name:'TEST STREET',filing_date:'2026-10-18T00:00:00.000',
+  job_description:'Mechanical work for a new building.',filing_status:'Approved',initial_cost:'300'};
+const collisionInput=fixture({extraDobRows:[unrelated,{...unrelated,
+  filing_status:'Pending Plan Examiner Assignment',initial_cost:'100'}]});
+const originalBatch=JSON.stringify(collisionInput.batches);
+const cleanScope=diagnostic.build(collisionInput);
+assert.equal(cleanScope.status,'SOURCE_RICH_DIAGNOSTIC_ONLY');
+assert.equal(cleanScope.filings,panel.filings,'unrelated collision cannot remove any selected case');
+assert.deepEqual(cleanScope.cases,panel.cases);
+assert.equal(cleanScope.sourceCollisionReceipt.quarantinedRowCount,2);
+assert.equal(JSON.stringify(collisionInput.batches),originalBatch);
+collisionInput.protectedReferences={frozenSourceCases:[{sourceRecordId:'DOB_NOW:B00772431-A5'}]};
+const protectedHold=diagnostic.build(collisionInput);
+assert.equal(protectedHold.status,'REVIEW');
+assert(protectedHold.failures.includes('DOB_COLLISION_REFERENCED'));
 console.log('Separate source-rich construction panel: 100% source binding, full-scope evidence, formula-safe CSV and zero holdout access passed.');

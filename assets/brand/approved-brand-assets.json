@@ -1,0 +1,46 @@
+{
+  "release": "approved-retally-logos-20261022",
+  "derivation": "Owner-approved white-background artwork, proportionally downsampled. Header is the unchanged wordmark and endorsement region. No AI regeneration.",
+  "brands": {
+    "permitplate": {
+      "name": "PermitPlate by RETALLY",
+      "source_sha256": "4c34118fca23f1743f6e34e71dc5e65366c61f612619fa5264a14cfc6861874f",
+      "source_dimensions": [
+        6144,
+        4096
+      ],
+      "files": {
+        "permitplate-600-20261022.webp": {
+          "sha256": "090947b925274a59cc8ba9eba2c9243df2297bd44556e5f1ce0d704fcc0498c0",
+          "width": 600,
+          "height": 400,
+          "bytes": 47400
+        },
+        "permitplate-1200-20261022.webp": {
+          "sha256": "a8c8da27bd251494792d90a7e595a5efb8afff5ef08f88f2a87aba35dbba2afa",
+          "width": 1200,
+          "height": 800,
+          "bytes": 118482
+        },
+        "permitplate-wordmark-20261022.webp": {
+          "sha256": "86dbd105af12dc3fb39d950ff143b672acf4ab70d42cdb668934fb0f5424be3f",
+          "width": 640,
+          "height": 127,
+          "bytes": 13220
+        },
+        "permitplate-social-20261022.png": {
+          "sha256": "98c8d9b3c36f891c91908fbec2d8c6d2fd1067f0dc6c30ae296bacd8a208a637",
+          "width": 1200,
+          "height": 630,
+          "bytes": 500709
+        },
+        "permitplate-icon-20261022.png": {
+          "sha256": "aafe3a759c066bc2ce90547fa6ac4dbd4d619926e6a164bd5b5cebc2f90b4b0d",
+          "width": 256,
+          "height": 256,
+          "bytes": 64454
+        }
+      }
+    }
+  }
+}

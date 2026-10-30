@@ -20,10 +20,21 @@ jobs:
       - name: Verify bounded x402 directory receipts (offline)
         run: python3 -m unittest discover -s tests -p 'test_pa_entity_directory_bounding.py'
 
+      - name: Verify external distribution trust boundary (offline)
+        run: python3 -m unittest discover -s tests -p 'test_post_floot_distribution_workflow_policy.py' -v
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '22.23.4'
+
+      - name: Enforce October 2026 patched Node.js baseline
+        run: |
+          node --version
+          node -e 'const [major,minor,patch]=process.versions.node.split(".").map(Number);if(major!==22 || minor<23 || (minor===23 && patch<4)) process.exit(1)'
+
+      - name: Reject unsupported and floating CI Node runtimes
+        run: python3 -m unittest discover -s tests -p 'test_node_security_workflow_policy.py' -v
 
       - name: Verify public deployment boundary
         run: node build-site.test.js
@@ -166,6 +177,21 @@ jobs:
       - name: Run founder-curated paid offer regression
         run: node pipeline/founder-curated-offer.test.js
 
+      - name: Verify bounded no-card trial admission, source gates and exact provider activation
+        run: node pipeline/free-trial.test.js
+
+      - name: Verify labeled customer simulations cannot create commercial proof or LIVE approvals
+        run: node pipeline/trial-customer-simulation.test.js
+
+      - name: Verify source collision quarantine preserves complete publisher evidence
+        run: node pipeline/dob-source-collisions.test.js
+
+      - name: Verify trial email-draft request and both publication targets
+        run: node trial-request.test.js
+
+      - name: Verify nonempty unique official readback evidence and chronology
+        run: node pipeline/nyc-dob-filing-readback.test.js
+
       - name: Verify private curated product acceptance gates
         run: node pipeline/curated-production-readiness.test.js
 
@@ -202,5 +228,17 @@ jobs:
       - name: Run 47-case historical shadow scoring replay
         run: node pipeline/historical-shadow-score-benchmark.test.js
 
+      - name: Verify owner-authorized V4 internal production scores never enable customer transport
+        run: node pipeline/nyc-v4-internal-production-scoring.test.js
+
+      - name: Verify private operator V4 HTML and CSV security
+        run: node pipeline/nyc-v4-review-workbench.test.js
+
       - name: Run controlled scoring promotion policy regression
         run: node pipeline/scoring-policy.test.js
+
+      - name: Verify exact Cloudflare Pages standalone publication build
+        run: |
+          node build-site.test.js
+          node build-standalone-site.test.js
+          node build-site.js --site-base https://permitplate.retallyrecovery.com/

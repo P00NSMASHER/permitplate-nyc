@@ -46,5 +46,20 @@ class PilotSourceAdmissionTests(unittest.TestCase):
             source=(ROOT/path).read_text()
             self.assertIn("github.ref == 'refs/heads/main'",source)
 
+    def test_launch_renews_provider_evidence_only_after_current_main_admission(self):
+        source=(ROOT/".github/workflows/launch-readiness.yml").read_text()
+        policy,live=source.split("  launch-readiness:",1)
+        self.assertNotIn("secrets.PERMITPLATE_STRIPE_READ_KEY",policy)
+        self.assertIn("refresh-launch-external-evidence.test.js",policy)
+        self.assertIn("PERMITPLATE_REFRESH_EXTERNAL_EVIDENCE: 'true'",live)
+        self.assertLess(live.index("Admit exact current main"),
+                        live.index("secrets.PERMITPLATE_STRIPE_READ_KEY"))
+        self.assertIn("pipeline/launch-external-evidence-result.json",live)
+        self.assertNotIn("continue-on-error",live)
+        runner=(ROOT/"pipeline/run-launch-readiness.js").read_text()
+        self.assertIn("await externalRefresh.refresh",runner)
+        self.assertIn("evaluatedAt=refreshEnabled?new Date().toISOString():observedAt",runner)
+
 if __name__=="__main__":
     unittest.main()
+

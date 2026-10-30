@@ -8,10 +8,27 @@ owner-approved, provider-reconciled attempt.
 
 Stripe is authoritative for a completed subscription, the exact $79/month
 PermitPlate price, email, category, territory, Starter preference and
-subscription-created baseline. A new customer receives a founder-reviewed
-official-source brief (up to ten signals), or a no-matches note, within five
-business days and weekly thereafter. The first seven-day Starter Snapshot is
+subscription-created baseline. A new customer receives a founder-reviewed official-source brief (up to ten signals), or a no-matches note, sent within five
+business days and weekly thereafter. The first payment is refundable before
+the first send and during the following seven calendar days; if the first
+message does not arrive or the five-business-day first-send promise is missed,
+the customer may request a resend or first-payment refund. The first seven-day Starter Snapshot is
 optional. Do **not** promise an opening, guaranteed sale or exclusive lead.
+
+## Internal production V4 source-relevance scoring — not customer delivery
+
+The owner has authorized **private internal** V4 source-event relevance ranking
+under [the internal scoring runbook](NYC_INTERNAL_V4_SCORING.md). The existing
+daily `curated-research.yml` main-only workflow writes
+`state/nyc-v4-internal-scores.json` to the existing private state repository,
+with the same source snapshot and guarded Git writer. Its rankings are an
+operator research aid only. Records with unknown business-event dates or
+unverified NYC boroughs are held, and every category has source-evidence
+ceilings. **No source-relevance number is a verified buyer probability or a
+customer-authorized score receipt.** Founder-reviewed subscriber briefs remain
+source-specific and **NO SCORE**, with owner send authorization and provider
+readback unchanged. Do not convert an internal score into a paid scored feed
+without independent buyer validation and a separately accepted promotion.
 
 ## 1. Independent live research
 
@@ -177,6 +194,12 @@ judgments, or treat this audit as the existing scored Equipment holdout.
 The original 70-case tuning and 30-case scoring holdout remain untouched.
 
 ## Independent full-scope construction diagnostic (not scored calibration)
+
+The current diagnostic preserves conflicting DOB publisher rows and excludes
+only demonstrably unused scope under the bounded
+[source-collision contract](DOB_COLLISION_QUARANTINE.md). Relevant, affirmative,
+historical or unproven references remain held; source completeness and the
+frozen reference are unchanged.
 
 The source refresh creates three additional **private** artifacts:
 `state/construction-validation-panel.json`,

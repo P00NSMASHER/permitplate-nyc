@@ -219,6 +219,73 @@ const a = require('./source-adapters');
   assert.equal(a1.observationId, a2.observationId);
 }
 
+
+{
+  const receipt = a.buildSourceObservation('DOHMH', {
+    observedAt:'2026-10-30T08:50:00Z',
+    queryScope:{where:"record_date >= '2026-10-29'"},
+    sourceFresh:true,
+    transportOk:true,
+    intendedFullScope:true,
+    publisherCount:1,
+    cursorClosed:true,
+    schemaFields:['camis','record_date'],
+    rawPages:['[{"camis":"1"}]'],
+    rows:[{camis:'1', record_date:'2026-10-30'}]
+  });
+  assert.deepEqual(receipt.sourceProvenance, {
+    sourceId:'nyc-open-data:43nn-pn8j',
+    datasetName:'DOHMH New York City Restaurant Inspection Results',
+    agency:'NYC DOHMH',
+    landingUrl:'https://data.cityofnewyork.us/d/43nn-pn8j',
+    apiUrl:'https://data.cityofnewyork.us/resource/43nn-pn8j.json',
+    termsUrl:'https://data.cityofnewyork.us/stories/s/Terms-of-Use/k9k7-3cje',
+    useConditions:'NYC_OPEN_DATA_TERMS'
+  });
+}
+
+{
+  const receipt = a.buildSourceObservation('SLA_PENDING', {
+    observedAt:'2026-10-30T08:50:00Z',
+    queryScope:{where:"received_date >= '2026-10-29'"},
+    sourceFresh:true,
+    transportOk:true,
+    intendedFullScope:true,
+    publisherCount:0,
+    cursorClosed:true,
+    schemaFields:['application_id','received_date'],
+    rawPages:['[]'],
+    rows:[]
+  });
+  assert.equal(
+    receipt.sourceProvenance.termsUrl,
+    'https://data.ny.gov/dataset/OPEN-NY-Terms-Of-Use/77gx-ii52'
+  );
+  assert.equal(receipt.sourceProvenance.useConditions, 'OPEN_NY_TERMS_LAWFUL_USE');
+}
+
+
+
+assert.throws(
+  () => a.buildSourceProvenance(Object.assign({}, a.SOURCE_CONFIGS.DOHMH, {
+    apiUrl:'https://example.com/resource/43nn-pn8j.json'
+  })),
+  /must use official host data\.cityofnewyork\.us/
+);
+assert.throws(
+  () => a.buildSourceProvenance(Object.assign({}, a.SOURCE_CONFIGS.DOB_NOW, {
+    termsUrl:null
+  })),
+  /missing termsUrl/
+);
+assert.throws(
+  () => a.buildSourceProvenance(Object.assign({}, a.SOURCE_CONFIGS.SLA_PENDING, {
+    useConditions:'NYC_OPEN_DATA_TERMS'
+  })),
+  /use conditions mismatch/
+);
+
+
 assert.throws(() => a.normalizeDohmhRow({dba:'missing-id'}), /missing CAMIS/);
 assert.throws(() => a.normalizeDobNowRow({filing_status:'Approved'}), /missing job_filing_number/);
 assert.throws(() => a.normalizeSlaPendingRow({status:'Pending'}), /missing application_id/);

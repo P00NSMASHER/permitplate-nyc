@@ -13,8 +13,9 @@ const readiness=require('./launch-readiness');
 const curatedCanary=require('./run-founder-curated-canary');
 const curatedProduction=require('./curated-production-readiness');
 const stripeIntakeReadiness=require('./stripe-intake-readiness');
+const externalRefresh=require('./refresh-launch-external-evidence');
 
-const RUNNER_VERSION='PermitPlate-launch-readiness-runner-v1.2.0';
+const RUNNER_VERSION='PermitPlate-launch-readiness-runner-v1.3.0';
 
 function readJson(filePath){
   return JSON.parse(fs.readFileSync(filePath,'utf8'));
@@ -88,7 +89,6 @@ async function run(options){
       curatedStateDir,'curated-onboarding-anchor.json')),
     evaluatedAt:observedAt
   });
-  const externalEvidence=readJson(externalEvidencePath);
   const subscriberCanary=firstSubscriber.run();
   const founderCuratedCanary=curatedCanary.run();
   const manifest=readJson(path.join(__dirname,'..','release-manifest.json'));
@@ -97,6 +97,17 @@ async function run(options){
   );
   const publicBuildFailures=publicBuild.validateAllowlist();
   const currentPublicSourceFingerprint=readiness.publicSourceFingerprint();
+  const refreshEnabled=opts.refreshExternalEvidence===true;
+  const externalEvidence=refreshEnabled?await externalRefresh.refresh({
+    key:opts.stripeReadKey,sourceCommit:opts.sourceCommit
+  }):readJson(externalEvidencePath);
+  // Public-source collection precedes provider verification. Evaluate freshness
+  // at completion so a genuinely new receipt is not mistaken for future data.
+  const evaluatedAt=refreshEnabled?new Date().toISOString():observedAt;
+  if(refreshEnabled&&opts.externalEvidenceOutputPath){
+    fs.writeFileSync(opts.externalEvidenceOutputPath,
+      JSON.stringify(externalEvidence,null,2)+'\n');
+  }
 
   const result=readiness.evaluateLaunchReadiness({
     graph,
@@ -114,7 +125,7 @@ async function run(options){
     publicBuildFailures,
     currentPublicSourceFingerprint,
     externalEvidence,
-    evaluatedAt:observedAt
+    evaluatedAt
   });
 
   return Object.assign({
@@ -144,7 +155,11 @@ async function main(){
     path.join(__dirname,'launch-readiness-result.json');
   const detectionPath=process.argv[3]||undefined;
   const opportunityPath=process.argv[4]||undefined;
-  const result=await run({detectionPath,opportunityPath});
+  const result=await run({detectionPath,opportunityPath,
+    refreshExternalEvidence:process.env.PERMITPLATE_REFRESH_EXTERNAL_EVIDENCE==='true',
+    stripeReadKey:process.env.PERMITPLATE_STRIPE_READ_KEY,
+    sourceCommit:process.env.GITHUB_SHA,
+    externalEvidenceOutputPath:path.join(__dirname,'launch-external-evidence-result.json')});
   fs.writeFileSync(outputPath,JSON.stringify(result,null,2)+'\n');
   console.log(JSON.stringify(result,null,2));
   if(shouldFailJob(result)) {
@@ -164,3 +179,4 @@ module.exports={
   shouldFailJob,
   run
 };
+

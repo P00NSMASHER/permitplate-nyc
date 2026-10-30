@@ -1,0 +1,20 @@
+{
+  "version": "PermitPlate-NYC-internal-scoring-authorization-v1.0.0",
+  "authorizationId": "NYC-V4-INTERNAL-SOURCE-RELEVANCE-2026-10-21",
+  "status": "OWNER_AUTHORIZED_INTERNAL_PRODUCTION",
+  "ownerAuthorizedOn": "2026-10-21",
+  "mode": "V4_EVENT_TIME_SOURCE_RELEVANCE_PRIVATE_NO_SEND",
+  "scorerVersion": "permitplate-shadow-score-v4-event-time-2026-09-21",
+  "internalScoringAllowed": true,
+  "privateResearchStateOnly": true,
+  "externalTransportAllowed": false,
+  "customerScoredLeadDeliveryAllowed": false,
+  "customerPurchaseIntentClaimsAllowed": false,
+  "estimatedBuyerPrecisionValidated": false,
+  "independenceOrHumanLabelsProvided": false,
+  "sourceEventRequired": true,
+  "unknownBusinessEventDateHeld": true,
+  "sourceIntegrityFailClosed": true,
+  "legacyV3PromotionUnaffected": true,
+  "limitation": "This is owner authorization to compute internal source-relevance rankings, not third-party adjudication, verified buying interest, validated buyer precision, or authorization for customer messages."
+}

@@ -37,11 +37,41 @@ function validInput(){
 }
 
 {
+// Real DOHMH 1900 inspection placeholders are uninspected applicants,
+// not independently dated new permit filings. No raw stage may reach a
+// paid founder-curated HTML/CSV research brief as "JUST FILED".
+  const input=validInput();
+  input.signals[0].stage='JUST FILED';
+  const out=curated.buildCuratedBrief(input);
+  assert.equal(out.status,'READY');
+  assert.equal(out.signals[0].stage,'APPLICANT — NOT YET INSPECTED');
+  assert(out.csv.includes('APPLICANT — NOT YET INSPECTED'));
+  assert(out.html.includes('APPLICANT — NOT YET INSPECTED'));
+  assert(!out.csv.includes('JUST FILED'));
+  assert(!out.html.includes('JUST FILED'));
+}
+
+{
   const input=validInput();
   input.ownerReviewed=false;
   const out=curated.buildCuratedBrief(input);
   assert.equal(out.status,'REVIEW');
   assert(out.failures.includes('OWNER_REVIEW_REQUIRED'));
+}
+
+{
+  for(const ending of ['', '.', '?', '!']){
+    const input=validInput();
+    const rationale='Verify the current equipment need before treating this as a sales opportunity'+ending;
+    Object.assign(input.signals[0],{categoryEvidenceBasis:'APPLICANT_CONTEXT_ONLY',
+      categoryFitRationale:rationale,
+      categoryOfficialUrl:input.signals[0].sourceUrls[0]});
+    const out=curated.buildCuratedBrief(input);
+    assert.equal(out.status,'READY');
+    assert(out.html.includes('<strong>Founder assessment:</strong> '+rationale+(ending?'':'.')+' <a '));
+    assert.equal(out.signals[0].categoryFitRationale,rationale,'rendering must not rewrite the reviewed claim');
+    assert(!out.html.includes('opportunity..'));
+  }
 }
 
 {
@@ -88,4 +118,22 @@ function validInput(){
   assert(out.transportPreflight.failures.includes('OWNER_AUTHORIZATION_MISSING'));
 }
 
+
+{
+  const input=validInput();
+  input.signals[0].categoryEvidenceBasis='SOURCE_KEYWORD_CONTEXT';
+  input.signals[0].categoryFitRationale='Official source text supports a research question, not a buyer commitment.';
+  input.signals[0].categoryOfficialUrl=input.signals[0].sourceUrls[0];
+  const out=curated.buildCuratedBrief(input);
+  assert.equal(out.status,'READY');
+  assert(out.csv.includes('Next Verification Step'));
+  assert(out.csv.includes('exact scope, current status, operator identity'));
+  assert(out.html.includes('Decision brief 2.0'));
+  assert(out.html.includes('Next verification:'));
+  assert(out.html.includes('Evidence appendix'));
+  assert(out.html.includes('not a list of confirmed buyers'));
+  assert.equal(out.signalCount,1);
+  assert.equal(out.signals[0].whyItMatters,input.signals[0].whyItMatters);
+  assert.equal(out.launchMode,'FOUNDER_CURATED_NO_SCORE_V1');
+}
 console.log('PermitPlate founder-curated offer tests passed.');

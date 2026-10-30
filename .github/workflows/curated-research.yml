@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '12 14 * * *'
+  # Readiness follows this writer; include its inputs and the public-build files.
   push:
     branches: [main]
     paths:
@@ -12,12 +13,19 @@ on:
       - 'pipeline/category-evidence.js'
       - 'pipeline/category-evidence.test.js'
       - 'pipeline/run-curated-research.js'
+      - 'pipeline/nyc-v4-internal-production-scoring.js'
+      - 'pipeline/nyc-v4-internal-production-scoring.test.js'
+      - 'pipeline/nyc-v4-review-workbench.js'
+      - 'pipeline/nyc-v4-review-workbench.test.js'
+      - 'scoring/nyc-v4-internal-owner-authorization.json'
       - 'pipeline/independent-source-review.js'
       - 'pipeline/independent-source-review.test.js'
       - 'pipeline/construction-scope-evidence.js'
       - 'pipeline/construction-scope-evidence.test.js'
       - 'pipeline/construction-validation-panel.js'
       - 'pipeline/construction-validation-panel.test.js'
+      - 'pipeline/dob-source-collisions.js'
+      - 'pipeline/dob-source-collisions.test.js'
       - 'pipeline/construction-blind-diagnostic.js'
       - 'pipeline/construction-frozen-reference.js'
       - 'pipeline/construction-reviewer-worksheet.js'
@@ -35,6 +43,14 @@ on:
       - 'pipeline/identity-receipt-recovery.js'
       - 'pipeline/identity-receipt-recovery.test.js'
       - 'pipeline/source-adapters.js'
+      - 'pipeline/candidate-builder.js'
+      - 'pipeline/project-signal.js'
+      - 'pipeline/run-source-health.js'
+      - 'pipeline/socrata-reader.js'
+      - 'pipeline/timestamp.js'
+      - 'model-v7.js'
+      - 'operations/socrata-observer.js'
+      - 'operations/source-registry.js'
       - 'pipeline/source-adapters.test.js'
       - 'pipeline/run-current-graph.js'
       - 'pipeline/material-change.js'
@@ -43,6 +59,48 @@ on:
       - 'pipeline/run-curated-review-queue.js'
       - 'pipeline/curated-product.test.js'
       - '.github/workflows/curated-research.yml'
+      - 'pipeline/launch-readiness.js'
+      - 'pipeline/run-launch-readiness.js'
+      - 'pipeline/refresh-launch-external-evidence.js'
+      - 'pipeline/refresh-launch-external-evidence.test.js'
+      - 'pipeline/stripe-intake-readiness.js'
+      - 'pipeline/stripe-intake-readiness.test.js'
+      - 'pipeline/curated-stripe-onboarding.js'
+      - 'pipeline/run-curated-stripe-onboarding.js'
+      - '.github/workflows/stripe-onboarding.yml'
+      - 'pipeline/curated-production-readiness.js'
+      - 'pipeline/curated-production-readiness.test.js'
+      - 'pipeline/run-shadow-scoring-evaluation.js'
+      - 'pipeline/historical-shadow-score-benchmark.js'
+      - 'pipeline/scoring-policy.js'
+      - 'pipeline/run-first-subscriber-canary.js'
+      - 'pipeline/founder-curated-offer.js'
+      - 'pipeline/run-founder-curated-canary.js'
+      - 'operations/FOUNDER_CURATED_FULFILLMENT.md'
+      - 'release-manifest.json'
+      - 'pipeline/detection-ledger.js'
+      - 'pipeline/opportunity-ledger.js'
+      - 'verification/launch-external-evidence.json'
+      - 'build-site.js'
+      - 'tests/test_pilot_source_admission.py'
+      - '.github/workflows/launch-readiness.yml'
+      - '.github/workflows/detection-ledger.yml'
+      - '*.html'
+      - 'assets/**'
+      - 'favicon.svg'
+      - 'apple-touch-icon.png'
+      - 'og-card.png'
+      - 'site.css'
+      - 'case-study.css'
+      - 'case-study.js'
+      - 'samples/**'
+      - 'site.js'
+      - 'trial-request.js'
+      - 'manifest.webmanifest'
+      - 'robots.txt'
+      - 'sitemap.xml'
+      - 'tests/test_launch_refresh_sequence.py'
+
   pull_request:
     branches: [main]
     paths:
@@ -51,12 +109,19 @@ on:
       - 'pipeline/category-evidence.js'
       - 'pipeline/category-evidence.test.js'
       - 'pipeline/run-curated-research.js'
+      - 'pipeline/nyc-v4-internal-production-scoring.js'
+      - 'pipeline/nyc-v4-internal-production-scoring.test.js'
+      - 'pipeline/nyc-v4-review-workbench.js'
+      - 'pipeline/nyc-v4-review-workbench.test.js'
+      - 'scoring/nyc-v4-internal-owner-authorization.json'
       - 'pipeline/independent-source-review.js'
       - 'pipeline/independent-source-review.test.js'
       - 'pipeline/construction-scope-evidence.js'
       - 'pipeline/construction-scope-evidence.test.js'
       - 'pipeline/construction-validation-panel.js'
       - 'pipeline/construction-validation-panel.test.js'
+      - 'pipeline/dob-source-collisions.js'
+      - 'pipeline/dob-source-collisions.test.js'
       - 'pipeline/construction-blind-diagnostic.js'
       - 'pipeline/construction-frozen-reference.js'
       - 'pipeline/construction-reviewer-worksheet.js'
@@ -74,6 +139,14 @@ on:
       - 'pipeline/identity-receipt-recovery.js'
       - 'pipeline/identity-receipt-recovery.test.js'
       - 'pipeline/source-adapters.js'
+      - 'pipeline/candidate-builder.js'
+      - 'pipeline/project-signal.js'
+      - 'pipeline/run-source-health.js'
+      - 'pipeline/socrata-reader.js'
+      - 'pipeline/timestamp.js'
+      - 'model-v7.js'
+      - 'operations/socrata-observer.js'
+      - 'operations/source-registry.js'
       - 'pipeline/source-adapters.test.js'
       - 'pipeline/run-current-graph.js'
       - 'pipeline/material-change.js'
@@ -82,6 +155,47 @@ on:
       - 'pipeline/curated-product.test.js'
       - 'tests/test_curated_workflow_policy.py'
       - '.github/workflows/curated-research.yml'
+      - 'pipeline/launch-readiness.js'
+      - 'pipeline/run-launch-readiness.js'
+      - 'pipeline/refresh-launch-external-evidence.js'
+      - 'pipeline/refresh-launch-external-evidence.test.js'
+      - 'pipeline/stripe-intake-readiness.js'
+      - 'pipeline/stripe-intake-readiness.test.js'
+      - 'pipeline/curated-stripe-onboarding.js'
+      - 'pipeline/run-curated-stripe-onboarding.js'
+      - '.github/workflows/stripe-onboarding.yml'
+      - 'pipeline/curated-production-readiness.js'
+      - 'pipeline/curated-production-readiness.test.js'
+      - 'pipeline/run-shadow-scoring-evaluation.js'
+      - 'pipeline/historical-shadow-score-benchmark.js'
+      - 'pipeline/scoring-policy.js'
+      - 'pipeline/run-first-subscriber-canary.js'
+      - 'pipeline/founder-curated-offer.js'
+      - 'pipeline/run-founder-curated-canary.js'
+      - 'operations/FOUNDER_CURATED_FULFILLMENT.md'
+      - 'release-manifest.json'
+      - 'pipeline/detection-ledger.js'
+      - 'pipeline/opportunity-ledger.js'
+      - 'verification/launch-external-evidence.json'
+      - 'build-site.js'
+      - 'tests/test_pilot_source_admission.py'
+      - '.github/workflows/launch-readiness.yml'
+      - '.github/workflows/detection-ledger.yml'
+      - '*.html'
+      - 'assets/**'
+      - 'favicon.svg'
+      - 'apple-touch-icon.png'
+      - 'og-card.png'
+      - 'site.css'
+      - 'case-study.css'
+      - 'case-study.js'
+      - 'samples/**'
+      - 'site.js'
+      - 'trial-request.js'
+      - 'manifest.webmanifest'
+      - 'robots.txt'
+      - 'sitemap.xml'
+      - 'tests/test_launch_refresh_sequence.py'
 
 permissions:
   contents: read
@@ -103,9 +217,13 @@ jobs:
       - name: Set up pinned Node runtime
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: '22'
+          node-version: '22.23.4'
       - name: Test actual paid product with offline fixtures
         run: node pipeline/curated-product.test.js
+      - name: Verify no-send NYC internal production score boundary
+        run: node pipeline/nyc-v4-internal-production-scoring.test.js
+      - name: Verify private V4 workbench source links and safe exports
+        run: node pipeline/nyc-v4-review-workbench.test.js
       - name: Verify independent early-source discovery remains review-only
         run: node pipeline/independent-source-review.test.js
       - name: Verify full DOB scope and conflicting building identifiers
@@ -114,6 +232,8 @@ jobs:
         run: node pipeline/nyc-million-bin-real-case.test.js
       - name: Verify separate full-scope DOB diagnostic does not inspect scoring holdout
         run: node pipeline/construction-validation-panel.test.js
+      - name: Keep ambiguous DOB variants and quarantine only proven unused scope
+        run: node pipeline/dob-source-collisions.test.js
       - name: Verify premise-root grouped construction reviewer and reserved audit separation
         run: node pipeline/construction-blind-diagnostic.test.js
       - name: Verify first-observation history across repeated scans
@@ -126,6 +246,8 @@ jobs:
         run: node pipeline/identity-triage-history.test.js
       - name: Verify legacy identity disk-proof compatibility
         run: node pipeline/identity-receipt-recovery.test.js
+      - name: Verify post-refresh launch admission offline
+        run: python3 -m unittest discover -s tests -p 'test_launch_refresh_sequence.py' -v
       - name: Verify workflow policy
         run: python3 -m unittest discover -s tests -p 'test_curated_workflow_policy.py' -v
 
@@ -157,7 +279,7 @@ jobs:
       - name: Set up pinned Node runtime
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: '22'
+          node-version: '22.23.4'
       - name: Require dedicated private durable state
         env:
           GH_TOKEN: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
@@ -197,7 +319,7 @@ jobs:
           set -euo pipefail
           git -C "$PRIVATE_DIR" config user.name "PermitPlate Curated Research"
           git -C "$PRIVATE_DIR" config user.email "actions@users.noreply.github.com"
-          git -C "$PRIVATE_DIR" add -- state/curated-research-ledger.json state/curated-current-graph.json state/curated-baseline-anchor.json state/independent-source-review.json state/independent-source-history.json state/identity-bridge-review.json state/identity-triage-history.json state/identity-bridge-review.csv state/identity-bridge-review.html state/construction-validation-panel.json state/construction-validation-panel.csv state/construction-validation-summary.md state/construction-blind-reviewer.json state/construction-reserved-audit.json state/construction-blind-manifest.json research/construction-frozen-reference-v1
+          git -C "$PRIVATE_DIR" add -- state/curated-research-ledger.json state/curated-current-graph.json state/curated-baseline-anchor.json state/nyc-v4-internal-scores.json state/nyc-v4-review-workbench-receipt.json state/nyc-v4-review-workbench.csv state/nyc-v4-review-workbench.html state/independent-source-review.json state/independent-source-history.json state/identity-bridge-review.json state/identity-triage-history.json state/identity-bridge-review.csv state/identity-bridge-review.html state/construction-validation-panel.json state/construction-validation-panel.csv state/construction-validation-summary.md state/construction-blind-reviewer.json state/construction-reserved-audit.json state/construction-blind-manifest.json research/construction-frozen-reference-v1
           if git -C "$PRIVATE_DIR" diff --cached --quiet; then
             echo "No private research changes."
             exit 0
