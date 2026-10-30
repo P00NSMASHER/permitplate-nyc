@@ -2,6 +2,7 @@ name: PA Entity x402 release regression
 
 on:
   push:
+    branches: [main]
     paths:
       - 'docs/pa-entity-floot-release/**'
       - 'scripts/test-pa-entity-floot-release.mts'
@@ -13,6 +14,7 @@ on:
       - 'scripts/test-floot-rehost-raw-endpoints.mts'
       - 'PA_ENTITY_SKILL.md'
       - 'x402-manifest.json'
+      - 'tests/test_pa_entity_release_regression_policy.py'
       - '.github/workflows/pa-entity-release-regression.yml'
   pull_request:
     paths:
@@ -26,35 +28,54 @@ on:
       - 'scripts/test-floot-rehost-raw-endpoints.mts'
       - 'PA_ENTITY_SKILL.md'
       - 'x402-manifest.json'
+      - 'tests/test_pa_entity_release_regression_policy.py'
+      - '.github/workflows/pa-entity-release-regression.yml'
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pa-entity-release-regression-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   regression:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - uses: actions/checkout@v4
-      - name: Select October 2026 patched Node.js runtime
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22.23.4'
-      - name: Reject unpatched Node.js runtime
+      - name: Bind authoritative live probe to current main
+        if: github.event_name != 'pull_request'
+        env:
+          EVENT_SHA: ${{ github.sha }}
         run: |
-          node --version
-          node -e 'const [major,minor,patch]=process.versions.node.split(".").map(Number);if(major!==22 || minor<23 || (minor===23 && patch<4)) process.exit(1)'
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/main"
+          current_main="$(git ls-remote origin refs/heads/main | awk '{print $1}')"
+          test -n "$current_main"
+          test "$EVENT_SHA" = "$current_main"
+      - name: Verify release-QA workflow policy
+        run: python3 -m unittest discover -s tests -p 'test_pa_entity_release_regression_policy.py' -v
       - name: Test payment and settlement recovery
-        run: npx -y tsx@latest scripts/test-pa-entity-floot-release.mts
+        run: node --experimental-strip-types scripts/test-pa-entity-floot-release.mts
       - name: Test $0.001 best-match payment and ranking
-        run: npx -y tsx@latest scripts/test-pa-entity-best-match-release.mts
+        run: node --experimental-strip-types scripts/test-pa-entity-best-match-release.mts
       - name: Test discovery fixture parity
         run: node scripts/test-pa-entity-discovery-fixtures.mjs
       - name: Verify atomic Floot patch parity
         run: node scripts/verify-pa-entity-floot-patches.mjs
       - name: Test staged Floot-native vendor gate
-        run: npx -y tsx@latest scripts/test-floot-vendor-gate-release.mts
+        run: node --experimental-strip-types scripts/test-floot-vendor-gate-release.mts
       - name: Test staged Floot-native raw rehost endpoints
-        run: npx -y tsx@latest scripts/test-floot-rehost-raw-endpoints.mts
+        run: node --experimental-strip-types scripts/test-floot-rehost-raw-endpoints.mts
       - name: Record current AppDeploy vendor-gate hosting status
-        if: always()
+        if: github.event_name != 'pull_request'
         continue-on-error: true
         run: node scripts/verify-pa-vendor-gate.mjs
