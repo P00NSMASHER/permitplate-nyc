@@ -1,12 +1,12 @@
 {
-  "checkedAt": "2026-10-30T21:55:39.836Z",
+  "checkedAt": "2026-10-30T21:56:01.267Z",
   "mode": "zero-spend-direct-upstream-readiness",
   "appdeployDependency": false,
   "checks": {
     "paRegistry": {
       "ok": true,
       "status": 200,
-      "latencyMs": 564,
+      "latencyMs": 728,
       "rowCount": 5,
       "sample": [
         {
@@ -43,7 +43,7 @@
     "census": {
       "ok": true,
       "status": 200,
-      "latencyMs": 502,
+      "latencyMs": 511,
       "input": "600 North Second Street, Suite 401, Harrisburg, PA 17101",
       "matchedAddress": "600 N 2ND ST, HARRISBURG, PA, 17101",
       "coordinates": {
@@ -57,13 +57,13 @@
       "ok": true,
       "sdn": {
         "status": 200,
-        "latencyMs": 1327,
+        "latencyMs": 3776,
         "bytes": 5750799,
         "sha256": "5f240bed79d504e7a54788b4cd1c7f84e6afa56cd4778653b70b0771b6a8509d"
       },
       "alt": {
         "status": 200,
-        "latencyMs": 1245,
+        "latencyMs": 3374,
         "bytes": 1064299,
         "sha256": "b0e2811fbb49ba6e9941a497e6b05fa2c9037b45ae7923196a01e2363a402259"
       },
@@ -82,10 +82,10 @@
     "sec": {
       "ok": true,
       "tickerMapStatus": 200,
-      "tickerMapLatencyMs": 139,
+      "tickerMapLatencyMs": 320,
       "cik": "0000320193",
       "submissionsStatus": 200,
-      "submissionsLatencyMs": 46,
+      "submissionsLatencyMs": 68,
       "recentFormCount": 1000,
       "source": "U.S. Securities and Exchange Commission EDGAR",
       "error": null
@@ -93,7 +93,7 @@
     "treasury": {
       "ok": true,
       "status": 200,
-      "latencyMs": 568,
+      "latencyMs": 511,
       "rowCount": 100,
       "latestRecordDate": "2026-09-30",
       "totalMarketableRate": "3.518",
