@@ -1,22 +1,10 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
-import * as vendorGateModule from '../docs/pa-entity-floot-release/vendor-intake-gate_GET.ts'
-
-// Node 22 can load a .ts file through CommonJS interop when no package
-// "type" is declared. Resolve the actual export object without weakening
-// payment, settlement, or review-decision assertions below.
-const endpoint = typeof vendorGateModule.handle === 'function'
-  ? vendorGateModule
-  : vendorGateModule.default
-if (
-  !endpoint ||
-  typeof endpoint.handle !== 'function' ||
-  typeof endpoint.paymentDocument !== 'function' ||
-  typeof endpoint.runVendorGate !== 'function'
-) {
-  throw new Error('Vendor gate endpoint exports unavailable')
-}
-const { handle, paymentDocument, runVendorGate } = endpoint
+import {
+  handle,
+  paymentDocument,
+  runVendorGate,
+} from '../docs/pa-entity-floot-release/vendor-intake-gate_GET.ts'
 
 const endpointPath =
   'docs/pa-entity-floot-release/vendor-intake-gate_GET.ts'
@@ -163,6 +151,15 @@ try {
     '0x708f7b52b56eafd7fc1de65fc7752ed732914021'
   )
   assert.equal(doc.accepts[0].extra.name, 'USD Coin')
+  assert.equal(typeof doc.resource.serviceName, 'string')
+  assert.ok(doc.resource.serviceName.length > 0 && doc.resource.serviceName.length <= 32)
+  assert.match(doc.resource.serviceName, /^[\x20-\x7E]+$/)
+  assert.ok(Array.isArray(doc.resource.tags))
+  assert.ok(doc.resource.tags.length <= 5)
+  for (const tag of doc.resource.tags) {
+    assert.ok(tag.length > 0 && tag.length <= 32)
+    assert.match(tag, /^[\x20-\x7E]+$/)
+  }
 
   const base =
     'https://pa-entity-x402.floot.app/_api/vendor-intake-gate'

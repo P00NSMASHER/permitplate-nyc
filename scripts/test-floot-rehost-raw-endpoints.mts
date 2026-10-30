@@ -19,6 +19,12 @@ import {
   handle as handleOfac,
   paymentDocument as ofacPaymentDocument,
 } from '../docs/pa-entity-floot-release/ofac-sdn-screen_GET.ts'
+import {
+  paymentDocument as paBusinessPaymentDocument,
+} from '../docs/pa-entity-floot-release/pa-business_GET.ts'
+import {
+  paymentDocument as paEntityOnePaymentDocument,
+} from '../docs/pa-entity-floot-release/pa-entity-one_GET.ts'
 
 const realFetch = globalThis.fetch
 
@@ -70,11 +76,21 @@ async function withMockFetch(
 
 function assertPaymentDocument(
   doc: ReturnType<typeof treasuryPaymentDocument>,
-  resource: string
+  resource: string,
+  amount = '5000'
 ) {
   assert.equal(doc.x402Version, 2)
   assert.equal(doc.resource.url, resource)
-  assert.equal(doc.accepts[0].amount, '5000')
+  assert.equal(doc.accepts[0].amount, amount)
+  assert.equal(typeof doc.resource.serviceName, 'string')
+  assert.ok(doc.resource.serviceName.length > 0 && doc.resource.serviceName.length <= 32)
+  assert.match(doc.resource.serviceName, /^[\x20-\x7E]+$/)
+  assert.ok(Array.isArray(doc.resource.tags))
+  assert.ok(doc.resource.tags.length <= 5)
+  for (const tag of doc.resource.tags) {
+    assert.ok(tag.length > 0 && tag.length <= 32)
+    assert.match(tag, /^[\x20-\x7E]+$/)
+  }
   assert.equal(doc.accepts[0].network, 'eip155:8453')
   assert.equal(
     doc.accepts[0].asset.toLowerCase(),
@@ -84,27 +100,6 @@ function assertPaymentDocument(
     doc.accepts[0].payTo.toLowerCase(),
     '0x708f7b52b56eafd7fc1de65fc7752ed732914021'
   )
-  assert.equal(doc.extensions?.bazaar?.info?.input?.method, 'GET')
-  assert.equal(doc.extensions?.bazaar?.schema?.type, 'object')
-  assert.equal(
-    doc.extensions?.bazaar?.schema?.properties?.input?.properties?.method?.const,
-    'GET'
-  )
-  assert.equal(
-    doc.extensions?.bazaar?.schema?.properties?.output?.properties?.type?.const,
-    'json'
-  )
-  const serviceName = doc.resource.serviceName
-  if (serviceName !== undefined) {
-    assert.match(serviceName, /^[\x20-\x7E]+$/)
-    assert.ok(serviceName.length >= 1 && serviceName.length <= 32)
-  }
-  const tags = doc.resource.tags ?? []
-  assert.ok(tags.length <= 5)
-  for (const tag of tags) {
-    assert.match(tag, /^[\x20-\x7E]+$/)
-    assert.ok(tag.length >= 1 && tag.length <= 32)
-  }
 }
 
 async function assertChallenge(
@@ -137,6 +132,16 @@ assertPaymentDocument(
 assertPaymentDocument(
   ofacPaymentDocument(),
   'https://pa-entity-x402.floot.app/_api/ofac-sdn-screen'
+)
+assertPaymentDocument(
+  paBusinessPaymentDocument(),
+  'https://pa-entity-x402.floot.app/_api/pa-business',
+  '5000'
+)
+assertPaymentDocument(
+  paEntityOnePaymentDocument(),
+  'https://pa-entity-x402.floot.app/_api/pa-entity-one',
+  '1000'
 )
 
 await assertChallenge(

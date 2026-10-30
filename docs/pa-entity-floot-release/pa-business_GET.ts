@@ -204,14 +204,13 @@ export function paymentDocument() {
       description:
         'Pennsylvania business registry and company identity lookup by business name. Returns filing number, registration type, creation date, registered address, county, and source-published principal/officer roles.',
       mimeType: 'application/json',
-      serviceName: 'Pennsylvania Business Registry — Company Identity Lookup',
+      serviceName: 'PA Business Registry',
       tags: [
-        'pennsylvania-business-registry',
+        'business-registry',
         'company-identity',
         'legal-entity',
         'vendor-verification',
         'due-diligence',
-        'lead-enrichment',
       ],
     },
     accepts: [requirements()],

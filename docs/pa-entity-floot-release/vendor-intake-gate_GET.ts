@@ -195,15 +195,13 @@ export function paymentDocument() {
       description:
         'Fail-closed Pennsylvania vendor-intake decision for autonomous agents using Pennsylvania registry identity, Census address consistency, OFAC SDN candidate-name screening, and authoritative RDAP domain evidence. Returns proceed or human_review with explicit evidence and limitations.',
       mimeType: 'application/json',
-      serviceName: 'Pennsylvania Vendor Intake Decision Gate',
+      serviceName: 'PA Vendor Intake Gate',
       tags: [
         'vendor-intake',
         'agent-decision',
         'human-review',
-        'pennsylvania-business-registry',
-        'census-address',
-        'ofac-screening',
-        'rdap',
+        'business-registry',
+        'compliance',
       ],
     },
     accepts: [requirements()],
