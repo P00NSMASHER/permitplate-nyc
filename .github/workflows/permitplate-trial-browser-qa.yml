@@ -1,0 +1,62 @@
+name: PermitPlate independent trial browser acceptance
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'trial.html'
+      - 'trial-request.js'
+      - 'site.css'
+      - 'site.js'
+      - 'scripts/audit-trial-browser.py'
+      - 'pipeline/trial-1000-customer-audit.test.js'
+      - '.github/workflows/permitplate-trial-browser-qa.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'trial.html'
+      - 'trial-request.js'
+      - 'site.css'
+      - 'site.js'
+      - 'scripts/audit-trial-browser.py'
+      - 'pipeline/trial-1000-customer-audit.test.js'
+      - '.github/workflows/permitplate-trial-browser-qa.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: permitplate-trial-browser-qa-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  trial-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - name: Checkout exact proposed source without persisted token
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Setup pinned Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.4'
+      - name: Setup pinned Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - name: Install pinned browser testing library
+        run: python -m pip install --disable-pip-version-check playwright==1.57.0
+      - name: Install official browser
+        run: python -m playwright install --with-deps ${{ matrix.browser }}
+      - name: Build exact static standalone UI
+        run: node build-site.js --site-base https://permitplate.retallyrecovery.com/
+      - name: Run real-browser form, navigation and mobile acceptance without sends
+        env:
+          QA_BROWSER: ${{ matrix.browser }}
+        run: python scripts/audit-trial-browser.py
