@@ -112,7 +112,8 @@ test('adversarial invalid payload and honeypot never enter private request table
   }
   assert.equal(d.requests.size,0);
   const trap=await json(await onRequestPost({request:request({...eligible,fax:'please contact me'}),env:e}));
-  assert.equal(trap.code,202);
+  assert.equal(trap.code,400);
+  assert.equal(trap.body.status,'NOT_RECEIVED');
   assert.equal(d.requests.size,0,'honeypot must not persist');
   const big=await onRequestPost({request:request(JSON.stringify({...eligible,extra:'x'.repeat(4000)})),env:e});
   assert.equal(big.status,413);

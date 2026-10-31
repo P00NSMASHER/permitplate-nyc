@@ -84,7 +84,8 @@ export async function onRequestPost({request,env}){
   try{data=validate(await boundedJSON(request));}
   catch(e){const code=e?.message||'FIELDS_INVALID';return denied(code==='PAYLOAD_TOO_LARGE'?413:400,code,
     'Please check the business, website, contact email and territory.');}
-  if(data.spam)return reply(202,{status:'RECEIVED_FOR_REVIEW',message:'Request received for manual review.'});
+  // Never show a genuine receipt when a bot-trap field prevented storage.
+  if(data.spam)return denied(400,'REQUEST_NOT_ACCEPTED','Please review the request fields.');
   try{
     const db=env.TRIAL_REQUEST_DB,now=Date.now(),expires=now+86400000;
     const bucket=await ipBucket(ip,env.TRIAL_INTAKE_RATE_SECRET,now);
