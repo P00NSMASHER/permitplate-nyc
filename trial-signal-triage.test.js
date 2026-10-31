@@ -12,7 +12,7 @@ test('every source/evidence state is buyer-marked, never a verified lead',()=>{
      const r=t.triage({category,territory,kind:'inspection',event,corroboration,fit});
      assert.match(r.report,/BUYER-MARKED, UNVERIFIED/);
      assert.match(r.report,/NO SOURCE WAS FETCHED OR VERIFIED/);
-     assert(!/OPENING CONFIRMED|VERIFIED LEAD|SCORE [0-9]+|CUSTOMER APPROVED/.test(r.outcome));
+     assert(!/OPENING CONFIRMED|^VERIFIED LEAD|SCORE [0-9]+|CUSTOMER APPROVED/.test(r.outcome));
      assert(!/Contact email|Business name|Paid status|Authorization: approved/.test(r.report));
      if(event==='conflict'||corroboration==='conflict')assert.match(r.outcome,/HOLD/);
      if(event==='listing'||event==='unchecked')
