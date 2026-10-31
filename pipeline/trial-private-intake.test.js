@@ -31,8 +31,9 @@ class FakeD1 {
           if(db.fail)throw Error('DB_FAILURE');
           if(sql.startsWith('INSERT OR IGNORE INTO trial_intake_requests')){
             const [reference,name,domain,website,email,category,territory,now]=params;
-            if(!db.requests.has(domain))db.requests.set(domain,{reference,name,domain,website,email,category,territory,now,status:'PENDING'});
-            return {success:true,meta:{changes:db.requests.has(domain)?1:0}};
+            const existed=db.requests.has(domain);
+            if(!existed)db.requests.set(domain,{reference,name,domain,website,email,category,territory,now,status:'PENDING'});
+            return {success:true,meta:{changes:existed?0:1}};
           }
           throw Error('Unexpected write SQL '+sql);
         }
@@ -40,6 +41,14 @@ class FakeD1 {
     }};
   }
 }
+// D1 supports parameterless prepare(sql).first() as well as bound statements.
+// The test double must match both real API shapes, including failures.
+const originalPrepare=FakeD1.prototype.prepare;
+FakeD1.prototype.prepare=function(sql){
+  const statement=originalPrepare.call(this,sql);
+  statement.first=()=>statement.bind().first();
+  return statement;
+};
 const eligible={
   businessName:'Fictional Kitchen Supply',website:'https://www.vendor-customer.com/about?utm=abc',
   email:'owner@vendor-customer.com',category:'equipment',territory:'Brooklyn',consent:true,fax:''
