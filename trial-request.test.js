@@ -22,6 +22,22 @@ test('request remains an explicit email draft with no billing, credential or enr
     assert.throws(()=>request.buildRequest({...valid,...change}));
   }
 });
+test('shared-host paths survive trial requests without leaking tracking or bypassing URL validation',()=>{
+  const a={...valid,website:'https://sites.google.com/view/vendor-a/landing?utm_source=campaign#contact'};
+  const b={...a,website:'https://sites.google.com/view/vendor-b/landing?ref=private'};
+  const normalized=request.normalizeRequest(a,true);
+  assert.equal(normalized.website,'https://sites.google.com/view/vendor-a/landing');
+  assert.equal(request.normalizeRequest({...a,website:'https://vendor.example.com/?token=abc#section'},true).website,
+    'https://vendor.example.com');
+  const draftA=request.buildRequest(a),draftB=request.buildRequest(b);
+  assert(draftA.body.includes('Business website: https://sites.google.com/view/vendor-a/landing'));
+  assert(draftB.body.includes('Business website: https://sites.google.com/view/vendor-b/landing'));
+  assert.notEqual(draftA.body,draftB.body,'distinct shared-host business pages must remain distinguishable');
+  assert(!draftA.body.includes('utm_source')&&!draftA.body.includes('#contact'));
+  assert(!draftB.body.includes('ref=private'));
+  assert.throws(()=>request.buildRequest({...a,website:'https://vendor.example.com/'+
+    'a'.repeat(701)}),/shorter public business website URL/);
+});
 test('v3 scope preview offers truthful, public-only plans for every supported territory and category',()=>{
   let checked=0;
   for(const category of request.categories){
