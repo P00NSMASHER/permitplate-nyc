@@ -19,6 +19,7 @@ function persona(i){
     website:'https://www.audit-vendor-'+id+'.example.com/service/nyc?utm_source=simulation',
     category:request.categories[i%request.categories.length],
     territory:request.territories[Math.floor(i/request.categories.length)%request.territories.length],
+    email:'fictional-buyer-'+id+'@example.com',
     recipientEmail:'fictional-buyer-'+id+'@example.com'
   };
 }
@@ -38,7 +39,8 @@ test('one thousand fictional customer drafts preserve scope without any send or 
     assert(draft.body.includes('NYC territory: '+p.territory));
     assert(draft.body.includes('No card or automatic paid upgrade.'));
     assert(!draft.body.includes('utm_source=simulation'));
-    assert(!draft.body.includes('fictional-buyer-'+String(i).padStart(4,'0')+'@example.com'));
+    assert(draft.body.includes('Contact email: fictional-buyer-'+String(i).padStart(4,'0')+'@example.com'),
+      'Manual fallback must retain the explicit contact address for follow-up');
     assert(!/\r/.test(draft.body));
     seen.add(p.businessName);
     combo.add(p.category+'|'+p.territory);
@@ -182,10 +184,14 @@ test('page, legal terms and source preserve the manual-consent and no-card bound
   assert(html.includes('data-trial-request'));
   assert(html.includes('data-trial-fallback'));
   assert(html.includes('Review and send email request'));
-  assert(html.includes('Nothing is submitted until you send it from your email app'));
+  assert(html.includes('Online requests are securely stored for manual review'));
+  assert(html.includes('data-trial-success'));
+  assert(html.includes('name="email" type="email"'));
+  assert(html.includes('No card, no automatic upgrade'));
+  assert(html.includes('data-trial-copy'));
   assert(html.includes("form-action 'none'"));
   assert(!/<form[^>]*action=/i.test(html));
-  assert(!/name=["']email["']/i.test(html),'sender identity comes from manual email, not web submission');
+  assert(/name=["']email["']/i.test(html),'online requests must provide an email for manual reply');
   assert(terms.toLowerCase().includes('no card'));
   assert(terms.includes('never upgrades automatically'));
   assert(terms.includes('10-business pilot limit'));

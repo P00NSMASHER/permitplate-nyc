@@ -49,4 +49,5 @@ jobs:
       - name: Read-only production website check
         env:
           EXPECTED_PUBLIC_COMMIT: ${{ github.event.pull_request.base.sha || github.sha }}
+          TRIAL_STAGED_PR: ${{ github.event_name == 'pull_request' }}
         run: node scripts/audit-trial-live-readonly.mjs

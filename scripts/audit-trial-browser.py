@@ -2,6 +2,8 @@
 """Real local-browser trial UX audit; no mailto clicks, external requests or payments."""
 import functools
 import http.server
+import json
+import mimetypes
 import os
 from pathlib import Path
 import ssl
@@ -79,6 +81,7 @@ def main():
                                              ("distribution", "StatenIsland")]:
                     page.get_by_label("Business name").fill("FICTIONAL Browser Vendor")
                     page.get_by_label("Business website").fill("https://vendor.example.com/branch?utm=ignored")
+                    page.get_by_label("Work email for our reply").fill("buyer@vendor.example.com")
                     page.get_by_label("Vendor category").select_option(category)
                     page.get_by_label("NYC territory").select_option(territory)
                     page.get_by_role("button", name="Prepare my free-trial request").click()
@@ -100,6 +103,67 @@ def main():
                     assert "https://" in page.locator("[data-trial-status]").inner_text()
                     checked += 1
                 context.close()
+
+            # Exercise the actual one-step Cloudflare-origin mode with ALL
+            # requests intercepted locally. No private production API calls,
+            # customer records, provider sends or payments are created.
+            direct_context = browser.new_context(viewport={"width": 375, "height": 812},
+                                                  reduced_motion="reduce")
+            direct_state = {"mode": "accepted", "posts": []}
+            def direct_route(route):
+                uri = urlsplit(route.request.url)
+                if uri.path == "/api/trial-request":
+                    assert route.request.method == "POST"
+                    payload = route.request.post_data_json
+                    assert payload["consent"] is True
+                    assert payload["email"] == "test-buyer@vendor-customer.com"
+                    assert payload["category"] == "equipment"
+                    direct_state["posts"].append(payload)
+                    if direct_state["mode"] == "accepted":
+                        route.fulfill(status=202, content_type="application/json",
+                                      body=json.dumps({"status":"RECEIVED_FOR_REVIEW"}))
+                    else:
+                        route.fulfill(status=503, content_type="application/json",
+                                      body=json.dumps({"status":"NOT_RECEIVED"}))
+                    return
+                route_path = uri.path.lstrip("/") or "index.html"
+                if route_path == "trial":
+                    route_path = "trial.html"
+                file_path = (DIST / route_path).resolve()
+                if not file_path.is_relative_to(DIST.resolve()) or not file_path.is_file():
+                    route.fulfill(status=404, body="not found")
+                    return
+                mime = mimetypes.guess_type(str(file_path))[0] or "application/octet-stream"
+                route.fulfill(status=200, path=str(file_path), content_type=mime)
+            direct_context.route("https://permitplate.retallyrecovery.com/**",direct_route)
+            for accepted in [True, False]:
+                direct_state["mode"] = "accepted" if accepted else "failure"
+                page = direct_context.new_page()
+                page.goto("https://permitplate.retallyrecovery.com/trial",wait_until="load")
+                page.get_by_label("Business name").fill("FICTIONAL Vendor Test")
+                page.get_by_label("Business website").fill("https://vendor-customer.com/nyc")
+                page.get_by_label("Work email for our reply").fill("test-buyer@vendor-customer.com")
+                page.get_by_label("Vendor category").select_option("equipment")
+                page.get_by_label("NYC territory").select_option("Brooklyn")
+                page.get_by_role("button",name="Send my free-trial request").click()
+                if accepted:
+                    page.locator("[data-trial-success]").wait_for(state="visible",timeout=7000)
+                    assert page.get_by_role("heading",name="Request received").is_visible()
+                    assert "does not reserve" in page.locator("[data-trial-success]").inner_text()
+                    assert page.locator("[data-trial-request]").is_hidden()
+                    assert page.locator("[data-trial-email]").is_hidden()
+                else:
+                    page.locator("[data-trial-fallback]").wait_for(state="visible",timeout=7000)
+                    assert page.locator("[data-trial-email]").is_visible()
+                    assert page.locator("[data-trial-success]").is_hidden()
+                    assert "could not confirm" in page.locator("[data-trial-status]").inner_text().lower()
+                    assert page.locator("[data-trial-request]").is_visible()
+                page.close()
+            assert len(direct_state["posts"]) == 2
+            direct_context.close()
+            print({"status":"PASS","browser":browser_name,
+                   "direct_online_success_and_failure_mocked":2,
+                   "realOnlineSubmissions":0,"realEmails":0,"realPayments":0})
         finally:
             browser.close()
     server.shutdown()

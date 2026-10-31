@@ -176,7 +176,16 @@ function build(options={}){
   const standalone=siteBase===STANDALONE_SITE_BASE;
   const failures=validateAllowlist();
   if(standalone){
-    for(const file of ['functions','_worker.js','wrangler.toml','wrangler.json','wrangler.jsonc']){
+    // Only the single audited private trial-intake endpoint may be bundled by
+    // Cloudflare Pages Functions. It never enters the public static allowlist.
+    const functionRoot=path.join(ROOT,'functions');
+    const expectedFunctions=['functions/api/trial-request.js'];
+    const actualFunctions=fs.existsSync(functionRoot)?
+      listFilesRecursive(functionRoot,'functions'):[];
+    if(JSON.stringify(actualFunctions)!==JSON.stringify(expectedFunctions)){
+      failures.push('UNEXPECTED_PAGES_FUNCTIONS:'+actualFunctions.join(','));
+    }
+    for(const file of ['_worker.js','wrangler.toml','wrangler.json','wrangler.jsonc']){
       if(fs.existsSync(path.join(ROOT,file))) failures.push('UNEXPECTED_PAGES_RUNTIME:'+file);
     }
   }
