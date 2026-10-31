@@ -88,3 +88,15 @@ test('public trial options match supported fulfillment categories and territorie
   assert(transformed.includes('https://permitplate.retallyrecovery.com/trial'));
   assert(!transformed.includes('/permitplate-nyc/'));
 });
+
+test('work-email dot-atom syntax is validated before composing a buyer request',()=>{
+  const invalid=['buyer..contact@vendor.example.com','.buyer@vendor.example.com',
+    'buyer.@vendor.example.com','a'.repeat(65)+'@vendor.example.com'];
+  for(const email of invalid){
+    assert.throws(()=>request.normalizeEmail(email,true),/valid work email/,email);
+    assert.throws(()=>request.buildRequest({...valid,email}),/valid work email/,email);
+  }
+  assert.equal(request.normalizeEmail('first.last+sales@vendor.example.com',true),
+    'first.last+sales@vendor.example.com');
+  assert.equal(request.normalizeEmail('',false),'','optional email remains optional');
+});
