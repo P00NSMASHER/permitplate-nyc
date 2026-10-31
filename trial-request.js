@@ -59,6 +59,11 @@
     if(!email&&!required)return '';
     if(email.length>254||!(/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}$/.test(email)))
       throw Error('Enter a valid work email where we can reply.');
+    // SMTP dot-atom local parts cannot start/end in a dot or contain adjacent dots.
+    // Limit local part to 64 octets (the accepted input character set is ASCII).
+    const local=email.slice(0,email.indexOf('@'));
+    if(local.length>64||local.startsWith('.')||local.endsWith('.')||local.includes('..'))
+      throw Error('Enter a valid work email where we can reply.');
     try{publicDomain(email.split('@')[1]);}catch{throw Error('Enter a valid work email where we can reply.');}
     return email;
   }
