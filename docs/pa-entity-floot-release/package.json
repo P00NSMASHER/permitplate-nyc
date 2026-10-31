@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "type": "module",
+  "description": "ESM-only boundary for Floot TypeScript endpoint fixtures and deterministic tests; not a deployed service"
+}
