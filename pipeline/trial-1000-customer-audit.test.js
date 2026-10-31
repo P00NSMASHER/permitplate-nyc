@@ -182,10 +182,13 @@ test('page, legal terms and source preserve the manual-consent and no-card bound
   assert(html.includes('data-trial-request'));
   assert(html.includes('data-trial-fallback'));
   assert(html.includes('Review and send email request'));
-  assert(html.includes('Nothing is submitted until you send it from your email app'));
+  assert(html.includes('Online requests are securely stored for manual review'));
+  assert(html.includes('data-trial-success'));
+  assert(html.includes('name="email" type="email"'));
+  assert(html.includes('No card or automatic paid upgrade'));
   assert(html.includes("form-action 'none'"));
   assert(!/<form[^>]*action=/i.test(html));
-  assert(!/name=["']email["']/i.test(html),'sender identity comes from manual email, not web submission');
+  assert(/name=["']email["']/i.test(html),'online requests must provide an email for manual reply');
   assert(terms.toLowerCase().includes('no card'));
   assert(terms.includes('never upgrades automatically'));
   assert(terms.includes('10-business pilot limit'));

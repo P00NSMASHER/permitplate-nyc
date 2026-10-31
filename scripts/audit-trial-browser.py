@@ -79,6 +79,7 @@ def main():
                                              ("distribution", "StatenIsland")]:
                     page.get_by_label("Business name").fill("FICTIONAL Browser Vendor")
                     page.get_by_label("Business website").fill("https://vendor.example.com/branch?utm=ignored")
+                    page.get_by_label("Work email for our reply").fill("buyer@vendor.example.com")
                     page.get_by_label("Vendor category").select_option(category)
                     page.get_by_label("NYC territory").select_option(territory)
                     page.get_by_role("button", name="Prepare my free-trial request").click()

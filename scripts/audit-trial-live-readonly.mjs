@@ -44,7 +44,10 @@ async function main(){
   const trial=fs.readFileSync('dist/trial.html','utf8');
   assert(trial.includes('data-trial-request'));
   assert(trial.includes('Review and send email request'));
-  assert(trial.includes('Nothing is submitted until you send it from your email app'));
+  assert(trial.includes('Online requests are securely stored for manual review'));
+  assert(trial.includes('data-trial-success'));
+  assert(trial.includes('name="email" type="email"'));
+  assert(trial.includes('No card or automatic paid upgrade'));
   assert(!/<form[^>]*action=/i.test(trial));
   const build=await read('/build-info.json');
   assert.equal(build.status,200,'missing build identity');

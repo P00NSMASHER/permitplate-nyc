@@ -189,8 +189,14 @@ jobs:
       - name: Verify source collision quarantine preserves complete publisher evidence
         run: node pipeline/dob-source-collisions.test.js
 
-      - name: Verify trial email-draft request and both publication targets
+      - name: Verify trial direct request, fallback email draft and both publication targets
         run: node trial-request.test.js
+
+      - name: Verify private Pages intake rejects abuse, duplicates and unapproved enrollment
+        run: node --test pipeline/trial-private-intake.test.js
+
+      - name: Validate private intake D1 SQLite schema and constraints
+        run: python3 -m unittest discover -s tests -p 'test_trial_d1_schema.py' -v
 
       - name: Verify nonempty unique official readback evidence and chronology
         run: node pipeline/nyc-dob-filing-readback.test.js
