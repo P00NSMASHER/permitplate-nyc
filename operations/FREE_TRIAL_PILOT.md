@@ -1,8 +1,11 @@
 # PermitPlate supervised free trial
 
-Updated October 27, 2026. This is a bounded, no-card pilot workflow, not an
-unattended signup or mail service. The website creates a local email draft;
-the customer reviews and sends it. No intake is silently submitted.
+Updated October 30, 2026. This remains a bounded, no-card supervised pilot,
+not an unattended trial signup or mail service. On the official Cloudflare domain,
+a one-step request form privately records only an application for manual review
+and shows an on-screen receipt. It never approves admission, holds a trial slot,
+starts the clock, charges, or sends messages. A customer may instead prepare and
+send an email manually; the separate GitHub Pages version retains that fallback.
 
 ## Offer
 
@@ -21,6 +24,27 @@ initialization. An empty or source-unavailable result is not a free report.
 If scope cannot be served, explain that before admission; never invent activity
 to fulfill the offer. Only the actual owner may approve customer source review
 or authorize sending a report. Software tests use explicitly synthetic owners.
+
+## Request intake is not admitted-trial state
+
+The public endpoint POST /api/trial-request on the official Cloudflare
+domain records applications for MANUAL review in a separate private
+US-jurisdiction D1 database (permitplate-trial-intake). It never enrolls,
+charges, sends, authorizes delivery, reserves a slot or starts the clock.
+Only an authenticated human owner can approve a trial after source-scope
+review. Duplicate domains receive the same neutral public acknowledgment,
+without disclosure of previous applicants or capacity.
+
+The endpoint requires strict same-origin JSON, a valid business name,
+public HTTPS website and reply email, consent, a hidden bot-trap, keyed
+daily per-connection limit, 150-pending review backstop and private
+Cloudflare database/secret binding. Missing dependencies or failed
+persistence fail closed. The approved 10-business trial registry remains
+an entirely separate privately held file. Never place D1 records in
+public source or CI artifacts.
+
+See operations/TRIAL_ONLINE_INTAKE.md for rollout, review, privacy,
+retention and recovery.
 
 ## Admission and private state
 
