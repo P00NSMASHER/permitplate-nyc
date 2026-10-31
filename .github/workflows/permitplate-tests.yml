@@ -11,6 +11,9 @@ permissions:
 
 jobs:
   regression:
+    # Unique, unconditional PR check for the main-only protected-branch ruleset.
+    # Keep separate from optional PA Entity x402 jobs also named 'regression'.
+    name: permitplate-core-required
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
