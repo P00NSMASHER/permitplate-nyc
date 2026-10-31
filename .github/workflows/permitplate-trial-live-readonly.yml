@@ -28,8 +28,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: permitplate-trial-live-readonly-\${{ github.ref }}
-  cancel-in-progress: \${{ github.event_name == 'pull_request' }}
+  group: permitplate-trial-live-readonly-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   live-readonly-trial-acceptance:
@@ -48,5 +48,5 @@ jobs:
         run: node build-site.js --site-base https://permitplate.retallyrecovery.com/
       - name: Read-only production website check
         env:
-          EXPECTED_PUBLIC_COMMIT: \${{ github.event.pull_request.base.sha || github.sha }}
+          EXPECTED_PUBLIC_COMMIT: ${{ github.event.pull_request.base.sha || github.sha }}
         run: node scripts/audit-trial-live-readonly.mjs
