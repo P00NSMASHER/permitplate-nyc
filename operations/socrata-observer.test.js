@@ -154,6 +154,65 @@ const META = {
     assert.notEqual(a, c);
   }
 
+
+  // A publisher that ignores $limit must not produce a complete, absence-safe
+  // receipt merely because the oversized page happens to match count(*).
+  {
+    const source = getSource('DOHMH');
+    const fetchImpl = mockFetch((url) => {
+      if (url.pathname.includes('/api/views/')) return response(200, META);
+      if (url.searchParams.get('$select') === 'count(*)') return response(200, [{count:'2'}]);
+      assert.equal(url.searchParams.get('$limit'), '1');
+      return response(200, [{id:'1'}, {id:'2'}]);
+    });
+    const result = await observeSocrataQuery(source, {order:'id'}, {
+      fetchImpl, nowMs:NOW, pageSize:1, maxRows:10
+    });
+    assert.equal(result.receipt.publisherCount, 2);
+    assert.equal(result.receipt.transportOk, false);
+    assert.equal(result.receipt.cursorClosed, false);
+    assert.deepEqual(result.records, []);
+    assert.equal(result.classification.state, 'SOURCE_UNAVAILABLE');
+    assert.equal(result.classification.supportsAbsenceConclusion, false);
+  }
+
+  // After a valid first page, retain only verified prefix records if a later
+  // response violates the limit; do not pollute the candidate record stream.
+  {
+    const source = getSource('DOHMH');
+    const fetchImpl = mockFetch((url) => {
+      if (url.pathname.includes('/api/views/')) return response(200, META);
+      if (url.searchParams.get('$select') === 'count(*)') return response(200, [{count:'3'}]);
+      const offset = Number(url.searchParams.get('$offset') || 0);
+      return response(200, offset === 0 ? [{id:'1'}] : [{id:'2'}, {id:'3'}]);
+    });
+    const result = await observeSocrataQuery(source, {order:'id'}, {
+      fetchImpl, nowMs:NOW, pageSize:1, maxRows:10
+    });
+    assert.deepEqual(result.records, [{id:'1'}]);
+    assert.equal(result.receipt.fetchedCount, 1);
+    assert.equal(result.receipt.transportOk, false);
+    assert.equal(result.classification.state, 'PARTIAL');
+    assert.equal(result.classification.supportsPositiveObservation, true);
+    assert.equal(result.classification.supportsAbsenceConclusion, false);
+  }
+
+  // Also reject a page that respects $limit but exceeds count(*) remainder.
+  {
+    const source = getSource('DOHMH');
+    const fetchImpl = mockFetch((url) => {
+      if (url.pathname.includes('/api/views/')) return response(200, META);
+      if (url.searchParams.get('$select') === 'count(*)') return response(200, [{count:'1'}]);
+      return response(200, [{id:'1'}, {id:'2'}]);
+    });
+    const result = await observeSocrataQuery(source, {}, {
+      fetchImpl, nowMs:NOW, pageSize:3, maxRows:10
+    });
+    assert.deepEqual(result.records, []);
+    assert.equal(result.receipt.transportOk, false);
+    assert.equal(result.classification.supportsAbsenceConclusion, false);
+  }
+
   console.log('PermitPlate Socrata observer regression tests passed.');
 })().catch((error) => {
   console.error(error);
