@@ -20,20 +20,25 @@ async function main(){
     const live=await read(route);
     assert.equal(live.status,200,route+' status is not OK');
     const local=fs.readFileSync(file,'utf8');
-    if(digest(live.body)!==digest(local)){
-      const length=Math.min(live.body.length,local.length);
-      let i=0;while(i<length&&live.body[i]===local[i])i++;
+    // Cloudflare Email Obfuscation removes only the two explicit email_off
+    // sentinel comments at the edge, without altering enclosed content.
+    // Normalize precisely those markers; any other byte drift remains red.
+    const expectedHtml=file.endsWith('.html')?
+      local.replaceAll('<!--email_off-->','').replaceAll('<!--/email_off-->',''):local;
+    if(digest(live.body)!==digest(expectedHtml)){
+      const length=Math.min(live.body.length,expectedHtml.length);
+      let i=0;while(i<length&&live.body[i]===expectedHtml[i])i++;
       const meta=await read('/build-info.json');
       let source=null,expectedFile=null;
       try{const parsed=JSON.parse(meta.body);source=parsed.sourceCommit;
         expectedFile=parsed.files?.find(x=>x.path===file);}catch{}
-      console.error(JSON.stringify({route,liveLength:live.body.length,expectedLength:local.length,
+      console.error(JSON.stringify({route,liveLength:live.body.length,expectedLength:expectedHtml.length,
         divergenceIndex:i,liveSnippet:live.body.slice(Math.max(0,i-120),i+200),
-        expectedSnippet:local.slice(Math.max(0,i-120),i+200),
+        expectedSnippet:expectedHtml.slice(Math.max(0,i-120),i+200),
         liveBuildSha:source,liveManifestFile:expectedFile,
-        expectedHash:digest(local),liveHash:digest(live.body)},null,2));
+        expectedHash:digest(expectedHtml),liveHash:digest(live.body)},null,2));
     }
-    assert.equal(digest(live.body),digest(local),route+' exact published bytes differ from tested source');
+    assert.equal(digest(live.body),digest(expectedHtml),route+' edge-visible bytes differ beyond known email_off marker removal');
     results.push({route,status:live.status,sha256:digest(live.body)});
   }
   const trial=fs.readFileSync('dist/trial.html','utf8');
