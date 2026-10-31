@@ -27,8 +27,11 @@ async function main(){
     assert.equal(current,expected,'Cloudflare did not publish the requested exact commit inside the bounded observation window');
   }
   const routes=[['/trial','dist/trial.html'],['/trial-request.js','dist/trial-request.js'],
-    ['/assets/v4-triage.js','dist/assets/v4-triage.js'],
+
     ['/terms','dist/terms.html'],['/privacy','dist/privacy.html']];
+  // The newly added 4.0 asset cannot exist on production until this PR merges.
+  // After merge, demand its exact published bytes without weakening any other path.
+  if(!staged) routes.push(['/assets/v4-triage.js','dist/assets/v4-triage.js']);
   const results=[];
   for(const [route,file] of routes){
     const live=await read(route);
