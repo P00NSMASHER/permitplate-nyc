@@ -46,7 +46,13 @@ function uniqueNonblank(values) {
 }
 
 function validIsoDate(value) {
-  return /^\d{4}-\d{2}-\d{2}$/.test(asText(value));
+  const text = asText(value);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return false;
+  // An ISO-shaped string can still name a nonexistent calendar day (Feb 30,
+  // a non-leap Feb 29, month 13). Parse in UTC and require an exact round trip.
+  const calendarDate = new Date(text + 'T00:00:00.000Z');
+  return Number.isFinite(calendarDate.getTime()) &&
+    calendarDate.toISOString().slice(0, 10) === text;
 }
 
 function planEligible(row) {
@@ -84,8 +90,15 @@ function validateSnapshot(input) {
 
   for (const row of graph) {
     const venueKey = asText(row['Venue Key']);
-    assert(validIsoDate(row['First Signal Date']) && validIsoDate(row['Latest Signal Date']),
-      `${venueKey}: signal dates are not ISO dates.`, failures);
+    const firstDate = asText(row['First Signal Date']);
+    const latestDate = asText(row['Latest Signal Date']);
+    const calendarDatesValid = validIsoDate(firstDate) && validIsoDate(latestDate);
+    assert(calendarDatesValid,
+      `${venueKey}: signal dates are not valid ISO calendar dates.`, failures);
+    if (calendarDatesValid) {
+      assert(firstDate <= latestDate,
+        `${venueKey}: latest signal date precedes first signal date.`, failures);
+    }
     const scores = SCORE_COLUMNS.map(([column]) => score(row, column));
     assert(scores.every((value) => Number.isInteger(value) && value >= 0 && value <= 100),
       `${venueKey}: category score outside integer 0-100.`, failures);
