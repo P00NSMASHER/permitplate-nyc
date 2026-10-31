@@ -30,6 +30,9 @@ def main():
                 context = browser.new_context(viewport={"width": width, "height": height},
                                               reduced_motion="reduce")
                 page = context.new_page()
+                page.on('console', lambda msg: print('BROWSER_CONSOLE',browser_name,msg.type,msg.text))
+                page.on('pageerror', lambda err: print('BROWSER_PAGEERROR',browser_name,str(err)))
+                page.on('requestfailed', lambda req: print('BROWSER_REQUEST_FAILED',browser_name,req.url,req.failure))
                 page.goto("http://127.0.0.1:%d/trial.html" % server.server_address[1],
                           wait_until="load", timeout=15000)
                 assert page.title() == "Try your territory free — PermitPlate NYC"
@@ -43,6 +46,13 @@ def main():
                     assert toggle.is_visible()
                     assert toggle.get_attribute("aria-expanded") == "false"
                     toggle.click()
+                    if toggle.get_attribute("aria-expanded") != "true":
+                        print("MENU_DIAGNOSTIC",browser_name,width,page.evaluate("""() => ({
+                          state: document.querySelector('[data-menu-toggle]').getAttribute('aria-expanded'),
+                          menuClass: document.querySelector('[data-menu]').className,
+                          scripts: [...document.scripts].map(s=>({src:s.src,loaded:s.readyState})),
+                          csp: document.querySelector('meta[http-equiv="Content-Security-Policy"]').content
+                        })"""))
                     assert toggle.get_attribute("aria-expanded") == "true"
                     page.keyboard.press("Escape")
                     assert toggle.get_attribute("aria-expanded") == "false"
