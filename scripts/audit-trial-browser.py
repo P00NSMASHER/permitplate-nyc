@@ -84,6 +84,12 @@ def main():
                     page.get_by_label("Work email for our reply").fill("buyer@vendor.example.com")
                     page.get_by_label("Vendor category").select_option(category)
                     page.get_by_label("NYC territory").select_option(territory)
+                    scope = page.locator("[data-trial-scope]")
+                    assert scope.is_visible(), "Scope preview should appear once the two choices are selected"
+                    assert page.locator("[data-trial-scope-summary]").inner_text().startswith("Selected:")
+                    assert "not a guarantee" in page.locator("[data-trial-scope-focus]").inner_text()
+                    assert "No-match updates" in scope.inner_text()
+                    assert page.locator("[data-trial-scope-copy]").is_visible()
                     page.get_by_role("button", name="Prepare my free-trial request").click()
                     link = page.get_by_text("Review and send email request")
                     assert link.is_visible()
@@ -145,6 +151,9 @@ def main():
                 page.get_by_label("Work email for our reply").fill("test-buyer@vendor-customer.com")
                 page.get_by_label("Vendor category").select_option("equipment")
                 page.get_by_label("NYC territory").select_option("Brooklyn")
+                assert page.locator("[data-trial-scope]").is_visible()
+                assert "Brooklyn" in page.locator("[data-trial-scope-summary]").inner_text()
+                assert "Kitchen equipment" in page.locator("[data-trial-scope-summary]").inner_text()
                 page.get_by_role("button",name="Send my free-trial request").click()
                 if accepted:
                     page.locator("[data-trial-success]").wait_for(state="visible",timeout=7000)

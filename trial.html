@@ -8,6 +8,7 @@
   <meta name="theme-color" content="#190b12" />
   <meta name="description" content="Request a supervised 14-day PermitPlate trial for your NYC territory. Source-linked restaurant research, no card and no automatic paid upgrade." />
   <title>Try your territory free — PermitPlate NYC</title>
+  <meta name="permitplate-product-version" content="3.0" />
   <link rel="canonical" href="https://p00nsmasher.github.io/permitplate-nyc/trial.html" />
   <link rel="icon" href="/permitplate-nyc/assets/brand/permitplate-favicon.png" type="image/png" />
   <link rel="stylesheet" href="/permitplate-nyc/site.css?v=20261027-trial" />
@@ -23,7 +24,7 @@
   </div></nav>
   <main id="main" class="checkout-wrap"><div class="shell checkout-grid">
     <section class="checkout-copy">
-      <div class="eyebrow">See what is useful for your business</div>
+      <div class="eyebrow">PermitPlate 3.0 · See what is useful for your business</div>
       <h1>Try your territory free for 14 days.</h1>
       <p>Tell us what you sell and where you work. We check the scope, then prepare a short, source-linked restaurant research brief for your business.</p>
       <ul class="trial-benefits">
@@ -49,6 +50,15 @@
         <label for="trial-territory">NYC territory</label><select id="trial-territory" name="territory" required>
           <option value="">Choose one</option><option value="AllNYC">All NYC</option><option value="Manhattan">Manhattan</option><option value="Brooklyn">Brooklyn</option><option value="Queens">Queens</option><option value="Bronx">Bronx</option><option value="StatenIsland">Staten Island</option><option value="ManhattanBrooklyn">Manhattan and Brooklyn</option><option value="ManhattanQueens">Manhattan and Queens</option><option value="BrooklynQueens">Brooklyn and Queens</option><option value="ManhattanBronx">Manhattan and Bronx</option><option value="ManhattanBrooklynQueens">Manhattan, Brooklyn and Queens</option><option value="BrooklynStatenIsland">Brooklyn and Staten Island</option>
         </select>
+        <section data-trial-scope hidden class="trial-scope-preview" aria-labelledby="trial-scope-heading">
+          <div class="trial-scope-top"><span>YOUR RESEARCH SCOPE</span><strong>Preview only · No leads promised</strong></div>
+          <h3 id="trial-scope-heading">What your pilot will focus on</h3>
+          <p data-trial-scope-summary></p>
+          <p data-trial-scope-focus></p>
+          <p class="trial-scope-boundary">Starter brief + one weekly update, up to five reviewed signals each. Every item needs a source link and context. No-match updates do not start the 14-day clock.</p>
+          <button class="button button-line" data-trial-scope-copy type="button">Copy research scope</button>
+          <p data-trial-scope-copy-status role="status" aria-live="polite"></p>
+        </section>
         <div class="trial-quiet-field" aria-hidden="true"><label for="trial-fax">Leave blank</label><input id="trial-fax" name="fax" type="text" autocomplete="off" tabindex="-1" /></div>
         <button class="button button-primary button-wide" type="submit">Send my free-trial request</button>
         <p class="trial-consent">By requesting, you agree that we may reply about this request. No advertising emails or automatic enrollment.</p>

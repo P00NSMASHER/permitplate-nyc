@@ -354,3 +354,16 @@ a img.retally-wordmark{pointer-events:none}
 .trial-quiet-field{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip-path:inset(50%)!important;border:0!important;white-space:nowrap!important}
 
 .trial-card [hidden],.trial-card form[hidden],.trial-card .trial-received[hidden]{display:none!important}
+
+/* PermitPlate 3.0: source-honest local territory/category preview. */
+.trial-scope-preview{margin:14px 0 7px;padding:19px;border:1px solid rgba(210,232,190,.45);border-radius:16px;background:linear-gradient(140deg,#25382d,#27332a);color:#f7faec}
+.trial-scope-preview[hidden]{display:none!important}
+.trial-scope-top{display:flex;gap:10px;align-items:baseline;justify-content:space-between;flex-wrap:wrap}
+.trial-scope-top span{font-weight:800;font-size:11px;letter-spacing:.12em;color:#cdecb1}
+.trial-scope-top strong{font-weight:600;font-size:11px;color:#e9efda}
+.trial-scope-preview h3{margin:12px 0 8px;font:600 clamp(21px,2vw,26px)/1.17 var(--display,serif)}
+.trial-scope-preview p{font-size:14px;line-height:1.55;margin:9px 0;color:#eff5e7}
+.trial-scope-preview .trial-scope-boundary{padding-top:10px;border-top:1px solid #f4ffdf3d;font-size:12px;color:#e0ebd7}
+.trial-card .trial-scope-preview button{margin:10px 0 0;min-height:42px;padding:10px 14px;font-size:13px;border-color:#e2f0ce;color:#fff;background:transparent}
+.trial-scope-preview [data-trial-scope-copy-status]{min-height:1.2em;margin:8px 0 0;color:#e6f2df;font-size:12px}
+@media(max-width:480px){.trial-scope-preview{padding:16px 13px}.trial-scope-top{display:block}.trial-scope-top strong{display:block;margin-top:4px}}

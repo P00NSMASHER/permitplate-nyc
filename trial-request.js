@@ -51,9 +51,41 @@
     return {body,mailto:'mailto:jay@retallyrecovery.com?subject='+
       encodeURIComponent('PermitPlate free-trial request')+'&body='+encodeURIComponent(body)};
   }
+  // An honest research-scope preview, not a claim that any specific lead exists.
+  const categoryTopics=Object.freeze({
+    pos:['POS and payments','publicly documented changes that may affect checkout, payment, or POS needs'],
+    insurance:['Insurance','publicly documented changes that may warrant insurance follow-up'],
+    equipment:['Kitchen equipment','publicly documented changes that may involve equipment planning'],
+    hoodfire:['Hood and fire','publicly documented changes that may involve hood, ventilation, or fire safety scope'],
+    waste:['Waste','publicly documented changes that may involve waste and collection needs'],
+    pest:['Pest control','publicly documented changes that may involve pest management needs'],
+    linen:['Linen','publicly documented changes that may involve linen service needs'],
+    distribution:['Food distribution','publicly documented changes that may involve food-supply planning']
+  });
+  const territoryNames=Object.freeze({
+    AllNYC:'All NYC',Manhattan:'Manhattan',Brooklyn:'Brooklyn',Queens:'Queens',
+    Bronx:'Bronx',StatenIsland:'Staten Island',
+    ManhattanBrooklyn:'Manhattan and Brooklyn',ManhattanQueens:'Manhattan and Queens',
+    BrooklynQueens:'Brooklyn and Queens',ManhattanBronx:'Manhattan and Bronx',
+    ManhattanBrooklynQueens:'Manhattan, Brooklyn and Queens',
+    BrooklynStatenIsland:'Brooklyn and Staten Island'
+  });
+  function scopePreview(category,territory){
+    if(!categories.includes(category)||!territories.includes(territory))return null;
+    const [label,focus]=categoryTopics[category],place=territoryNames[territory];
+    const scope=label+' in '+place;
+    return Object.freeze({
+      scope,focus,
+      copy:'PermitPlate supervised free-trial research scope\n'+scope+'\n'+
+        'Research focus: '+focus+'.\n'+
+        'Starter brief and one weekly update. Up to five reviewed, source-linked signals per report.\n'+
+        'Public records do not prove buying intent. A no-matches note does not start the 14-day clock.\n'+
+        'One trial per business; maximum ten independently approved businesses; no card or automatic paid upgrade.'
+    });
+  }
   function onlineOrigin(location){return location&&location.origin===origin;}
   if(typeof module==='object'&&module.exports)
-    module.exports={buildRequest,categories,territories,publicDomain,normalizeRequest,normalizeEmail,onlineOrigin};
+    module.exports={buildRequest,scopePreview,categories,territories,publicDomain,normalizeRequest,normalizeEmail,onlineOrigin};
   if(!root.document)return;
   const form=root.document.querySelector('[data-trial-request]');
   if(!form)return;
@@ -67,6 +99,47 @@
   const legal=root.document.querySelector('[data-trial-legal]');
   const submit=form.querySelector?form.querySelector('button[type="submit"]'):null;
   const direct=onlineOrigin(root.location);
+  const scopeCard=root.document.querySelector('[data-trial-scope]');
+  const scopeSummary=root.document.querySelector('[data-trial-scope-summary]');
+  const scopeFocus=root.document.querySelector('[data-trial-scope-focus]');
+  const scopeCopy=root.document.querySelector('[data-trial-scope-copy]');
+  const scopeCopyStatus=root.document.querySelector('[data-trial-scope-copy-status]');
+  const categoryField=form.querySelector?form.querySelector('#trial-category'):null;
+  const territoryField=form.querySelector?form.querySelector('#trial-territory'):null;
+  let scopeRevision=0;
+  function currentScope(){return categoryField&&territoryField?scopePreview(categoryField.value,territoryField.value):null;}
+  function renderScope(){
+    scopeRevision++;
+    const plan=currentScope();
+    if(scopeCopyStatus)scopeCopyStatus.textContent='';
+    if(!scopeCard||!scopeSummary||!scopeFocus)return;
+    scopeCard.hidden=!plan;
+    if(!plan){scopeSummary.textContent='';scopeFocus.textContent='';return;}
+    scopeSummary.textContent='Selected: '+plan.scope+'.';
+    scopeFocus.textContent='We will examine '+plan.focus+' when the official source supports it. This is not a guarantee that matching projects exist.';
+  }
+  if(categoryField&&territoryField){
+    for(const field of [categoryField,territoryField]){
+      field.addEventListener('change',renderScope);
+      field.addEventListener('input',renderScope);
+    }
+    renderScope();
+  }
+  if(scopeCopy&&scopeCopy.addEventListener){
+    scopeCopy.addEventListener('click',async()=>{
+      const plan=currentScope();if(!plan)return;
+      const revision=scopeRevision;
+      try{
+        if(!root.navigator?.clipboard?.writeText)throw Error('COPY_UNAVAILABLE');
+        await root.navigator.clipboard.writeText(plan.copy);
+        if(scopeCopyStatus)scopeCopyStatus.textContent=revision===scopeRevision
+          ?'Scope copied. This page did not send or enroll anyone.'
+          :'Scope changed during copying. Review the new selection and copy again.';
+      }catch{
+        if(scopeCopyStatus)scopeCopyStatus.textContent='Copy unavailable. You can select the preview text to copy it manually. Nothing was sent.';
+      }
+    });
+  }
   if(!direct){
     if(submit)submit.textContent='Prepare my free-trial request';
     if(intro)intro.textContent='To request a free trial here, prepare an email you can review and send. For an immediate on-screen request receipt, visit permitplate.retallyrecovery.com/trial.';

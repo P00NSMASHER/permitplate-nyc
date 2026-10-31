@@ -22,6 +22,29 @@ test('request remains an explicit email draft with no billing, credential or enr
     assert.throws(()=>request.buildRequest({...valid,...change}));
   }
 });
+test('3.0 local scope explorer reflects supported categories and territories without inventing leads',()=>{
+  const plans=new Set();
+  for(const category of request.categories){
+    for(const territory of request.territories){
+      const plan=request.scopePreview(category,territory);
+      assert(plan&&plan.scope&&plan.focus&&plan.copy);
+      assert(plan.copy.includes('no card or automatic paid upgrade'));
+      assert(plan.copy.includes('no-matches note does not start the 14-day clock'));
+      assert(plan.copy.includes('source-linked'));
+      assert(!/buyer@|owner@|password|customer identity/i.test(plan.copy));
+      plans.add(plan.scope);
+    }
+  }
+  assert.equal(plans.size,96,'All 8 categories x 12 territories should be distinct');
+  assert.equal(request.scopePreview('malicious','Brooklyn'),null);
+  assert.equal(request.scopePreview('equipment','UnknownCity'),null);
+  const page=fs.readFileSync(__dirname+'/trial.html','utf8');
+  assert(page.includes('name="permitplate-product-version" content="3.0"'));
+  assert(page.includes('data-trial-scope'));
+  assert(page.includes('data-trial-scope-copy'));
+  assert(page.includes('No-match updates do not start the 14-day clock'));
+  assert(!/\b(?:localStorage|sessionStorage|sendBeacon)\b/.test(fs.readFileSync(__dirname+'/trial-request.js','utf8')));
+});
 test('public trial options match supported fulfillment categories and territories',()=>{
   assert.deepEqual(request.categories,[...offer.CATEGORY_VALUES]);
   assert.deepEqual(request.territories,[...offer.TERRITORY_VALUES]);

@@ -55,6 +55,8 @@ try{
   const home2=fs.readFileSync(path.join(build.OUT,'index.html'),'utf8');
   assert(home2.includes('/permitplate-nyc/case-study.html'));
   assert(sample2.includes('B01415135-S1')&&sample2.includes('B01415135-S2'));
+  assert(home2.includes('name="permitplate-product-version" content="3.0"'));
+  assert(fs.readFileSync(path.join(build.OUT,'trial.html'),'utf8').includes('data-trial-scope'));
   assert(sample2.includes('B01353208-P1')&&sample2.includes('CAMIS 50189702'));
   assert(sample2.includes('Next action')&&sample2.includes('Evidence appendix'));
   assert(sample2.toLowerCase().includes('not a live lead')&&sample2.includes('not the government publisher'));
