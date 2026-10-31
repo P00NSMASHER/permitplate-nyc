@@ -6,11 +6,12 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://data.cityofnewyork.us; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <meta name="theme-color" content="#190b12" />
-  <meta name="description" content="Request a supervised 14-day PermitPlate trial for your NYC territory. Source-linked restaurant research, no card and no automatic paid upgrade." />
+  <meta name="description" content="PermitPlate 3.0: preview your NYC restaurant-research trial scope by category and territory, then request a supervised 14-day free trial. No card or automatic upgrade." />
+  <meta name="permitplate-product-version" content="3.0" />
   <title>Try your territory free — PermitPlate NYC</title>
   <link rel="canonical" href="https://p00nsmasher.github.io/permitplate-nyc/trial.html" />
   <link rel="icon" href="/permitplate-nyc/assets/brand/permitplate-favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/permitplate-nyc/site.css?v=20261027-trial" />
+  <link rel="stylesheet" href="/permitplate-nyc/site.css?v=20261031-v3-scope" />
   <link rel="stylesheet" href="/permitplate-nyc/assets/brand/approved-brand-20261022.css?v=3" />
 </head>
 <body class="checkout-page">
@@ -23,7 +24,7 @@
   </div></nav>
   <main id="main" class="checkout-wrap"><div class="shell checkout-grid">
     <section class="checkout-copy">
-      <div class="eyebrow">See what is useful for your business</div>
+      <div class="eyebrow">PermitPlate 3.0 · Choose your research focus</div>
       <h1>Try your territory free for 14 days.</h1>
       <p>Tell us what you sell and where you work. We check the scope, then prepare a short, source-linked restaurant research brief for your business.</p>
       <ul class="trial-benefits">
@@ -49,6 +50,20 @@
         <label for="trial-territory">NYC territory</label><select id="trial-territory" name="territory" required>
           <option value="">Choose one</option><option value="AllNYC">All NYC</option><option value="Manhattan">Manhattan</option><option value="Brooklyn">Brooklyn</option><option value="Queens">Queens</option><option value="Bronx">Bronx</option><option value="StatenIsland">Staten Island</option><option value="ManhattanBrooklyn">Manhattan and Brooklyn</option><option value="ManhattanQueens">Manhattan and Queens</option><option value="BrooklynQueens">Brooklyn and Queens</option><option value="ManhattanBronx">Manhattan and Bronx</option><option value="ManhattanBrooklynQueens">Manhattan, Brooklyn and Queens</option><option value="BrooklynStatenIsland">Brooklyn and Staten Island</option>
         </select>
+        <section class="trial-v3-preview" data-trial-preview hidden aria-labelledby="trial-v3-preview-title">
+          <p class="trial-v3-kicker">PermitPlate 3.0 · Your scope preview</p>
+          <h3 id="trial-v3-preview-title">See your research plan before requesting.</h3>
+          <p data-trial-preview-summary>Choose a vendor category and NYC territory to see the scope.</p>
+          <dl class="trial-v3-details">
+            <div><dt>Research lens</dt><dd data-trial-preview-focus>Selected category required</dd></div>
+            <div><dt>Geography</dt><dd data-trial-preview-territory>Selected territory required</dd></div>
+            <div><dt>Free pilot</dt><dd>Starter brief plus one weekly update · up to five reviewed signals per report</dd></div>
+          </dl>
+          <p class="trial-v3-disclaimer">Planning preview only. Public records are research leads to investigate, not verified buyer demand. Zero matches are reported honestly; a no-matches note does not start the 14-day clock. No trial spot is reserved here.</p>
+          <button type="button" class="button button-line" data-trial-preview-copy disabled>Copy my trial scope</button>
+          <div data-trial-preview-fallback hidden><label for="trial-v3-plaintext">Plain-text scope for manual copying</label><textarea id="trial-v3-plaintext" data-trial-preview-plain readonly rows="7"></textarea></div>
+          <p data-trial-preview-status role="status" aria-live="polite"></p>
+        </section>
         <div class="trial-quiet-field" aria-hidden="true"><label for="trial-fax">Leave blank</label><input id="trial-fax" name="fax" type="text" autocomplete="off" tabindex="-1" /></div>
         <button class="button button-primary button-wide" type="submit">Send my free-trial request</button>
         <p class="trial-consent">By requesting, you agree that we may reply about this request. No advertising emails or automatic enrollment.</p>

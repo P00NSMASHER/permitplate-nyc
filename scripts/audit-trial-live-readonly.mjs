@@ -47,6 +47,9 @@ async function main(){
   assert(trial.includes('Review and send email request'));
   assert(trial.includes('Online requests are securely stored for manual review'));
   assert(trial.includes('data-trial-success'));
+  assert(trial.includes('data-trial-preview'));
+  assert(trial.includes('data-trial-preview-copy'));
+  assert(trial.includes('name="permitplate-product-version" content="3.0"'));
   assert(trial.includes('name="email" type="email"'));
   assert(trial.includes('No card, no automatic upgrade'));
   assert(trial.includes('Send my free-trial request'));

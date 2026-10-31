@@ -22,6 +22,25 @@ test('request remains an explicit email draft with no billing, credential or enr
     assert.throws(()=>request.buildRequest({...valid,...change}));
   }
 });
+test('v3 scope preview offers truthful, public-only plans for every supported territory and category',()=>{
+  let checked=0;
+  for(const category of request.categories){
+    for(const territory of request.territories){
+      const input={category,territory,website:'https://private.example',email:'private@example.com'};
+      const preview=request.scopePreview(input),copy=request.buildScopeSummary(input);
+      assert.equal(preview.category,category);assert.equal(preview.territory,territory);
+      assert.equal(preview.maxSignalsPerReport,5);assert.equal(preview.trialDays,14);
+      assert.equal(preview.automaticPaidUpgrade,false);
+      assert(copy.includes(preview.categoryLabel)&&copy.includes(preview.territoryLabel));
+      assert(copy.includes('not a submitted request')&&copy.includes('no automatic upgrade'));
+      assert(!copy.includes(input.website)&&!copy.includes(input.email),'Copied scope contains no buyer identity');
+      checked++;
+    }
+  }
+  assert.equal(checked,request.categories.length*request.territories.length);
+  assert.equal(request.scopePreview({category:'unapproved',territory:'Brooklyn'}),null);
+  assert.equal(request.buildScopeSummary({category:'equipment',territory:'Boston'}),null);
+});
 test('public trial options match supported fulfillment categories and territories',()=>{
   assert.deepEqual(request.categories,[...offer.CATEGORY_VALUES]);
   assert.deepEqual(request.territories,[...offer.TERRITORY_VALUES]);
@@ -29,6 +48,9 @@ test('public trial options match supported fulfillment categories and territorie
   for(const choice of [...request.categories,...request.territories])assert(html.includes('value="'+choice+'"'));
   assert(html.includes('never charge or enroll you automatically'));
   assert(html.includes('data-trial-success'));
+  assert(html.includes('data-trial-preview'));
+  assert(html.includes('data-trial-preview-copy'));
+  assert(html.includes('name="permitplate-product-version" content="3.0"'));
   assert(html.includes('name="email" type="email"'));
   assert(html.includes('Send my free-trial request'));
   assert(html.includes('Work email for our reply'));

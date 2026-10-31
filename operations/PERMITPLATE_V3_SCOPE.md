@@ -1,0 +1,7 @@
+# PermitPlate 3.0: preview the free-trial scope without a real customer
+
+The public trial page now provides an interactive category × NYC territory plan. It explains the research lens, maximum five source-linked signals per report, starter + one weekly brief, 14-day clock starting only after a useful delivered report, and the explicit no-matches behavior. Eight vendor categories and twelve supported territories yield 96 distinct public-only previews. A buyer can copy a plan without sending anything or including their business name, website or email. On GitHub Pages the existing separate manual email route remains; on the real Cloudflare host only the existing one-step private D1 intake can acknowledge a submission. The preview never submits, reserves a trial slot, verifies a lead, guarantees buying intent, starts a clock, or changes a payment.
+
+Exact invariants: No new form fields with names, no new backend POST schema, no extra API routes, no new customer or marketing messages, no analytics, cookies, storage, or tracking. No automatic paid upgrade. The $79/month membership and 10-business manual pilot capacity are unchanged. The private D1 request ledger and owner-approved admission remain separate.
+
+Verification: `node --test trial-request.test.js pipeline/trial-1000-customer-audit.test.js`, the always-required `permitplate-core-required` suite, the Chromium and WebKit `scripts/audit-trial-browser.py` trials with simulated private API, and the exact-public-byte deployment smoke. No synthetic production POST is permitted.
