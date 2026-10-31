@@ -7,7 +7,9 @@ const root = new URL('../', import.meta.url);
 const readJson = async (path) =>
   JSON.parse(await readFile(new URL(path, root), 'utf8'));
 
-const map = await readJson('docs/pa-entity-floot-recovery/deploy-map.json');
+// Historical deployment bundles belong to an immutable October 2 lock.
+// Validate against its frozen queue, never today's evolving candidate map.
+const map = await readJson('verification/floot-deployment-queue-latest.json');
 const a = await readJson('recovery/floot-deployment-bundle-01.json');
 const b = await readJson('recovery/floot-deployment-bundle-02.json');
 const queue = await readJson('verification/floot-deployment-queue-latest.json');
@@ -17,6 +19,8 @@ assert.equal(b.formatVersion, 1);
 assert.equal(a.projectId, map.projectId);
 assert.equal(queue.projectId, map.projectId);
 assert.match(String(queue.sourceMapBlobSha ?? ''), /^[0-9a-f]{40}$/);
+assert.equal(map.sourceMapBlobSha, queue.sourceMapBlobSha);
+assert.equal(map.sourceCommit, queue.sourceCommit);
 assert.equal(a.deployMapBlobSha, queue.sourceMapBlobSha);
 assert.equal(b.deployMapBlobSha, queue.sourceMapBlobSha);
 assert.equal(b.projectId, map.projectId);
