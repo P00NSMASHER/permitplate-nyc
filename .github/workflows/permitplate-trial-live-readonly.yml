@@ -1,0 +1,52 @@
+name: PermitPlate 1000-persona trial live read-only acceptance
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'trial.html'
+      - 'trial-request.js'
+      - 'terms.html'
+      - 'privacy.html'
+      - 'build-site.js'
+      - 'pipeline/trial-1000-customer-audit.test.js'
+      - 'scripts/audit-trial-live-readonly.mjs'
+      - '.github/workflows/permitplate-trial-live-readonly.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'trial.html'
+      - 'trial-request.js'
+      - 'terms.html'
+      - 'privacy.html'
+      - 'build-site.js'
+      - 'pipeline/trial-1000-customer-audit.test.js'
+      - 'scripts/audit-trial-live-readonly.mjs'
+      - '.github/workflows/permitplate-trial-live-readonly.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: permitplate-trial-live-readonly-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  live-readonly-trial-acceptance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - name: Checkout exact source without persistent credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Setup pinned Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.4'
+      - name: Build standalone public artifact
+        run: node build-site.js --site-base https://permitplate.retallyrecovery.com/
+      - name: Read-only production website check
+        env:
+          EXPECTED_PUBLIC_COMMIT: ${{ github.event.pull_request.base.sha || github.sha }}
+        run: node scripts/audit-trial-live-readonly.mjs

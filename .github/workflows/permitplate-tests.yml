@@ -183,6 +183,9 @@ jobs:
       - name: Verify labeled customer simulations cannot create commercial proof or LIVE approvals
         run: node pipeline/trial-customer-simulation.test.js
 
+      - name: Audit one thousand fictional free-trial customers without enrollment or sends
+        run: node --test pipeline/trial-1000-customer-audit.test.js
+
       - name: Verify source collision quarantine preserves complete publisher evidence
         run: node pipeline/dob-source-collisions.test.js
 
