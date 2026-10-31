@@ -62,6 +62,8 @@ try{
   assert(source2.includes('NO CLAIM')&&source2.includes('PROVENANCE AND LIMITS'));
   assert(source2.includes('data.cityofnewyork.us/resource/w9ak-ipjd.json'));
   assert(build.PUBLIC_FILES.includes('case-study.js')&&build.PUBLIC_FILES.includes('case-study.css'));
+  assert(fs.readFileSync('trial.html','utf8').includes('name="permitplate-product-version" content="3.0"'));
+  assert(fs.readFileSync('index.html','utf8').includes('name="permitplate-product-version" content="3.0"'));
   const htmlFiles=build.PUBLIC_FILES.filter((name)=>name.endsWith('.html'));
   for(const file of htmlFiles){
     const html=fs.readFileSync(path.join(build.OUT,file),'utf8');

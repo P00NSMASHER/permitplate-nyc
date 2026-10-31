@@ -28,6 +28,9 @@ test('one thousand fictional customer drafts preserve scope without any send or 
   const seen=new Set(), combo=new Set();
   for(let i=0;i<COUNT;i++){
     const p=persona(i), draft=request.buildRequest(p);
+    const preview=request.scopePreview(p),copy=request.buildScopeSummary(p);
+    assert(preview&&copy.includes(preview.categoryLabel)&&copy.includes(preview.territoryLabel));
+    assert(!copy.includes(p.businessName)&&!copy.includes(p.email),'Draft scope excludes customer identifiers');
     const uri=new URL(draft.mailto);
     assert.equal(uri.protocol,'mailto:');
     assert.equal(uri.pathname,'jay@retallyrecovery.com');

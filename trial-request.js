@@ -5,6 +5,48 @@
     'ManhattanBrooklyn','ManhattanQueens','BrooklynQueens','ManhattanBronx',
     'ManhattanBrooklynQueens','BrooklynStatenIsland'];
   const origin='https://permitplate.retallyrecovery.com';
+  // Category-specific research prompts are examples, NOT live-lead assertions.
+  const categoryLens=Object.freeze({
+    equipment:['Kitchen equipment','Look for public restaurant-project activity where equipment outreach may be worth investigating.'],
+    hoodfire:['Hood and fire','Look for restaurant project and permitting context relevant to fire or ventilation suppliers.'],
+    pos:['POS and payments','Look for public operating and project signals that may warrant a POS conversation.'],
+    insurance:['Insurance','Look for public activity that may warrant an independent coverage conversation.'],
+    waste:['Waste','Look for publicly recorded restaurant activity that could warrant waste-service outreach.'],
+    pest:['Pest control','Look for public restaurant activity that could warrant pest-service outreach.'],
+    linen:['Linen','Look for public restaurant activity that could warrant a linen-service conversation.'],
+    distribution:['Food distribution','Look for public restaurant activity where distribution outreach may be worth investigating.']
+  });
+  const territoryNames=Object.freeze({
+    AllNYC:'All NYC',Manhattan:'Manhattan',Brooklyn:'Brooklyn',Queens:'Queens',
+    Bronx:'Bronx',StatenIsland:'Staten Island',
+    ManhattanBrooklyn:'Manhattan and Brooklyn',ManhattanQueens:'Manhattan and Queens',
+    BrooklynQueens:'Brooklyn and Queens',ManhattanBronx:'Manhattan and Bronx',
+    ManhattanBrooklynQueens:'Manhattan, Brooklyn and Queens',
+    BrooklynStatenIsland:'Brooklyn and Staten Island'
+  });
+  function scopePreview(input){
+    if(!input||!categories.includes(input.category)||!territories.includes(input.territory))return null;
+    const lens=categoryLens[input.category];
+    return Object.freeze({category:input.category,territory:input.territory,
+      categoryLabel:lens[0],territoryLabel:territoryNames[input.territory],
+      focus:lens[1],maxSignalsPerReport:5,trialDays:14,
+      reports:['Starter brief','One weekly update'],automaticPaidUpgrade:false});
+  }
+  function buildScopeSummary(input){
+    const p=scopePreview(input);
+    if(!p)return null;
+    return [
+      'PermitPlate 3.0 — draft trial research plan (not a submitted request)',
+      'Vendor category: '+p.categoryLabel,
+      'NYC territory: '+p.territoryLabel,
+      'Research lens: '+p.focus,
+      'Included: starter research brief and one weekly update, up to five source-linked reviewed signals per report.',
+      'Trial clock: 14 days starting only after the first useful report is successfully sent.',
+      'Zero matches: reported honestly; a no-matches note does not start the trial clock.',
+      'Public records do not establish buying intent, customer demand, or guaranteed leads.',
+      'No card, no automatic upgrade, no reservation or enrollment from this preview.'
+    ].join('\n');
+  }
   function publicDomain(value){
     const name=String(value||'').toLowerCase().replace(/^www\./,'').replace(/\.$/,'');
     if(!/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,63}$/.test(name)||
@@ -53,7 +95,7 @@
   }
   function onlineOrigin(location){return location&&location.origin===origin;}
   if(typeof module==='object'&&module.exports)
-    module.exports={buildRequest,categories,territories,publicDomain,normalizeRequest,normalizeEmail,onlineOrigin};
+    module.exports={buildRequest,scopePreview,buildScopeSummary,categories,territories,publicDomain,normalizeRequest,normalizeEmail,onlineOrigin};
   if(!root.document)return;
   const form=root.document.querySelector('[data-trial-request]');
   if(!form)return;
@@ -67,6 +109,51 @@
   const legal=root.document.querySelector('[data-trial-legal]');
   const submit=form.querySelector?form.querySelector('button[type="submit"]'):null;
   const direct=onlineOrigin(root.location);
+  const preview=root.document.querySelector('[data-trial-preview]');
+  const categoryField=root.document.querySelector('#trial-category');
+  const territoryField=root.document.querySelector('#trial-territory');
+  const previewSummary=root.document.querySelector('[data-trial-preview-summary]');
+  const previewFocus=root.document.querySelector('[data-trial-preview-focus]');
+  const previewTerritory=root.document.querySelector('[data-trial-preview-territory]');
+  const previewCopy=root.document.querySelector('[data-trial-preview-copy]');
+  const previewStatus=root.document.querySelector('[data-trial-preview-status]');
+  const previewFallback=root.document.querySelector('[data-trial-preview-fallback]');
+  const previewPlain=root.document.querySelector('[data-trial-preview-plain]');
+  let scopeRevision=0;
+  function refreshScope(){
+    if(!preview||!categoryField||!territoryField||!previewCopy)return;
+    scopeRevision+=1;
+    const value=scopePreview({category:categoryField.value,territory:territoryField.value});
+    preview.hidden=false;
+    if(previewFallback)previewFallback.hidden=true;
+    if(previewPlain)previewPlain.value='';
+    if(previewStatus)previewStatus.textContent='';
+    previewCopy.disabled=!value;
+    if(previewSummary)previewSummary.textContent=value
+      ?'Draft scope: '+value.categoryLabel+' in '+value.territoryLabel+'.'
+      :'Choose both a vendor category and NYC territory above to preview your scope.';
+    if(previewFocus)previewFocus.textContent=value?value.focus:'Select a vendor category';
+    if(previewTerritory)previewTerritory.textContent=value?value.territoryLabel:'Select an NYC territory';
+  }
+  refreshScope();
+  form.addEventListener('change',refreshScope);
+  if(previewCopy)previewCopy.addEventListener('click',async()=>{
+    const plain=buildScopeSummary({category:categoryField?.value,territory:territoryField?.value});
+    if(!plain)return;
+    const revision=scopeRevision;
+    const stillCurrent=()=>revision===scopeRevision;
+    try{
+      if(!root.navigator?.clipboard?.writeText)throw Error('COPY_UNAVAILABLE');
+      await root.navigator.clipboard.writeText(plain);
+      if(!stillCurrent()){if(previewStatus)previewStatus.textContent='Scope changed while copying; copy the new plan.';return;}
+      if(previewFallback)previewFallback.hidden=true;
+      if(previewStatus)previewStatus.textContent='Scope copied locally. This does not submit or reserve a trial.';
+    }catch{
+      if(!stillCurrent()){if(previewStatus)previewStatus.textContent='Scope changed while copying; copy again.';return;}
+      if(previewPlain){previewPlain.value=plain;previewFallback.hidden=false;previewPlain.select();}
+      if(previewStatus)previewStatus.textContent='Clipboard unavailable. Select the complete plan below and copy it manually. Nothing was submitted.';
+    }
+  });
   if(!direct){
     if(submit)submit.textContent='Prepare my free-trial request';
     if(intro)intro.textContent='To request a free trial here, prepare an email you can review and send. For an immediate on-screen request receipt, visit permitplate.retallyrecovery.com/trial.';
@@ -83,7 +170,7 @@
     fallback.hidden=false;
     status.textContent=message;
   }
-  form.addEventListener('input',()=>{if(!form.hidden)resetDraft();});
+  form.addEventListener('input',()=>{if(!form.hidden)resetDraft();refreshScope();});
   if(copy&&copy.addEventListener){
     copy.addEventListener('click',async()=>{
       if(!body.value)return;
