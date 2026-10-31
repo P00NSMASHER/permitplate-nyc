@@ -3,6 +3,7 @@ name: Vendor gate Floot release preflight
 on:
   pull_request:
     paths:
+      - 'docs/pa-entity-floot-release/package.json'
       - 'docs/pa-entity-floot-release/vendor-intake-gate_GET.ts'
       - 'docs/pa-entity-floot-release/vendor-intake-gate_GET.schema.ts'
       - 'docs/pa-entity-floot-release/FLOOT_SAFE_PATCH_3_OPENAPI.txt'
@@ -17,6 +18,7 @@ on:
       - '.github/workflows/vendor-gate-floot-preflight.yml'
   push:
     paths:
+      - 'docs/pa-entity-floot-release/package.json'
       - 'docs/pa-entity-floot-release/vendor-intake-gate_GET.ts'
       - 'docs/pa-entity-floot-release/vendor-intake-gate_GET.schema.ts'
       - 'docs/pa-entity-floot-release/FLOOT_SAFE_PATCH_3_OPENAPI.txt'

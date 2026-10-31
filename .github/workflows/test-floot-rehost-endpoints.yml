@@ -3,6 +3,7 @@ name: Test Floot rehost endpoints
 on:
   push:
     paths:
+      - 'docs/pa-entity-floot-release/package.json'
       - 'docs/pa-entity-floot-release/*_GET.ts'
       - 'docs/pa-entity-floot-release/*_GET.schema.ts'
       - 'scripts/test-floot-rehost-raw-endpoints.mts'

@@ -14,8 +14,8 @@
     {
       "source": "docs/pa-entity-floot-release/vendor-intake-gate_GET.ts",
       "target": "endpoints/vendor-intake-gate_GET.ts",
-      "gitBlobSha": "f318feaaf197783c8460899d1d419026760496b5",
-      "size": 46016
+      "gitBlobSha": "23f2879e1e44b9e47550f45d435fc39d94d6f39f",
+      "size": 45938
     },
     {
       "source": "docs/pa-entity-floot-release/vendor-intake-gate_GET.schema.ts",
@@ -86,8 +86,8 @@
     {
       "source": "docs/pa-entity-floot-release/treasury-average-rates_GET.ts",
       "target": "endpoints/treasury-average-rates_GET.ts",
-      "gitBlobSha": "ba41708dd6524b0ab937f118cad6e204cccd9712",
-      "size": 12341
+      "gitBlobSha": "0459d96fbb8308f2d85c016f58e005662af86b0c",
+      "size": 12336
     },
     {
       "source": "docs/pa-entity-floot-release/treasury-average-rates_GET.schema.ts",
@@ -168,5 +168,5 @@
       "size": 77
     }
   ],
-  "refreshedAt": "2026-10-02"
+  "refreshedAt": "2026-10-30"
 }

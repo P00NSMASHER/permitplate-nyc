@@ -10,7 +10,9 @@ const progress = JSON.parse(
 );
 const deployMap = JSON.parse(
   await readFile(
-    new URL('../docs/pa-entity-floot-recovery/deploy-map.json', import.meta.url),
+    // Preserve immutable queue lineage for partial deployment receipts.
+    // A newer candidate map must not rewrite historical 13/26 write attestations.
+    new URL('../verification/floot-deployment-queue-latest.json', import.meta.url),
     'utf8'
   )
 );
@@ -18,6 +20,8 @@ const deployMap = JSON.parse(
 assert.equal(progress.projectId, deployMap.projectId);
 assert.equal(progress.productionOrigin, deployMap.productionOrigin);
 assert.equal(progress.writes.length, deployMap.writes.length);
+assert.equal(progress.sourceCommit, deployMap.sourceCommit);
+assert.equal(progress.sourceBranch, deployMap.sourceBranch);
 assert.equal(progress.writes.length, 26);
 
 let lastVersion = progress.preWriteSnapshot?.projectVersion ?? null;
