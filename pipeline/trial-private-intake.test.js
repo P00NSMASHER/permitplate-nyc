@@ -179,3 +179,19 @@ test('public and privileged paths never provide automatic enroll, send or charge
   assert(source.includes("request.headers.get('origin')!==ORIGIN"));
   assert(source.includes('crypto.subtle.sign'));
 });
+
+test('private trial intake refuses unreachable dot-atom work-email syntax without persisting',async()=>{
+  const {onRequestPost}=await modulePromise,d=new FakeD1(),e=env(d);
+  const invalid=['buyer..contact@vendor.example.com','.buyer@vendor.example.com',
+    'buyer.@vendor.example.com','a'.repeat(65)+'@vendor.example.com'];
+  for(const email of invalid){
+    const result=await json(await onRequestPost({request:request({...eligible,email}),env:e}));
+    assert.equal(result.code,400,email);
+    assert.equal(result.body.code,'EMAIL_INVALID',email);
+  }
+  assert.equal(d.requests.size,0,'invalid contact addresses must never reach the private queue');
+  const valid=await onRequestPost({
+    request:request({...eligible,email:'first.last+sales@vendor-customer.com'}),env:e});
+  assert.equal(valid.status,202,'valid tagged business contacts remain supported');
+  assert.equal(d.requests.size,1);
+});
