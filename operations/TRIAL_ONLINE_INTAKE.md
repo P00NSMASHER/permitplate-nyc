@@ -24,7 +24,15 @@ Any missing dependency causes a 503, not an apparent success.
 
 Strict same-origin JSON POST, a 2048-byte cap, one request per business
 domain, five attempts per pseudonymous-IP daily key and a pending queue
-backstop of 150 protect a small manual-review pilot. Duplicate domains
+backstop of 150 protect a small manual-review pilot. The private website field
+retains the public HTTPS URL path (up to 700 characters including the origin)
+so the owner can distinguish business pages hosted on a shared domain. Query
+parameters and fragments are discarded before private storage, including
+tracking parameters and tokens. The canonical business-domain duplicate key
+remains hostname-only; differing paths on one shared host do **not** bypass
+one-trial-per-business safeguards or automatically create distinct requests.
+The owner must independently verify business identity and aliases before any
+trial admission. Duplicate domains
 never reveal old applicant names/emails. Client requests are NOT
 authenticated owner approvals or confirmed email delivery.
 
