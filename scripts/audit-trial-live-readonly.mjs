@@ -20,6 +20,19 @@ async function main(){
     const live=await read(route);
     assert.equal(live.status,200,route+' status is not OK');
     const local=fs.readFileSync(file,'utf8');
+    if(digest(live.body)!==digest(local)){
+      const length=Math.min(live.body.length,local.length);
+      let i=0;while(i<length&&live.body[i]===local[i])i++;
+      const meta=await read('/build-info.json');
+      let source=null,expectedFile=null;
+      try{const parsed=JSON.parse(meta.body);source=parsed.sourceCommit;
+        expectedFile=parsed.files?.find(x=>x.path===file);}catch{}
+      console.error(JSON.stringify({route,liveLength:live.body.length,expectedLength:local.length,
+        divergenceIndex:i,liveSnippet:live.body.slice(Math.max(0,i-120),i+200),
+        expectedSnippet:local.slice(Math.max(0,i-120),i+200),
+        liveBuildSha:source,liveManifestFile:expectedFile,
+        expectedHash:digest(local),liveHash:digest(live.body)},null,2));
+    }
     assert.equal(digest(live.body),digest(local),route+' exact published bytes differ from tested source');
     results.push({route,status:live.status,sha256:digest(live.body)});
   }
