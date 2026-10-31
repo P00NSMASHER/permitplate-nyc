@@ -14,7 +14,20 @@ async function main(){
   const expected=process.env.EXPECTED_PUBLIC_COMMIT;
   assert.match(expected||'',/^[0-9a-f]{40}$/);
   const staged=process.env.TRIAL_STAGED_PR==='true';
+  // Exact-source smoke should wait for Cloudflare to publish this commit,
+  // not compare a freshly merged Git revision against an older healthy deployment.
+  if(!staged){
+    let current='';
+    for(let attempt=0;attempt<12;attempt++){
+      const status=await read('/build-info.json');
+      if(status.status===200){try{current=JSON.parse(status.body).sourceCommit||'';}catch{current='';}}
+      if(current===expected)break;
+      if(attempt<11)await new Promise(resolve=>setTimeout(resolve,10000));
+    }
+    assert.equal(current,expected,'Cloudflare did not publish the requested exact commit inside the bounded observation window');
+  }
   const routes=[['/trial','dist/trial.html'],['/trial-request.js','dist/trial-request.js'],
+    ['/assets/v4-triage.js','dist/assets/v4-triage.js'],
     ['/terms','dist/terms.html'],['/privacy','dist/privacy.html']];
   const results=[];
   for(const [route,file] of routes){
@@ -49,7 +62,10 @@ async function main(){
   assert(trial.includes('data-trial-success'));
   assert(trial.includes('data-trial-preview'));
   assert(trial.includes('data-trial-preview-copy'));
-  assert(trial.includes('name="permitplate-product-version" content="3.0"'));
+  assert(trial.includes('data-v4-signal'));
+  assert(trial.includes('data-v4-copy'));
+  assert(trial.includes('name="permitplate-product-version" content="4.0"'));
+
   assert(trial.includes('name="email" type="email"'));
   assert(trial.includes('No card, no automatic upgrade'));
   assert(trial.includes('Send my free-trial request'));

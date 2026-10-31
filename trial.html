@@ -6,12 +6,13 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://data.cityofnewyork.us; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <meta name="theme-color" content="#190b12" />
-  <meta name="description" content="PermitPlate 3.0: preview your NYC restaurant-research trial scope by category and territory, then request a supervised 14-day free trial. No card or automatic upgrade." />
-  <meta name="permitplate-product-version" content="3.0" />
+  <meta name="description" content="PermitPlate 4.0: preview your NYC restaurant-research trial scope by category and territory, then request a supervised 14-day free trial. No card or automatic upgrade." />
+  <meta name="permitplate-product-version" content="4.0" />
   <title>Try your territory free — PermitPlate NYC</title>
   <link rel="canonical" href="https://p00nsmasher.github.io/permitplate-nyc/trial.html" />
   <link rel="icon" href="/permitplate-nyc/assets/brand/permitplate-favicon.png" type="image/png" />
   <link rel="stylesheet" href="/permitplate-nyc/site.css?v=20261031-v3-scope" />
+  <link rel="stylesheet" href="/permitplate-nyc/assets/v4-triage.css?v=1" />
   <link rel="stylesheet" href="/permitplate-nyc/assets/brand/approved-brand-20261022.css?v=3" />
 </head>
 <body class="checkout-page">
@@ -35,6 +36,63 @@
       <p class="trial-note">Your 14 days start when the first useful report is sent successfully. A no-matches note does not start the clock. If we cannot support your scope, we will tell you before starting.</p>
       <p>One trial per business. This supervised pilot is limited to 10 businesses. Public records are research starting points; they do not establish buying intent or guarantee leads.</p>
       <p><strong>Continue only if you choose.</strong> The paid membership is $79/month for weekly briefs with up to 10 matching signals. The free trial never converts automatically.</p>
+      <section class="trial-v4-signal" id="signal-check" data-v4-signal hidden aria-labelledby="v4-signal-title">
+        <div class="trial-v4-heading">
+          <p class="trial-v4-eyebrow">PermitPlate 4.0 · Public-record signal triage</p>
+          <h2 id="v4-signal-title">Does a record actually point to a project?</h2>
+          <p>Make a private, local-only investigation checklist from a publicly available NYC record. An inspection listing alone does not establish a new opening, a vendor opportunity, or a buyer's intent.</p>
+        </div>
+        <div class="trial-v4-fields">
+          <label for="v4-public-url">Official public NYC record link (optional)
+            <input id="v4-public-url" data-v4-url type="url" maxlength="2048" inputmode="url" autocomplete="off" placeholder="https://data.cityofnewyork.us/…">
+          </label>
+          <p class="trial-v4-help">NYC government or NYC Open Data HTTPS links only, with no private credentials or tracking parameters. This page does not open or fetch the link.</p>
+          <label for="v4-source-kind">What kind of record?
+            <select id="v4-source-kind" data-v4-kind>
+              <option value="inspection">Restaurant inspection / health record</option>
+              <option value="permit">Building / permit record</option>
+              <option value="agency">Other public agency notice</option>
+              <option value="other">Other public record</option>
+            </select>
+          </label>
+          <label for="v4-event-status">Is an actual new project event dated in the record?
+            <select id="v4-event-status" data-v4-event>
+              <option value="unchecked">Not independently checked</option>
+              <option value="listing">Only a current listing or refreshed data extract</option>
+              <option value="dated_change">I located a dated project-relevant event</option>
+              <option value="conflict">Dates or events conflict</option>
+            </select>
+          </label>
+          <label for="v4-corroboration">Independent public corroboration
+            <select id="v4-corroboration" data-v4-corroboration>
+              <option value="none">Not found / not checked</option>
+              <option value="independent">I located a separate supporting public source</option>
+              <option value="conflict">Sources conflict</option>
+            </select>
+          </label>
+          <label for="v4-fit">Relevance to my vendor category
+            <select id="v4-fit" data-v4-fit>
+              <option value="unknown">Not independently assessed</option>
+              <option value="possible">I can explain a possible research connection</option>
+              <option value="not_shown">No category-specific need shown</option>
+            </select>
+          </label>
+        </div>
+        <div class="trial-v4-result" role="status" aria-live="polite">
+          <strong data-v4-outcome>RESEARCH ONLY</strong>
+          <p data-v4-explanation>Choose the category and territory in the trial form, then mark what you personally observed.</p>
+        </div>
+        <div class="trial-v4-actions">
+          <button type="button" class="button button-primary" data-v4-copy>Copy unverified research checklist</button>
+          <button type="button" class="button button-line" data-v4-reset>Reset triage</button>
+        </div>
+        <p data-v4-copy-status role="status" aria-live="polite"></p>
+        <div data-v4-fallback hidden><label for="v4-plain">Select this complete draft for manual copying</label>
+          <textarea id="v4-plain" readonly rows="10"></textarea>
+        </div>
+        <p class="trial-v4-boundary"><strong>Safety boundary:</strong> This tool never verifies source content, identifies a buyer, scores a lead, stores a form, enrolls anyone, contacts a prospect or starts a trial. A person must independently review primary sources before commercial use.</p>
+      </section>
+
     </section>
     <section class="checkout-card trial-card" aria-labelledby="request-title">
       <div class="price-label">Request a place in the pilot</div>
@@ -77,6 +135,6 @@
     </section>
   </div></main>
   <footer class="footer"><div class="shell footer-bottom"><a href="https://group.retallyrecovery.com/">PermitPlate · RETALLY Group</a><a href="/permitplate-nyc/sample.html">See the sample brief</a><a href="/permitplate-nyc/terms.html">Terms</a><a href="mailto:jay@retallyrecovery.com">Contact</a></div></footer>
-  <script src="/permitplate-nyc/site.js" defer></script><script src="/permitplate-nyc/trial-request.js" defer></script>
+  <script src="/permitplate-nyc/site.js" defer></script><script src="/permitplate-nyc/trial-request.js" defer></script><script src="/permitplate-nyc/assets/v4-triage.js?v=1" defer></script>
 </body>
 </html>

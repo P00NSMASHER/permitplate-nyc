@@ -6,6 +6,9 @@ on:
     paths:
       - 'trial.html'
       - 'trial-request.js'
+      - 'assets/v4-triage.js'
+      - 'assets/v4-triage.css'
+      - 'scripts/audit-trial-live-readonly.mjs'
       - 'terms.html'
       - 'privacy.html'
       - 'build-site.js'
@@ -17,6 +20,9 @@ on:
     paths:
       - 'trial.html'
       - 'trial-request.js'
+      - 'assets/v4-triage.js'
+      - 'assets/v4-triage.css'
+      - 'scripts/audit-trial-live-readonly.mjs'
       - 'terms.html'
       - 'privacy.html'
       - 'build-site.js'

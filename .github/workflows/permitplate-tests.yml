@@ -195,6 +195,9 @@ jobs:
       - name: Verify trial direct request, fallback email draft and both publication targets
         run: node trial-request.test.js
 
+      - name: Run v4 public signal triage with exhaustive no-send QA
+        run: node --test trial-signal-triage.test.js
+
       - name: Verify private Pages intake rejects abuse, duplicates and unapproved enrollment
         run: node --test pipeline/trial-private-intake.test.js
 

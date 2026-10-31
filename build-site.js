@@ -66,6 +66,8 @@ const PUBLIC_FILES=Object.freeze([
   'sample.html',
   'site.css',
   'site.js',
+  'assets/v4-triage.js',
+  'assets/v4-triage.css',
   'start.html',
   'sitemap.xml',
   'terms.html',
