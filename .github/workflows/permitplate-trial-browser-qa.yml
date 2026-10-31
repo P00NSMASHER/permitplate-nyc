@@ -7,6 +7,9 @@ on:
       - 'trial.html'
       - 'trial-request.js'
       - 'site.css'
+      - 'assets/v4-triage.js'
+      - 'assets/v4-triage.css'
+      - 'trial-signal-triage.test.js'
       - 'site.js'
       - 'scripts/audit-trial-browser.py'
       - 'pipeline/trial-1000-customer-audit.test.js'
@@ -17,6 +20,9 @@ on:
       - 'trial.html'
       - 'trial-request.js'
       - 'site.css'
+      - 'assets/v4-triage.js'
+      - 'assets/v4-triage.css'
+      - 'trial-signal-triage.test.js'
       - 'site.js'
       - 'scripts/audit-trial-browser.py'
       - 'pipeline/trial-1000-customer-audit.test.js'
@@ -54,6 +60,8 @@ jobs:
         run: python -m pip install --disable-pip-version-check playwright==1.57.0
       - name: Install official browser
         run: python -m playwright install --with-deps ${{ matrix.browser }}
+      - name: Run no-send signal triage combinations before browsers
+        run: node --test trial-signal-triage.test.js
       - name: Build exact static standalone UI
         run: node build-site.js --site-base https://permitplate.retallyrecovery.com/
       - name: Run real-browser form, navigation and mobile acceptance without sends

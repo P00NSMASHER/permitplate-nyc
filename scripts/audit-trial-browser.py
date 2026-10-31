@@ -84,6 +84,18 @@ def main():
                     page.get_by_label("Work email for our reply").fill("buyer@vendor.example.com")
                     page.get_by_label("Vendor category").select_option(category)
                     page.get_by_label("NYC territory").select_option(territory)
+                    triage = page.locator("[data-v4-signal]")
+                    assert triage.is_visible(), "V4 signal triage must be visible on every tested viewport"
+                    page.locator('[data-v4-event]').select_option('listing')
+                    assert "LISTING ALONE" in page.locator('[data-v4-outcome]').inner_text(), "A mere extract refresh cannot imply an opening"
+                    page.locator('[data-v4-event]').select_option('dated_change')
+                    page.locator('[data-v4-corroboration]').select_option('independent')
+                    page.locator('[data-v4-fit]').select_option('possible')
+                    assert "NOT A VERIFIED LEAD" in page.locator('[data-v4-outcome]').inner_text(), "Even corroborated buyer-marked record cannot claim a verified lead"
+                    page.locator('[data-v4-corroboration]').select_option('conflict')
+                    assert "HOLD" in page.locator('[data-v4-outcome]').inner_text()
+                    page.locator('[data-v4-reset]').click()
+                    assert "LISTING ALONE" in page.locator('[data-v4-outcome]').inner_text(), "Reset must return to unverified evidence"
                     scope = page.locator("[data-trial-preview]")
                     assert scope.is_visible(), "V3 scope preview must be visible on mobile and desktop"
                     assert page.locator("[data-trial-preview-copy]").is_enabled()
@@ -151,6 +163,8 @@ def main():
                 page.get_by_label("Work email for our reply").fill("test-buyer@vendor-customer.com")
                 page.get_by_label("Vendor category").select_option("equipment")
                 page.get_by_label("NYC territory").select_option("Brooklyn")
+                assert page.locator("[data-v4-signal]").is_visible()
+                assert page.locator("[data-v4-copy]").is_enabled()
                 assert page.locator("[data-trial-preview]").is_visible()
                 assert "Brooklyn" in page.locator("[data-trial-preview-summary]").inner_text()
                 page.get_by_role("button",name="Send my free-trial request").click()

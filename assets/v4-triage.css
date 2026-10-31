@@ -1,0 +1,21 @@
+/* PermitPlate 4.0 evidence triage, separate from private customer intake. */
+.trial-v4-signal{margin:32px 0 0;background:linear-gradient(145deg,#f9fbf3,#e3eee4);padding:26px;border:1px solid #b9d0bb;border-radius:22px;color:#173729;box-shadow:0 24px 60px #183d2811}
+.trial-v4-signal[hidden],.trial-v4-signal [hidden]{display:none!important}
+.trial-v4-eyebrow{font:800 .72rem/1.45 var(--mono,monospace);color:#295d43;letter-spacing:.075em;text-transform:uppercase;margin:0 0 9px}
+.trial-v4-heading h2{font:600 clamp(1.5rem,2.5vw,2.3rem)/1.15 var(--display,serif);max-width:22ch;margin:0 0 12px}
+.trial-v4-heading p:not(.trial-v4-eyebrow){font-size:.88rem;line-height:1.58;color:#395d4b}
+.trial-v4-fields{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin:20px 0}
+.trial-v4-fields label{display:block;font-size:.81rem;font-weight:750;line-height:1.35;color:#193b2b;min-width:0}
+.trial-v4-fields label:first-child{grid-column:1/-1}
+.trial-v4-fields input,.trial-v4-fields select{display:block;width:100%;min-width:0;min-height:46px;margin:7px 0 0;padding:10px;background:#fff;border:1px solid #aabfae;border-radius:10px;color:#143b2a;font:inherit;font-size:.81rem}
+.trial-v4-fields :is(input,select):focus-visible,.trial-v4-actions button:focus-visible{outline:3px solid #80a88a;outline-offset:3px}
+.trial-v4-help{grid-column:1/-1;color:#486e54;font-size:.73rem;line-height:1.5;margin:-4px 0 4px}
+.trial-v4-result{padding:16px;background:#e7f2e4;border:1px solid #b1cfb6;border-radius:14px;margin:16px 0}
+.trial-v4-result strong{font-size:.78rem;letter-spacing:.03em;color:#16432c}
+.trial-v4-result p{font-size:.79rem;line-height:1.5;color:#3d6048;margin:8px 0 0}
+.trial-v4-actions{display:flex;flex-wrap:wrap;gap:9px}.trial-v4-actions button{min-height:44px;margin:0;padding:11px 14px;font-size:.75rem}
+.trial-v4-actions button[disabled]{opacity:.5;cursor:not-allowed}
+.trial-v4-signal [data-v4-copy-status]{min-height:1.2em;font-size:.75rem;margin:12px 0;color:#30583e}
+.trial-v4-signal [data-v4-fallback] textarea{width:100%;min-height:145px;padding:12px;background:#fff;border:1px solid #b2c7b4;border-radius:10px;font:500 .73rem/1.5 monospace}
+.trial-v4-signal .trial-v4-boundary{border-top:1px solid #c1d5c2;padding:13px 0 0;font-size:.75rem;line-height:1.55;color:#3e604a}
+@media(max-width:680px){.trial-v4-signal{padding:19px 15px}.trial-v4-fields{grid-template-columns:1fr}.trial-v4-fields label:first-child,.trial-v4-help{grid-column:auto}.trial-v4-actions{display:grid;grid-template-columns:1fr}.trial-v4-actions button{width:100%}}

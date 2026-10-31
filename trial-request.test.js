@@ -66,7 +66,7 @@ test('public trial options match supported fulfillment categories and territorie
   assert(html.includes('data-trial-success'));
   assert(html.includes('data-trial-preview'));
   assert(html.includes('data-trial-preview-copy'));
-  assert(html.includes('name="permitplate-product-version" content="3.0"'));
+  assert(html.includes('name="permitplate-product-version" content="4.0"'));
   assert(html.includes('name="email" type="email"'));
   assert(html.includes('Send my free-trial request'));
   assert(html.includes('Work email for our reply'));
