@@ -4,6 +4,9 @@ import functools
 import http.server
 import os
 from pathlib import Path
+import ssl
+import subprocess
+import tempfile
 import threading
 from urllib.parse import parse_qs, urlsplit
 
@@ -19,7 +22,20 @@ class SilentServer(http.server.SimpleHTTPRequestHandler):
 def main():
     assert (DIST / "trial.html").is_file(), "Build standalone files first"
     handler = functools.partial(SilentServer, directory=str(DIST))
+    # Match production HTTPS: WebKit correctly upgrades all HTTP subresources
+    # under the site's strict upgrade-insecure-requests CSP. A local plain
+    # HTTP test server would falsely report that scripts and navigation fail.
+    cert_dir = tempfile.TemporaryDirectory(prefix="permitplate-trial-browser-")
+    cert = str(Path(cert_dir.name) / "cert.pem")
+    key = str(Path(cert_dir.name) / "key.pem")
+    subprocess.run(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes",
+                    "-keyout", key, "-out", cert, "-days", "1",
+                    "-subj", "/CN=127.0.0.1", "-addext", "subjectAltName=IP:127.0.0.1"],
+                   check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    tls = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    tls.load_cert_chain(certfile=cert, keyfile=key)
+    server.socket = tls.wrap_socket(server.socket, server_side=True)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     browser_name = os.environ.get("QA_BROWSER", "chromium")
     checked = 0
@@ -27,13 +43,13 @@ def main():
         browser = getattr(api, browser_name).launch(headless=True)
         try:
             for width, height in [(375, 812), (768, 1024), (1440, 900)]:
-                context = browser.new_context(viewport={"width": width, "height": height},
+                context = browser.new_context(ignore_https_errors=True, viewport={"width": width, "height": height},
                                               reduced_motion="reduce")
                 page = context.new_page()
                 page.on('console', lambda msg: print('BROWSER_CONSOLE',browser_name,msg.type,msg.text))
                 page.on('pageerror', lambda err: print('BROWSER_PAGEERROR',browser_name,str(err)))
                 page.on('requestfailed', lambda req: print('BROWSER_REQUEST_FAILED',browser_name,req.url,req.failure))
-                page.goto("http://127.0.0.1:%d/trial.html" % server.server_address[1],
+                page.goto("https://127.0.0.1:%d/trial.html" % server.server_address[1],
                           wait_until="load", timeout=15000)
                 assert page.title() == "Try your territory free — PermitPlate NYC"
                 assert page.get_by_role("heading", name="Try your territory free for 14 days.").is_visible()
@@ -87,6 +103,7 @@ def main():
         finally:
             browser.close()
     server.shutdown()
+    cert_dir.cleanup()
     print({"status": "PASS", "browser": browser_name, "viewports": 3,
            "valid_and_rejection_pairs": checked, "realMailtoClicks": 0,
            "productionHTTPRequests": 0, "payments": 0})
