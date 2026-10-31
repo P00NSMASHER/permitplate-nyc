@@ -38,22 +38,26 @@
     <section class="checkout-card trial-card" aria-labelledby="request-title">
       <div class="price-label">Request a place in the pilot</div>
       <h2 id="request-title">What should we research?</h2>
-      <p>We confirm fit and availability by email. Preparing this request does not enroll or charge you.</p>
+      <p data-trial-intro>Send your request in one step. You will see an immediate receipt. We personally review suitability and availability before offering a spot, and never charge or enroll you automatically.</p>
       <form data-trial-request>
         <label for="trial-business">Business name</label><input id="trial-business" name="businessName" autocomplete="organization" minlength="2" maxlength="160" required />
         <label for="trial-website">Business website</label><input id="trial-website" name="website" type="url" placeholder="https://yourbusiness.com" autocomplete="url" maxlength="300" required />
+        <label for="trial-email">Work email for our reply</label><input id="trial-email" name="email" type="email" placeholder="you@yourbusiness.com" autocomplete="email" maxlength="254" required />
         <label for="trial-category">Vendor category</label><select id="trial-category" name="category" required>
           <option value="">Choose one</option><option value="equipment">Kitchen equipment</option><option value="hoodfire">Hood and fire</option><option value="pos">POS and payments</option><option value="insurance">Insurance</option><option value="waste">Waste</option><option value="pest">Pest control</option><option value="linen">Linen</option><option value="distribution">Food distribution</option>
         </select>
         <label for="trial-territory">NYC territory</label><select id="trial-territory" name="territory" required>
           <option value="">Choose one</option><option value="AllNYC">All NYC</option><option value="Manhattan">Manhattan</option><option value="Brooklyn">Brooklyn</option><option value="Queens">Queens</option><option value="Bronx">Bronx</option><option value="StatenIsland">Staten Island</option><option value="ManhattanBrooklyn">Manhattan and Brooklyn</option><option value="ManhattanQueens">Manhattan and Queens</option><option value="BrooklynQueens">Brooklyn and Queens</option><option value="ManhattanBronx">Manhattan and Bronx</option><option value="ManhattanBrooklynQueens">Manhattan, Brooklyn and Queens</option><option value="BrooklynStatenIsland">Brooklyn and Staten Island</option>
         </select>
-        <button class="button button-primary button-wide" type="submit">Prepare my free-trial request</button>
+        <div class="trial-quiet-field" aria-hidden="true"><label for="trial-fax">Leave blank</label><input id="trial-fax" name="fax" type="text" autocomplete="off" tabindex="-1" /></div>
+        <button class="button button-primary button-wide" type="submit">Send my free-trial request</button>
+        <p class="trial-consent">By requesting, you agree that we may reply about this request. No advertising emails or automatic enrollment.</p>
       </form>
       <p data-trial-status role="status" aria-live="polite"></p>
+      <section data-trial-success class="trial-received" hidden aria-labelledby="trial-received-heading"><h3 id="trial-received-heading" tabindex="-1">Request received</h3><p>Your request is on file for a personal review. Watch your email for our response about fit and availability. This does not reserve a pilot slot, start your 14 days, or charge you.</p><p>While you wait, <a href="/permitplate-nyc/sample.html">see an example research brief</a>.</p></section>
       <a class="button button-dark button-wide" data-trial-email hidden>Review and send email request</a>
-      <div data-trial-fallback hidden><label for="trial-email-body">Prefer webmail? Copy this request and email jay@retallyrecovery.com.</label><textarea id="trial-email-body" data-trial-body readonly rows="8"></textarea></div>
-      <p class="checkout-legal">This page prepares an email draft on your device. Nothing is submitted until you send it from your email app. Read the <a href="/permitplate-nyc/privacy.html">privacy notice</a> and <a href="/permitplate-nyc/terms.html#free-trial">trial terms</a>.</p>
+      <div data-trial-fallback hidden><label for="trial-email-body">Prefer webmail? Copy this request and email jay@retallyrecovery.com.</label><textarea id="trial-email-body" data-trial-body readonly rows="8"></textarea><button class="button button-line button-wide" data-trial-copy type="button">Copy request text</button></div>
+      <p class="checkout-legal" data-trial-legal>Online requests are securely stored for manual review. If online intake is unavailable, the email option opens a draft that is not sent until you press Send. No card, no automatic upgrade. Read the <a href="/permitplate-nyc/privacy.html">privacy notice</a> and <a href="/permitplate-nyc/terms.html#free-trial">trial terms</a>.</p>
       <noscript><p>Email <a href="mailto:jay@retallyrecovery.com?subject=PermitPlate%20free-trial%20request">jay@retallyrecovery.com</a> with your business name, website, vendor category and NYC territory to request the free pilot.</p></noscript>
     </section>
   </div></main>
