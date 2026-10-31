@@ -19,6 +19,7 @@ function persona(i){
     website:'https://www.audit-vendor-'+id+'.example.com/service/nyc?utm_source=simulation',
     category:request.categories[i%request.categories.length],
     territory:request.territories[Math.floor(i/request.categories.length)%request.territories.length],
+    email:'fictional-buyer-'+id+'@example.com',
     recipientEmail:'fictional-buyer-'+id+'@example.com'
   };
 }
@@ -185,7 +186,8 @@ test('page, legal terms and source preserve the manual-consent and no-card bound
   assert(html.includes('Online requests are securely stored for manual review'));
   assert(html.includes('data-trial-success'));
   assert(html.includes('name="email" type="email"'));
-  assert(html.includes('No card or automatic paid upgrade'));
+  assert(html.includes('No card, no automatic upgrade'));
+  assert(html.includes('data-trial-copy'));
   assert(html.includes("form-action 'none'"));
   assert(!/<form[^>]*action=/i.test(html));
   assert(/name=["']email["']/i.test(html),'online requests must provide an email for manual reply');
