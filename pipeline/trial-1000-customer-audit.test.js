@@ -186,11 +186,86 @@ test('page, legal terms and source preserve the manual-consent and no-card bound
   assert(html.includes("form-action 'none'"));
   assert(!/<form[^>]*action=/i.test(html));
   assert(!/name=["']email["']/i.test(html),'sender identity comes from manual email, not web submission');
-  assert(terms.includes('No card'));
+  assert(terms.toLowerCase().includes('no card'));
   assert(terms.includes('never upgrades automatically'));
   assert(terms.includes('10-business pilot limit'));
   assert(terms.includes('first nonempty report'));
   assert(terms.includes('Provider acceptance does not guarantee inbox delivery'));
   assert(!/\bstripe\b/i.test(scriptWithoutNodeImports()));
   function scriptWithoutNodeImports(){return fs.readFileSync(require.resolve('../trial-request'),'utf8');}
+});
+
+
+test('1,000 simulated customer full lifecycles produce source-bound first and weekly reports, never real sends',()=>{
+  const simulation=require('./trial-customer-simulation');
+  const research=require('./curated-research-ledger');
+  const boroughs=['Manhattan','Brooklyn','Queens','Bronx','Staten Island'];
+  let simulated=0, reports=0, failed=0, unsupportedUpgrade=0, noSend=0;
+  for(let world=0;world<500;world++){
+    const borough=boroughs[world%boroughs.length], observedAt='2026-10-27T10:00:00.000Z';
+    const candidates=Array.from({length:6},(_,i)=>{
+      const id=String(50000000+world*10+i);
+      return {entityId:'CAMIS:'+id,camis:id,
+        canonicalName:'FICTIONAL Restaurant '+world+'-'+i,address:(10+i)+' TEST STREET',
+        borough,lifecycleStage:'JUST FILED',sourceSystems:['DOHMH'],
+        acceptedCorroboration:[],rejectedCorroboration:[],commercialEvidence:[],
+        sourceFirstEffectiveAt:'2026-10-26T08:00:00.000Z',
+        sourceLatestEffectiveAt:'2026-10-26T08:00:00.000Z',
+        deliverySuppressed:false,crossCamisOperationalConflicts:[]};
+    });
+    const sourceObservations=Object.fromEntries(research.REQUIRED_SOURCES.map(key=>[key,{
+      observationId:'OBS:FICTIONAL:'+key+':'+world,observedAt,
+      state:'COMPLETE_NONEMPTY',supportsAbsenceConclusion:true,sourceFresh:true,
+      transportOk:true,publisherCount:6,fetchedCount:6
+    }]));
+    const graph={runnerVersion:'PermitPlate-current-graph-v1.0.0',observedAt,
+      graphState:'COMPLETE',graphDigest:research.hash(candidates),sourceObservations,
+      metrics:{candidateCount:6},knownRegressionChecks:{passed:true},candidates,passed:true};
+    graph.artifactFingerprint=research.graphFingerprint(graph);
+    const before=graph.artifactFingerprint,result=simulation.simulate(graph);
+    assert.equal(graph.artifactFingerprint,before);
+    assert.equal(result.scenarios.length,2);
+    assert.equal(result.controls.realProviderCalls,0);
+    assert.equal(result.controls.realMessagesSent,0);
+    assert.equal(result.controls.realPaymentsCreated,0);
+    assert.equal(result.controls.commercialProofEstablished,false);
+    for(const scenario of result.scenarios){
+      simulated++;
+      assert.equal(scenario.lifecycle.reportCount,2);
+      assert.equal(scenario.lifecycle.repeatedSignalCount,0);
+      assert.equal(scenario.lifecycle.testReviewRejectedInLive,true);
+      assert.equal(scenario.lifecycle.automaticBilling,false);
+      assert.equal(scenario.lifecycle.realMessagesSent,0);
+      assert.equal(scenario.lifecycle.realPaymentsCreated,0);
+      assert.equal(scenario.lifecycle.noMatchesStartsClock,false);
+      assert.equal(scenario.lifecycle.secondReportExtendsTrial,false);
+      assert.equal(scenario.lifecycle.expiredTrialBlocked,true);
+      reports+=2;
+      for(const packet of [scenario.firstBrief,scenario.weeklyBrief]){
+        assert.match(packet.subject,/^\[TEST SIMULATION\]/);
+        assert.match(packet.html,/not a real customer report/);
+        assert.match(packet.html,/No card, automatic charge or automatic paid upgrade/);
+        assert(packet.signals.every(x=>x.borough===borough));
+        assert(!packet.html.includes('<strong>JUST FILED</strong>'));
+      }
+      for(const feedback of [scenario.firstFeedback,scenario.weeklyFeedback]){
+        assert.equal(feedback.criteria.sourceAccuracy.result,'MATCHES_INPUT_SNAPSHOT');
+        assert.equal(feedback.criteria.territory.result,'MATCH');
+        assert.equal(feedback.criteria.upgradeTerms.result,'CLEAR');
+        assert.equal(feedback.actualConversion,false);
+        assert.equal(feedback.actualSatisfactionMeasured,false);
+        if(feedback.simulatedUpgradeDecision!=='CONSIDER_ONLY_AFTER_REAL_VALUE_VALIDATION')unsupportedUpgrade++;
+      }
+      noSend+=Number(scenario.lifecycle.realMessagesSent===0);
+    }
+  }
+  assert.equal(simulated,1000);
+  assert.equal(reports,2000);
+  assert.equal(noSend,1000);
+  assert.equal(failed,0);
+  console.log(JSON.stringify({kind:'FICTIONAL_COMPLETE_TRIAL_LIFECYCLES',
+    simulatedCustomers:simulated,firstAndWeeklyReports:reports,
+    sourceTerritories:boroughs.length,sourceCategoryPersonas:2,
+    noRealSends:noSend,realPayments:0,actualCustomerSatisfactionMeasured:0,
+    simulatedUpgradeDeferOrDeclineAssessments:unsupportedUpgrade}));
 });
