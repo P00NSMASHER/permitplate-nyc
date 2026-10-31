@@ -34,10 +34,14 @@ a qualified customer lead or a live customer delivery.
 
 ## Free trial pilot
 
-`trial.html` accepts a request by preparing a local email draft. It does not
-submit an intake, enroll a customer, create a subscription or start billing.
-The operator confirms scope before admitting up to 10 businesses, one trial
-per business, using the private no-send trial workflow.
+The official Cloudflare `trial.html` form records a **private, manual-review
+application** and displays a receipt only after durable intake confirms it.
+The GitHub Pages fallback prepares a local email draft, which the visitor must
+send; neither surface enrolls a customer, bills or starts a trial clock.
+Public website page paths are retained for owner review on shared hosts, while
+query strings and fragments are discarded and domain-level deduplication remains
+conservative. The owner verifies scope and identity before admitting up to 10
+businesses, one trial per business, using the private no-send workflow.
 
 - One category and NYC territory; two reports with up to five reviewed signals each.
 - Fourteen days begin at the first nonempty, authorized, provider-accepted send.

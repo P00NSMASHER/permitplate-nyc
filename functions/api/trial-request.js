@@ -37,7 +37,12 @@ function validate(raw){
   if(!CATEGORIES.has(raw.category)||!TERRITORIES.has(raw.territory))throw Error('SCOPE_INVALID');
   if(raw.consent!==true)throw Error('CONTACT_CONSENT_REQUIRED');
   if(text(raw.fax).length>300)throw Error('FIELDS_INVALID');
-  return {businessName,businessDomain,website:u.origin,email,
+  // Preserve a public page path for manual identity review on shared hosts.
+  // Query strings and fragments may contain tracking or tokens, so never retain them.
+  // Admission and duplicate suppression continue using businessDomain only.
+  const website=u.origin+(u.pathname==='/'?'':u.pathname);
+  if(website.length>700)throw Error('WEBSITE_INVALID');
+  return {businessName,businessDomain,website,email,
     category:raw.category,territory:raw.territory,spam:!!text(raw.fax)};
 }
 async function boundedJSON(request){

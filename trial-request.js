@@ -75,7 +75,11 @@
     publicDomain(website.hostname);
     if(!categories.includes(input.category)||!territories.includes(input.territory))
       throw Error('Choose one vendor category and NYC territory.');
-    return {businessName:name,website:website.origin,
+    // Keep the public page path for founder review (shared hosts distinguish businesses
+    // by path). Strip query/fragment and retain hostname-only duplicate checks server-side.
+    const websitePath=website.origin+(website.pathname==='/'?'':website.pathname);
+    if(websitePath.length>700)throw Error('Use a shorter public business website URL.');
+    return {businessName:name,website:websitePath,
       email:normalizeEmail(input.email,requireEmail),category:input.category,
       territory:input.territory,fax:typeof input.fax==='string'?input.fax:'',consent:true};
   }

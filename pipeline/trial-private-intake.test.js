@@ -81,7 +81,8 @@ test('one validated request persists privately; duplicate domain does not consum
   assert.equal(d.requests.size,1);
   const saved=[...d.requests.values()][0];
   assert.equal(saved.domain,'vendor-customer.com');
-  assert.equal(saved.website,'https://www.vendor-customer.com');
+  assert.equal(saved.website,'https://www.vendor-customer.com/about');
+  assert(!saved.website.includes('utm=abc'),'request tracking query must not reach private state');
   assert.equal(saved.email,'owner@vendor-customer.com');
   assert.equal(saved.status,'PENDING');
   assert.equal(saved.category,'equipment');
@@ -90,6 +91,24 @@ test('one validated request persists privately; duplicate domain does not consum
   assert.equal(d.requests.size,1);
   assert.deepEqual(repeat.body,first.body,'duplicate must not reveal prior applicant');
   assert.equal(d.rates.size,1);
+});
+test('shared hosting pages retain founder-review paths but cannot create extra trial slots',async()=>{
+  const {onRequestPost}=await modulePromise,d=new FakeD1(),e=env(d);
+  const a={...eligible,website:'https://sites.google.com/view/fixture-a?utm_source=private#bio'};
+  const b={...eligible,website:'https://sites.google.com/view/fixture-b?secret=yes'};
+  const first=await json(await onRequestPost({request:request(a),env:e}));
+  const second=await json(await onRequestPost({request:request(b),env:e}));
+  assert.equal(first.code,202);assert.equal(second.code,202);
+  assert.deepEqual(second.body,first.body,'duplicate must not reveal prior applicant');
+  assert.equal(d.requests.size,1,'same host remains one pending business until verified by owner');
+  const saved=[...d.requests.values()][0];
+  assert.equal(saved.domain,'sites.google.com');
+  assert.equal(saved.website,'https://sites.google.com/view/fixture-a');
+  assert(!saved.website.includes('utm_')&&!saved.website.includes('#'));
+  const invalid=await json(await onRequestPost({request:request({
+    ...eligible,website:'https://vendor-customer.com/'+'z'.repeat(701)
+  }),env:e}));
+  assert.equal(invalid.code,400);assert.equal(d.requests.size,1);
 });
 test('invalid origin, method context, missing db and unsupported content type fail closed',async()=>{
   const {onRequestPost}=await modulePromise,d=new FakeD1(),e=env(d);
