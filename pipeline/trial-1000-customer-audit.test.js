@@ -39,7 +39,8 @@ test('one thousand fictional customer drafts preserve scope without any send or 
     assert(draft.body.includes('NYC territory: '+p.territory));
     assert(draft.body.includes('No card or automatic paid upgrade.'));
     assert(!draft.body.includes('utm_source=simulation'));
-    assert(!draft.body.includes('fictional-buyer-'+String(i).padStart(4,'0')+'@example.com'));
+    assert(draft.body.includes('Contact email: fictional-buyer-'+String(i).padStart(4,'0')+'@example.com'),
+      'Manual fallback must retain the explicit contact address for follow-up');
     assert(!/\r/.test(draft.body));
     seen.add(p.businessName);
     combo.add(p.category+'|'+p.territory);
