@@ -211,4 +211,42 @@ assert(backwardsDate.failures.some((failure) => failure.includes('precedes first
   assert(duplicateReceiptColumns.failures.some(message=>message.includes('AMBIGUOUS_SHEET_HEADERS')));
 }
 
+// Source-integrity follow-up: nonempty spreadsheet cells without a header
+// were silently truncated even when live/staging snapshots matched bytewise.
+{
+  const clean = dateEvidenceFixture('2026-09-20', '2026-09-21');
+  assert.equal(v.validateSnapshot(clean).passed, true, 'clean source-control fixture must pass');
+  for (const [table, staging] of [
+    ['graph', 'graphStaging'], ['leads', 'leadsStaging'], ['sourceEvents', null]
+  ]) {
+    const bad = JSON.parse(JSON.stringify(clean));
+    bad[table][1].push('unlabelled contradictory source evidence');
+    if (staging) bad[staging] = bad[table];
+    const outcome = v.validateSnapshot(bad);
+    assert.equal(outcome.passed, false, table + ' silently discarded a populated unlabeled cell');
+    assert(outcome.failures.some((failure) => failure.includes(table + ': AMBIGUOUS_SHEET_ROW')),
+      table + ' missing explicit row-width finding');
+
+    const blankPadding = JSON.parse(JSON.stringify(clean));
+    blankPadding[table][1].push('   ', null, '');
+    if (staging) blankPadding[staging] = blankPadding[table];
+    const paddedOutcome = v.validateSnapshot(blankPadding);
+    assert.equal(paddedOutcome.passed, true,
+      table + ' rejected ordinary blank Google Sheets trailing padding: ' +
+        JSON.stringify(paddedOutcome.failures));
+  }
+  const malformedReceipt = v.validateSourceObservationReceipts([
+    ['Observation ID', 'Source ID', 'Transport OK'],
+    ['obs-width', 'nyc-source', 'false', 'concealed receipt']
+  ]);
+  assert.equal(malformedReceipt.passed, false, 'receipt silently discarded unlabeled evidence');
+  assert.equal(malformedReceipt.enforced, true);
+  assert(malformedReceipt.failures.some((failure) => failure.includes('AMBIGUOUS_SHEET_ROW')));
+  const objectInsteadOfSheetRow = v.validateSourceObservationReceipts([
+    ['Observation ID'], {'0': 'pseudo-sheet-row'}
+  ]);
+  assert.equal(objectInsteadOfSheetRow.passed, false, 'non-array sheet row was accepted');
+  assert(objectInsteadOfSheetRow.failures.some((failure) => failure.includes('INVALID_SHEET_ROW')));
+}
+
 console.log('PermitPlate delivery verifier unit tests passed.');
