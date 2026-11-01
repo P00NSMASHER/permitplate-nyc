@@ -116,4 +116,57 @@ assert.equal(noReceiptCanary.enforced, false);
   assert(v.makeSignalKey('normal', '2026-09-18', row).endsWith(':explicit-change-123'));
 }
 
+
+/**
+ * Adversarial source-date regression. The same validated graph/queue/source
+ * fixture must reject impossible days and inverted date bounds without relying
+ * on a staging mismatch or unrelated missing data.
+ */
+function dateEvidenceFixture(firstDate, latestDate) {
+  const venueKey = '153 BOWERY|10002';
+  const graphColumns = [
+    'Venue Key', 'Commercial Fit', 'First Signal Date', 'Latest Signal Date',
+    'Source Count', 'Sources', 'POS Score', 'Insurance Score', 'Equipment Score',
+    'Hood/Fire Score', 'Waste Score', 'Pest Score', 'Linen Score',
+    'Distribution Score', 'Best Score'
+  ];
+  const graphRows = [graphColumns, [
+    venueKey, 'HIGH', firstDate, latestDate, '1', 'DOB',
+    90, 0, 0, 0, 0, 0, 0, 0, 90
+  ]];
+  const leads = [['Lead Key', 'Venue Key'], ['lead-1', venueKey]];
+  return {
+    graph: graphRows,
+    graphStaging: graphRows,
+    leads,
+    leadsStaging: leads,
+    sourceEvents: [['Event ID', 'Venue Key', 'Source'], ['event-1', venueKey, 'DOB']],
+    deliveryState: [['Delivery ID']]
+  };
+}
+
+for (const [firstDate, latestDate] of [
+  ['2024-02-29', '2024-03-01'],
+  ['2000-02-29', '2000-03-01'],
+  ['2026-01-31', '2026-01-31']
+]) {
+  const result = v.validateSnapshot(dateEvidenceFixture(firstDate, latestDate));
+  assert.equal(result.passed, true, 'valid dates rejected: ' + JSON.stringify(result.failures));
+}
+
+for (const invalidDate of [
+  '2026-02-29', '2026-02-30', '1900-02-29', '2026-04-31',
+  '2026-00-01', '2026-13-01', '2026-01-00'
+]) {
+  const result = v.validateSnapshot(dateEvidenceFixture(invalidDate, '2026-12-31'));
+  assert.equal(result.passed, false, 'accepted impossible source date: ' + invalidDate);
+  assert(result.failures.some((failure) => failure.includes('valid ISO calendar dates')),
+    'invalid date was not rejected for its calendar validity: ' + invalidDate);
+}
+
+const backwardsDate = v.validateSnapshot(dateEvidenceFixture('2026-07-02', '2026-07-01'));
+assert.equal(backwardsDate.passed, false, 'accepted a latest signal earlier than its first');
+assert(backwardsDate.failures.some((failure) => failure.includes('precedes first signal date')),
+  'failed to identify backwards date chronology');
+
 console.log('PermitPlate delivery verifier unit tests passed.');

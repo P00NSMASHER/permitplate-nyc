@@ -91,3 +91,19 @@ real rows and would not demonstrate actual buyer demand.
 If production intake fails, keep the enable gate off and show the
 manual email fallback. Do not reset the 10-person canonical trial
 registry or promise an enrollment/confirmation message.
+
+
+## Buyer changes while an online request is pending
+
+The public form holds one in-flight request at a time. A receipt from that
+request confirms only the exact submitted snapshot, **not** later edits to
+vendor category, territory, contact details or business identity. If the
+buyer changes fields while the network request is pending, the earlier
+receipt is explained without hiding the new unsent edits. An uncertain
+network response must not resurrect a stale email draft containing the old
+details; it explains that the earlier submission **may** already be on file.
+
+Offline regression: `node --test trial-request.test.js` exercises unchanged
+success, edited-field success, edited-field failure and repeated submission
+with synthetic same-origin responses. It never creates a real D1 row or sends
+an email. Revert the corresponding feature-branch PR to roll back.
