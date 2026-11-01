@@ -33,6 +33,11 @@ function validate(raw){
   const businessDomain=domain(u.hostname),email=text(raw.email).toLowerCase();
   if(email.length<6||email.length>254||!(/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}$/.test(email)))
     throw Error('EMAIL_INVALID');
+  // Reject syntactically invalid dot-atom local parts before durable intake.
+  // Stay aligned with the browser validation; no new external dependencies.
+  const emailLocal=email.slice(0,email.indexOf('@'));
+  if(emailLocal.length>64||emailLocal.startsWith('.')||emailLocal.endsWith('.')||emailLocal.includes('..'))
+    throw Error('EMAIL_INVALID');
   try{domain(email.slice(email.indexOf('@')+1));}catch{throw Error('EMAIL_INVALID');}
   if(!CATEGORIES.has(raw.category)||!TERRITORIES.has(raw.territory))throw Error('SCOPE_INVALID');
   if(raw.consent!==true)throw Error('CONTACT_CONSENT_REQUIRED');
