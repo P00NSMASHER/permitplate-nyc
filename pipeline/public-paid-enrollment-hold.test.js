@@ -43,6 +43,8 @@ test('no-JavaScript membership page reports hold and offers an opt-in no-card tr
   assert(!start.includes(PAID_LINK));
   assert(start.includes('aria-label="How the supervised trial works"'));
   assert(!start.includes('What happens after membership checkout'));
+  assert(start.includes('aria-label="Trial request and admission steps"'));
+  assert(!start.includes('What happens after checkout'));
   assert(start.includes('Questions about the free trial?'));
   assert(!start.includes('Questions before checkout?'));
   assert(start.includes('Future $79/month membership on hold; supervised free trial available.'));
