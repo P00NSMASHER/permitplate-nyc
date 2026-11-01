@@ -26,6 +26,11 @@ test('published HTML and browser JS never send a visitor into blocked $79 checko
   assert(!home.includes('Start secure checkout'));
   assert(!home.includes('Start for $79/month'));
   assert(home.includes('Paid enrollment is on hold'));
+  assert(home.includes('· Paid enrollment on hold ·'),'top banner must state purchasing is unavailable');
+  assert(home.includes('href="/permitplate-nyc/trial.html">Request a free trial'));
+  assert(!home.includes('Start membership'),'final CTA must not invite purchases while checkout is blocked');
+  assert(home.includes('Paid enrollment on hold; request a no-card supervised free trial.'),
+    'search description must not imply a purchasable $79 subscription');
 });
 test('no-JavaScript membership page reports hold and offers an opt-in no-card trial',()=>{
   const start=read('start.html');
@@ -36,6 +41,14 @@ test('no-JavaScript membership page reports hold and offers an opt-in no-card tr
   assert(start.includes('Request a supervised free trial'));
   assert(!start.includes('Continue to secure checkout'));
   assert(!start.includes(PAID_LINK));
+  assert(start.includes('aria-label="How the supervised trial works"'));
+  assert(!start.includes('What happens after membership checkout'));
+  assert(start.includes('aria-label="Trial request and admission steps"'));
+  assert(!start.includes('What happens after checkout'));
+  assert(start.includes('Questions about the free trial?'));
+  assert(!start.includes('Questions before checkout?'));
+  assert(start.includes('Future $79/month membership on hold; supervised free trial available.'));
+  assert(!start.includes('Weekly official-source research briefs for NYC restaurant vendors, one category and territory, $79/month.'));
   const trial=read('trial.html');
   assert(trial.includes('No card required'));
   assert(trial.includes('No automatic paid upgrade'));
