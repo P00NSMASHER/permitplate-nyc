@@ -172,11 +172,10 @@ test('trial browser and private intake agree on domain length, DEL controls and 
   assert.throws(()=>request.buildRequest({...valid,website:'https://'+hugeHost}),
     /public business domain/, 'offline email path must share the same domain boundary');
   for(const businessName of ['Acme\x7f Partners','AB\x7f']){
-    const control=businessName.replace('\x7f','\x7f');
-    assert.throws(()=>request.normalizeRequest({...valid,businessName:control},true),
+    assert.throws(()=>request.normalizeRequest({...valid,businessName},true),
       /business name/, 'DEL character must be blocked before submit');
   }
   const canon=request.normalizeRequest({...valid,businessName:'Cafe\u0301 Supplies'},true);
-  assert.equal(canon.businessName,'Caf\u00e9 Supplies'.replace('\u00e9','é'));
+  assert.equal(canon.businessName,'Café Supplies');
   assert.equal(request.normalizeRequest(valid,true).website,'https://vendor.example.com/path');
 });
