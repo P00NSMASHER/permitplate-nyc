@@ -233,3 +233,21 @@ test('private trial intake refuses unreachable dot-atom work-email syntax withou
   assert.equal(valid.status,202,'valid tagged business contacts remain supported');
   assert.equal(d.requests.size,1);
 });
+
+
+test('private intake rejects oversize public domain and DEL control name without storing anything',async()=>{
+  const {onRequestPost}=await modulePromise,d=new FakeD1(),e=env(d);
+  const hugeHost=['a'.repeat(63),'b'.repeat(63),'c'.repeat(63),'d'.repeat(60),'com'].join('.');
+  assert.equal(hugeHost.length,256);
+  for(const override of [
+    {website:'https://'+hugeHost},
+    {businessName:'Acme\x7f Partners'},
+  ]){
+    const r=await json(await onRequestPost({request:request({...eligible,...override}),env:e}));
+    assert.equal(r.code,400,'invalid value cannot create pending receipt');
+  }
+  assert.equal(d.requests.size,0);
+  const accepted=await onRequestPost({request:request({...eligible,businessName:'Cafe\u0301 Supplies'}),env:e});
+  assert.equal(accepted.status,202);
+  assert.equal([...d.requests.values()][0].name,'Caf\u00e9 Supplies');
+});
