@@ -27,7 +27,18 @@ function rowObjects(rows) {
       new Set(header.map((key) => key.toLowerCase())).size !== header.length) {
     throw new Error('AMBIGUOUS_SHEET_HEADERS: blank or duplicate column name');
   }
-  return rows.slice(1).map((row) => Object.fromEntries(header.map((key, i) => [key, row[i] == null ? '' : row[i]])));
+  return rows.slice(1).map((row, rowIndex) => {
+    if (!Array.isArray(row)) {
+      throw new Error(`INVALID_SHEET_ROW: expected array at data row ${rowIndex + 2}`);
+    }
+    // Sheets may omit trailing empty cells or include blank padding, but a
+    // populated cell without a column name must not disappear from evidence.
+    if (row.length > header.length &&
+        row.slice(header.length).some((cell) => asText(cell) !== '')) {
+      throw new Error(`AMBIGUOUS_SHEET_ROW: populated unlabeled cell at row ${rowIndex + 2}`);
+    }
+    return Object.fromEntries(header.map((key, i) => [key, row[i] == null ? '' : row[i]]));
+  });
 }
 
 function snapshotRows(rows, sheetName, failures) {
