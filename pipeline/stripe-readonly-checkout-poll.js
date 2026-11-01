@@ -60,10 +60,12 @@ function validPriceContract(lineItems){
 async function attestPaymentLink(key,fetchImpl=fetch){
   const url=ORIGIN+'/v1/payment_links/'+encodeURIComponent(LINK);
   const record=await jsonGET(url,key,fetchImpl);
-  // The connected Stripe merchant account is NOT inferred from an empty list.
-  // A wrong account, test-mode key or inactive/mismatched product fails closed.
+  // Verify provider identity and product without requiring enrollment to be
+  // active: an intentionally deactivated link still has historical paid sessions
+  // that must remain visible to the read-only intake/reconciliation process.
+  // Never change link.active or infer that an inactive link offers checkout.
   if(record.object!=='payment_link'||record.id!==LINK||
-     record.livemode!==true||record.active!==true||
+     record.livemode!==true||typeof record.active!=='boolean'||
      record.metadata?.project!=='permitplate_nyc'||
      record.metadata?.plan!=='monthly_79'){
     throw Error('STRIPE_PAYMENT_LINK_ACCOUNT_NOT_VERIFIED');

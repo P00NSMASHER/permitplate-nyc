@@ -169,4 +169,84 @@ assert.equal(backwardsDate.passed, false, 'accepted a latest signal earlier than
 assert(backwardsDate.failures.some((failure) => failure.includes('precedes first signal date')),
   'failed to identify backwards date chronology');
 
+
+// Source-integrity regression: an ambiguous sheet header cannot hide or
+// overwrite contradictory evidence during delivery readiness checks.
+{
+  const clean=dateEvidenceFixture('2026-09-20','2026-09-21');
+  assert.equal(v.validateSnapshot(clean).passed,true,'unmodified control must pass');
+  assert.deepEqual(v.rowObjects([['Venue Key','Stage'],['key-1','BUILDOUT']]),
+    [{'Venue Key':'key-1',Stage:'BUILDOUT'}]);
+
+  for(const [table,staging,header,second] of [
+    ['graph','graphStaging','Commercial Fit','LOW'],
+    ['leads','leadsStaging','Lead Key','lead-overwrite'],
+    ['sourceEvents',null,'Event ID','event-overwrite'],
+    ['deliveryState',null,'Delivery ID',null]
+  ]){
+    const fixture=JSON.parse(JSON.stringify(clean));
+    fixture[table][0].push(' '+header+' ');
+    if(fixture[table].length>1)fixture[table][1].push(second);
+    if(staging)fixture[staging]=fixture[table];
+    const result=v.validateSnapshot(fixture);
+    assert.equal(result.passed,false,table+' accepted a duplicate normalized header');
+    assert(result.failures.some(message=>message.includes(table+': AMBIGUOUS_SHEET_HEADERS')),
+      table+' did not explain the ambiguous header');
+  }
+  const blank=JSON.parse(JSON.stringify(clean));
+  blank.graph[0].push('  ');
+  blank.graph[1].push('ignored');
+  blank.graphStaging=blank.graph;
+  const blankResult=v.validateSnapshot(blank);
+  assert.equal(blankResult.passed,false,'blank header must invalidate snapshot');
+  assert(blankResult.failures.some(message=>message.includes('graph: AMBIGUOUS_SHEET_HEADERS')));
+
+  assert.throws(()=>v.rowObjects([['Source','source'],['DOB','SLA']]),
+    /AMBIGUOUS_SHEET_HEADERS/,'case-only duplicate headers must not be accepted');
+  const duplicateReceiptColumns=v.validateSourceObservationReceipts([
+    ['Observation ID',' Observation ID '],['obs-1','spoofed-id']
+  ]);
+  assert.equal(duplicateReceiptColumns.passed,false);
+  assert.equal(duplicateReceiptColumns.enforced,true);
+  assert(duplicateReceiptColumns.failures.some(message=>message.includes('AMBIGUOUS_SHEET_HEADERS')));
+}
+
+// Source-integrity follow-up: nonempty spreadsheet cells without a header
+// were silently truncated even when live/staging snapshots matched bytewise.
+{
+  const clean = dateEvidenceFixture('2026-09-20', '2026-09-21');
+  assert.equal(v.validateSnapshot(clean).passed, true, 'clean source-control fixture must pass');
+  for (const [table, staging] of [
+    ['graph', 'graphStaging'], ['leads', 'leadsStaging'], ['sourceEvents', null]
+  ]) {
+    const bad = JSON.parse(JSON.stringify(clean));
+    bad[table][1].push('unlabelled contradictory source evidence');
+    if (staging) bad[staging] = bad[table];
+    const outcome = v.validateSnapshot(bad);
+    assert.equal(outcome.passed, false, table + ' silently discarded a populated unlabeled cell');
+    assert(outcome.failures.some((failure) => failure.includes(table + ': AMBIGUOUS_SHEET_ROW')),
+      table + ' missing explicit row-width finding');
+
+    const blankPadding = JSON.parse(JSON.stringify(clean));
+    blankPadding[table][1].push('   ', null, '');
+    if (staging) blankPadding[staging] = blankPadding[table];
+    const paddedOutcome = v.validateSnapshot(blankPadding);
+    assert.equal(paddedOutcome.passed, true,
+      table + ' rejected ordinary blank Google Sheets trailing padding: ' +
+        JSON.stringify(paddedOutcome.failures));
+  }
+  const malformedReceipt = v.validateSourceObservationReceipts([
+    ['Observation ID', 'Source ID', 'Transport OK'],
+    ['obs-width', 'nyc-source', 'false', 'concealed receipt']
+  ]);
+  assert.equal(malformedReceipt.passed, false, 'receipt silently discarded unlabeled evidence');
+  assert.equal(malformedReceipt.enforced, true);
+  assert(malformedReceipt.failures.some((failure) => failure.includes('AMBIGUOUS_SHEET_ROW')));
+  const objectInsteadOfSheetRow = v.validateSourceObservationReceipts([
+    ['Observation ID'], {'0': 'pseudo-sheet-row'}
+  ]);
+  assert.equal(objectInsteadOfSheetRow.passed, false, 'non-array sheet row was accepted');
+  assert(objectInsteadOfSheetRow.failures.some((failure) => failure.includes('INVALID_SHEET_ROW')));
+}
+
 console.log('PermitPlate delivery verifier unit tests passed.');

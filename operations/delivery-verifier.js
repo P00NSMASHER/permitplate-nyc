@@ -20,8 +20,33 @@ function asText(value) {
 
 function rowObjects(rows) {
   if (!Array.isArray(rows) || !rows.length) return [];
-  const header = rows[0].map(asText);
-  return rows.slice(1).map((row) => Object.fromEntries(header.map((key, i) => [key, row[i] == null ? '' : row[i]])));
+  const header = Array.isArray(rows[0]) ? rows[0].map(asText) : null;
+  // A duplicate header silently overwrites evidence under Object.fromEntries;
+  // reject ambiguous sheet structure before using any row for delivery checks.
+  if (!header || !header.length || header.some((key) => !key) ||
+      new Set(header.map((key) => key.toLowerCase())).size !== header.length) {
+    throw new Error('AMBIGUOUS_SHEET_HEADERS: blank or duplicate column name');
+  }
+  return rows.slice(1).map((row, rowIndex) => {
+    if (!Array.isArray(row)) {
+      throw new Error(`INVALID_SHEET_ROW: expected array at data row ${rowIndex + 2}`);
+    }
+    // Sheets may omit trailing empty cells or include blank padding, but a
+    // populated cell without a column name must not disappear from evidence.
+    if (row.length > header.length &&
+        row.slice(header.length).some((cell) => asText(cell) !== '')) {
+      throw new Error(`AMBIGUOUS_SHEET_ROW: populated unlabeled cell at row ${rowIndex + 2}`);
+    }
+    return Object.fromEntries(header.map((key, i) => [key, row[i] == null ? '' : row[i]]));
+  });
+}
+
+function snapshotRows(rows, sheetName, failures) {
+  try { return rowObjects(rows); }
+  catch (error) {
+    failures.push(sheetName + ': ' + error.message);
+    return [];
+  }
 }
 
 function normalizeCell(value) {
@@ -67,11 +92,11 @@ function score(row, column) {
 
 function validateSnapshot(input) {
   const failures = [];
-  const graph = rowObjects(input.graph);
-  const graphStaging = rowObjects(input.graphStaging);
-  const leads = rowObjects(input.leads);
-  const sourceEvents = rowObjects(input.sourceEvents);
-  const deliveryState = rowObjects(input.deliveryState);
+  const graph = snapshotRows(input.graph, 'graph', failures);
+  const graphStaging = snapshotRows(input.graphStaging, 'graphStaging', failures);
+  const leads = snapshotRows(input.leads, 'leads', failures);
+  const sourceEvents = snapshotRows(input.sourceEvents, 'sourceEvents', failures);
+  const deliveryState = snapshotRows(input.deliveryState, 'deliveryState', failures);
   const graphKeys = graph.map((row) => asText(row['Venue Key']));
   const leadKeys = leads.map((row) => asText(row['Lead Key']));
 
@@ -175,7 +200,12 @@ function normalizeObservationReceipt(row) {
 
 function validateSourceObservationReceipts(input) {
   const failures = [];
-  const rows = observationObjects(input);
+  let rows;
+  try { rows = observationObjects(input); }
+  catch (error) {
+    return {passed: false, enforced: true,
+      failures: ['Source observations: ' + error.message], receiptCount: 0, states: {}};
+  }
   if (!rows.length) {
     return {
       passed: true,
