@@ -21,7 +21,10 @@ function fixture(n=140){
     building:String(100+i),street:'SYNTHETIC AVE',
     boro:'Manhattan',zipcode:'10001',
     cuisine_description:'Coffee/Tea',
-    inspection_date:'1900-01-01T00:00:00.000',
+    // Deliberately include source-dated and undated fictional cases so
+    // conservative and contextual simulators can genuinely disagree.
+    inspection_date:i%4===0?'2026-10-18T00:00:00.000':'1900-01-01T00:00:00.000',
+    inspection_type:i%4===0?'Pre-permit (Non-operational) / Initial Inspection':'',
     record_date:'2026-10-20T00:00:00.000'
   },{observedAt:OBS}));
   const batch=items=>({
@@ -108,6 +111,8 @@ test('runs 100-case benchmark in a simulated and sealed 70/30 split',()=>{
   assert.equal(result.status,lab.STRICT_STATUS);
   assert.equal(result.sampledCases,94);
   assert.equal(result.simulatedVotes,846);
+  assert(result.simulatedDisagreements>0,
+    'the fictional benchmark must exercise competing reviewer outcomes');
   assert.equal(result.lockedHoldoutCases,30);
   assert.equal(result.holdoutReleased,false);
   assert.equal(result.realIndependentReviewerCount,0);
