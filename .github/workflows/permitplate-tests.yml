@@ -45,6 +45,9 @@ jobs:
       - name: Verify GitHub Pages checkout and conversion constraints
         run: node pipeline/public-conversion.test.js
 
+      - name: Verify paid enrollment hold is enforced in public pages
+        run: node --test pipeline/public-paid-enrollment-hold.test.js
+
       - name: Verify retired legacy offers stay denylisted
         run: node operations/legacy-offer-retirement.test.js
 

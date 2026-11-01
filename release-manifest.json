@@ -17,7 +17,10 @@
       "vendor category",
       "NYC territory",
       "Starter Snapshot preference"
-    ]
+    ],
+    "public_enrollment": "ON_HOLD",
+    "hold_reason": "Provider-backed preference capture, live onboarding, and fulfillment acceptance not verified.",
+    "external_saved_payment_link_bypass_remains": true
   },
   "customer_portal": {
     "provider": "Stripe hosted customer portal",
@@ -46,6 +49,6 @@
     "card_required": false,
     "automatic_upgrade": false
   },
-  "release_stage": "Founder-curated first-customer launch with supervised trial request",
+  "release_stage": "Supervised free-trial requests; paid enrollment staged pending verified provider readiness.",
   "commercial_proof": "Not claimed until a real paid subscriber, provider-backed delivery, and next-run duplicate suppression are verified"
 }

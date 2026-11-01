@@ -13,7 +13,9 @@ assert(home.includes('First payment refundable through 7 days after first brief 
 assert(home.includes('seven calendar days after that first message is sent'));
 assert(start.includes('Seven-day refund after the first brief or no-matches note is sent'));
 assert(!refunds.includes('within seven calendar days after the charge'));
-assert(start.includes('https://buy.stripe.com/4gM28r1cL81x8dF9Xj9sk02'));
+assert(!start.includes('https://buy.stripe.com/4gM28r1cL81x8dF9Xj9sk02'));
+assert(start.includes('Paid membership enrollment is on hold'));
+assert.equal(JSON.parse(read('release-manifest.json')).checkout.public_enrollment,'ON_HOLD');
 assert(home.includes('no-matches note') && start.includes('$79'));
 const readiness=read('pipeline/launch-readiness.js');
 for(const k of ['realPaidSubscriberEndToEndVerified','providerBackedDeliveryVerified','nextRunDuplicateSuppressionVerifiedForRealSubscriber'])

@@ -125,12 +125,14 @@ try{
   ]) assert.equal(index.includes(stale),false,'stale public claim: '+stale);
 
   const start=fs.readFileSync(path.join(build.OUT,'start.html'),'utf8');
-  assert(start.includes(STRIPE_URL));
-  assert.equal(start.split(STRIPE_URL).length-1,1);
-  assert(start.includes('Continue to secure checkout'));
+  assert(!start.includes(STRIPE_URL));
+  assert.equal(start.split(STRIPE_URL).length-1,0);
+  assert(start.includes('Request a supervised free trial'));
+  assert(start.includes('Paid membership enrollment is on hold'));
+  assert(start.includes('data-paid-enrollment="hold"'));
   assert(start.includes('First brief within 5 business days'));
   assert(start.includes('7-day refund after first brief'));
-  assert(start.includes('rel="noopener"'));
+  assert(start.includes('href="/permitplate-nyc/trial.html"'));
   assert(!start.includes('<form'));
 
   const stripeOccurrences=[];
@@ -139,7 +141,7 @@ try{
     const count=html.split(STRIPE_URL).length-1;
     if(count) stripeOccurrences.push({file,count});
   }
-  assert.deepEqual(stripeOccurrences,[{file:'start.html',count:1}]);
+  assert.deepEqual(stripeOccurrences,[]);
 
   const methodology=fs.readFileSync(path.join(build.OUT,'methodology.html'),'utf8');
   const terms=fs.readFileSync(path.join(build.OUT,'terms.html'),'utf8');
@@ -171,7 +173,7 @@ try{
   assert(start.indexOf('class="checkout-card"')<start.indexOf('class="checkout-explainer"'));
   assert(pa.includes('data-menu-toggle') && pa.includes('data-menu'));
   assert(pa.includes('<script src="/permitplate-nyc/site.js" defer></script>'));
-  assert(start.indexOf('Continue to secure checkout')<start.indexOf('<ul>'));
+  assert(start.indexOf('Request a supervised free trial')<start.indexOf('<ul>'));
   assert(pa.indexOf('Buy securely for $29')<pa.indexOf('<ul>'));
   assert(pa.indexOf('class="checkout-card"')<pa.indexOf('class="checkout-explainer"'));
   assert(!welcome.includes('Payment complete'));

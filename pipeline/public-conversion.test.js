@@ -21,18 +21,24 @@ assert.equal(manifest.checkout.launch_mode,'FOUNDER_CURATED_NO_SCORE_V1');
 assert.equal(manifest.customer_contract.max_signals_per_brief,10);
 assert(manifest.customer_contract.delivery.includes('five business days'));
 
-assert(index.includes('Start for $79/month'));
+assert(index.includes('View $79/month plan'));
+assert(index.includes('Paid enrollment is on hold'));
 assert(index.toLowerCase().includes('weekly founder-reviewed brief'));
 assert(index.toLowerCase().includes('up to 10 matching signals'));
 assert(index.includes('First payment refundable through 7 days after first brief is sent'));
 assert(index.includes('/permitplate-nyc/start.html'));
 assert(!index.includes(stripeUrl));
 
-assert(start.includes(stripeUrl));
-assert(start.includes('Continue to secure checkout'));
-assert(start.includes('Choose your vendor category and NYC territory at Stripe checkout.'));
-assert(start.indexOf('Continue to secure checkout')<start.indexOf('<ul>'),
-  'paid checkout action must precede the long benefits list on mobile');
+assert(!start.includes(stripeUrl));
+assert.equal(manifest.checkout.public_enrollment,'ON_HOLD');
+assert.equal(manifest.checkout.external_saved_payment_link_bypass_remains,true);
+assert(start.includes('Request a supervised free trial'));
+assert(start.includes('Paid membership enrollment is on hold'));
+assert(!start.includes('Choose your vendor category and NYC territory at Stripe checkout.'));
+assert(start.includes('data-paid-enrollment="hold"'));
+assert(start.includes('/permitplate-nyc/trial.html'));
+assert(start.indexOf('Request a supervised free trial')<start.indexOf('<ul>'),
+  'no-card trial action must precede the long plan list on mobile');
 assert(start.includes('One vendor category'));
 assert(start.includes('One NYC territory'));
 assert(start.toLowerCase().includes('weekly founder-reviewed brief'));
