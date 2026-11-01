@@ -285,7 +285,7 @@ async function main(){
   assert.equal(heldIntake.created,1);
   assert.equal(heldIntake.externalSendCalls,0);
   assert.equal(heldIntake.paymentMutations,0);
-  for(const malformedActive of (null,'false',0)){
+  for(const malformedActive of [null,'false',0]){
     await assert.rejects(polling.snapshot('rk_live_unitfixture',async()=>({
       ok:true,json:async()=>({...verifiedLink,active:malformedActive})
     })),/STRIPE_PAYMENT_LINK_ACCOUNT_NOT_VERIFIED/);
