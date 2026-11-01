@@ -162,3 +162,21 @@ test('work-email dot-atom syntax is validated before composing a buyer request',
     'first.last+sales@vendor.example.com');
   assert.equal(request.normalizeEmail('',false),'','optional email remains optional');
 });
+
+
+test('trial browser and private intake agree on domain length, DEL controls and NFC business names',()=>{
+  const hugeHost=['a'.repeat(63),'b'.repeat(63),'c'.repeat(63),'d'.repeat(60),'com'].join('.');
+  assert.equal(hugeHost.length,256);
+  assert.throws(()=>request.normalizeRequest({...valid,website:'https://'+hugeHost},true),
+    /public business domain/, 'oversized FQDN must fail before submit, not bounce from private API');
+  assert.throws(()=>request.buildRequest({...valid,website:'https://'+hugeHost}),
+    /public business domain/, 'offline email path must share the same domain boundary');
+  for(const businessName of ['Acme\x7f Partners','AB\x7f']){
+    const control=businessName.replace('\x7f','\x7f');
+    assert.throws(()=>request.normalizeRequest({...valid,businessName:control},true),
+      /business name/, 'DEL character must be blocked before submit');
+  }
+  const canon=request.normalizeRequest({...valid,businessName:'Cafe\u0301 Supplies'},true);
+  assert.equal(canon.businessName,'Caf\u00e9 Supplies'.replace('\u00e9','é'));
+  assert.equal(request.normalizeRequest(valid,true).website,'https://vendor.example.com/path');
+});
