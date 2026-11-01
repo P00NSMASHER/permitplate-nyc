@@ -268,9 +268,28 @@ async function main(){
   await assert.rejects(polling.snapshot('rk_live_unitfixture',async()=>({
     ok:true,json:async()=>({...verifiedLink,id:'plink_wrong'})
   })),/STRIPE_PAYMENT_LINK_ACCOUNT_NOT_VERIFIED/);
-  await assert.rejects(polling.snapshot('rk_live_unitfixture',async()=>({
-    ok:true,json:async()=>({...verifiedLink,active:false})
-  })),/STRIPE_PAYMENT_LINK_ACCOUNT_NOT_VERIFIED/);
+  // Paid enrollment was deliberately paused after public checkout was held.
+  // The read-only reconciler must still discover historical paid subscriptions
+  // without reactivating the link or changing any Stripe/provider settings.
+  const heldRead=(url,args)=>{
+    if(new URL(url).pathname==='/v1/payment_links/'+stripe.PERMITPLATE_PAYMENT_LINK){
+      return Promise.resolve({ok:true,json:async()=>({...verifiedLink,active:false})});
+    }
+    return fake(url,args);
+  };
+  const heldSnapshot=await polling.snapshot('rk_live_unitfixture',heldRead);
+  assert.equal(heldSnapshot.complete,true);
+  assert.equal(heldSnapshot.paidSessionCount,1);
+  const heldIntake=adapter.processSnapshot({...heldSnapshot,checkedAt:AFTER});
+  assert.equal(heldIntake.status,'READY');
+  assert.equal(heldIntake.created,1);
+  assert.equal(heldIntake.externalSendCalls,0);
+  assert.equal(heldIntake.paymentMutations,0);
+  for(const malformedActive of (null,'false',0)){
+    await assert.rejects(polling.snapshot('rk_live_unitfixture',async()=>({
+      ok:true,json:async()=>({...verifiedLink,active:malformedActive})
+    })),/STRIPE_PAYMENT_LINK_ACCOUNT_NOT_VERIFIED/);
+  }
   await assert.rejects(polling.snapshot('rk_live_unitfixture',async()=>({
     ok:true,json:async()=>({data:[],has_more:false})
   })),/STRIPE_PAYMENT_LINK_ACCOUNT_NOT_VERIFIED/);
