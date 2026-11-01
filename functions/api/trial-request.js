@@ -111,13 +111,28 @@ export async function onRequestPost({request,env}){
     if(waiting.count>=MAX_PENDING)
       return denied(503,'MANUAL_REVIEW_QUEUE_FULL','Online requests are paused. Please use email.');
     const reference='PP-'+crypto.randomUUID().replace(/-/g,'').slice(0,16).toUpperCase();
+    // Enforce the queue cap in the *same SQLite write statement* as admission.
+    // Two concurrent requests can both see 149 in the preliminary count.
+    // D1 serializes writers, so the second conditional INSERT must observe 150.
     const saved=await db.prepare(
       "INSERT OR IGNORE INTO trial_intake_requests "+
       "(reference,business_name,business_domain,website,contact_email,category,territory,requested_at,status) "+
-      "VALUES(?1,?2,?3,?4,?5,?6,?7,?8,'PENDING')"
+      "SELECT ?1,?2,?3,?4,?5,?6,?7,?8,'PENDING' "+
+      "WHERE (SELECT COUNT(*) FROM trial_intake_requests WHERE status='PENDING') < ?9"
     ).bind(reference,data.businessName,data.businessDomain,data.website,data.email,
-      data.category,data.territory,now).run();
-    if(!saved?.success)return denied(503,'STORAGE_UNAVAILABLE','We could not confirm receipt. Please use email.');
+      data.category,data.territory,now,MAX_PENDING).run();
+    if(!saved?.success||![0,1].includes(saved.meta?.changes))
+      return denied(503,'STORAGE_UNAVAILABLE','We could not confirm receipt. Please use email.');
+    if(saved.meta.changes===0){
+      // A duplicate and a just-full queue both skip the insert. Never expose
+      // whether this business already exists: only report public queue capacity.
+      const latest=await db.prepare(
+        "SELECT COUNT(*) AS count FROM trial_intake_requests WHERE status='PENDING'").first();
+      if(!latest||!Number.isInteger(latest.count))
+        return denied(503,'STORAGE_UNAVAILABLE','We could not confirm receipt. Please use email.');
+      if(latest.count>=MAX_PENDING)
+        return denied(503,'MANUAL_REVIEW_QUEUE_FULL','Online requests are paused. Please use email.');
+    }
     // Duplicates intentionally share one neutral acknowledgment. Never reveal who applied.
     return reply(202,{status:'RECEIVED_FOR_REVIEW',
       message:'Your request is on file for manual review. This is not enrollment or a reserved spot.'});
