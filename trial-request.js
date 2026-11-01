@@ -49,7 +49,7 @@
   }
   function publicDomain(value){
     const name=String(value||'').toLowerCase().replace(/^www\./,'').replace(/\.$/,'');
-    if(!/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,63}$/.test(name)||
+    if(name.length>253||!/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,63}$/.test(name)||
       /\.(?:local|localhost|localdomain|internal|lan|home|test|example|invalid|onion)$/.test(name))
       throw Error('Use a public business domain, such as yourbusiness.com.');
     return name;
@@ -68,8 +68,8 @@
     return email;
   }
   function normalizeRequest(input,requireEmail){
-    const name=String(input.businessName||'').trim();
-    if(name.length<2||name.length>160||/[\r\n\x00-\x1f<>]/.test(name))
+    const name=String(input.businessName||'').trim().normalize('NFC');
+    if(name.length<2||name.length>160||/[\r\n\x00-\x1f\x7f<>]/.test(name))
       throw Error('Enter your business name.');
     let website;
     try{website=new URL(String(input.website||'').trim());}
