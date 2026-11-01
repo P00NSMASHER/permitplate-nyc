@@ -32,8 +32,11 @@ class FakeD1 {
           if(sql.startsWith('INSERT OR IGNORE INTO trial_intake_requests')){
             const [reference,name,domain,website,email,category,territory,now]=params;
             const existed=db.requests.has(domain);
-            if(!existed)db.requests.set(domain,{reference,name,domain,website,email,category,territory,now,status:'PENDING'});
-            return {success:true,meta:{changes:existed?0:1}};
+            const cap=params[8]; // undefined for old unguarded INSERT (negative control).
+            const pending=[...db.requests.values()].filter(x=>x.status==='PENDING').length;
+            const allowed=cap===undefined||pending<cap;
+            if(!existed&&allowed)db.requests.set(domain,{reference,name,domain,website,email,category,territory,now,status:'PENDING'});
+            return {success:true,meta:{changes:!existed&&allowed?1:0}};
           }
           throw Error('Unexpected write SQL '+sql);
         }
@@ -160,6 +163,41 @@ test('pseudonymous per-IP rate limit rejects sixth daily request without storing
   assert.match(savedKey,/^[0-9a-f]{64}$/);
   assert(!savedKey.includes('198.51.100.41'));
 });
+test('concurrent arrivals at 149 pending cannot overflow the 150-record operator queue',async()=>{
+  const {onRequestPost}=await modulePromise,d=new FakeD1(),e=env(d);
+  for(let i=0;i<149;i++)d.requests.set('existing-'+i+'.example.org',{status:'PENDING'});
+  // Both requests observe the *same* old 149 count. A separate preflight
+  // check alone accepts both and silently overbooks the queue to 151.
+  const rawPrepare=d.prepare.bind(d);
+  let firstReads=0,release;
+  const bothRead=new Promise(resolve=>{release=resolve;});
+  d.prepare=function(sql){
+    const stmt=rawPrepare(sql);
+    if(sql.includes('COUNT(*) AS count')){
+      const previous=stmt.first.bind(stmt);
+      stmt.first=async()=>{
+        const result=await previous();
+        if(++firstReads===2)release();
+        if(firstReads<=2)await bothRead;
+        return result;
+      };
+    }
+    return stmt;
+  };
+  const applicants=[0,1].map(n=>onRequestPost({
+    request:request({...eligible,website:'https://race-'+n+'.com'}),
+    env:e
+  }));
+  const statuses=(await Promise.all(applicants)).map(r=>r.status).sort();
+  assert.deepEqual(statuses,[202,503],
+    'one of two concurrent validated requests must fail closed when only one slot remains');
+  assert.equal(firstReads,3,'both preflight reads and final capacity check must execute');
+  assert.equal(d.requests.size,150);
+  assert.equal([...d.requests.values()].filter(x=>x.status==='PENDING').length,150);
+  assert(d.calls.some(sql=>sql.includes("SELECT ?1,?2,?3,?4,?5,?6,?7,?8,'PENDING'")&&
+    sql.includes("WHERE (SELECT COUNT(*) FROM trial_intake_requests WHERE status='PENDING') < ?9")),
+    'the bound-capacity guard must occur inside the insertion statement');
+});
 test('storage outages and manually saturated review queues never emit a success receipt',async()=>{
   const {onRequestPost}=await modulePromise,d=new FakeD1(),e=env(d);
   d.fail=true;
@@ -178,4 +216,20 @@ test('public and privileged paths never provide automatic enroll, send or charge
   assert(source.includes("env?.TRIAL_INTAKE_ENABLED==='1'"));
   assert(source.includes("request.headers.get('origin')!==ORIGIN"));
   assert(source.includes('crypto.subtle.sign'));
+});
+
+test('private trial intake refuses unreachable dot-atom work-email syntax without persisting',async()=>{
+  const {onRequestPost}=await modulePromise,d=new FakeD1(),e=env(d);
+  const invalid=['buyer..contact@vendor.example.com','.buyer@vendor.example.com',
+    'buyer.@vendor.example.com','a'.repeat(65)+'@vendor.example.com'];
+  for(const email of invalid){
+    const result=await json(await onRequestPost({request:request({...eligible,email}),env:e}));
+    assert.equal(result.code,400,email);
+    assert.equal(result.body.code,'EMAIL_INVALID',email);
+  }
+  assert.equal(d.requests.size,0,'invalid contact addresses must never reach the private queue');
+  const valid=await onRequestPost({
+    request:request({...eligible,email:'first.last+sales@vendor-customer.com'}),env:e});
+  assert.equal(valid.status,202,'valid tagged business contacts remain supported');
+  assert.equal(d.requests.size,1);
 });

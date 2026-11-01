@@ -59,6 +59,11 @@
     if(!email&&!required)return '';
     if(email.length>254||!(/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}$/.test(email)))
       throw Error('Enter a valid work email where we can reply.');
+    // SMTP dot-atom local parts cannot start/end in a dot or contain adjacent dots.
+    // Limit local part to 64 octets (the accepted input character set is ASCII).
+    const local=email.slice(0,email.indexOf('@'));
+    if(local.length>64||local.startsWith('.')||local.endsWith('.')||local.includes('..'))
+      throw Error('Enter a valid work email where we can reply.');
     try{publicDomain(email.split('@')[1]);}catch{throw Error('Enter a valid work email where we can reply.');}
     return email;
   }
@@ -124,6 +129,8 @@
   const previewFallback=root.document.querySelector('[data-trial-preview-fallback]');
   const previewPlain=root.document.querySelector('[data-trial-preview-plain]');
   let scopeRevision=0;
+  // Keep the customer's current edits distinct from an already-sent request.
+  let requestRevision=0,requestPending=false;
   function refreshScope(){
     if(!preview||!categoryField||!territoryField||!previewCopy)return;
     scopeRevision+=1;
@@ -140,7 +147,7 @@
     if(previewTerritory)previewTerritory.textContent=value?value.territoryLabel:'Select an NYC territory';
   }
   refreshScope();
-  form.addEventListener('change',refreshScope);
+  form.addEventListener('change',()=>{requestRevision+=1;refreshScope();});
   if(previewCopy)previewCopy.addEventListener('click',async()=>{
     const plain=buildScopeSummary({category:categoryField?.value,territory:territoryField?.value});
     if(!plain)return;
@@ -174,7 +181,7 @@
     fallback.hidden=false;
     status.textContent=message;
   }
-  form.addEventListener('input',()=>{if(!form.hidden)resetDraft();refreshScope();});
+  form.addEventListener('input',()=>{requestRevision+=1;if(!form.hidden)resetDraft();refreshScope();});
   if(copy&&copy.addEventListener){
     copy.addEventListener('click',async()=>{
       if(!body.value)return;
@@ -190,7 +197,8 @@
   }
   form.addEventListener('submit',event=>{
     event.preventDefault();
-    if(!form.reportValidity())return;
+    // A second Enter/submit must not create overlapping requests or competing receipts.
+    if(requestPending||!form.reportValidity())return;
     let values,request;
     try{
       values=Object.fromEntries(new FormData(form));
@@ -204,6 +212,8 @@
       offerEmail(request,'Your draft is ready. Open your email app to review and send it. Your trial has not started.');
       return;
     }
+    const sentRevision=requestRevision;
+    requestPending=true;
     if(submit){submit.disabled=true;submit.textContent='Sending request…';}
     status.textContent='Sending securely. Your trial has not started.';
     const abort=new AbortController();
@@ -217,14 +227,23 @@
       const data=await response.json();
       if(response.status!==202||data?.status!=='RECEIVED_FOR_REVIEW')throw Error('REQUEST_NOT_CONFIRMED');
       clearTimeout(timeout);
+      if(sentRevision!==requestRevision){
+        status.textContent='Your earlier request was received for review. Later edits were not sent. Please check your details before making another request.';
+        return;
+      }
       if(success){success.hidden=false;success.querySelector('h3')?.focus();}
       form.hidden=true;
       resetDraft();
       status.textContent='Request received for personal review. Not enrolled, no charge, no trial clock started.';
     }).catch(()=>{
       clearTimeout(timeout);
+      if(sentRevision!==requestRevision){
+        status.textContent='We could not confirm the earlier request. Your edited details were not sent. Please review them before trying again; a prior request may still be on file.';
+        return;
+      }
       offerEmail(request,'We could not confirm an online receipt. Your trial has not started. You may send this email request instead; duplicate businesses are reviewed only once.');
     }).finally(()=>{
+      requestPending=false;
       if(submit){submit.disabled=false;submit.textContent='Send my free-trial request';}
     });
   });

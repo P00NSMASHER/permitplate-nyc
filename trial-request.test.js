@@ -88,3 +88,77 @@ test('public trial options match supported fulfillment categories and territorie
   assert(transformed.includes('https://permitplate.retallyrecovery.com/trial'));
   assert(!transformed.includes('/permitplate-nyc/'));
 });
+
+test('async trial receipts bind to submitted fields, not later edits or repeated submits',async()=>{
+  const vm=require('node:vm');
+  const source=fs.readFileSync(__dirname+'/trial-request.js','utf8');
+  const flush=()=>new Promise(resolve=>setImmediate(resolve));
+  function harness(){
+    const fields={businessName:'Fictional Vendor',website:'https://fictional-vendor.com/',
+      email:'owner@fictional-vendor.com',category:'equipment',territory:'Brooklyn',fax:''};
+    const events={},pending=[];
+    const submitButton={disabled:false,textContent:'Send my free-trial request'};
+    const form={hidden:false,querySelector:()=>submitButton,reportValidity:()=>true,
+      addEventListener:(event,listener)=>{events[event]=listener;}};
+    const link={hidden:true,removeAttribute(name){delete this[name];}};
+    const status={textContent:''},fallback={hidden:true},body={value:''};
+    const success={hidden:true,querySelector:()=>({focus(){}})};
+    const elements={'[data-trial-request]':form,'[data-trial-email]':link,
+      '[data-trial-status]':status,'[data-trial-fallback]':fallback,
+      '[data-trial-body]':body,'[data-trial-success]':success};
+    const window={document:{querySelector:key=>elements[key]||null},
+      location:{origin:'https://permitplate.retallyrecovery.com'},navigator:{},
+      fetch:(url,options)=>new Promise((resolve,reject)=>{pending.push({url,options,resolve,reject});})};
+    class FormDataStub{
+      [Symbol.iterator](){return Object.entries(fields)[Symbol.iterator]();}
+    }
+    vm.runInNewContext(source,{window,FormData:FormDataStub,URL,AbortController,
+      setTimeout,clearTimeout},{timeout:1000});
+    return {fields,form,submitButton,link,status,fallback,body,success,pending,
+      submit:()=>events.submit({preventDefault(){}}),
+      edit:(key,value)=>{fields[key]=value;events.input();events.change();}};
+  }
+  const response={status:202,json:async()=>({status:'RECEIVED_FOR_REVIEW'})};
+  const normal=harness();
+  normal.submit();await flush();
+  assert.equal(normal.pending.length,1);
+  normal.pending[0].resolve(response);await flush();await flush();
+  assert.equal(normal.form.hidden,true,'unchanged request still shows genuine receipt');
+  assert.equal(normal.success.hidden,false);
+
+  const changed=harness();
+  changed.submit();await flush();
+  assert.equal(changed.submitButton.disabled,true);
+  changed.submit();await flush();
+  assert.equal(changed.pending.length,1,'repeated Enter cannot queue overlapping POSTs');
+  assert.equal(JSON.parse(changed.pending[0].options.body).territory,'Brooklyn');
+  changed.edit('territory','Queens');
+  changed.pending[0].resolve(response);await flush();await flush();
+  assert.equal(changed.form.hidden,false,'edits not sent with earlier POST remain visible');
+  assert.equal(changed.success.hidden,true,'no receipt attributed to edited scope');
+  assert.match(changed.status.textContent,/Later edits were not sent/);
+  assert.equal(changed.submitButton.disabled,false);
+
+  const failed=harness();
+  failed.submit();await flush();
+  failed.edit('territory','Bronx');
+  failed.pending[0].reject(Error('SIMULATED_OFFLINE'));await flush();await flush();
+  assert.equal(failed.link.hidden,true,'stale email draft must not reappear');
+  assert.equal(failed.fallback.hidden,true,'stale email copy must not reappear');
+  assert.equal(failed.body.value,'');
+  assert.match(failed.status.textContent,/edited details were not sent/);
+  assert.match(failed.status.textContent,/may still be on file/);
+  assert.equal(failed.submitButton.disabled,false);
+});
+
+test('work-email dot-atom syntax is validated before composing a buyer request',()=>{
+  const invalid=['buyer..contact@vendor.example.com','.buyer@vendor.example.com',
+    'buyer.@vendor.example.com','a'.repeat(65)+'@vendor.example.com'];
+  for(const email of invalid){
+    assert.throws(()=>request.normalizeEmail(email,true),/valid work email/,email);
+    assert.throws(()=>request.buildRequest({...valid,email}),/valid work email/,email);
+  }
+  assert.equal(request.normalizeEmail('first.last+sales@vendor.example.com',true),
+    'first.last+sales@vendor.example.com');
+  assert.equal(request.normalizeEmail('',false),'','optional email remains optional');
+});

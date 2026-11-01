@@ -299,6 +299,14 @@ async function observeSocrataQuery(source, scope, options) {
         receipt.fetchedCount = records.length;
         return {records, receipt, classification: model.classifySourceObservation(receipt)};
       }
+      // The response must respect both the requested page limit and the
+      // independently reported publisher count. Oversized pages can otherwise
+      // counterfeit a full-scope receipt and authorize an absence conclusion.
+      if (parsed.json.length > limit || parsed.json.length > publisherCount - offset) {
+        receipt.transportOk = false;
+        receipt.fetchedCount = records.length;
+        return {records, receipt, classification: model.classifySourceObservation(receipt)};
+      }
       records.push(...parsed.json);
       receipt.fetchedCount = records.length;
       offset += parsed.json.length;
