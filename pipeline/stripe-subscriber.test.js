@@ -282,4 +282,39 @@ function subscription(overrides){
   assert(out.failures.includes('PROFILE_NORMALIZATION_FAILED'));
 }
 
+{
+  // Previously the session customer silently won over a different
+  // subscription customer, producing an ACTIVE paid profile.
+  const out=s.profileFromCheckout({
+    session:session({customer:'cus_other'}),
+    subscription:subscription()
+  });
+  assert.equal(out.status,'REVIEW');
+  assert(out.failures.includes('STRIPE_CUSTOMER_ID_MISMATCH'));
+  assert.equal(out.profile,null);
+}
+
+{
+  // Missing identities cannot be recovered from the other Stripe object.
+  for(const [sess,sub] of [
+    [session({customer:null}),subscription()],
+    [session(),subscription({customer:null})]
+  ]){
+    const out=s.profileFromCheckout({session:sess,subscription:sub});
+    assert.equal(out.status,'REVIEW');
+    assert(out.failures.includes('STRIPE_CUSTOMER_ID_MISSING'));
+  }
+}
+
+{
+  // External preference receipts must not bypass the customer match.
+  const out=s.profileFromCheckoutAndPreferences({
+    session:session({customer:'cus_other'}),
+    subscription:subscription(),
+    preferences:{category:'Equipment',territory:'Brooklyn'}
+  });
+  assert.equal(out.status,'REVIEW');
+  assert(out.failures.includes('STRIPE_CUSTOMER_ID_MISMATCH'));
+}
+
 console.log('PermitPlate Stripe subscriber adapter tests passed.');
