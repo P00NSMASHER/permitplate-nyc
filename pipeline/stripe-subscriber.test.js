@@ -337,4 +337,30 @@ function subscription(overrides){
   assert(out.failures.includes('STRIPE_CUSTOMER_ID_MISMATCH'));
 }
 
+
+{
+  // A supplied Subscription object alone does not establish that a
+  // completed Checkout Session purchased that particular Subscription.
+  // Before the guard, all three missing Checkout links were accepted.
+  for(const absentLink of [null,undefined,'']){
+    const out=s.profileFromCheckout({
+      session:session({subscription:absentLink}),
+      subscription:subscription()
+    });
+    assert.equal(out.status,'REVIEW');
+    assert(out.failures.includes('CHECKOUT_SUBSCRIPTION_ID_MISSING'));
+    assert.equal(out.profile,null);
+  }
+
+  // External preference receipts must obey the same source-of-truth link.
+  const external=s.profileFromCheckoutAndPreferences({
+    session:session({subscription:null}),
+    subscription:subscription(),
+    preferences:{category:'Equipment',territory:'Brooklyn'}
+  });
+  assert.equal(external.status,'REVIEW');
+  assert(external.failures.includes('CHECKOUT_SUBSCRIPTION_ID_MISSING'));
+}
+
+
 console.log('PermitPlate Stripe subscriber adapter tests passed.');
