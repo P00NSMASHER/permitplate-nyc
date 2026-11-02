@@ -135,6 +135,16 @@ function checkoutSubscriptionContext(input){
   const status=text(subscription&&subscription.status).toLowerCase();
   if(!['active','trialing'].includes(status)) failures.push('SUBSCRIPTION_STATUS_NOT_ELIGIBLE');
 
+  // Provider session and subscription must refer to the same paying customer.
+  // A mismatch (or missing side) cannot authorize a paid onboarding profile.
+  const sessionCustomer=customerId(session,null);
+  const subscriptionCustomer=customerId(null,subscription);
+  if(!sessionCustomer||!subscriptionCustomer){
+    failures.push('STRIPE_CUSTOMER_ID_MISSING');
+  }else if(sessionCustomer!==subscriptionCustomer){
+    failures.push('STRIPE_CUSTOMER_ID_MISMATCH');
+  }
+
   const email=recipientEmail(session);
   if(!email) failures.push('CHECKOUT_EMAIL_MISSING');
   const clientReferenceId=text(session.client_reference_id)||null;
