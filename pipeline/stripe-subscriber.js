@@ -127,7 +127,11 @@ function checkoutSubscriptionContext(input){
   }
   if(projectMarker(session,subscription)!=='permitplate_nyc') failures.push('PROJECT_MARKER_MISMATCH');
 
-  const subId=subscriptionId(session.subscription)||subscriptionId(subscription);
+  // A completed Checkout Session must itself identify the Subscription.
+  // Do not treat an unrelated supplied Subscription object as proof of linkage.
+  const checkoutSubId=subscriptionId(session.subscription);
+  const subId=checkoutSubId||subscriptionId(subscription);
+  if(!checkoutSubId) failures.push('CHECKOUT_SUBSCRIPTION_ID_MISSING');
   if(!subId) failures.push('SUBSCRIPTION_ID_MISSING');
   if(!subscription||text(subscription.id)!==subId) failures.push('SUBSCRIPTION_OBJECT_REQUIRED');
 
