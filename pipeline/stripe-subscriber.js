@@ -81,10 +81,12 @@ function recipientEmail(session){
   ).toLowerCase()||null;
 }
 function projectMarker(session,subscription){
-  return text(
-    session&&session.metadata&&session.metadata.project ||
-    subscription&&subscription.metadata&&subscription.metadata.project
-  ).toLowerCase();
+  const sessionProject=text(session&&session.metadata&&session.metadata.project).toLowerCase();
+  const subscriptionProject=text(subscription&&subscription.metadata&&subscription.metadata.project).toLowerCase();
+  // A correctly marked Checkout Session must not mask a conflicting
+  // Subscription marker from the same provider snapshot.
+  if(sessionProject&&subscriptionProject&&sessionProject!==subscriptionProject) return '';
+  return sessionProject||subscriptionProject;
 }
 function reviewResult(session,subId,failures,extra){
   const base={
