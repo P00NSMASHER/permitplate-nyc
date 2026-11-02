@@ -110,6 +110,15 @@ const wrongCustomer=adapter.processSnapshot({
 assert.equal(wrongCustomer.status,'REVIEW');
 assert(wrongCustomer.failures.includes('STRIPE_PAID_CUSTOMER_INTAKE_INVALID'));
 
+const wrongProject=adapter.processSnapshot({
+  checkedAt:AFTER,complete:true,previousLedger:empty.ledger,
+  sessions:[session({metadata:{project:'permitplate_nyc'}})],
+  subscriptionById:{[SUB]:subscription({metadata:{project:'other_project'}})}
+});
+assert.equal(wrongProject.status,'REVIEW');
+assert(wrongProject.failures.includes('STRIPE_PAID_CUSTOMER_INTAKE_INVALID'));
+assert.equal(wrongProject.ledger,undefined);
+
 const wrongPrice=adapter.processSnapshot({
   checkedAt:AFTER,complete:true,previousLedger:empty.ledger,
   sessions:[session()],subscriptionById:{[SUB]:subscription({
