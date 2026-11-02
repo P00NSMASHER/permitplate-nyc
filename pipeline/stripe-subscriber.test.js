@@ -196,6 +196,26 @@ function subscription(overrides){
 }
 
 {
+  // A valid Checkout project marker must never mask contradictory
+  // subscription metadata from the same Stripe provider snapshot.
+  const out=s.profileFromCheckout({
+    session:session({metadata:{project:'permitplate_nyc'}}),
+    subscription:subscription({metadata:{project:'other_project'}})
+  });
+  assert.equal(out.status,'REVIEW');
+  assert(out.failures.includes('PROJECT_MARKER_MISMATCH'));
+  assert.equal(out.profile,null);
+}
+
+{
+  // Preserve compatibility when only one Stripe object carries a marker.
+  const out=s.profileFromCheckout({
+    session:session(),subscription:subscription({metadata:{}})
+  });
+  assert.equal(out.status,'ACTIVE');
+}
+
+{
   const nested=session({subscription:subscription()});
   const out=s.profileFromCheckout({session:nested,subscription:null});
   assert.equal(out.status,'ACTIVE');
