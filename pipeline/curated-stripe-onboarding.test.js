@@ -102,6 +102,14 @@ const resumed=adapter.processSnapshot({
 });
 assert.equal(resumed.ledger.subscriptions[SUB].state,'PENDING_FOUNDER_REVIEW');
 
+const wrongCustomer=adapter.processSnapshot({
+  checkedAt:AFTER,complete:true,previousLedger:empty.ledger,
+  sessions:[session({customer:'cus_wrong_buyer'})],
+  subscriptionById:{[SUB]:subscription()}
+});
+assert.equal(wrongCustomer.status,'REVIEW');
+assert(wrongCustomer.failures.includes('STRIPE_PAID_CUSTOMER_INTAKE_INVALID'));
+
 const wrongPrice=adapter.processSnapshot({
   checkedAt:AFTER,complete:true,previousLedger:empty.ledger,
   sessions:[session()],subscriptionById:{[SUB]:subscription({
