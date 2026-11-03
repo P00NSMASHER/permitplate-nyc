@@ -353,6 +353,9 @@ async function main(){
       /STRIPE_PAYMENT_LINK_PRICE_CONTRACT_INVALID/);
   }
 
+  // The isolated TEST-only read path stays off production workflows; assert
+  // its provider contract and NO_SEND negative controls in required CI.
+  await require('./stripe-sandbox-acceptance.test').run();
   console.log('Verified private Stripe onboarding, idempotency, billing holds and no-send.');
 }
 main().catch(err=>{console.error(err);process.exitCode=1});
