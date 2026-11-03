@@ -1,0 +1,162 @@
+'use strict';
+const assert=require('node:assert/strict');
+const sandbox=require('./stripe-sandbox-acceptance');
+
+const SUB='sub_sandbox_acceptance_fixture';
+const SESSION='cs_test_sandbox_acceptance_fixture';
+const CUSTOMER='cus_sandbox_acceptance_fixture';
+const link={
+  object:'payment_link',id:sandbox.TEST_LINK,
+  livemode:false,active:true,
+  metadata:{project:'permitplate_nyc',plan:'pilot_monthly',environment:'test'},
+  custom_fields:[
+    {key:'category',type:'dropdown',optional:false,
+      dropdown:{options:[{value:'equipment'},{value:'insurance'}],default_value:null}},
+    {key:'territory',type:'dropdown',optional:false,
+      dropdown:{options:[{value:'Brooklyn'},{value:'AllNYC'}],default_value:null}},
+    {key:'starter',type:'dropdown',optional:false,
+      dropdown:{options:[{value:'yes'},{value:'no'}],default_value:'yes'}}
+  ]
+};
+const lineItems={
+  object:'list',has_more:false,
+  data:[{quantity:1,price:{id:sandbox.TEST_PRICE,currency:'usd',
+    unit_amount:7900,recurring:{interval:'month',interval_count:1,usage_type:'licensed'}}}]
+};
+const checkout={
+  object:'checkout.session',id:SESSION,livemode:false,
+  payment_link:sandbox.TEST_LINK,status:'complete',
+  payment_status:'paid',mode:'subscription',
+  customer:CUSTOMER,customer_details:{email:'synthetic@example.invalid'},
+  metadata:{project:'permitplate_nyc'},
+  subscription:SUB,custom_fields:[
+    {key:'category',type:'dropdown',dropdown:{value:'equipment'}},
+    {key:'territory',type:'dropdown',dropdown:{value:'Brooklyn'}},
+    {key:'starter',type:'dropdown',dropdown:{value:'yes'}}
+  ]
+};
+const subscription={
+  id:SUB,livemode:false,status:'active',customer:CUSTOMER,
+  created:1792400000,items:{data:[{price:{id:sandbox.TEST_PRICE}}]}
+};
+function provider({linkValue=link,items=lineItems,sessions=[checkout],sub=subscription,hasMore=false}={}){
+  const calls=[];
+  const fetchImpl=async(url,options)=>{
+    calls.push({url,method:options.method,redirect:options.redirect});
+    assert.equal(options.method,'GET');
+    assert.equal(options.redirect,'error');
+    assert(url.startsWith('https://api.stripe.com/v1/'));
+    assert.equal(options.headers.Authorization,'Bearer rk_test_synthetic_fixture');
+    let record;
+    const uri=new URL(url);
+    if(uri.pathname==='/v1/payment_links/'+sandbox.TEST_LINK){
+      record=linkValue;
+    }else if(uri.pathname==='/v1/payment_links/'+sandbox.TEST_LINK+'/line_items'){
+      record=items;
+    }else if(uri.pathname==='/v1/checkout/sessions'){
+      assert.equal(uri.searchParams.get('payment_link'),sandbox.TEST_LINK);
+      assert.equal(uri.searchParams.get('status'),'complete');
+      record={data:sessions,has_more:hasMore};
+    }else if(uri.pathname==='/v1/subscriptions/'+SUB){
+      record=sub;
+    }else{
+      throw Error('UNEXPECTED_SANDBOX_PROVIDER_ENDPOINT');
+    }
+    return {ok:true,json:async()=>structuredClone(record)};
+  };
+  return {fetchImpl,calls};
+}
+async function run(){
+  const one=provider();
+  const accepted=await sandbox.snapshot({
+    key:'rk_test_synthetic_fixture',fetchImpl:one.fetchImpl
+  });
+  assert.equal(accepted.environment,'STRIPE_TEST_ONLY');
+  assert.equal(accepted.status,'PROFILE_SOURCE_ACCEPTED_NO_SEND');
+  assert.equal(accepted.completedSessionCount,1);
+  assert.equal(accepted.paidSessionCount,1);
+  assert.equal(accepted.eligibleProfileCount,1);
+  assert.equal(accepted.externalSendCalls,0);
+  assert.equal(accepted.paymentMutations,0);
+  assert.equal(accepted.noSend,true);
+  assert.equal(accepted.readOnly,true);
+  assert(one.calls.every(c=>c.method==='GET'));
+  assert(!JSON.stringify(accepted).includes('synthetic@example.invalid'));
+  const again=await sandbox.snapshot({
+    key:'rk_test_synthetic_fixture',fetchImpl:provider().fetchImpl
+  });
+  assert.deepEqual(again,accepted); // deterministic no-write/readback
+
+  const none=await sandbox.snapshot({
+    key:'rk_test_synthetic_fixture',fetchImpl:provider({sessions:[]}).fetchImpl
+  });
+  assert.equal(none.status,'NO_ELIGIBLE_HOSTED_TEST_CHECKOUT');
+  assert.equal(none.completedSessionCount,0);
+  assert.equal(none.eligibleProfileCount,0);
+
+  const unpaid=await sandbox.snapshot({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sessions:[{...checkout,payment_status:'unpaid'}]}).fetchImpl
+  });
+  assert.equal(unpaid.heldCount,1);
+  assert.equal(unpaid.eligibleProfileCount,0);
+  const canceled=await sandbox.snapshot({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sub:{...subscription,status:'canceled'}}).fetchImpl
+  });
+  assert.equal(canceled.eligibleProfileCount,0);
+  assert.equal(canceled.heldCount,1);
+  for(const sub of [
+    {...subscription,customer:'cus_other'},
+    {...subscription,livemode:true},
+    {...subscription,items:{data:[{price:{id:'price_other'}}]}}
+  ]){
+    await assert.rejects(sandbox.snapshot({
+      key:'rk_test_synthetic_fixture',fetchImpl:provider({sub}).fetchImpl
+    }),/SANDBOX_(?:PAID_PROFILE_REVIEW_REQUIRED|SUBSCRIPTION_READBACK_INVALID)/);
+  }
+  for(const bad of [
+    {...checkout,payment_link:null},
+    {...checkout,livemode:true},
+    {...checkout,subscription:null},
+    {...checkout,custom_fields:[]}
+  ]){
+    await assert.rejects(sandbox.snapshot({
+      key:'rk_test_synthetic_fixture',fetchImpl:provider({sessions:[bad]}).fetchImpl
+    }),/SANDBOX_(?:CHECKOUT_IDENTITY_INVALID|SUBSCRIPTION_LINK_INVALID|PAID_PROFILE_REVIEW_REQUIRED)/);
+  }
+  await assert.rejects(sandbox.snapshot({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sessions:[checkout,checkout]}).fetchImpl
+  }),/SANDBOX_CHECKOUT_IDENTITY_INVALID/);
+  for(const linkValue of [
+    {...link,active:false},
+    {...link,livemode:true},
+    {...link,metadata:{...link.metadata,environment:'live'}},
+    {...link,custom_fields:link.custom_fields.slice(1)}
+  ]){
+    await assert.rejects(sandbox.snapshot({
+      key:'rk_test_synthetic_fixture',fetchImpl:provider({linkValue}).fetchImpl
+    }),/SANDBOX_PAYMENT_LINK_CONTRACT_INVALID/);
+  }
+  await assert.rejects(sandbox.snapshot({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({items:{...lineItems,data:[{...lineItems.data[0],
+      price:{...lineItems.data[0].price,unit_amount:7800}}]}}).fetchImpl
+  }),/SANDBOX_PRICE_CONTRACT_INVALID/);
+  await assert.rejects(sandbox.snapshot({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sessions:[],hasMore:true}).fetchImpl
+  }),/SANDBOX_PAGE_CURSOR_MISSING/);
+  let calls=0;
+  await assert.rejects(sandbox.snapshot({
+    key:'rk_live_never_allowed',fetchImpl:async()=>{calls++}
+  }),/SANDBOX_RESTRICTED_READ_KEY_REQUIRED/);
+  assert.equal(calls,0);
+  await assert.rejects(sandbox.read('/v1/charges','rk_test_synthetic_fixture',
+    async()=>{calls++}),/SANDBOX_READ_ENDPOINT_NOT_ALLOWED/);
+  assert.equal(calls,0);
+  console.log('Stripe sandbox read-only hosted-link acceptance negative controls passed.');
+}
+if(require.main===module)run().catch(err=>{console.error(err);process.exitCode=1});
+module.exports={run};
