@@ -52,13 +52,11 @@ function epochSeconds(value) {
 }
 
 function metadataFreshness(metadata, observedAt, maxAgeDays) {
-  const candidates = [
-    epochSeconds(metadata && metadata.rowsUpdatedAt),
-    epochSeconds(metadata && metadata.dataUpdatedAt),
-    epochSeconds(metadata && metadata.viewLastModified)
-  ].filter(Boolean);
-  if (!candidates.length) return {fresh:false,ageMs:null,updatedAt:null};
-  const latest = Math.max(...candidates) * 1000;
+  // Match the production observer: never promote metadata/view edits
+  // ahead of the actual publisher's row-update watermark.
+  const updated = epochSeconds(metadata && (metadata.rowsUpdatedAt ?? metadata.dataUpdatedAt));
+  if (!updated) return {fresh:false,ageMs:null,updatedAt:null};
+  const latest = updated * 1000;
   const now = Date.parse(observedAt);
   const ageMs = Number.isFinite(now) ? Math.max(0, now - latest) : null;
   const maxAgeMs = Math.max(0, Number(maxAgeDays) || 0) * 24 * 60 * 60 * 1000;
