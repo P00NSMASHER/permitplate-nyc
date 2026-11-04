@@ -179,6 +179,27 @@ const metadata = {
     assert.equal(batch.observation.supportsPositiveObservation, false);
   }
 
+  // Metadata-only timestamp changes cannot produce full-source authority.
+  {
+    const old=Math.floor(Date.parse('2026-09-01T00:00:00Z')/1000);
+    const newView=Math.floor(Date.parse('2026-09-21T13:00:00Z')/1000);
+    const observed='2026-09-21T14:00:00Z';
+    assert.equal(r.metadataFreshness(
+      {rowsUpdatedAt:old,viewLastModified:newView},observed,3).fresh,false);
+    assert.equal(r.metadataFreshness(
+      {viewLastModified:newView},observed,3).fresh,false);
+    assert.equal(r.metadataFreshness(
+      {dataUpdatedAt:newView},observed,3).fresh,true);
+    const published=require('./run-source-health').publicObservation({
+      observationId:'OBS:official',sourceId:'nyc-open-data:43nn-pn8j',
+      observedAt:observed,sourceUpdatedAt:new Date(old*1000).toISOString(),
+      sourceFresh:false,state:'UNKNOWN',stateReason:'SOURCE_NOT_FRESH'
+    });
+    assert.equal(published.sourceFresh,false);
+    assert.equal(published.sourceUpdatedAt,new Date(old*1000).toISOString());
+    assert.equal(published.state,'UNKNOWN');
+  }
+
   // Deterministic scope hash is representation-stable for the same options.
   {
     const config = require('./source-adapters').SOURCE_CONFIGS.DOHMH;

@@ -145,6 +145,41 @@ const META = {
     assert.equal(result.classification.reason, 'SOURCE_NOT_FRESH');
   }
 
+  // A metadata-only edit does not make earlier DOHMH rows new.
+  {
+    const source = getSource('DOHMH');
+    let countRequests = 0;
+    const freshView = Math.floor(Date.parse('2026-09-21T13:59:00Z') / 1000);
+    const fetchImpl = mockFetch((url) => {
+      if (url.pathname.includes('/api/views/')) {
+        return response(200, {...META, rowsUpdatedAt:STALE, viewLastModified:freshView});
+      }
+      countRequests++;
+      throw new Error('stale source must stop before fetching rows');
+    });
+    const result = await observeSocrataQuery(source, {}, {fetchImpl, nowMs:NOW});
+    assert.equal(result.receipt.sourceFresh, false);
+    assert.equal(result.receipt.sourceUpdatedAt, new Date(STALE*1000).toISOString());
+    assert.equal(result.classification.reason, 'SOURCE_NOT_FRESH');
+    assert.equal(result.classification.supportsAbsenceConclusion, false);
+    assert.equal(countRequests, 0);
+  }
+  {
+    const source = getSource('DOHMH');
+    let countRequests = 0;
+    const fetchImpl = mockFetch((url) => {
+      if (url.pathname.includes('/api/views/')) {
+        return response(200, {viewLastModified:FRESH, columns:META.columns});
+      }
+      countRequests++;
+      throw new Error('view-only watermark cannot authorize data fetch');
+    });
+    const result = await observeSocrataQuery(source, {}, {fetchImpl, nowMs:NOW});
+    assert.equal(result.receipt.sourceFresh, false);
+    assert.equal(result.classification.state, 'UNKNOWN');
+    assert.equal(countRequests, 0);
+  }
+
   {
     const source = getSource('DOB');
     const a = queryFingerprint(source, {where:"borough='MANHATTAN'", select:'a,b'});

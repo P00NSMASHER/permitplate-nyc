@@ -58,7 +58,9 @@ function schemaFingerprint(metadata) {
 }
 
 function metadataUpdatedAt(metadata) {
-  const raw = metadata && (metadata.rowsUpdatedAt || metadata.dataUpdatedAt || metadata.viewLastModified);
+  // Only published row/data updates prove new evidence. A metadata-only
+  // view edit must not turn stale restaurant records into a fresh source.
+  const raw = metadata && (metadata.rowsUpdatedAt ?? metadata.dataUpdatedAt);
   if (raw === null || raw === undefined || raw === '') return null;
   if (typeof raw === 'number' || /^\d+$/.test(String(raw))) {
     const n = Number(raw);

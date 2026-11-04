@@ -18,6 +18,7 @@ function publicObservation(observation) {
     queryScopeHash: observation.queryScopeHash,
     queryScope: observation.queryScope,
     observedAt: observation.observedAt,
+    sourceUpdatedAt: observation.sourceUpdatedAt || null,
     sourceFresh: observation.sourceFresh,
     transportOk: observation.transportOk,
     httpStatus: observation.httpStatus,
