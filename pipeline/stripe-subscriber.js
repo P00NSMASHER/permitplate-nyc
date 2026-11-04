@@ -81,10 +81,12 @@ function recipientEmail(session){
   ).toLowerCase()||null;
 }
 function projectMarker(session,subscription){
-  return text(
-    session&&session.metadata&&session.metadata.project ||
-    subscription&&subscription.metadata&&subscription.metadata.project
-  ).toLowerCase();
+  const sessionProject=text(session&&session.metadata&&session.metadata.project).toLowerCase();
+  const subscriptionProject=text(subscription&&subscription.metadata&&subscription.metadata.project).toLowerCase();
+  // A correctly marked Checkout Session must not mask a conflicting
+  // Subscription marker from the same provider snapshot.
+  if(sessionProject&&subscriptionProject&&sessionProject!==subscriptionProject) return '';
+  return sessionProject||subscriptionProject;
 }
 function reviewResult(session,subId,failures,extra){
   const base={
@@ -125,7 +127,11 @@ function checkoutSubscriptionContext(input){
   }
   if(projectMarker(session,subscription)!=='permitplate_nyc') failures.push('PROJECT_MARKER_MISMATCH');
 
-  const subId=subscriptionId(session.subscription)||subscriptionId(subscription);
+  // A completed Checkout Session must itself identify the Subscription.
+  // Do not treat an unrelated supplied Subscription object as proof of linkage.
+  const checkoutSubId=subscriptionId(session.subscription);
+  const subId=checkoutSubId||subscriptionId(subscription);
+  if(!checkoutSubId) failures.push('CHECKOUT_SUBSCRIPTION_ID_MISSING');
   if(!subId) failures.push('SUBSCRIPTION_ID_MISSING');
   if(!subscription||text(subscription.id)!==subId) failures.push('SUBSCRIPTION_OBJECT_REQUIRED');
 
@@ -134,6 +140,16 @@ function checkoutSubscriptionContext(input){
 
   const status=text(subscription&&subscription.status).toLowerCase();
   if(!['active','trialing'].includes(status)) failures.push('SUBSCRIPTION_STATUS_NOT_ELIGIBLE');
+
+  // Provider session and subscription must refer to the same paying customer.
+  // A mismatch (or missing side) cannot authorize a paid onboarding profile.
+  const sessionCustomer=customerId(session,null);
+  const subscriptionCustomer=customerId(null,subscription);
+  if(!sessionCustomer||!subscriptionCustomer){
+    failures.push('STRIPE_CUSTOMER_ID_MISSING');
+  }else if(sessionCustomer!==subscriptionCustomer){
+    failures.push('STRIPE_CUSTOMER_ID_MISMATCH');
+  }
 
   const email=recipientEmail(session);
   if(!email) failures.push('CHECKOUT_EMAIL_MISSING');
