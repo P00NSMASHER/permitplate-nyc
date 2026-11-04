@@ -57,7 +57,7 @@ async function snapshot({key,fetchImpl=fetch}={}){
   if(!priceValid(items))throw Error('SANDBOX_PRICE_CONTRACT_INVALID');
 
   const seenSessions=new Set(),seenSubscriptions=new Set();
-  let cursor=null,complete=false,paid=0,held=0,eligible=0;
+  let cursor=null,complete=false,paid=0,held=0,eligible=0,paidHeld=0;
   for(let page=0;page<MAX_PAGES;page++){
     const query=new URLSearchParams({
       payment_link:TEST_LINK,status:'complete',limit:'100'
@@ -91,7 +91,7 @@ async function snapshot({key,fetchImpl=fetch}={}){
         throw Error('SANDBOX_SUBSCRIPTION_READBACK_INVALID');
       }
       // Cancellation, dispute or incomplete billing cannot be fulfillment.
-      if(sub.status!=='active'){held++;continue}
+      if(sub.status!=='active'){held++;paidHeld++;continue}
       const profile=stripe.profileFromCheckout({
         session,subscription:sub,expectedPaymentLink:TEST_LINK,
         expectedPriceId:TEST_PRICE
@@ -112,9 +112,12 @@ async function snapshot({key,fetchImpl=fetch}={}){
     environment:'STRIPE_TEST_ONLY',readOnly:true,linkVerified:true,
     priceVerified:true,providerPagesComplete:true,
     completedSessionCount:seenSessions.size,paidSessionCount:paid,
-    eligibleProfileCount:eligible,heldCount:held,
+    eligibleProfileCount:eligible,heldCount:held,paidHeldCount:paidHeld,
     noSend:true,externalSendCalls:0,paymentMutations:0,
-    status:eligible?'PROFILE_SOURCE_ACCEPTED_NO_SEND':'NO_ELIGIBLE_HOSTED_TEST_CHECKOUT'
+    // Even if another paid checkout qualifies, a paid-but-inactive subscription
+    // must not be silently hidden behind an overall accepted receipt.
+    status:paidHeld?'PAID_CHECKOUT_REVIEW_REQUIRED':
+      eligible?'PROFILE_SOURCE_ACCEPTED_NO_SEND':'NO_ELIGIBLE_HOSTED_TEST_CHECKOUT'
   };
 }
 module.exports={TEST_LINK,TEST_PRICE,MAX_PAGES,priceValid,read,snapshot};
