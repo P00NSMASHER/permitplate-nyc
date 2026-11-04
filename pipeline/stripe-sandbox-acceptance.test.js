@@ -39,7 +39,8 @@ const subscription={
   id:SUB,livemode:false,status:'active',customer:CUSTOMER,
   created:1792400000,items:{data:[{price:{id:sandbox.TEST_PRICE}}]}
 };
-function provider({linkValue=link,items=lineItems,sessions=[checkout],sub=subscription,hasMore=false}={}){
+function provider({linkValue=link,items=lineItems,sessions=[checkout],sub=subscription,
+                  extraSubscriptions={},hasMore=false}={}){
   const calls=[];
   const fetchImpl=async(url,options)=>{
     calls.push({url,method:options.method,redirect:options.redirect});
@@ -59,6 +60,9 @@ function provider({linkValue=link,items=lineItems,sessions=[checkout],sub=subscr
       record={data:sessions,has_more:hasMore};
     }else if(uri.pathname==='/v1/subscriptions/'+SUB){
       record=sub;
+    }else if(uri.pathname.startsWith('/v1/subscriptions/')&&
+              Object.hasOwn(extraSubscriptions,uri.pathname.split('/').at(-1))){
+      record=extraSubscriptions[uri.pathname.split('/').at(-1)];
     }else{
       throw Error('UNEXPECTED_SANDBOX_PROVIDER_ENDPOINT');
     }
@@ -106,6 +110,28 @@ async function run(){
   });
   assert.equal(canceled.eligibleProfileCount,0);
   assert.equal(canceled.heldCount,1);
+  assert.equal(canceled.paidHeldCount,1);
+  assert.equal(canceled.status,'PAID_CHECKOUT_REVIEW_REQUIRED');
+  // A valid paid profile must not mask another already-paid checkout whose
+  // subscription was canceled before the readback. Hold the entire receipt.
+  const heldSubId='sub_sandbox_cancelled_fixture';
+  const heldCustomerId='cus_sandbox_cancelled_fixture';
+  const heldSession={...checkout,id:'cs_test_sandbox_cancelled_fixture',
+    subscription:heldSubId,customer:heldCustomerId};
+  const mixed=await sandbox.snapshot({
+    key:'rk_test_synthetic_fixture',fetchImpl:provider({
+      sessions:[checkout,heldSession],
+      extraSubscriptions:{[heldSubId]:{...subscription,id:heldSubId,
+        customer:heldCustomerId,status:'canceled'}}
+    }).fetchImpl
+  });
+  assert.equal(mixed.completedSessionCount,2);
+  assert.equal(mixed.paidSessionCount,2);
+  assert.equal(mixed.eligibleProfileCount,1);
+  assert.equal(mixed.paidHeldCount,1);
+  assert.equal(mixed.status,'PAID_CHECKOUT_REVIEW_REQUIRED');
+  assert.equal(mixed.externalSendCalls,0);
+  assert.equal(mixed.paymentMutations,0);
   for(const sub of [
     {...subscription,customer:'cus_other'},
     {...subscription,livemode:true},
