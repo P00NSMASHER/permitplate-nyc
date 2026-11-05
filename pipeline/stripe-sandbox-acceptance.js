@@ -102,8 +102,23 @@ async function inspect({key,fetchImpl=fetch}={},privateMode=false){
       // an independently verified first USD $79 monthly payment. Stripe can
       // accept a correctly priced subscription with a reduced first invoice;
       // such sessions require explicit review, not a private paid handoff.
-      if(session.currency!=='usd'||!Number.isSafeInteger(session.amount_total)||
-          session.amount_total<7900){
+      // The first Checkout must agree with the single USD $79 base item.
+      // A larger total is allowed ONLY when Stripe itself reports a matching
+      // tax amount on that exact subtotal, with no discount or shipping.
+      // Otherwise an unexplained surcharge could be silently associated with
+      // fulfillment despite the advertised monthly price.
+      const subtotal=session.amount_subtotal;
+      const details=session.total_details;
+      const baseValid=session.currency==='usd'&&
+        Number.isSafeInteger(session.amount_total)&&
+        session.amount_total>=7900&&
+        (subtotal==null||subtotal===7900)&&
+        (details==null?session.amount_total===7900:
+          subtotal===7900&&
+          Number.isSafeInteger(details.amount_tax)&&details.amount_tax>=0&&
+          details.amount_discount===0&&details.amount_shipping===0&&
+          session.amount_total===subtotal+details.amount_tax);
+      if(!baseValid){
         throw Error('SANDBOX_CHECKOUT_AMOUNT_INVALID');
       }
       paid++;
