@@ -184,6 +184,33 @@ async function run(){
   assert.equal(mixed.eligibleProfileCount,1);
   assert.equal(mixed.paidHeldCount,1);
   assert.equal(mixed.status,'PAID_CHECKOUT_REVIEW_REQUIRED');
+  // A completed but unpaid Checkout cannot hide behind a second paid,
+  // valid Checkout and produce a misleading accepted aggregate receipt.
+  const unpaidSession={...checkout,
+    id:'cs_test_sandbox_unpaid_second',
+    subscription:'sub_sandbox_unpaid_second',
+    customer:'cus_sandbox_unpaid_second',
+    payment_status:'unpaid'};
+  const mixedPayment=await sandbox.snapshot({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sessions:[checkout,unpaidSession]}).fetchImpl
+  });
+  assert.equal(mixedPayment.completedSessionCount,2);
+  assert.equal(mixedPayment.paidSessionCount,1);
+  assert.equal(mixedPayment.eligibleProfileCount,1);
+  assert.equal(mixedPayment.heldCount,1);
+  assert.equal(mixedPayment.status,'CHECKOUT_REVIEW_REQUIRED');
+  const unpaidOnly=await sandbox.snapshot({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sessions:[unpaidSession]}).fetchImpl
+  });
+  assert.equal(unpaidOnly.status,'CHECKOUT_REVIEW_REQUIRED');
+  const mixedPaymentPrivate=await sandbox.privateNoSendHandoff({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sessions:[checkout,unpaidSession]}).fetchImpl
+  });
+  assert.equal(mixedPaymentPrivate.status,'CHECKOUT_REVIEW_REQUIRED');
+  assert.deepEqual(mixedPaymentPrivate.privateAssociations,[]);
   assert.equal(mixed.externalSendCalls,0);
   assert.equal(mixed.paymentMutations,0);
   for(const sub of [
