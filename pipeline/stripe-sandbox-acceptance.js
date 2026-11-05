@@ -136,6 +136,7 @@ async function inspect({key,fetchImpl=fetch}={},privateMode=false){
     // Even if another paid checkout qualifies, a paid-but-inactive subscription
     // must not be silently hidden behind an overall accepted receipt.
     status:paidHeld?'PAID_CHECKOUT_REVIEW_REQUIRED':
+      held?'CHECKOUT_REVIEW_REQUIRED':
       eligible?'PROFILE_SOURCE_ACCEPTED_NO_SEND':'NO_ELIGIBLE_HOSTED_TEST_CHECKOUT'
   };
   if(!privateMode)return summary;
