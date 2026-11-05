@@ -25,6 +25,9 @@ class FakeD1 {
           if(sql.includes('COUNT(*) AS count')){
             return {count:[...db.requests.values()].filter(x=>x.status==='PENDING').length};
           }
+          if(sql.startsWith('SELECT 1 AS existing FROM trial_intake_requests WHERE business_domain=')){
+            return db.requests.has(params[0])?{existing:1}:null;
+          }
           throw Error('Unexpected read SQL '+sql);
         },
         async run(){
@@ -250,4 +253,22 @@ test('private intake rejects oversize public domain and DEL control name without
   const accepted=await onRequestPost({request:request({...eligible,businessName:'Cafe\u0301 Supplies'}),env:e});
   assert.equal(accepted.status,202);
   assert.equal([...d.requests.values()][0].name,'Caf\u00e9 Supplies');
+});
+
+
+test('skipped insertion without matching duplicate never claims customer request was received',async()=>{
+  const {onRequestPost}=await modulePromise,d=new FakeD1(),e=env(d);
+  const original=d.prepare.bind(d);
+  d.prepare=function(sql){
+    const statement=original(sql);
+    if(sql.startsWith('INSERT OR IGNORE INTO trial_intake_requests')){
+      statement.bind=()=>({run:async()=>({success:true,meta:{changes:0}})});
+    }
+    return statement;
+  };
+  const failed=await json(await onRequestPost({request:request(eligible),env:e}));
+  assert.equal(d.requests.size,0,'no database record exists for this accepted-looking input');
+  assert.equal(failed.code,503,'ignored nonduplicate insert must fail closed, not claim receipt');
+  assert.equal(failed.body.status,'NOT_RECEIVED');
+  assert.equal(failed.body.code,'STORAGE_UNAVAILABLE');
 });
