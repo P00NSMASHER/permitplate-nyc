@@ -180,6 +180,33 @@ async function run(){
     }),/SANDBOX_CHECKOUT_AMOUNT_INVALID/);
   }
 
+  // Billing integrity: the source link establishes one $79 monthly item.
+  // A completed paid Checkout must not silently associate a profile when its
+  // total includes unexplained surcharges. Explicit provider-reported tax on
+  // the $79 subtotal is acceptable; absent or contradictory breakdown is not.
+  const taxedCheckout={...checkout,amount_subtotal:7900,amount_total:8557,
+    total_details:{amount_tax:657,amount_discount:0,amount_shipping:0}};
+  for(const altered of [
+    {...checkout,amount_total:15800},
+    {...checkout,amount_total:7901},
+    {...checkout,amount_subtotal:15800,amount_total:15800,
+      total_details:{amount_tax:0,amount_discount:0,amount_shipping:0}},
+    {...taxedCheckout,total_details:{amount_tax:50,
+      amount_discount:0,amount_shipping:0}},
+    {...taxedCheckout,amount_subtotal:8000}
+  ]){
+    await assert.rejects(sandbox.privateNoSendHandoff({
+      key:'rk_test_synthetic_fixture',
+      fetchImpl:provider({sessions:[altered]}).fetchImpl
+    }),/SANDBOX_CHECKOUT_AMOUNT_INVALID/);
+  }
+  const taxAccepted=await sandbox.privateNoSendHandoff({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sessions:[taxedCheckout]}).fetchImpl
+  });
+  assert.equal(taxAccepted.status,'PRIVATE_ASSOCIATION_READY_NO_SEND');
+  assert.equal(taxAccepted.privateAssociations.length,1);
+
   const none=await sandbox.snapshot({
     key:'rk_test_synthetic_fixture',fetchImpl:provider({sessions:[]}).fetchImpl
   });
