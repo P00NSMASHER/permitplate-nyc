@@ -98,6 +98,14 @@ async function inspect({key,fetchImpl=fetch}={},privateMode=false){
       }
       seenSessions.add(session.id);
       if(session.payment_status!=='paid'){held++;continue}
+      // Do not count a zero-charge/discounted or foreign-currency Checkout as
+      // an independently verified first USD $79 monthly payment. Stripe can
+      // accept a correctly priced subscription with a reduced first invoice;
+      // such sessions require explicit review, not a private paid handoff.
+      if(session.currency!=='usd'||!Number.isSafeInteger(session.amount_total)||
+          session.amount_total<7900){
+        throw Error('SANDBOX_CHECKOUT_AMOUNT_INVALID');
+      }
       paid++;
       const subId=typeof session.subscription==='string'?
         session.subscription:session.subscription?.id;
