@@ -137,6 +137,15 @@ export async function onRequestPost({request,env}){
         return denied(503,'STORAGE_UNAVAILABLE','We could not confirm receipt. Please use email.');
       if(latest.count>=MAX_PENDING)
         return denied(503,'MANUAL_REVIEW_QUEUE_FULL','Online requests are paused. Please use email.');
+      // INSERT OR IGNORE also suppresses non-duplicate SQLite constraints.
+      // A zero-change insert proves nothing about a buyer's request unless
+      // the exact domain was already recorded. Check the UNIQUE-indexed key;
+      // never emit a success receipt for an unrecorded, ignored request.
+      const existing=await db.prepare(
+        'SELECT 1 AS existing FROM trial_intake_requests WHERE business_domain=?1 LIMIT 1'
+      ).bind(data.businessDomain).first();
+      if(existing?.existing!==1)
+        return denied(503,'STORAGE_UNAVAILABLE','We could not confirm receipt. Please use email.');
     }
     // Duplicates intentionally share one neutral acknowledgment. Never reveal who applied.
     return reply(202,{status:'RECEIVED_FOR_REVIEW',
