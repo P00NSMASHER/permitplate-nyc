@@ -39,7 +39,7 @@ function priceValid(items){
     p.unit_amount===7900&&r.interval==='month'&&r.interval_count===1&&
     r.usage_type==='licensed';
 }
-async function snapshot({key,fetchImpl=fetch}={}){
+async function inspect({key,fetchImpl=fetch}={},privateMode=false){
   // Fail closed before a single request if a live credential was passed.
   if(!/^rk_test_[A-Za-z0-9_]+$/.test(String(key||''))){
     throw Error('SANDBOX_RESTRICTED_READ_KEY_REQUIRED');
@@ -57,6 +57,9 @@ async function snapshot({key,fetchImpl=fetch}={}){
   if(!priceValid(items))throw Error('SANDBOX_PRICE_CONTRACT_INVALID');
 
   const seenSessions=new Set(),seenSubscriptions=new Set();
+  // Private associations exist only in the opt-in, in-memory TEST-only path.
+  // Never log or publish them; they contain the synthetic or provider identity.
+  const privateRecords=[];
   let cursor=null,complete=false,paid=0,held=0,eligible=0,paidHeld=0;
   for(let page=0;page<MAX_PAGES;page++){
     const query=new URLSearchParams({
@@ -100,6 +103,22 @@ async function snapshot({key,fetchImpl=fetch}={}){
         throw Error('SANDBOX_PAID_PROFILE_REVIEW_REQUIRED');
       }
       eligible++;
+      if(privateMode){
+        const row=stripe.toPrivateSheetRow(profile);
+        privateRecords.push({
+          environment:'STRIPE_TEST_ONLY',
+          checkoutSessionId:profile.checkoutSessionId,
+          subscriptionId:profile.subscriptionId,
+          idempotencyKey:stripe.sha256(stripe.stableStringify({
+            checkoutSessionId:profile.checkoutSessionId,
+            subscriptionId:profile.subscriptionId,
+            profileFingerprint:profile.profileFingerprint
+          })),
+          privateSheetRow:row,
+          state:'PENDING_FOUNDER_REVIEW',
+          transportAllowed:false,ownerAuthorizationGranted:false
+        });
+      }
     }
     if(listing.has_more===false){complete=true;break}
     if(listing.data.length===0)throw Error('SANDBOX_PAGE_CURSOR_MISSING');
@@ -108,7 +127,7 @@ async function snapshot({key,fetchImpl=fetch}={}){
   if(!complete)throw Error('SANDBOX_PAGE_LIMIT_EXCEEDED');
   // Deliberately no full Session/Subscription objects, PII, persistence, send,
   // charge or customer-authority return values. This is diagnostic only.
-  return {
+  const summary={
     environment:'STRIPE_TEST_ONLY',readOnly:true,linkVerified:true,
     priceVerified:true,providerPagesComplete:true,
     completedSessionCount:seenSessions.size,paidSessionCount:paid,
@@ -119,5 +138,21 @@ async function snapshot({key,fetchImpl=fetch}={}){
     status:paidHeld?'PAID_CHECKOUT_REVIEW_REQUIRED':
       eligible?'PROFILE_SOURCE_ACCEPTED_NO_SEND':'NO_ELIGIBLE_HOSTED_TEST_CHECKOUT'
   };
+  if(!privateMode)return summary;
+  // No partial private association when *any* completed checkout is on hold.
+  // A zero-session read is NOT an end-to-end sandbox fulfillment receipt.
+  const safe=paid>0&&eligible===paid&&held===0&&paidHeld===0;
+  return {
+    environment:'STRIPE_TEST_ONLY',readOnly:true,noSend:true,
+    status:safe?'PRIVATE_ASSOCIATION_READY_NO_SEND':
+      (held||paidHeld?'CHECKOUT_REVIEW_REQUIRED':'NO_COMPLETED_PAID_HOSTED_CHECKOUT'),
+    summary,privateAssociations:safe?privateRecords:[],
+    transportAllowed:false,ownerAuthorizationGranted:false,
+    externalSendCalls:0,paymentMutations:0
+  };
 }
-module.exports={TEST_LINK,TEST_PRICE,MAX_PAGES,priceValid,read,snapshot};
+function snapshot(options){return inspect(options,false)}
+// Private diagnostic only: returns source-bound in-memory handoffs, NO_SEND,
+// with no disk, email, entitlement, Stripe writes or customer provisioning.
+function privateNoSendHandoff(options){return inspect(options,true)}
+module.exports={TEST_LINK,TEST_PRICE,MAX_PAGES,priceValid,read,snapshot,privateNoSendHandoff};
