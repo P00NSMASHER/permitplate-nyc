@@ -100,8 +100,12 @@ async function inspect({key,fetchImpl=fetch}={},privateMode=false){
           subItems.data[0]?.price?.id!==TEST_PRICE){
         throw Error('SANDBOX_SUBSCRIPTION_READBACK_INVALID');
       }
-      // Cancellation, dispute or incomplete billing cannot be fulfillment.
-      if(sub.status!=='active'){held++;paidHeld++;continue}
+      // Stripe pause_collection leaves status='active' while future invoices
+      // are not collected. Do not mistake paused billing for an ongoing paid
+      // subscription or expose its profile in the private NO_SEND handoff.
+      if(sub.status!=='active'||sub.pause_collection!=null){
+        held++;paidHeld++;continue
+      }
       const profile=stripe.profileFromCheckout({
         session,subscription:sub,expectedPaymentLink:TEST_LINK,
         expectedPriceId:TEST_PRICE
