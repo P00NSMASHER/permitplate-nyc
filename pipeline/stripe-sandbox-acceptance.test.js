@@ -146,6 +146,25 @@ async function run(){
   assert.equal(mixedPrivate.status,'CHECKOUT_REVIEW_REQUIRED');
   assert.deepEqual(mixedPrivate.privateAssociations,[]);
 
+  // Red-team provider readback: Stripe's offered dropdown choices are a
+  // source contract, not merely arbitrary canonical vendor categories.
+  // A duplicate or a selection absent from this exact Payment Link must hold.
+  const duplicateCategory={...checkout,custom_fields:[
+    ...checkout.custom_fields,
+    {key:'category',type:'dropdown',dropdown:{value:'insurance'}}
+  ]};
+  await assert.rejects(sandbox.privateNoSendHandoff({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sessions:[duplicateCategory]}).fetchImpl
+  }),/SANDBOX_CHECKOUT_PREFERENCE_FIELDS_INVALID/);
+  const categoryNotOffered={...checkout,custom_fields:
+    checkout.custom_fields.map(f=>f.key==='category'?
+      {...f,dropdown:{value:'pos'}}:f)};
+  await assert.rejects(sandbox.privateNoSendHandoff({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sessions:[categoryNotOffered]}).fetchImpl
+  }),/SANDBOX_CHECKOUT_PREFERENCE_FIELDS_INVALID/);
+
   const none=await sandbox.snapshot({
     key:'rk_test_synthetic_fixture',fetchImpl:provider({sessions:[]}).fetchImpl
   });
