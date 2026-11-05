@@ -91,6 +91,60 @@ async function run(){
   });
   assert.deepEqual(again,accepted); // deterministic no-write/readback
 
+  // The public diagnostic deliberately returns aggregates only. The separate
+  // private adapter must produce a deterministic, non-delivering association
+  // containing category + borough + starter and the exact provider identities.
+  const privateProvider=provider();
+  const privateResult=await sandbox.privateNoSendHandoff({
+    key:'rk_test_synthetic_fixture',fetchImpl:privateProvider.fetchImpl
+  });
+  assert.equal(privateResult.status,'PRIVATE_ASSOCIATION_READY_NO_SEND');
+  assert.equal(privateResult.privateAssociations.length,1);
+  assert.equal(privateResult.externalSendCalls,0);
+  assert.equal(privateResult.paymentMutations,0);
+  assert.equal(privateResult.transportAllowed,false);
+  assert.equal(privateResult.ownerAuthorizationGranted,false);
+  assert(privateProvider.calls.every(c=>c.method==='GET'));
+  const association=privateResult.privateAssociations[0];
+  assert.equal(association.checkoutSessionId,SESSION);
+  assert.equal(association.subscriptionId,SUB);
+  assert.equal(association.privateSheetRow.Email,'synthetic@example.invalid');
+  assert.equal(association.privateSheetRow.Categories,'Equipment');
+  assert.equal(association.privateSheetRow['Boroughs/Territory'],'Brooklyn');
+  assert.equal(association.privateSheetRow['Starter Snapshot Enabled'],true);
+  assert.equal(association.state,'PENDING_FOUNDER_REVIEW');
+  assert.equal(association.transportAllowed,false);
+  assert.equal(association.ownerAuthorizationGranted,false);
+  const stablePrivate=await sandbox.privateNoSendHandoff({
+    key:'rk_test_synthetic_fixture',fetchImpl:provider().fetchImpl
+  });
+  assert.deepEqual(stablePrivate,privateResult); // idempotent re-read
+  assert.equal(Object.hasOwn(accepted,'privateAssociations'),false);
+  assert(!JSON.stringify(accepted).includes('synthetic@example.invalid'));
+  const noPrivate=await sandbox.privateNoSendHandoff({
+    key:'rk_test_synthetic_fixture',fetchImpl:provider({sessions:[]}).fetchImpl
+  });
+  assert.equal(noPrivate.status,'NO_COMPLETED_PAID_HOSTED_CHECKOUT');
+  assert.deepEqual(noPrivate.privateAssociations,[]);
+  const heldPrivate=await sandbox.privateNoSendHandoff({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sub:{...subscription,status:'canceled'}}).fetchImpl
+  });
+  assert.equal(heldPrivate.status,'CHECKOUT_REVIEW_REQUIRED');
+  assert.deepEqual(heldPrivate.privateAssociations,[]);
+  const mixedPrivate=await sandbox.privateNoSendHandoff({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sessions:[checkout,{...checkout,
+      id:'cs_test_sandbox_cancelled_second',
+      subscription:'sub_sandbox_cancelled_second',
+      customer:'cus_sandbox_cancelled_second'}],
+      extraSubscriptions:{sub_sandbox_cancelled_second:{...subscription,
+        id:'sub_sandbox_cancelled_second',
+        customer:'cus_sandbox_cancelled_second',status:'canceled'}}}).fetchImpl
+  });
+  assert.equal(mixedPrivate.status,'CHECKOUT_REVIEW_REQUIRED');
+  assert.deepEqual(mixedPrivate.privateAssociations,[]);
+
   const none=await sandbox.snapshot({
     key:'rk_test_synthetic_fixture',fetchImpl:provider({sessions:[]}).fetchImpl
   });
