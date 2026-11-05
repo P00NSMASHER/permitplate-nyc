@@ -89,8 +89,15 @@ async function inspect({key,fetchImpl=fetch}={},privateMode=false){
       }
       seenSubscriptions.add(subId);
       const sub=await fetchRead('/v1/subscriptions/'+subId);
+      // Stripe embeds a paginated subscription-item list. An incomplete page
+      // can hide a second price, while changed quantity can break $79/seat
+      // terms. Require one fully enumerated item at exactly one unit.
+      const subItems=sub?.items;
       if(sub?.id!==subId||sub.livemode!==false||
-          typeof sub.status!=='string'||!Array.isArray(sub.items?.data)){
+          typeof sub.status!=='string'||subItems?.object!=='list'||
+          subItems.has_more!==false||!Array.isArray(subItems.data)||
+          subItems.data.length!==1||subItems.data[0]?.quantity!==1||
+          subItems.data[0]?.price?.id!==TEST_PRICE){
         throw Error('SANDBOX_SUBSCRIPTION_READBACK_INVALID');
       }
       // Cancellation, dispute or incomplete billing cannot be fulfillment.
