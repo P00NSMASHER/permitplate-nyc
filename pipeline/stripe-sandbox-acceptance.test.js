@@ -274,7 +274,7 @@ async function run(){
   ]){
     await assert.rejects(sandbox.snapshot({
       key:'rk_test_synthetic_fixture',fetchImpl:provider({sessions:[bad]}).fetchImpl
-    }),/SANDBOX_(?:CHECKOUT_IDENTITY_INVALID|SUBSCRIPTION_LINK_INVALID|PAID_PROFILE_REVIEW_REQUIRED)/);
+    }),/SANDBOX_(?:CHECKOUT_IDENTITY_INVALID|SUBSCRIPTION_LINK_INVALID|PAID_PROFILE_REVIEW_REQUIRED|CHECKOUT_PREFERENCE_FIELDS_INVALID)/);
   }
   await assert.rejects(sandbox.snapshot({
     key:'rk_test_synthetic_fixture',
