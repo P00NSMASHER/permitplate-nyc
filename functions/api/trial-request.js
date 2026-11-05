@@ -96,6 +96,14 @@ export async function onRequestPost({request,env}){
     'Please check the business, website, contact email and territory.');}
   // Never show a genuine receipt when a bot-trap field prevented storage.
   if(data.spam)return denied(400,'REQUEST_NOT_ACCEPTED','Please review the request fields.');
+  // Google Sites hosts unrelated businesses beneath one hostname. D1's
+  // UNIQUE(business_domain) would silently ignore a second company's page
+  // yet previously return 202 as if its own request were stored. Keep the
+  // existing privacy/dedupe key and fail closed to the manual email fallback
+  // for every such inquiry, without looking up or disclosing prior applicants.
+  if(data.businessDomain==='sites.google.com')
+    return denied(503,'SHARED_HOST_MANUAL_REVIEW',
+      'Shared-host business websites require manual review. Please use the email request option.');
   try{
     const db=env.TRIAL_REQUEST_DB,now=Date.now(),expires=now+86400000;
     const bucket=await ipBucket(ip,env.TRIAL_INTAKE_RATE_SECRET,now);
