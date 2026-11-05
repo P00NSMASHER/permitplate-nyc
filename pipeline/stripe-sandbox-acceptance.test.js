@@ -166,7 +166,21 @@ async function run(){
     fetchImpl:provider({sessions:[categoryNotOffered]}).fetchImpl
   }),/SANDBOX_CHECKOUT_PREFERENCE_FIELDS_INVALID/);
 
-  // Red-team: Stripe 'paid' is insufficient for the advertised USD $79\n  // monthly first payment if Checkout itself charged $0 or non-USD.\n  for(const altered of [\n    {...checkout,amount_total:0},\n    {...checkout,currency:'eur'},\n    {...checkout,amount_total:undefined},\n    {...checkout,currency:undefined}\n  ]){\n    await assert.rejects(sandbox.privateNoSendHandoff({\n      key:'rk_test_synthetic_fixture',\n      fetchImpl:provider({sessions:[altered]}).fetchImpl\n    }),/SANDBOX_CHECKOUT_AMOUNT_INVALID/);\n  }\n\n  const none=await sandbox.snapshot({
+  // Red-team: Stripe 'paid' is insufficient for the advertised USD $79
+  // monthly first payment if Checkout itself charged $0 or non-USD.
+  for(const altered of [
+    {...checkout,amount_total:0},
+    {...checkout,currency:'eur'},
+    {...checkout,amount_total:undefined},
+    {...checkout,currency:undefined}
+  ]){
+    await assert.rejects(sandbox.privateNoSendHandoff({
+      key:'rk_test_synthetic_fixture',
+      fetchImpl:provider({sessions:[altered]}).fetchImpl
+    }),/SANDBOX_CHECKOUT_AMOUNT_INVALID/);
+  }
+
+  const none=await sandbox.snapshot({
     key:'rk_test_synthetic_fixture',fetchImpl:provider({sessions:[]}).fetchImpl
   });
   assert.equal(none.status,'NO_ELIGIBLE_HOSTED_TEST_CHECKOUT');
