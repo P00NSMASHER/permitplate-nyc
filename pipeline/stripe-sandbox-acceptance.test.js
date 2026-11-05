@@ -37,7 +37,8 @@ const checkout={
 };
 const subscription={
   id:SUB,livemode:false,status:'active',customer:CUSTOMER,
-  created:1792400000,items:{data:[{price:{id:sandbox.TEST_PRICE}}]}
+  created:1792400000,items:{object:'list',has_more:false,
+    data:[{quantity:1,price:{id:sandbox.TEST_PRICE}}]}
 };
 function provider({linkValue=link,items=lineItems,sessions=[checkout],sub=subscription,
                   extraSubscriptions={},hasMore=false}={}){
@@ -216,7 +217,13 @@ async function run(){
   for(const sub of [
     {...subscription,customer:'cus_other'},
     {...subscription,livemode:true},
-    {...subscription,items:{data:[{price:{id:'price_other'}}]}}
+    // A subscription-items page with an unseen second price cannot be treated
+    // as a verified single $79/month line; neither can altered quantity.
+    {...subscription,items:{...subscription.items,has_more:true}},
+    {...subscription,items:{...subscription.items,
+      data:[{quantity:2,price:{id:sandbox.TEST_PRICE}}]}},
+    {...subscription,items:{...subscription.items,
+      data:[{quantity:1,price:{id:'price_other'}}]}}
   ]){
     await assert.rejects(sandbox.snapshot({
       key:'rk_test_synthetic_fixture',fetchImpl:provider({sub}).fetchImpl
