@@ -98,23 +98,26 @@ test('one validated request persists privately; duplicate domain does not consum
   assert.deepEqual(repeat.body,first.body,'duplicate must not reveal prior applicant');
   assert.equal(d.rates.size,1);
 });
-test('shared hosting pages retain founder-review paths but cannot create extra trial slots',async()=>{
+test('shared-host trial inquiries cannot report a false online receipt',async()=>{
+  // On sites.google.com, different business pages share one database domain key.
+  // The second buyer would receive 202 while their distinct request was not saved.
+  // Redirect both to the manual-email fallback instead of risking silent lost demand.
   const {onRequestPost}=await modulePromise,d=new FakeD1(),e=env(d);
   const a={...eligible,website:'https://sites.google.com/view/fixture-a?utm_source=private#bio'};
   const b={...eligible,website:'https://sites.google.com/view/fixture-b?secret=yes'};
   const first=await json(await onRequestPost({request:request(a),env:e}));
   const second=await json(await onRequestPost({request:request(b),env:e}));
-  assert.equal(first.code,202);assert.equal(second.code,202);
-  assert.deepEqual(second.body,first.body,'duplicate must not reveal prior applicant');
-  assert.equal(d.requests.size,1,'same host remains one pending business until verified by owner');
-  const saved=[...d.requests.values()][0];
-  assert.equal(saved.domain,'sites.google.com');
-  assert.equal(saved.website,'https://sites.google.com/view/fixture-a');
-  assert(!saved.website.includes('utm_')&&!saved.website.includes('#'));
-  const invalid=await json(await onRequestPost({request:request({
-    ...eligible,website:'https://vendor-customer.com/'+'z'.repeat(701)
-  }),env:e}));
-  assert.equal(invalid.code,400);assert.equal(d.requests.size,1);
+  for(const result of [first,second]){
+    assert.equal(result.code,503);
+    assert.equal(result.body.status,'NOT_RECEIVED');
+    assert.equal(result.body.code,'SHARED_HOST_MANUAL_REVIEW');
+  }
+  assert.deepEqual(second.body,first.body,'shared-host applicants receive the same non-identifying fallback');
+  assert.equal(d.requests.size,0,'no shared-host applicant can be falsely reported as durably recorded');
+  assert.equal(d.calls.length,0,'manual fallback must cost zero production D1 reads');
+  const ordinary=await json(await onRequestPost({request:request(eligible),env:e}));
+  assert.equal(ordinary.code,202,'ordinary independent business domains keep working');
+  assert.equal(d.requests.size,1);
 });
 test('invalid origin, method context, missing db and unsupported content type fail closed',async()=>{
   const {onRequestPost}=await modulePromise,d=new FakeD1(),e=env(d);
