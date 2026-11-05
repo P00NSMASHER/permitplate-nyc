@@ -39,6 +39,24 @@ function priceValid(items){
     p.unit_amount===7900&&r.interval==='month'&&r.interval_count===1&&
     r.usage_type==='licensed';
 }
+// A Checkout selection must be unique and come from this very Payment Link's
+// verified required dropdown options, not just be a plausible product value.
+// Any historical/current link mismatch is held for human review, not trusted.
+function checkoutFieldsMatchLink(fields,configured){
+  if(!Array.isArray(fields)||fields.length!==3||!Array.isArray(configured))return false;
+  const offered=new Map(configured.map(field=>[
+    field.key,new Set(field.dropdown.options.map(option=>option.value))
+  ]));
+  const seen=new Set();
+  for(const field of fields){
+    if(field?.type!=='dropdown'||!offered.has(field.key)||
+        seen.has(field.key)||!offered.get(field.key).has(field.dropdown?.value)){
+      return false;
+    }
+    seen.add(field.key);
+  }
+  return seen.size===3;
+}
 async function inspect({key,fetchImpl=fetch}={},privateMode=false){
   // Fail closed before a single request if a live credential was passed.
   if(!/^rk_test_[A-Za-z0-9_]+$/.test(String(key||''))){
@@ -105,6 +123,9 @@ async function inspect({key,fetchImpl=fetch}={},privateMode=false){
       // subscription or expose its profile in the private NO_SEND handoff.
       if(sub.status!=='active'||sub.pause_collection!=null){
         held++;paidHeld++;continue
+      }
+      if(!checkoutFieldsMatchLink(session.custom_fields,link.custom_fields)){
+        throw Error('SANDBOX_CHECKOUT_PREFERENCE_FIELDS_INVALID');
       }
       const profile=stripe.profileFromCheckout({
         session,subscription:sub,expectedPaymentLink:TEST_LINK,
