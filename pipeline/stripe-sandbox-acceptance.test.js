@@ -167,6 +167,24 @@ async function run(){
   assert.equal(canceled.heldCount,1);
   assert.equal(canceled.paidHeldCount,1);
   assert.equal(canceled.status,'PAID_CHECKOUT_REVIEW_REQUIRED');
+  // Stripe can pause collection while keeping subscription.status='active'.
+  // A prior paid Checkout must not silently validate a currently uncollected
+  // $79 monthly plan as a normal, ongoing paid subscription.
+  const pausedBilling={...subscription,
+    pause_collection:{behavior:'void',resumes_at:null}};
+  const paused=await sandbox.snapshot({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sub:pausedBilling}).fetchImpl
+  });
+  assert.equal(paused.status,'PAID_CHECKOUT_REVIEW_REQUIRED');
+  assert.equal(paused.paidHeldCount,1);
+  assert.equal(paused.eligibleProfileCount,0);
+  const pausedPrivate=await sandbox.privateNoSendHandoff({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sub:pausedBilling}).fetchImpl
+  });
+  assert.equal(pausedPrivate.status,'CHECKOUT_REVIEW_REQUIRED');
+  assert.deepEqual(pausedPrivate.privateAssociations,[]);
   // A valid paid profile must not mask another already-paid checkout whose
   // subscription was canceled before the readback. Hold the entire receipt.
   const heldSubId='sub_sandbox_cancelled_fixture';
