@@ -120,4 +120,39 @@ const p=require('./subscriber-profile');
   assert.equal(p.parseBoolean('yes',false),true);
 }
 
+
+{
+  // RED regression: rehydrating a USD $79/month paid Stripe subscriber from
+  // the private sheet must preserve the advertised 10-signal ceiling. A
+  // missing column previously inherited the generic 25-signal allowance.
+  const price='price_1UFjcWDPW8riWrxQhnrPX6nc';
+  const paid={
+    subscriberId:'sub_paid_sheet_fixture',
+    recipientEmail:'buyer@example.com',
+    baselineAt:'2026-09-21T16:00:00Z',
+    category:'Equipment',priceId:price
+  };
+  const missing=p.normalizeProfile(paid);
+  assert.equal(missing.status,'ACTIVE');
+  assert.equal(missing.profile.maxSignals,10,
+    'known $79 paid Price must not inherit generic 25-signal default');
+  const excessive=p.normalizeProfile({...paid,maxSignals:25});
+  assert.equal(excessive.status,'REVIEW',
+    'explicit stale 25-signal paid allowance requires review');
+  assert(excessive.failures.includes('PAID_PLAN_MAX_SIGNALS_INVALID'));
+  const sheetBase={
+    Email:'buyer@example.com',Categories:'Equipment',
+    'Boroughs/Territory':'Brooklyn',
+    'Baseline At':'2026-09-21T16:00:00Z',
+    'Stripe Subscription':'sub_paid_sheet_fixture',
+    'Price ID':price,Status:'active'
+  };
+  assert.equal(p.fromSheetRow(sheetBase).profile.maxSignals,10);
+  assert.equal(p.fromSheetRow({...sheetBase,'Max Signals':25}).status,'REVIEW');
+  // Do not change a legitimate legacy/non-paid 25-signal profile.
+  const generic=p.normalizeProfile({...paid,priceId:null});
+  assert.equal(generic.status,'ACTIVE');
+  assert.equal(generic.profile.maxSignals,25);
+}
+
 console.log('PermitPlate subscriber profile contract tests passed.');
