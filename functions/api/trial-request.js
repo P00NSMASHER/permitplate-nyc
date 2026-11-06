@@ -80,9 +80,14 @@ async function ipBucket(ip,secret,now){
 }
 const enabled=env=>env?.TRIAL_INTAKE_ENABLED==='1'&&env?.TRIAL_REQUEST_DB&&
   typeof env?.TRIAL_INTAKE_RATE_SECRET==='string'&&env.TRIAL_INTAKE_RATE_SECRET.length>=32;
+// This is a configuration check, NOT a D1 availability test. The shared D1
+// rows-read budget may already be exhausted even when all bindings are present.
+// Keep this endpoint zero-read and never label storage as operational without
+// an authenticated provider readback. A POST is the only intake receipt.
 export async function onRequestGet({env}){
   const yes=enabled(env);
-  return reply(yes?200:503,{status:yes?'REQUEST_INTAKE_READY':'REQUEST_INTAKE_UNAVAILABLE'});
+  return reply(yes?200:503,{status:yes?'REQUEST_INTAKE_CONFIGURED_UNVERIFIED':'REQUEST_INTAKE_UNAVAILABLE',
+    storageVerified:false});
 }
 export async function onRequestPost({request,env}){
   if(!enabled(env))return denied(503,'TEMPORARILY_UNAVAILABLE','Online requests are temporarily unavailable. Please use email.');
