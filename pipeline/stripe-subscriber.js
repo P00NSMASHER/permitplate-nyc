@@ -5,6 +5,9 @@ const profiles=require('./subscriber-profile');
 
 const STRIPE_SUBSCRIBER_ADAPTER_VERSION='PermitPlate-stripe-subscriber-v1.2.0';
 const PERMITPLATE_PAYMENT_LINK='plink_1UG3RUDPW8riWrxQpZwHExK2';
+// Canonical production paid-price contract for the known PermitPlate link.
+// An omitted caller expectation must NEVER mean every recurring Price is valid.
+const PERMITPLATE_PAID_PRICE='price_1UFjcWDPW8riWrxQhnrPX6nc';
 
 function stableStringify(value){
   if(Array.isArray(value)) return '['+value.map(stableStringify).join(',')+']';
@@ -168,9 +171,17 @@ function checkoutSubscriptionContext(input){
   const clientReferenceId=text(session.client_reference_id)||null;
 
   const actualPriceId=priceId(subscription);
-  const expectedPriceId=text(data.expectedPriceId);
+  const expectedLink=text(data.expectedPaymentLink||PERMITPLATE_PAYMENT_LINK);
+  const callerPriceId=text(data.expectedPriceId);
+  // Pin the known production Payment Link to its exact advertised Price even
+  // when a caller omits expectedPriceId. Test-only alternate links require
+  // an explicit expected Price and their own trusted provider readback.
+  const expectedPriceId=expectedLink===PERMITPLATE_PAYMENT_LINK?
+    PERMITPLATE_PAID_PRICE:callerPriceId;
   if(!actualPriceId) failures.push('PRICE_ID_MISSING');
-  if(expectedPriceId&&actualPriceId&&actualPriceId!==expectedPriceId){
+  if(!expectedPriceId) failures.push('PRICE_ID_EXPECTATION_MISSING');
+  if((callerPriceId&&callerPriceId!==expectedPriceId)||
+      (actualPriceId&&expectedPriceId&&actualPriceId!==expectedPriceId)){
     failures.push('PRICE_ID_MISMATCH');
   }
 
