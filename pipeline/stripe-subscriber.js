@@ -122,7 +122,10 @@ function checkoutSubscriptionContext(input){
   }
   if(text(session.mode)!=='subscription') failures.push('CHECKOUT_MODE_NOT_SUBSCRIPTION');
   if(text(session.status)!=='complete') failures.push('CHECKOUT_NOT_COMPLETE');
-  if(!['paid','no_payment_required'].includes(text(session.payment_status))){
+  // Paid subscriber profiles must have a provider-confirmed paid Checkout.
+  // A completed Checkout with 'no_payment_required' can represent a zero-cost
+  // trial or discounted first invoice; supervised trials remain separate.
+  if(text(session.payment_status)!=='paid'){
     failures.push('CHECKOUT_PAYMENT_NOT_CONFIRMED');
   }
   if(projectMarker(session,subscription)!=='permitplate_nyc') failures.push('PROJECT_MARKER_MISMATCH');
