@@ -72,7 +72,7 @@ function checkout(){
   const subscription={
     id:'sub_material_test',created:Date.parse('2026-10-18T13:00:00Z')/1000,
     customer:'cus_material_test',status:'active',
-    items:{data:[{price:{id:curated.EXPECTED_PRICE_ID}}]}
+    items:{object:'list',has_more:false,data:[{quantity:1,price:{id:curated.EXPECTED_PRICE_ID}}]}
   };
   return {session,subscription};
 }
