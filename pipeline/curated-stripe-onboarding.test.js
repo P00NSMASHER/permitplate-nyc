@@ -30,7 +30,7 @@ function subscription(overrides={}){
   return {
     id:SUB,status:'active',customer:'cus_permitplate_unit',
     created:Date.parse(NOW)/1000,
-    items:{data:[{price:{id:adapter.EXPECTED_PRICE_ID}}]},
+    items:{object:'list',has_more:false,data:[{quantity:1,price:{id:adapter.EXPECTED_PRICE_ID}}]},
     ...overrides
   };
 }
