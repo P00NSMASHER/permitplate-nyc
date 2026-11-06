@@ -178,4 +178,31 @@ const p=require('./subscriber-profile');
   assert.equal(p.fromSheetRow({...paidSheet,'Price ID':'',Status:''}).status,'ACTIVE');
 }
 
+
+{
+  // A paid $79 Price must not infer authorization for every NYC borough
+  // from a missing private-sheet territory value. Legacy profiles retain
+  // their historical default, and an explicit ALL NYC selection stays valid.
+  const paid={
+    Email:'synthetic@example.invalid',Categories:'Equipment',
+    'Baseline At':'2026-09-21T16:00:00Z',
+    'Stripe Subscription':'sub_paid_missing_borough_fixture',
+    'Price ID':'price_1UFjcWDPW8riWrxQhnrPX6nc',
+    Status:'active'
+  };
+  for(const territory of [undefined,'','  ']){
+    const row={...paid};
+    if(territory!==undefined)row['Boroughs/Territory']=territory;
+    const result=p.fromSheetRow(row);
+    assert.equal(result.status,'REVIEW',
+      'price-bound paid sheet without an explicit territory must not activate all NYC');
+    assert(result.failures.includes('PAID_TERRITORY_PREFERENCE_REQUIRED'));
+    assert.equal(result.profile,null);
+  }
+  assert.equal(p.fromSheetRow({...paid,'Boroughs/Territory':'ALL NYC'}).status,'ACTIVE');
+  const legacy=p.fromSheetRow({...paid,'Price ID':''});
+  assert.equal(legacy.status,'ACTIVE');
+  assert.deepEqual(legacy.profile.boroughs,p.BOROUGH_ORDER);
+}
+
 console.log('PermitPlate subscriber profile contract tests passed.');
