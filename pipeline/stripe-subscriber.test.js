@@ -88,11 +88,24 @@ function subscription(overrides){
     }),
     subscription:subscription({status:'trialing'})
   });
-  assert.equal(out.status,'ACTIVE');
-  assert.deepEqual(out.profile.categories,['POS']);
-  assert.equal(out.profile.starterSnapshotEnabled,false);
-  assert.equal(out.profile.boroughs.length,5);
-  assert.equal(s.toPrivateSheetRow(out)['Boroughs/Territory'],'ALL NYC');
+  // A trialing subscription is not a currently active $79/month paid plan,
+  // even when a Checkout fixture reports an initial paid amount. The
+  // supervised no-card trial is governed by a separate admission path.
+  assert.equal(out.status,'REVIEW',
+    'trialing cannot activate a paid fulfillment entitlement');
+  assert(out.failures.includes('SUBSCRIPTION_STATUS_NOT_ELIGIBLE'));
+  assert.equal(out.profile,null);
+  const external=s.profileFromCheckoutAndPreferences({
+    session:session({custom_fields:[]}),
+    subscription:subscription({status:'trialing'}),
+    preferences:{category:'Equipment',boroughs:['Brooklyn']},
+    preferenceSource:'EXTERNAL_PREFERENCE_RECEIPT',
+    preferenceReceiptId:'trial_review_fixture'
+  });
+  assert.equal(external.status,'REVIEW',
+    'external preference receipts cannot bypass the paid-plan trialing hold');
+  assert(external.failures.includes('SUBSCRIPTION_STATUS_NOT_ELIGIBLE'));
+  assert.equal(external.profile,null);
 }
 
 {
