@@ -164,6 +164,25 @@ function subscription(overrides){
 }
 
 {
+  // Stripe pause_collection may retain status='active' while invoices are not
+  // collected. Neither direct paid-onboarding adapter may call that ACTIVE.
+  for(const behavior of ['void','keep_as_draft','mark_uncollectible']){
+    const paused=subscription({status:'active',pause_collection:{behavior,resumes_at:null}});
+    const direct=s.profileFromCheckout({session:session(),subscription:paused});
+    assert.equal(direct.status,'REVIEW','paused billing must not grant a paid profile');
+    assert(direct.failures.includes('SUBSCRIPTION_COLLECTION_PAUSED'));
+    assert.equal(direct.profile,null);
+    const external=s.profileFromCheckoutAndPreferences({
+      session:session({custom_fields:[]}),subscription:paused,
+      preferences:{category:'Equipment',boroughs:['Brooklyn']}
+    });
+    assert.equal(external.status,'REVIEW','external preferences cannot bypass paused billing');
+    assert(external.failures.includes('SUBSCRIPTION_COLLECTION_PAUSED'));
+    assert.equal(external.profile,null);
+  }
+}
+
+{
   const fields=session().custom_fields.filter((field)=>field.key!=='category');
   const out=s.profileFromCheckout({
     session:session({custom_fields:fields}),
