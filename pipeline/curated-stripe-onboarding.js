@@ -110,6 +110,10 @@ function processSnapshot(input){
   }
   if(failures.length)return {status:'REVIEW',failures:[...new Set(failures)]};
   const entries=structuredClone(previous.subscriptions),seenSessionIds=new Set();
+  // Every previously accepted paid Checkout must remain in a COMPLETE
+  // provider snapshot; otherwise a reversed/omitted payment can retain an
+  // apparently pending paid subscriber without fresh authorization evidence.
+  const recordedCheckoutIds=new Set(Object.values(entries).map(x=>x.checkoutSessionId));
   let accepted=0,skipped=0,held=0,created=0;
   for(const session of data.sessions){
     if(!session||!String(session.id||'').startsWith('cs_')||
@@ -120,6 +124,9 @@ function processSnapshot(input){
     seenSessionIds.add(session.id);
     if(session.status!=='complete'){skipped++;continue}
     if(session.payment_status!=='paid'){
+      if(recordedCheckoutIds.has(session.id)){
+        failures.push('STRIPE_TRACKED_CHECKOUT_NOT_PAID');
+      }
       held++;continue;
     }
     if(!paidFirstCheckoutAmountValid(session)){
@@ -184,6 +191,9 @@ function processSnapshot(input){
       created++;
     }
     accepted++;
+  }
+  for(const id of recordedCheckoutIds){
+    if(!seenSessionIds.has(id))failures.push('STRIPE_TRACKED_CHECKOUT_MISSING');
   }
   if(failures.length)return {status:'REVIEW',failures:[...new Set(failures)]};
   const ledger=seal({
