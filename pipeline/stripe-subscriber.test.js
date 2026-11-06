@@ -342,7 +342,9 @@ function subscription(overrides){
   // preference receipt path must apply the same bound as Stripe custom fields.
   const basic=s.profileFromCheckoutAndPreferences({
     session:session({custom_fields:[]}),subscription:subscription(),
-    preferences:{category:'Equipment',boroughs:['Brooklyn']}
+    preferences:{category:'Equipment',boroughs:['Brooklyn']},
+    preferenceSource:'EXTERNAL_PREFERENCE_RECEIPT',
+    preferenceReceiptId:'explicit_external_paid_receipt'
   });
   assert.equal(basic.status,'ACTIVE');
   assert.equal(basic.profile.maxSignals,10,
@@ -601,6 +603,31 @@ function subscription(overrides){
     assert(external.failures.includes('CHECKOUT_SESSION_ID_INVALID'));
     assert.equal(external.profile,null);
   }
+}
+
+// A manually supplied paid-plan preference cannot become an ACTIVE subscriber
+// without a traceable external preference receipt. Checkout/Subscription alone
+// do not prove what category or territory the buyer selected.
+{
+  for(const receiptId of [undefined, null, '', '   ']){
+    const out=s.profileFromCheckoutAndPreferences({
+      session:session({custom_fields:[]}),subscription:subscription(),
+      preferences:{category:'Equipment',territory:'Brooklyn'},
+      preferenceSource:'EXTERNAL_PREFERENCE_RECEIPT',
+      preferenceReceiptId:receiptId
+    });
+    assert.equal(out.status,'REVIEW',
+      'missing source-bound preference receipt must not activate paid fulfillment');
+    assert(out.failures.includes('PAID_PREFERENCE_RECEIPT_REQUIRED'));
+    assert.equal(out.profile,null);
+  }
+  const verified=s.profileFromCheckoutAndPreferences({
+    session:session({custom_fields:[]}),subscription:subscription(),
+    preferences:{category:'Equipment',territory:'Brooklyn'},
+    preferenceSource:'EXTERNAL_PREFERENCE_RECEIPT',
+    preferenceReceiptId:'real_receipt_identity_fixture'
+  });
+  assert.equal(verified.status,'ACTIVE','explicit external receipt still works');
 }
 
 console.log('PermitPlate Stripe subscriber adapter tests passed.');
