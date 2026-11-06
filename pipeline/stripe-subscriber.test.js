@@ -548,4 +548,34 @@ function subscription(overrides){
     'legitimate provider-reported $79 plus tax must remain eligible');
 }
 
+// Exact paid-customer preference acceptance: omission must not silently grant
+// the broadest NYC territory for an external receipt.
+{
+  for(const preferences of [
+    {category:'Equipment'},
+    {category:'Equipment',territory:''}
+  ]){
+    const out=s.profileFromCheckoutAndPreferences({
+      session:session({custom_fields:[]}),
+      subscription:subscription(),
+      preferences,
+      preferenceSource:'EXTERNAL_PREFERENCE_RECEIPT',
+      preferenceReceiptId:'territory_missing_regression'
+    });
+    assert.equal(out.status,'REVIEW',
+      'missing territory must not become an all-NYC paid subscriber');
+    assert(out.failures.includes('PAID_TERRITORY_PREFERENCE_REQUIRED'));
+    assert.equal(out.profile,null);
+  }
+  const explicit=s.profileFromCheckoutAndPreferences({
+    session:session({custom_fields:[]}),
+    subscription:subscription(),
+    preferences:{category:'Equipment',territory:'ALL NYC'},
+    preferenceSource:'EXTERNAL_PREFERENCE_RECEIPT',
+    preferenceReceiptId:'territory_explicit_regression'
+  });
+  assert.equal(explicit.status,'ACTIVE');
+  assert.equal(explicit.profile.boroughs.length,5);
+}
+
 console.log('PermitPlate Stripe subscriber adapter tests passed.');
