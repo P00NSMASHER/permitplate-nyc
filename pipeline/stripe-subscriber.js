@@ -82,6 +82,19 @@ function priceId(subscription){
       list.data[0]?.quantity!==1)return null;
   return text(list.data[0]?.price?.id)||null;
 }
+// A paid status is not enough to prove this offer's $79 first payment:
+// Stripe permits discounted or tax-adjusted invoices on the same recurring
+// Price. Only a fully reconciled USD $79 base amount can create paid profiles.
+function validPaidFirstCheckoutAmount(session){
+  const s=session||{},total=s.amount_total,subtotal=s.amount_subtotal;
+  const details=s.total_details;
+  if(s.currency!=='usd'||!Number.isSafeInteger(total)||total<7900)return false;
+  if(details==null)return total===7900&&
+    (subtotal==null||subtotal===7900);
+  return subtotal===7900&&Number.isSafeInteger(details.amount_tax)&&
+    details.amount_tax>=0&&details.amount_discount===0&&
+    details.amount_shipping===0&&total===subtotal+details.amount_tax;
+}
 function recipientEmail(session){
   return text(
     session&&session.customer_details&&session.customer_details.email ||
@@ -135,6 +148,9 @@ function checkoutSubscriptionContext(input){
   // trial or discounted first invoice; supervised trials remain separate.
   if(text(session.payment_status)!=='paid'){
     failures.push('CHECKOUT_PAYMENT_NOT_CONFIRMED');
+  }
+  if(!validPaidFirstCheckoutAmount(session)){
+    failures.push('CHECKOUT_FIRST_PAYMENT_AMOUNT_INVALID');
   }
   if(projectMarker(session,subscription)!=='permitplate_nyc') failures.push('PROJECT_MARKER_MISMATCH');
 
@@ -389,6 +405,7 @@ module.exports={
   subscriptionId,
   customerId,
   priceId,
+  validPaidFirstCheckoutAmount,
   recipientEmail,
   projectMarker,
   checkoutSubscriptionContext,
