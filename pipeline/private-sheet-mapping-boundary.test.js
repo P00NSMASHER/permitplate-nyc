@@ -16,7 +16,7 @@ function adapterResult(){
       customer_details:{email:'buyer@example.com'},metadata:{project:'permitplate_nyc'},subscription:'sub_mapping',
       custom_fields:[
         {key:'category',type:'dropdown',dropdown:{value:'equipment'}},
-        {key:'territory',type:'text',text:{value:'Manhattan, Queens'}},
+        {key:'territory',type:'dropdown',dropdown:{value:'ManhattanQueens'}},
         {key:'starter',type:'dropdown',dropdown:{value:'yes'}}
       ]
     },
