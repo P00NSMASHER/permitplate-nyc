@@ -114,6 +114,9 @@ async function run(){
   assert.equal(association.privateSheetRow.Categories,'Equipment');
   assert.equal(association.privateSheetRow['Boroughs/Territory'],'Brooklyn');
   assert.equal(association.privateSheetRow['Starter Snapshot Enabled'],true);
+  // Paid PermitPlate contract: up to 10 source-linked signals, not legacy 25.
+  assert.equal(association.privateSheetRow['Max Signals'],10,
+    'paid brief contracted maximum is 10; private handoff must not authorize 25');
   assert.equal(association.state,'PENDING_FOUNDER_REVIEW');
   assert.equal(association.transportAllowed,false);
   assert.equal(association.ownerAuthorizationGranted,false);
