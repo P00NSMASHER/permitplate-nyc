@@ -70,9 +70,14 @@ function customerId(session,subscription){
   return text(fromSession||fromSub)||null;
 }
 function priceId(subscription){
-  const items=subscription&&subscription.items&&subscription.items.data||[];
-  if(items.length!==1) return null;
-  return text(items[0]&&items[0].price&&items[0].price.id)||null;
+  // Stripe's subscription items are paginated. One visible matching price
+  // cannot prove single-seat $79/month terms if there are unseen items or
+  // more than one unit. Require a complete one-item provider snapshot.
+  const list=subscription&&subscription.items;
+  if(list?.object!=='list'||list.has_more!==false||
+      !Array.isArray(list.data)||list.data.length!==1||
+      list.data[0]?.quantity!==1)return null;
+  return text(list.data[0]?.price?.id)||null;
 }
 function recipientEmail(session){
   return text(
