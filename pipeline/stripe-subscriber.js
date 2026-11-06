@@ -137,6 +137,12 @@ function checkoutSubscriptionContext(input){
     (session.subscription&&typeof session.subscription==='object'?session.subscription:null);
   const failures=[];
 
+  // Never create a paid subscriber without an exact traceable Checkout ID.
+  // A completed/payment-confirmed snapshot is not source-bound if its primary
+  // provider identity is missing or is not a Stripe Checkout identifier.
+  if(!/^cs_[A-Za-z0-9_]+$/.test(text(session.id))){
+    failures.push('CHECKOUT_SESSION_ID_INVALID');
+  }
   if(session.object&&session.object!=='checkout.session') failures.push('CHECKOUT_OBJECT_INVALID');
   if(text(session.payment_link)!==text(data.expectedPaymentLink||PERMITPLATE_PAYMENT_LINK)){
     failures.push('PAYMENT_LINK_MISMATCH');
