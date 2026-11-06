@@ -116,6 +116,7 @@ function normalizeProfile(input){
   }
   if(!categories.length) failures.push('NO_VALID_CATEGORY');
 
+  const paidPermitPlate=text(data.priceId)===PERMITPLATE_PAID_PRICE;
   const requestedBoroughs=parseList(data.boroughs||data.territory);
   // A known $79 paid buyer must explicitly authorize their territory.
   // Only legacy/non-price-bound profiles retain the all-NYC default.
@@ -142,7 +143,6 @@ function normalizeProfile(input){
   const starterSnapshotEnabled=parseBoolean(data.starterSnapshotEnabled,false);
   const starterDaysRaw=data.starterDays==null||data.starterDays===''?7:Number(data.starterDays);
   const starterLimitRaw=data.starterLimit==null||data.starterLimit===''?10:Number(data.starterLimit);
-  const paidPermitPlate=text(data.priceId)===PERMITPLATE_PAID_PRICE;
   const maxSignalsRaw=data.maxSignals==null||data.maxSignals===''?
     (paidPermitPlate?10:25):Number(data.maxSignals);
   if(!Number.isInteger(starterDaysRaw)||starterDaysRaw<0||starterDaysRaw>7){
