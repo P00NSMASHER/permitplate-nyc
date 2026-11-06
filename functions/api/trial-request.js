@@ -160,10 +160,16 @@ export async function onRequestPost({request,env}){
       // the exact domain was already recorded. Check the UNIQUE-indexed key;
       // never emit a success receipt for an unrecorded, ignored request.
       const existing=await db.prepare(
-        'SELECT 1 AS existing FROM trial_intake_requests WHERE business_domain=?1 LIMIT 1'
+        'SELECT 1 AS existing, status FROM trial_intake_requests WHERE business_domain=?1 LIMIT 1'
       ).bind(data.businessDomain).first();
       if(existing?.existing!==1)
         return denied(503,'STORAGE_UNAVAILABLE','We could not confirm receipt. Please use email.');
+      // A terminal request can no longer be promised a fresh pending review.
+      // Never rewrite or reopen declined/completed history from public input.
+      // The fallback reveals no prior applicant identity or decision status.
+      if(!['PENDING','REVIEWING'].includes(existing.status))
+        return denied(503,'REQUEST_MANUAL_REVIEW_REQUIRED',
+          'We could not confirm a new request. Please use email.');
     }
     // Duplicates intentionally share one neutral acknowledgment. Never reveal who applied.
     return reply(202,{status:'RECEIVED_FOR_REVIEW',
