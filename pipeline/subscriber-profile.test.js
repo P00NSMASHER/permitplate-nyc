@@ -130,7 +130,7 @@ const p=require('./subscriber-profile');
     subscriberId:'sub_paid_sheet_fixture',
     recipientEmail:'buyer@example.com',
     baselineAt:'2026-09-21T16:00:00Z',
-    category:'Equipment',priceId:price,subscriptionStatus:'active'
+    category:'Equipment',boroughs:'Brooklyn',priceId:price,subscriptionStatus:'active'
   };
   const missing=p.normalizeProfile(paid);
   assert.equal(missing.status,'ACTIVE');
