@@ -155,4 +155,27 @@ const p=require('./subscriber-profile');
   assert.equal(generic.profile.maxSignals,25);
 }
 
+{
+  // A price-bound $79 paid subscriber sheet must not silently assume that
+  // Stripe billing is active if the status is absent or still trialing.
+  const paidSheet={
+    Email:'synthetic@example.invalid',Categories:'Equipment',
+    'Boroughs/Territory':'Brooklyn',
+    'Baseline At':'2026-09-21T16:00:00Z',
+    'Stripe Subscription':'sub_price_bound_status_fixture',
+    'Price ID':'price_1UFjcWDPW8riWrxQhnrPX6nc',
+    Status:'active'
+  };
+  assert.equal(p.fromSheetRow(paidSheet).status,'ACTIVE');
+  for(const invalidStatus of ['', 'trialing']){
+    const held=p.fromSheetRow({...paidSheet,Status:invalidStatus});
+    assert.equal(held.status,'REVIEW',
+      'paid subscription sheet cannot silently treat missing status as active');
+    assert(held.failures.includes('PAID_PLAN_ACTIVE_STATUS_REQUIRED'));
+    assert.equal(held.profile,null);
+  }
+  // Preserve historical generic profile policy (unbound to the $79 Price).
+  assert.equal(p.fromSheetRow({...paidSheet,'Price ID':'',Status:''}).status,'ACTIVE');
+}
+
 console.log('PermitPlate subscriber profile contract tests passed.');
