@@ -25,7 +25,7 @@ class FakeD1 {
           if(sql.includes('COUNT(*) AS count')){
             return {count:[...db.requests.values()].filter(x=>x.status==='PENDING').length};
           }
-          if(sql.startsWith('SELECT 1 AS existing FROM trial_intake_requests WHERE business_domain=')){
+          if(sql.startsWith('SELECT 1 AS existing, status FROM trial_intake_requests WHERE business_domain=')){
             return db.requests.has(params[0])?{existing:1,status:db.requests.get(params[0]).status}:null;
           }
           throw Error('Unexpected read SQL '+sql);
