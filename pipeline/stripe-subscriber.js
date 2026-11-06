@@ -246,7 +246,17 @@ function profileFromPreferences(input){
 
   const categories=preferences.categories||
     (preferences.category?[preferences.category]:[]);
-  const boroughs=preferences.boroughs||preferences.territory||'ALL NYC';
+  const boroughs=preferences.boroughs||preferences.territory;
+  // The external paid receipt must explicitly supply the selected NYC
+  // territory. The generic profile normalizer intentionally defaults blank
+  // territories to all NYC, but that cannot replace paid buyer consent.
+  if(!profiles.parseList(boroughs).length){
+    return reviewResult({id:context.checkoutSessionId},context.subscriptionId,
+      ['PAID_TERRITORY_PREFERENCE_REQUIRED'],{
+        preferenceSource:text(data.preferenceSource)||null,
+        preferenceReceiptId:text(data.preferenceReceiptId)||null
+      });
+  }
   const starter=preferences.starterSnapshotEnabled===true;
   // The advertised $79 paid plan allows up to ten signals per brief. The
   // external-receipt path must never grant the general profile's 25-signal
