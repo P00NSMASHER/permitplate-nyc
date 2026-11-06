@@ -287,6 +287,16 @@ function profileFromCheckout(input){
   const territory=normalizeCheckoutTerritory(territoryRaw);
   const starterRaw=customFieldValue(session,'starter');
   const failures=[];
+  // The direct fulfillment adapter must enforce the same unique three-field
+  // Checkout contract as the restricted TEST-only provider reader. Otherwise
+  // taking the first duplicate can activate a contradictory paid preference.
+  const required=['category','territory','starter'];
+  const fields=Array.isArray(session.custom_fields)?session.custom_fields:[];
+  if(fields.length!==required.length||!required.every(key=>
+    fields.filter(field=>text(field?.key)===key&&field?.type==='dropdown').length===1
+  )){
+    failures.push('CHECKOUT_REQUIRED_DROPDOWNS_INVALID');
+  }
   if(!category) failures.push('CATEGORY_CUSTOM_FIELD_MISSING');
   if(!territoryRaw) failures.push('TERRITORY_CUSTOM_FIELD_MISSING');
   else if(!territory) failures.push('TERRITORY_CUSTOM_FIELD_INVALID');
