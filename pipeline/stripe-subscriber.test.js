@@ -11,6 +11,8 @@ function session(overrides){
     mode:'subscription',
     status:'complete',
     payment_status:'paid',
+    currency:'usd',amount_subtotal:7900,amount_total:7900,
+    total_details:{amount_tax:0,amount_discount:0,amount_shipping:0},
     created:1790000000,
     customer:'cus_test',
     customer_details:{email:'buyer@example.com'},
@@ -500,6 +502,31 @@ function subscription(overrides){
     'external preference receipts must not bypass the offered paid Price');
   assert(external.failures.includes('PRICE_ID_MISMATCH'));
   assert.equal(external.profile,null);
+}
+
+{
+  // SOURCE-LEVEL NEGATIVE: A confirmed Stripe paid status alone is not proof
+  // of the advertised $79 first payment. The separate curated/TEST-only
+  // readers reject discounted amounts, but both directly callable paid profile
+  // adapters must independently fail closed too.
+  const cases=[
+    ['discounted', {amount_total:100,total_details:{amount_tax:0,amount_discount:7800,amount_shipping:0}}],
+    ['foreign currency', {currency:'eur'}],
+    ['missing first-payment total', {amount_total:undefined}],
+    ['unexplained surcharge', {amount_total:8900}]
+  ];
+  for(const [label,override] of cases){
+    const sess=session(override);
+    const direct=s.profileFromCheckout({session:sess,subscription:subscription()});
+    assert.equal(direct.status,'REVIEW',label+' must not activate paid fulfillment');
+    assert.equal(direct.profile,null);
+    const external=s.profileFromCheckoutAndPreferences({
+      session:sess,subscription:subscription(),
+      preferences:{category:'Equipment',boroughs:['Brooklyn']}
+    });
+    assert.equal(external.status,'REVIEW',label+' must not activate external preference fulfillment');
+    assert.equal(external.profile,null);
+  }
 }
 
 console.log('PermitPlate Stripe subscriber adapter tests passed.');
