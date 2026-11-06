@@ -578,4 +578,29 @@ function subscription(overrides){
   assert.equal(explicit.profile.boroughs.length,5);
 }
 
+
+// A source-bound paid profile must not be ACTIVE when the purported Checkout
+// lacks its primary Stripe Checkout Session ID, even if all other fields are
+// plausible. This blocks an untraceable NO_SEND fulfillment association.
+{
+  for(const id of ['', 'not_a_checkout', null]){
+    const bad=session({id});
+    const direct=s.profileFromCheckout({session:bad,subscription:subscription()});
+    assert.equal(direct.status,'REVIEW',
+      'paid profile requires a traceable Checkout Session ID');
+    assert(direct.failures.includes('CHECKOUT_SESSION_ID_INVALID'));
+    assert.equal(direct.profile,null);
+    const external=s.profileFromCheckoutAndPreferences({
+      session:bad,subscription:subscription(),
+      preferences:{category:'Equipment',territory:'Brooklyn'},
+      preferenceSource:'EXTERNAL_PREFERENCE_RECEIPT',
+      preferenceReceiptId:'synthetic_bound_receipt'
+    });
+    assert.equal(external.status,'REVIEW',
+      'external preferences cannot bypass missing Checkout identity');
+    assert(external.failures.includes('CHECKOUT_SESSION_ID_INVALID'));
+    assert.equal(external.profile,null);
+  }
+}
+
 console.log('PermitPlate Stripe subscriber adapter tests passed.');
