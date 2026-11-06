@@ -74,7 +74,15 @@ test('health refuses unprovisioned backend, never leaks records or secrets',asyn
   assert.equal(blocked.body.status,'REQUEST_INTAKE_UNAVAILABLE');
   const live=await json(await onRequestGet({env:env()}));
   assert.equal(live.code,200);
-  assert.deepEqual(live.body,{status:'REQUEST_INTAKE_READY'});
+  assert.deepEqual(live.body,{status:'REQUEST_INTAKE_CONFIGURED_UNVERIFIED',storageVerified:false},
+    'a configured D1 binding must never claim storage is operational without a read');
+  // Fault injection: the mock binding exists but D1 is unavailable; a no-read
+  // health endpoint must be truthful, not claim an operational database.
+  const outage=new FakeD1();outage.fail=true;
+  const whileUnavailable=await json(await onRequestGet({env:env(outage)}));
+  assert.equal(whileUnavailable.body.storageVerified,false);
+  assert.equal(whileUnavailable.body.status,'REQUEST_INTAKE_CONFIGURED_UNVERIFIED');
+  assert.equal(outage.calls.length,0,'no production D1 reads added to health');
   assert(!JSON.stringify(live.body).includes('TRIAL_INTAKE_RATE_SECRET'));
 });
 test('one validated request persists privately; duplicate domain does not consume another slot',async()=>{
