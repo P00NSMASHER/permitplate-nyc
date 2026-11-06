@@ -154,6 +154,11 @@ function normalizeProfile(input){
   }
 
   const subscriptionStatus=text(data.subscriptionStatus||data.status).toLowerCase();
+  // Missing or trialing billing state is not proof of an ACTIVE $79 paid plan.
+  // Legacy/non-price-bound profiles retain their historical defaults.
+  if(paidPermitPlate&&subscriptionStatus!=='active'){
+    failures.push('PAID_PLAN_ACTIVE_STATUS_REQUIRED');
+  }
   if(subscriptionStatus&&!['active','trialing','canary'].includes(subscriptionStatus)){
     failures.push('SUBSCRIPTION_STATUS_NOT_ELIGIBLE');
   }
@@ -212,7 +217,7 @@ function fromSheetRow(row){
     starterDays:r['Starter Days']??r.starterDays,
     starterLimit:r['Starter Limit']??r.starterLimit,
     maxSignals:r['Max Signals']??r.maxSignals,
-    subscriptionStatus:r.Status||r.status||'active',
+    subscriptionStatus:r.Status??r.status,
     stripeCustomerId:r['Stripe Customer']||r.stripeCustomerId,
     stripeSubscriptionId:r['Stripe Subscription']||r.stripeSubscriptionId,
     priceId:r['Price ID']||r.priceId,
