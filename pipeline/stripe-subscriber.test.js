@@ -520,13 +520,19 @@ function subscription(overrides){
     const direct=s.profileFromCheckout({session:sess,subscription:subscription()});
     assert.equal(direct.status,'REVIEW',label+' must not activate paid fulfillment');
     assert.equal(direct.profile,null);
+    assert(direct.failures.includes('CHECKOUT_FIRST_PAYMENT_AMOUNT_INVALID'));
     const external=s.profileFromCheckoutAndPreferences({
       session:sess,subscription:subscription(),
       preferences:{category:'Equipment',boroughs:['Brooklyn']}
     });
     assert.equal(external.status,'REVIEW',label+' must not activate external preference fulfillment');
     assert.equal(external.profile,null);
+    assert(external.failures.includes('CHECKOUT_FIRST_PAYMENT_AMOUNT_INVALID'));
   }
+  const taxed=session({amount_total:8324,
+    total_details:{amount_tax:424,amount_discount:0,amount_shipping:0}});
+  assert.equal(s.profileFromCheckout({session:taxed,subscription:subscription()}).status,'ACTIVE',
+    'legitimate provider-reported $79 plus tax must remain eligible');
 }
 
 console.log('PermitPlate Stripe subscriber adapter tests passed.');
