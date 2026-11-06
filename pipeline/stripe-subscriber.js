@@ -208,6 +208,17 @@ function profileFromPreferences(input){
     (preferences.category?[preferences.category]:[]);
   const boroughs=preferences.boroughs||preferences.territory||'ALL NYC';
   const starter=preferences.starterSnapshotEnabled===true;
+  // The advertised $79 paid plan allows up to ten signals per brief. The
+  // external-receipt path must never grant the general profile's 25-signal
+  // allowance; explicit over-limit values require founder review.
+  const maxSignals=preferences.maxSignals==null?10:Number(preferences.maxSignals);
+  if(!Number.isInteger(maxSignals)||maxSignals<1||maxSignals>10){
+    return reviewResult({id:context.checkoutSessionId},context.subscriptionId,
+      ['PAID_PLAN_MAX_SIGNALS_INVALID'],{
+        preferenceSource:text(data.preferenceSource)||null,
+        preferenceReceiptId:text(data.preferenceReceiptId)||null
+      });
+  }
 
   const normalized=profiles.normalizeProfile({
     subscriberId:context.subscriptionId,
@@ -219,7 +230,7 @@ function profileFromPreferences(input){
     starterSnapshotEnabled:starter,
     starterDays:preferences.starterDays==null?7:preferences.starterDays,
     starterLimit:preferences.starterLimit==null?10:preferences.starterLimit,
-    maxSignals:preferences.maxSignals==null?25:preferences.maxSignals,
+    maxSignals,
     subscriptionStatus:context.subscriptionStatus,
     stripeCustomerId:context.customerId,
     stripeSubscriptionId:context.subscriptionId,
