@@ -303,6 +303,26 @@ function subscription(overrides){
 }
 
 {
+  // The public $79/month offer caps each brief at ten signals. The external
+  // preference receipt path must apply the same bound as Stripe custom fields.
+  const basic=s.profileFromCheckoutAndPreferences({
+    session:session({custom_fields:[]}),subscription:subscription(),
+    preferences:{category:'Equipment',boroughs:['Brooklyn']}
+  });
+  assert.equal(basic.status,'ACTIVE');
+  assert.equal(basic.profile.maxSignals,10,
+    'unspecified external paid allowance must inherit the public 10-signal cap');
+
+  const over=s.profileFromCheckoutAndPreferences({
+    session:session({custom_fields:[]}),subscription:subscription(),
+    preferences:{category:'Equipment',boroughs:['Brooklyn'],maxSignals:25}
+  });
+  assert.equal(over.status,'REVIEW',
+    'an explicit 25-signal external allowance must not activate the $79 plan');
+  assert(over.failures.includes('PAID_PLAN_MAX_SIGNALS_INVALID'));
+}
+
+{
   const out=s.checkoutSubscriptionContext({
     session:session({custom_fields:[]}),
     subscription:subscription(),
