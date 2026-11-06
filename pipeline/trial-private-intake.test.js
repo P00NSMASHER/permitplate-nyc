@@ -293,3 +293,20 @@ test('skipped insertion without matching duplicate never claims customer request
   assert.equal(failed.body.status,'NOT_RECEIVED');
   assert.equal(failed.body.code,'STORAGE_UNAVAILABLE');
 });
+
+test('mobile subdomains of shared profile hosts cannot falsely acknowledge distinct applicants',async()=>{
+  const {onRequestPost}=await modulePromise;
+  // Exact-host protection must not be bypassed by supported mobile host aliases.
+  for(const host of ['m.facebook.com','l.facebook.com','m.instagram.com']){
+    const d=new FakeD1(),e=env(d);
+    for(const suffix of ['fictional-vendor-one','fictional-vendor-two']){
+      const result=await json(await onRequestPost({
+        request:request({...eligible,website:'https://'+host+'/'+suffix}),env:e
+      }));
+      assert.equal(result.code,503,host+' must not acknowledge a profile request by domain alone');
+      assert.equal(result.body.code,'SHARED_HOST_MANUAL_REVIEW');
+    }
+    assert.equal(d.requests.size,0,'shared hostname must never consume another business\'s slot');
+    assert.equal(d.calls.length,0,'shared-profile fallback must consume zero D1 reads');
+  }
+});
