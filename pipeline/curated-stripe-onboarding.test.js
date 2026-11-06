@@ -102,6 +102,30 @@ const resumed=adapter.processSnapshot({
 });
 assert.equal(resumed.ledger.subscriptions[SUB].state,'PENDING_FOUNDER_REVIEW');
 
+// RED: Stripe can report payment_status=paid after a discounted $1 first
+// payment. It is not an independently paid $79 enrollment and must not
+// create a private paid-fulfillment profile under the published contract.
+const discountedFirstPayment=adapter.processSnapshot({
+  checkedAt:AFTER,complete:true,previousLedger:empty.ledger,
+  sessions:[session({currency:'usd',amount_subtotal:7900,amount_total:100,
+    total_details:{amount_tax:0,amount_discount:7800,amount_shipping:0}})],
+  subscriptionById:{[SUB]:subscription()}
+});
+assert.equal(discountedFirstPayment.status,'REVIEW',
+  'discounted $1 payment must not activate $79/month onboarding');
+assert(discountedFirstPayment.failures.includes('STRIPE_CHECKOUT_AMOUNT_INVALID'));
+assert.equal(discountedFirstPayment.ledger,undefined);
+const foreignCurrencyPayment=adapter.processSnapshot({
+  checkedAt:AFTER,complete:true,previousLedger:empty.ledger,
+  sessions:[session({currency:'eur',amount_subtotal:7900,amount_total:7900,
+    total_details:{amount_tax:0,amount_discount:0,amount_shipping:0}})],
+  subscriptionById:{[SUB]:subscription()}
+});
+assert.equal(foreignCurrencyPayment.status,'REVIEW',
+  'paid non-USD Checkout cannot establish USD $79 acceptance');
+assert(foreignCurrencyPayment.failures.includes('STRIPE_CHECKOUT_AMOUNT_INVALID'));
+assert.equal(foreignCurrencyPayment.ledger,undefined);
+
 const wrongCustomer=adapter.processSnapshot({
   checkedAt:AFTER,complete:true,previousLedger:empty.ledger,
   sessions:[session({customer:'cus_wrong_buyer'})],
