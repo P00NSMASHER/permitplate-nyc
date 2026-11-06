@@ -15,6 +15,8 @@ function session(overrides={}){
     id:SESSION,object:'checkout.session',
     payment_link:stripe.PERMITPLATE_PAYMENT_LINK,
     status:'complete',payment_status:'paid',mode:'subscription',
+    currency:'usd',amount_subtotal:7900,amount_total:7900,
+    total_details:{amount_tax:0,amount_discount:0,amount_shipping:0},
     customer:'cus_permitplate_unit',
     customer_details:{email:'internal-buyer@example.com'},
     metadata:{project:'permitplate_nyc'},
@@ -125,6 +127,22 @@ assert.equal(foreignCurrencyPayment.status,'REVIEW',
   'paid non-USD Checkout cannot establish USD $79 acceptance');
 assert(foreignCurrencyPayment.failures.includes('STRIPE_CHECKOUT_AMOUNT_INVALID'));
 assert.equal(foreignCurrencyPayment.ledger,undefined);
+
+const paidWithProviderTax=adapter.processSnapshot({
+  checkedAt:AFTER,complete:true,previousLedger:empty.ledger,
+  sessions:[session({amount_total:8300,
+    total_details:{amount_tax:400,amount_discount:0,amount_shipping:0}})],
+  subscriptionById:{[SUB]:subscription()}
+});
+assert.equal(paidWithProviderTax.status,'READY',
+  'legitimate Stripe-reported tax on $79 subtotal remains eligible');
+const missingTotal=adapter.processSnapshot({
+  checkedAt:AFTER,complete:true,previousLedger:empty.ledger,
+  sessions:[session({amount_total:undefined})],
+  subscriptionById:{[SUB]:subscription()}
+});
+assert.equal(missingTotal.status,'REVIEW');
+assert(missingTotal.failures.includes('STRIPE_CHECKOUT_AMOUNT_INVALID'));
 
 const wrongCustomer=adapter.processSnapshot({
   checkedAt:AFTER,complete:true,previousLedger:empty.ledger,

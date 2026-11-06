@@ -64,6 +64,19 @@ function firstBriefBusinessDate(createdAt){
   }
   return cursor.toISOString().slice(0,10);
 }
+// Binding a $79 recurring Price ID is not proof of the first Checkout total.
+// Paid discounted/non-USD sessions require founder reconciliation, not an
+// automatic paid onboarding receipt. Explicit Stripe tax on $79 is allowed.
+function paidFirstCheckoutAmountValid(session){
+  const s=session||{},total=s.amount_total,subtotal=s.amount_subtotal;
+  const details=s.total_details;
+  if(s.currency!=='usd'||!Number.isSafeInteger(total)||total<7900)return false;
+  if(details==null)return total===7900&&
+    (subtotal==null||subtotal===7900);
+  return subtotal===7900&&Number.isSafeInteger(details.amount_tax)&&
+    details.amount_tax>=0&&details.amount_discount===0&&
+    details.amount_shipping===0&&total===subtotal+details.amount_tax;
+}
 function emptyLedger(now){
   if(!iso(now))throw Error('INTAKE_TIMESTAMP_INVALID');
   return seal({version:VERSION,initializedAt:now,checkedAt:now,subscriptions:{}});
@@ -108,6 +121,9 @@ function processSnapshot(input){
     if(session.status!=='complete'){skipped++;continue}
     if(session.payment_status!=='paid'){
       held++;continue;
+    }
+    if(!paidFirstCheckoutAmountValid(session)){
+      failures.push('STRIPE_CHECKOUT_AMOUNT_INVALID');continue;
     }
     const subId=typeof session.subscription==='string'?session.subscription:
       session.subscription?.id;
