@@ -424,4 +424,34 @@ function subscription(overrides){
 }
 
 
+
+{
+  // A Subscription item list can be paginated and quantity can exceed one.
+  // A single visible matching price does NOT prove a $79/month single-seat
+  // commitment when unseen items or extra seats are billed.
+  const advertisedPrice='price_1UFjcWDPW8riWrxQhnrPX6nc';
+  const cases=[
+    {label:'hidden priced item',items:{
+      object:'list',has_more:true,
+      data:[{quantity:1,price:{id:advertisedPrice}}]}},
+    {label:'two seats',items:{
+      object:'list',has_more:false,
+      data:[{quantity:2,price:{id:advertisedPrice}}]}}
+  ];
+  for(const example of cases){
+    const sub=subscription({items:example.items});
+    const direct=s.profileFromCheckout({session:session(),subscription:sub});
+    assert.equal(direct.status,'REVIEW',
+      example.label+' must not activate a paid subscriber');
+    assert.equal(direct.profile,null);
+    const external=s.profileFromCheckoutAndPreferences({
+      session:session(),subscription:sub,
+      preferences:{category:'Equipment',boroughs:['Brooklyn']}
+    });
+    assert.equal(external.status,'REVIEW',
+      example.label+' must not be accepted via external preferences');
+    assert.equal(external.profile,null);
+  }
+}
+
 console.log('PermitPlate Stripe subscriber adapter tests passed.');
