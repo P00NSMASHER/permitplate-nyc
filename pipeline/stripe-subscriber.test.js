@@ -113,6 +113,28 @@ function subscription(overrides){
 }
 
 {
+  // A $79/month paid membership cannot be activated from a completed
+  // Checkout that requires no payment (for example, a free-trial Checkout).
+  // The manually supervised free trial is a separate, non-billing workflow.
+  const noCharge=s.profileFromCheckout({
+    session:session({payment_status:'no_payment_required'}),
+    subscription:subscription({status:'trialing'})
+  });
+  assert.equal(noCharge.status,'REVIEW',
+    'zero-payment Checkout must not create a paid subscriber profile');
+  assert(noCharge.failures.includes('CHECKOUT_PAYMENT_NOT_CONFIRMED'));
+  assert.equal(noCharge.profile,null);
+  const externalNoCharge=s.profileFromCheckoutAndPreferences({
+    session:session({payment_status:'no_payment_required',custom_fields:[]}),
+    subscription:subscription({status:'trialing'}),
+    preferences:{category:'Equipment',boroughs:['Brooklyn']}
+  });
+  assert.equal(externalNoCharge.status,'REVIEW',
+    'manual preference association must enforce the same payment gate');
+  assert(externalNoCharge.failures.includes('CHECKOUT_PAYMENT_NOT_CONFIRMED'));
+}
+
+{
   const out=s.profileFromCheckout({
     session:session({status:'expired',payment_status:'unpaid'}),
     subscription:subscription()
