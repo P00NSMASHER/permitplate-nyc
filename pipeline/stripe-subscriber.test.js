@@ -455,4 +455,28 @@ function subscription(overrides){
   }
 }
 
+{
+  // A paid Checkout must carry exactly the three unique required dropdowns.
+  // The TEST-only provider reader already rejects duplicates, but direct
+  // fulfillment activation previously used the first matching field instead.
+  const fields=session().custom_fields;
+  for(const bad of [
+    [...fields,{key:'category',type:'dropdown',dropdown:{value:'insurance'}}],
+    [...fields,{key:'territory',type:'dropdown',dropdown:{value:'Bronx'}}],
+    [...fields,{key:'starter',type:'dropdown',dropdown:{value:'no'}}],
+    fields.map(f=>f.key==='category'?
+      {key:'category',type:'text',text:{value:'equipment'}}:f),
+    [...fields,{key:'unverified',type:'text',text:{value:'extra'}}]
+  ]){
+    const out=s.profileFromCheckout({
+      session:session({custom_fields:bad}),
+      subscription:subscription()
+    });
+    assert.equal(out.status,'REVIEW',
+      'ambiguous or non-dropdown preference fields must not activate fulfillment');
+    assert(out.failures.includes('CHECKOUT_REQUIRED_DROPDOWNS_INVALID'));
+    assert.equal(out.profile,null);
+  }
+}
+
 console.log('PermitPlate Stripe subscriber adapter tests passed.');
