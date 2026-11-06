@@ -26,7 +26,7 @@ class FakeD1 {
             return {count:[...db.requests.values()].filter(x=>x.status==='PENDING').length};
           }
           if(sql.startsWith('SELECT 1 AS existing FROM trial_intake_requests WHERE business_domain=')){
-            return db.requests.has(params[0])?{existing:1}:null;
+            return db.requests.has(params[0])?{existing:1,status:db.requests.get(params[0]).status}:null;
           }
           throw Error('Unexpected read SQL '+sql);
         },
@@ -316,5 +316,27 @@ test('mobile subdomains of shared profile hosts cannot falsely acknowledge disti
     }
     assert.equal(d.requests.size,0,'shared hostname must never consume another business\'s slot');
     assert.equal(d.calls.length,0,'shared-profile fallback must consume zero D1 reads');
+  }
+});
+
+
+test('terminal domain records cannot falsely acknowledge a new supervised-trial review',async()=>{
+  const {onRequestPost}=await modulePromise;
+  for(const terminal of ['DECLINED','HANDOFF_RECORDED']){
+    const d=new FakeD1(),e=env(d);
+    d.requests.set('vendor-customer.com',{status:terminal});
+    const result=await json(await onRequestPost({request:request(eligible),env:e}));
+    assert.equal(result.code,503,terminal+' must not receive a fresh-review receipt');
+    assert.equal(result.body.status,'NOT_RECEIVED');
+    assert.equal(result.body.code,'REQUEST_MANUAL_REVIEW_REQUIRED');
+    assert.equal(d.requests.get('vendor-customer.com').status,terminal);
+    assert.equal(d.requests.size,1,'terminal original record must be preserved');
+  }
+  for(const inReview of ['PENDING','REVIEWING']){
+    const d=new FakeD1(),e=env(d);
+    d.requests.set('vendor-customer.com',{status:inReview});
+    const result=await json(await onRequestPost({request:request(eligible),env:e}));
+    assert.equal(result.code,202,inReview+' existing request is genuinely under review');
+    assert.equal(result.body.status,'RECEIVED_FOR_REVIEW');
   }
 });
