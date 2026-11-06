@@ -289,7 +289,7 @@ function subscription(overrides){
       minimumScore:60,
       starterDays:7,
       starterLimit:10,
-      maxSignals:25
+      maxSignals:10
     },
     preferenceSource:'EXTERNAL_PREFERENCE_RECEIPT',
     preferenceReceiptId:'submission_123'
