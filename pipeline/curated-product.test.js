@@ -65,6 +65,8 @@ function checkout(variant={}) {
     object:'checkout.session',
     payment_link:stripe.PERMITPLATE_PAYMENT_LINK,
     mode:'subscription',status:'complete',payment_status:'paid',
+    currency:'usd',amount_subtotal:7900,amount_total:7900,
+    total_details:{amount_tax:0,amount_discount:0,amount_shipping:0},
     customer:'cus_approved_fixture',
     customer_details:{email:'buyer@example.com'},
     subscription:'sub_curated_fixture',
