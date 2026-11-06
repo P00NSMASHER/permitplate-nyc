@@ -119,6 +119,24 @@ test('shared-host trial inquiries cannot report a false online receipt',async()=
   assert.equal(ordinary.code,202,'ordinary independent business domains keep working');
   assert.equal(d.requests.size,1);
 });
+test('social business profile hosts cannot silently lose a second applicant behind hostname deduplication',async()=>{
+  // Facebook and Instagram host unrelated vendors at different URL paths.
+  // UNIQUE(business_domain) otherwise admits only the first and returns
+  // an identical misleading 202 to the second, whose request is never stored.
+  const {onRequestPost}=await modulePromise;
+  for(const host of ['www.facebook.com','www.instagram.com','linktr.ee']){
+    const d=new FakeD1(),e=env(d);
+    for(const path of ['fixture-vendor-a','fixture-vendor-b']){
+      const result=await json(await onRequestPost({
+        request:request({...eligible,website:'https://'+host+'/'+path}),env:e
+      }));
+      assert.equal(result.code,503,host+'/'+path+' must require a manual identity review');
+      assert.equal(result.body.code,'SHARED_HOST_MANUAL_REVIEW');
+    }
+    assert.equal(d.requests.size,0,host+' must not store a misleading single shared-host record');
+    assert.equal(d.calls.length,0,host+' should use the privacy-preserving zero-D1 manual fallback');
+  }
+});
 test('invalid origin, method context, missing db and unsupported content type fail closed',async()=>{
   const {onRequestPost}=await modulePromise,d=new FakeD1(),e=env(d);
   assert.equal((await onRequestPost({request:request(eligible),env:{...e,TRIAL_INTAKE_ENABLED:'0'}})).status,503);
