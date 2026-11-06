@@ -285,7 +285,9 @@ function profileFromCheckout(input){
       minimumScore:data.minimumScore==null?60:data.minimumScore,
       starterDays:7,
       starterLimit:10,
-      maxSignals:25
+      // Public $79/month customer contract promises up to ten signals/brief.
+      // A private Stripe handoff must not inherit the old 25-signal profile.
+      maxSignals:10
     },
     preferenceSource:'STRIPE_CUSTOM_FIELDS',
     preferenceReceiptId:text(session.id)
