@@ -34,7 +34,7 @@ function subscription(){
     status:'active',
     customer:'cus_mapping',
     metadata:{project:'permitplate_nyc'},
-    items:{data:[{price:{id:'price_1UFjcWDPW8riWrxQhnrPX6nc'}}]}
+    items:{object:'list',has_more:false,data:[{quantity:1,price:{id:'price_1UFjcWDPW8riWrxQhnrPX6nc'}}]}
   };
 }
 function activationResult(){
