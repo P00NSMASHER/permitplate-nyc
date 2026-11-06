@@ -7,6 +7,9 @@ const TERRITORIES=new Set(['AllNYC','Manhattan','Brooklyn','Queens','Bronx','Sta
   'ManhattanBrooklynQueens','BrooklynStatenIsland']);
 const FIELDS=new Set(['businessName','website','email','category','territory','consent','fax']);
 const MAX_BYTES=2048,MAX_IP_REQUESTS=5,MAX_PENDING=150;
+// These path-based profile hosts serve many unrelated businesses under one
+// hostname. Domain-keyed UNIQUE intake cannot distinguish their pages.
+const SHARED_PROFILE_HOSTS=new Set(['sites.google.com','facebook.com','instagram.com','linktr.ee']);
 const DISALLOWED=/(?:^|\.)(?:localhost|local|localdomain|internal|lan|home|test|example|invalid|onion)$/;
 function reply(status,payload){return new Response(JSON.stringify(payload),{status,headers:{
   'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store,max-age=0',
@@ -96,12 +99,11 @@ export async function onRequestPost({request,env}){
     'Please check the business, website, contact email and territory.');}
   // Never show a genuine receipt when a bot-trap field prevented storage.
   if(data.spam)return denied(400,'REQUEST_NOT_ACCEPTED','Please review the request fields.');
-  // Google Sites hosts unrelated businesses beneath one hostname. D1's
-  // UNIQUE(business_domain) would silently ignore a second company's page
-  // yet previously return 202 as if its own request were stored. Keep the
-  // existing privacy/dedupe key and fail closed to the manual email fallback
-  // for every such inquiry, without looking up or disclosing prior applicants.
-  if(data.businessDomain==='sites.google.com')
+  // Facebook, Instagram, Linktree and Google Sites can host unrelated
+  // vendors under separate page paths on the same domain. Domain-keyed D1
+  // deduplication cannot acknowledge one without risking silently losing
+  // another. Fail closed to manual intake before touching production D1.
+  if(SHARED_PROFILE_HOSTS.has(data.businessDomain))
     return denied(503,'SHARED_HOST_MANUAL_REVIEW',
       'Shared-host business websites require manual review. Please use the email request option.');
   try{
