@@ -100,10 +100,13 @@ export async function onRequestPost({request,env}){
   // Never show a genuine receipt when a bot-trap field prevented storage.
   if(data.spam)return denied(400,'REQUEST_NOT_ACCEPTED','Please review the request fields.');
   // Facebook, Instagram, Linktree and Google Sites can host unrelated
-  // vendors under separate page paths on the same domain. Domain-keyed D1
+  // vendors under separate page paths on the same domain or mobile aliases.
+  // Use an exact hostname or dot-delimited subdomain match (not a loose substring).
+  // Domain-keyed D1
   // deduplication cannot acknowledge one without risking silently losing
   // another. Fail closed to manual intake before touching production D1.
-  if(SHARED_PROFILE_HOSTS.has(data.businessDomain))
+  if([...SHARED_PROFILE_HOSTS].some(host=>
+    data.businessDomain===host||data.businessDomain.endsWith('.'+host)))
     return denied(503,'SHARED_HOST_MANUAL_REVIEW',
       'Shared-host business websites require manual review. Please use the email request option.');
   try{
