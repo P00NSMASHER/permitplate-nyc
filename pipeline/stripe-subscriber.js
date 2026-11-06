@@ -166,7 +166,11 @@ function checkoutSubscriptionContext(input){
   if(!baselineAt) failures.push('SUBSCRIPTION_CREATED_MISSING');
 
   const status=text(subscription&&subscription.status).toLowerCase();
-  if(!['active','trialing'].includes(status)) failures.push('SUBSCRIPTION_STATUS_NOT_ELIGIBLE');
+  // The $79 paid entitlement requires an active billing subscription.
+  // A subscription still in Stripe trialing state belongs in review even
+  // when its Checkout shows an initial paid amount; the supervised trial is
+  // separate from this recurring paid enrollment path.
+  if(status!=='active') failures.push('SUBSCRIPTION_STATUS_NOT_ELIGIBLE');
   // Stripe may keep status='active' while pause_collection stops invoice
   // collection. A past paid Checkout does not authorize new paid onboarding
   // during paused billing, regardless of preference source.
