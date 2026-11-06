@@ -479,4 +479,27 @@ function subscription(overrides){
   }
 }
 
+{
+  // UNPINNED_PAID_PRICE_REGRESSION: An adapter caller that omits the optional
+  // expectedPriceId must NOT grant paid fulfillment for a different recurring
+  // Price, even when the Checkout Payment Link matches PermitPlate.
+  const wrongPrice=subscription({items:{object:'list',has_more:false,
+    data:[{quantity:1,price:{id:'price_unrelated_other_offer'}}]}});
+  const direct=s.profileFromCheckout({
+    session:session(),subscription:wrongPrice
+  });
+  assert.equal(direct.status,'REVIEW',
+    'wrong paid Price without an explicit expectation must not activate a subscriber');
+  assert(direct.failures.includes('PRICE_ID_MISMATCH'));
+  assert.equal(direct.profile,null);
+  const external=s.profileFromCheckoutAndPreferences({
+    session:session({custom_fields:[]}),subscription:wrongPrice,
+    preferences:{category:'Equipment',boroughs:['Brooklyn']}
+  });
+  assert.equal(external.status,'REVIEW',
+    'external preference receipts must not bypass the offered paid Price');
+  assert(external.failures.includes('PRICE_ID_MISMATCH'));
+  assert.equal(external.profile,null);
+}
+
 console.log('PermitPlate Stripe subscriber adapter tests passed.');
