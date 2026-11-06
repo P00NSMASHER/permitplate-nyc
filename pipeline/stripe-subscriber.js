@@ -378,6 +378,16 @@ function profileFromCheckoutAndPreferences(input){
   const data=input||{};
   const context=checkoutSubscriptionContext(data);
   if(context.status!=='VALID_SUBSCRIPTION') return context;
+  // Customer-selected paid preferences must have their own traceable receipt.
+  // An otherwise valid Stripe subscription alone does not establish which
+  // category/territory the buyer authorized through an external form.
+  // Hold the subscription for manual reconciliation without granting access.
+  if(!text(data.preferenceReceiptId)){
+    return reviewResult(data.session||{},context.subscriptionId,
+      ['PAID_PREFERENCE_RECEIPT_REQUIRED'],{
+        preferenceSource:text(data.preferenceSource)||null
+      });
+  }
 
   return profileFromPreferences({
     context,
