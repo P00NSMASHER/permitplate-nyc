@@ -117,6 +117,11 @@ function normalizeProfile(input){
   if(!categories.length) failures.push('NO_VALID_CATEGORY');
 
   const requestedBoroughs=parseList(data.boroughs||data.territory);
+  // A known $79 paid buyer must explicitly authorize their territory.
+  // Only legacy/non-price-bound profiles retain the all-NYC default.
+  if(paidPermitPlate&&!requestedBoroughs.length){
+    failures.push('PAID_TERRITORY_PREFERENCE_REQUIRED');
+  }
   let boroughs;
   if(!requestedBoroughs.length){
     boroughs=BOROUGH_ORDER.slice();
