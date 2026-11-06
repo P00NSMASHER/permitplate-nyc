@@ -80,7 +80,7 @@ function checkout(variant={}) {
     created:Date.parse(BASELINE)/1000,
     customer:'cus_approved_fixture',
     status:'active',
-    items:{data:[{price:{id:customer.EXPECTED_PRICE_ID}}]}
+    items:{object:'list',has_more:false,data:[{quantity:1,price:{id:customer.EXPECTED_PRICE_ID}}]}
   };
   return {session,subscription,...variant};
 }
