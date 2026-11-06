@@ -143,6 +143,10 @@ function checkoutSubscriptionContext(input){
 
   const status=text(subscription&&subscription.status).toLowerCase();
   if(!['active','trialing'].includes(status)) failures.push('SUBSCRIPTION_STATUS_NOT_ELIGIBLE');
+  // Stripe may keep status='active' while pause_collection stops invoice
+  // collection. A past paid Checkout does not authorize new paid onboarding
+  // during paused billing, regardless of preference source.
+  if(subscription?.pause_collection!=null) failures.push('SUBSCRIPTION_COLLECTION_PAUSED');
 
   // Provider session and subscription must refer to the same paying customer.
   // A mismatch (or missing side) cannot authorize a paid onboarding profile.
