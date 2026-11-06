@@ -371,7 +371,7 @@ function subscription(overrides){
   const out=s.profileFromCheckoutAndPreferences({
     session:session({custom_fields:[]}),
     subscription:subscription(),
-    preferences:{category:'Unknown',starterSnapshotEnabled:true},
+    preferences:{category:'Unknown',territory:'Brooklyn',starterSnapshotEnabled:true},
     preferenceSource:'EXTERNAL_PREFERENCE_RECEIPT',
     preferenceReceiptId:'submission_bad'
   });
