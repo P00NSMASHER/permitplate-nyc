@@ -88,6 +88,27 @@ assert.equal(repeated.created,0);
 assert.equal(repeated.totalSubscribers,1);
 assert.equal(repeated.ledger.subscriptions[SUB].firstDiscoveredAt,AFTER);
 
+// A previously paid subscriber must never remain pending as a verified paid
+ // intake when a completed provider readback has lost that paid Checkout.
+ // A reversal/partial page is a review condition, not a quiet READY ledger.
+const reversedPaidCheckout=adapter.processSnapshot({
+  checkedAt:'2026-10-20T16:15:00Z',complete:true,
+  previousLedger:repeated.ledger,
+  sessions:[session({payment_status:'unpaid'})],subscriptionById:{}
+});
+assert.equal(reversedPaidCheckout.status,'REVIEW',
+  'an unpaid reversal cannot preserve a previously accepted paid subscriber');
+assert(reversedPaidCheckout.failures.includes('STRIPE_TRACKED_CHECKOUT_NOT_PAID'));
+assert.equal(reversedPaidCheckout.ledger,undefined);
+const absentPriorCheckout=adapter.processSnapshot({
+  checkedAt:'2026-10-20T16:30:00Z',complete:true,
+  previousLedger:repeated.ledger,sessions:[],subscriptionById:{}
+});
+assert.equal(absentPriorCheckout.status,'REVIEW',
+  'a completed source snapshot cannot silently omit a recorded paid Checkout');
+assert(absentPriorCheckout.failures.includes('STRIPE_TRACKED_CHECKOUT_MISSING'));
+assert.equal(absentPriorCheckout.ledger,undefined);
+
 const stopped=adapter.processSnapshot({
   checkedAt:'2026-10-20T17:00:00Z',complete:true,
   previousLedger:repeated.ledger,
