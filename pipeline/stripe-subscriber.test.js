@@ -630,4 +630,44 @@ function subscription(overrides){
   assert.equal(verified.status,'ACTIVE','explicit external receipt still works');
 }
 
+
+// Provider-mode integrity: mixed live/test Stripe objects, or TEST objects
+// presented as the known production Payment Link, cannot confer paid access.
+// This is a synthetic source-bound negative test, not a customer incident.
+{
+  const cases=[
+    [session({livemode:true}),subscription({livemode:false})],
+    [session({livemode:false}),subscription({livemode:true})],
+    [session({livemode:false}),subscription({livemode:false})],
+    [session({livemode:true}),subscription({livemode:undefined})]
+  ];
+  for(const [checkout,sub] of cases){
+    const direct=s.profileFromCheckout({session:checkout,subscription:sub});
+    assert.equal(direct.status,'REVIEW',
+      'unreconciled Stripe live/test provenance cannot activate paid fulfillment');
+    assert(direct.failures.includes('STRIPE_ENVIRONMENT_MISMATCH'));
+    const external=s.profileFromCheckoutAndPreferences({
+      session:checkout,subscription:sub,
+      preferences:{category:'Equipment',territory:'Brooklyn'},
+      preferenceReceiptId:'synthetic_provenance_receipt'
+    });
+    assert.equal(external.status,'REVIEW',
+      'external preference receipts cannot override live/test provenance');
+    assert(external.failures.includes('STRIPE_ENVIRONMENT_MISMATCH'));
+  }
+  const live=s.profileFromCheckout({
+    session:session({livemode:true}),subscription:subscription({livemode:true})
+  });
+  assert.equal(live.status,'ACTIVE',
+    'matching LIVE Stripe snapshots retain eligible paid behavior');
+  const test=s.profileFromCheckout({
+    session:session({livemode:false,payment_link:'plink_test_synthetic_fixture'}),
+    subscription:subscription({livemode:false}),
+    expectedPaymentLink:'plink_test_synthetic_fixture',
+    expectedPriceId:'price_1UFjcWDPW8riWrxQhnrPX6nc'
+  });
+  assert.equal(test.status,'ACTIVE',
+    'matching TEST objects remain eligible only for explicit TEST-link evaluation');
+}
+
 console.log('PermitPlate Stripe subscriber adapter tests passed.');
