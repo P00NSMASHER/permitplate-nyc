@@ -25,6 +25,9 @@ class FakeD1 {
           if(sql.includes('COUNT(*) AS count')){
             return {count:[...db.requests.values()].filter(x=>x.status==='PENDING').length};
           }
+          if(sql.startsWith('SELECT 1 AS existing, status FROM trial_intake_requests WHERE business_domain=')){
+            return db.requests.has(params[0])?{existing:1,status:db.requests.get(params[0]).status}:null;
+          }
           throw Error('Unexpected read SQL '+sql);
         },
         async run(){
@@ -71,7 +74,15 @@ test('health refuses unprovisioned backend, never leaks records or secrets',asyn
   assert.equal(blocked.body.status,'REQUEST_INTAKE_UNAVAILABLE');
   const live=await json(await onRequestGet({env:env()}));
   assert.equal(live.code,200);
-  assert.deepEqual(live.body,{status:'REQUEST_INTAKE_READY'});
+  assert.deepEqual(live.body,{status:'REQUEST_INTAKE_CONFIGURED_UNVERIFIED',storageVerified:false},
+    'a configured D1 binding must never claim storage is operational without a read');
+  // Fault injection: the mock binding exists but D1 is unavailable; a no-read
+  // health endpoint must be truthful, not claim an operational database.
+  const outage=new FakeD1();outage.fail=true;
+  const whileUnavailable=await json(await onRequestGet({env:env(outage)}));
+  assert.equal(whileUnavailable.body.storageVerified,false);
+  assert.equal(whileUnavailable.body.status,'REQUEST_INTAKE_CONFIGURED_UNVERIFIED');
+  assert.equal(outage.calls.length,0,'no production D1 reads added to health');
   assert(!JSON.stringify(live.body).includes('TRIAL_INTAKE_RATE_SECRET'));
 });
 test('one validated request persists privately; duplicate domain does not consume another slot',async()=>{
@@ -95,23 +106,44 @@ test('one validated request persists privately; duplicate domain does not consum
   assert.deepEqual(repeat.body,first.body,'duplicate must not reveal prior applicant');
   assert.equal(d.rates.size,1);
 });
-test('shared hosting pages retain founder-review paths but cannot create extra trial slots',async()=>{
+test('shared-host trial inquiries cannot report a false online receipt',async()=>{
+  // On sites.google.com, different business pages share one database domain key.
+  // The second buyer would receive 202 while their distinct request was not saved.
+  // Redirect both to the manual-email fallback instead of risking silent lost demand.
   const {onRequestPost}=await modulePromise,d=new FakeD1(),e=env(d);
   const a={...eligible,website:'https://sites.google.com/view/fixture-a?utm_source=private#bio'};
   const b={...eligible,website:'https://sites.google.com/view/fixture-b?secret=yes'};
   const first=await json(await onRequestPost({request:request(a),env:e}));
   const second=await json(await onRequestPost({request:request(b),env:e}));
-  assert.equal(first.code,202);assert.equal(second.code,202);
-  assert.deepEqual(second.body,first.body,'duplicate must not reveal prior applicant');
-  assert.equal(d.requests.size,1,'same host remains one pending business until verified by owner');
-  const saved=[...d.requests.values()][0];
-  assert.equal(saved.domain,'sites.google.com');
-  assert.equal(saved.website,'https://sites.google.com/view/fixture-a');
-  assert(!saved.website.includes('utm_')&&!saved.website.includes('#'));
-  const invalid=await json(await onRequestPost({request:request({
-    ...eligible,website:'https://vendor-customer.com/'+'z'.repeat(701)
-  }),env:e}));
-  assert.equal(invalid.code,400);assert.equal(d.requests.size,1);
+  for(const result of [first,second]){
+    assert.equal(result.code,503);
+    assert.equal(result.body.status,'NOT_RECEIVED');
+    assert.equal(result.body.code,'SHARED_HOST_MANUAL_REVIEW');
+  }
+  assert.deepEqual(second.body,first.body,'shared-host applicants receive the same non-identifying fallback');
+  assert.equal(d.requests.size,0,'no shared-host applicant can be falsely reported as durably recorded');
+  assert.equal(d.calls.length,0,'manual fallback must cost zero production D1 reads');
+  const ordinary=await json(await onRequestPost({request:request(eligible),env:e}));
+  assert.equal(ordinary.code,202,'ordinary independent business domains keep working');
+  assert.equal(d.requests.size,1);
+});
+test('social business profile hosts cannot silently lose a second applicant behind hostname deduplication',async()=>{
+  // Facebook and Instagram host unrelated vendors at different URL paths.
+  // UNIQUE(business_domain) otherwise admits only the first and returns
+  // an identical misleading 202 to the second, whose request is never stored.
+  const {onRequestPost}=await modulePromise;
+  for(const host of ['www.facebook.com','www.instagram.com','linktr.ee']){
+    const d=new FakeD1(),e=env(d);
+    for(const path of ['fixture-vendor-a','fixture-vendor-b']){
+      const result=await json(await onRequestPost({
+        request:request({...eligible,website:'https://'+host+'/'+path}),env:e
+      }));
+      assert.equal(result.code,503,host+'/'+path+' must require a manual identity review');
+      assert.equal(result.body.code,'SHARED_HOST_MANUAL_REVIEW');
+    }
+    assert.equal(d.requests.size,0,host+' must not store a misleading single shared-host record');
+    assert.equal(d.calls.length,0,host+' should use the privacy-preserving zero-D1 manual fallback');
+  }
 });
 test('invalid origin, method context, missing db and unsupported content type fail closed',async()=>{
   const {onRequestPost}=await modulePromise,d=new FakeD1(),e=env(d);
@@ -250,4 +282,61 @@ test('private intake rejects oversize public domain and DEL control name without
   const accepted=await onRequestPost({request:request({...eligible,businessName:'Cafe\u0301 Supplies'}),env:e});
   assert.equal(accepted.status,202);
   assert.equal([...d.requests.values()][0].name,'Caf\u00e9 Supplies');
+});
+
+
+test('skipped insertion without matching duplicate never claims customer request was received',async()=>{
+  const {onRequestPost}=await modulePromise,d=new FakeD1(),e=env(d);
+  const original=d.prepare.bind(d);
+  d.prepare=function(sql){
+    const statement=original(sql);
+    if(sql.startsWith('INSERT OR IGNORE INTO trial_intake_requests')){
+      statement.bind=()=>({run:async()=>({success:true,meta:{changes:0}})});
+    }
+    return statement;
+  };
+  const failed=await json(await onRequestPost({request:request(eligible),env:e}));
+  assert.equal(d.requests.size,0,'no database record exists for this accepted-looking input');
+  assert.equal(failed.code,503,'ignored nonduplicate insert must fail closed, not claim receipt');
+  assert.equal(failed.body.status,'NOT_RECEIVED');
+  assert.equal(failed.body.code,'STORAGE_UNAVAILABLE');
+});
+
+test('mobile subdomains of shared profile hosts cannot falsely acknowledge distinct applicants',async()=>{
+  const {onRequestPost}=await modulePromise;
+  // Exact-host protection must not be bypassed by supported mobile host aliases.
+  for(const host of ['m.facebook.com','l.facebook.com','m.instagram.com']){
+    const d=new FakeD1(),e=env(d);
+    for(const suffix of ['fictional-vendor-one','fictional-vendor-two']){
+      const result=await json(await onRequestPost({
+        request:request({...eligible,website:'https://'+host+'/'+suffix}),env:e
+      }));
+      assert.equal(result.code,503,host+' must not acknowledge a profile request by domain alone');
+      assert.equal(result.body.code,'SHARED_HOST_MANUAL_REVIEW');
+    }
+    assert.equal(d.requests.size,0,'shared hostname must never consume another business\'s slot');
+    assert.equal(d.calls.length,0,'shared-profile fallback must consume zero D1 reads');
+  }
+});
+
+
+test('terminal domain records cannot falsely acknowledge a new supervised-trial review',async()=>{
+  const {onRequestPost}=await modulePromise;
+  for(const terminal of ['DECLINED','HANDOFF_RECORDED']){
+    const d=new FakeD1(),e=env(d);
+    d.requests.set('vendor-customer.com',{status:terminal});
+    const result=await json(await onRequestPost({request:request(eligible),env:e}));
+    assert.equal(result.code,503,terminal+' must not receive a fresh-review receipt');
+    assert.equal(result.body.status,'NOT_RECEIVED');
+    assert.equal(result.body.code,'REQUEST_MANUAL_REVIEW_REQUIRED');
+    assert.equal(d.requests.get('vendor-customer.com').status,terminal);
+    assert.equal(d.requests.size,1,'terminal original record must be preserved');
+  }
+  for(const inReview of ['PENDING','REVIEWING']){
+    const d=new FakeD1(),e=env(d);
+    d.requests.set('vendor-customer.com',{status:inReview});
+    const result=await json(await onRequestPost({request:request(eligible),env:e}));
+    assert.equal(result.code,202,inReview+' existing request is genuinely under review');
+    assert.equal(result.body.status,'RECEIVED_FOR_REVIEW');
+  }
 });

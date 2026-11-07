@@ -39,7 +39,25 @@ function priceValid(items){
     p.unit_amount===7900&&r.interval==='month'&&r.interval_count===1&&
     r.usage_type==='licensed';
 }
-async function snapshot({key,fetchImpl=fetch}={}){
+// A Checkout selection must be unique and come from this very Payment Link's
+// verified required dropdown options, not just be a plausible product value.
+// Any historical/current link mismatch is held for human review, not trusted.
+function checkoutFieldsMatchLink(fields,configured){
+  if(!Array.isArray(fields)||fields.length!==3||!Array.isArray(configured))return false;
+  const offered=new Map(configured.map(field=>[
+    field.key,new Set(field.dropdown.options.map(option=>option.value))
+  ]));
+  const seen=new Set();
+  for(const field of fields){
+    if(field?.type!=='dropdown'||!offered.has(field.key)||
+        seen.has(field.key)||!offered.get(field.key).has(field.dropdown?.value)){
+      return false;
+    }
+    seen.add(field.key);
+  }
+  return seen.size===3;
+}
+async function inspect({key,fetchImpl=fetch}={},privateMode=false){
   // Fail closed before a single request if a live credential was passed.
   if(!/^rk_test_[A-Za-z0-9_]+$/.test(String(key||''))){
     throw Error('SANDBOX_RESTRICTED_READ_KEY_REQUIRED');
@@ -57,6 +75,9 @@ async function snapshot({key,fetchImpl=fetch}={}){
   if(!priceValid(items))throw Error('SANDBOX_PRICE_CONTRACT_INVALID');
 
   const seenSessions=new Set(),seenSubscriptions=new Set();
+  // Private associations exist only in the opt-in, in-memory TEST-only path.
+  // Never log or publish them; they contain the synthetic or provider identity.
+  const privateRecords=[];
   let cursor=null,complete=false,paid=0,held=0,eligible=0,paidHeld=0;
   for(let page=0;page<MAX_PAGES;page++){
     const query=new URLSearchParams({
@@ -77,6 +98,29 @@ async function snapshot({key,fetchImpl=fetch}={}){
       }
       seenSessions.add(session.id);
       if(session.payment_status!=='paid'){held++;continue}
+      // Do not count a zero-charge/discounted or foreign-currency Checkout as
+      // an independently verified first USD $79 monthly payment. Stripe can
+      // accept a correctly priced subscription with a reduced first invoice;
+      // such sessions require explicit review, not a private paid handoff.
+      // The first Checkout must agree with the single USD $79 base item.
+      // A larger total is allowed ONLY when Stripe itself reports a matching
+      // tax amount on that exact subtotal, with no discount or shipping.
+      // Otherwise an unexplained surcharge could be silently associated with
+      // fulfillment despite the advertised monthly price.
+      const subtotal=session.amount_subtotal;
+      const details=session.total_details;
+      const baseValid=session.currency==='usd'&&
+        Number.isSafeInteger(session.amount_total)&&
+        session.amount_total>=7900&&
+        (subtotal==null||subtotal===7900)&&
+        (details==null?session.amount_total===7900:
+          subtotal===7900&&
+          Number.isSafeInteger(details.amount_tax)&&details.amount_tax>=0&&
+          details.amount_discount===0&&details.amount_shipping===0&&
+          session.amount_total===subtotal+details.amount_tax);
+      if(!baseValid){
+        throw Error('SANDBOX_CHECKOUT_AMOUNT_INVALID');
+      }
       paid++;
       const subId=typeof session.subscription==='string'?
         session.subscription:session.subscription?.id;
@@ -86,12 +130,26 @@ async function snapshot({key,fetchImpl=fetch}={}){
       }
       seenSubscriptions.add(subId);
       const sub=await fetchRead('/v1/subscriptions/'+subId);
+      // Stripe embeds a paginated subscription-item list. An incomplete page
+      // can hide a second price, while changed quantity can break $79/seat
+      // terms. Require one fully enumerated item at exactly one unit.
+      const subItems=sub?.items;
       if(sub?.id!==subId||sub.livemode!==false||
-          typeof sub.status!=='string'||!Array.isArray(sub.items?.data)){
+          typeof sub.status!=='string'||subItems?.object!=='list'||
+          subItems.has_more!==false||!Array.isArray(subItems.data)||
+          subItems.data.length!==1||subItems.data[0]?.quantity!==1||
+          subItems.data[0]?.price?.id!==TEST_PRICE){
         throw Error('SANDBOX_SUBSCRIPTION_READBACK_INVALID');
       }
-      // Cancellation, dispute or incomplete billing cannot be fulfillment.
-      if(sub.status!=='active'){held++;paidHeld++;continue}
+      // Stripe pause_collection leaves status='active' while future invoices
+      // are not collected. Do not mistake paused billing for an ongoing paid
+      // subscription or expose its profile in the private NO_SEND handoff.
+      if(sub.status!=='active'||sub.pause_collection!=null){
+        held++;paidHeld++;continue
+      }
+      if(!checkoutFieldsMatchLink(session.custom_fields,link.custom_fields)){
+        throw Error('SANDBOX_CHECKOUT_PREFERENCE_FIELDS_INVALID');
+      }
       const profile=stripe.profileFromCheckout({
         session,subscription:sub,expectedPaymentLink:TEST_LINK,
         expectedPriceId:TEST_PRICE
@@ -100,6 +158,22 @@ async function snapshot({key,fetchImpl=fetch}={}){
         throw Error('SANDBOX_PAID_PROFILE_REVIEW_REQUIRED');
       }
       eligible++;
+      if(privateMode){
+        const row=stripe.toPrivateSheetRow(profile);
+        privateRecords.push({
+          environment:'STRIPE_TEST_ONLY',
+          checkoutSessionId:profile.checkoutSessionId,
+          subscriptionId:profile.subscriptionId,
+          idempotencyKey:stripe.sha256(stripe.stableStringify({
+            checkoutSessionId:profile.checkoutSessionId,
+            subscriptionId:profile.subscriptionId,
+            profileFingerprint:profile.profileFingerprint
+          })),
+          privateSheetRow:row,
+          state:'PENDING_FOUNDER_REVIEW',
+          transportAllowed:false,ownerAuthorizationGranted:false
+        });
+      }
     }
     if(listing.has_more===false){complete=true;break}
     if(listing.data.length===0)throw Error('SANDBOX_PAGE_CURSOR_MISSING');
@@ -108,7 +182,7 @@ async function snapshot({key,fetchImpl=fetch}={}){
   if(!complete)throw Error('SANDBOX_PAGE_LIMIT_EXCEEDED');
   // Deliberately no full Session/Subscription objects, PII, persistence, send,
   // charge or customer-authority return values. This is diagnostic only.
-  return {
+  const summary={
     environment:'STRIPE_TEST_ONLY',readOnly:true,linkVerified:true,
     priceVerified:true,providerPagesComplete:true,
     completedSessionCount:seenSessions.size,paidSessionCount:paid,
@@ -117,7 +191,24 @@ async function snapshot({key,fetchImpl=fetch}={}){
     // Even if another paid checkout qualifies, a paid-but-inactive subscription
     // must not be silently hidden behind an overall accepted receipt.
     status:paidHeld?'PAID_CHECKOUT_REVIEW_REQUIRED':
+      held?'CHECKOUT_REVIEW_REQUIRED':
       eligible?'PROFILE_SOURCE_ACCEPTED_NO_SEND':'NO_ELIGIBLE_HOSTED_TEST_CHECKOUT'
   };
+  if(!privateMode)return summary;
+  // No partial private association when *any* completed checkout is on hold.
+  // A zero-session read is NOT an end-to-end sandbox fulfillment receipt.
+  const safe=paid>0&&eligible===paid&&held===0&&paidHeld===0;
+  return {
+    environment:'STRIPE_TEST_ONLY',readOnly:true,noSend:true,
+    status:safe?'PRIVATE_ASSOCIATION_READY_NO_SEND':
+      (held||paidHeld?'CHECKOUT_REVIEW_REQUIRED':'NO_COMPLETED_PAID_HOSTED_CHECKOUT'),
+    summary,privateAssociations:safe?privateRecords:[],
+    transportAllowed:false,ownerAuthorizationGranted:false,
+    externalSendCalls:0,paymentMutations:0
+  };
 }
-module.exports={TEST_LINK,TEST_PRICE,MAX_PAGES,priceValid,read,snapshot};
+function snapshot(options){return inspect(options,false)}
+// Private diagnostic only: returns source-bound in-memory handoffs, NO_SEND,
+// with no disk, email, entitlement, Stripe writes or customer provisioning.
+function privateNoSendHandoff(options){return inspect(options,true)}
+module.exports={TEST_LINK,TEST_PRICE,MAX_PAGES,priceValid,read,snapshot,privateNoSendHandoff};

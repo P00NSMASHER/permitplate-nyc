@@ -5,6 +5,9 @@ const profiles=require('./subscriber-profile');
 
 const STRIPE_SUBSCRIBER_ADAPTER_VERSION='PermitPlate-stripe-subscriber-v1.2.0';
 const PERMITPLATE_PAYMENT_LINK='plink_1UG3RUDPW8riWrxQpZwHExK2';
+// Canonical production paid-price contract for the known PermitPlate link.
+// An omitted caller expectation must NEVER mean every recurring Price is valid.
+const PERMITPLATE_PAID_PRICE='price_1UFjcWDPW8riWrxQhnrPX6nc';
 
 function stableStringify(value){
   if(Array.isArray(value)) return '['+value.map(stableStringify).join(',')+']';
@@ -70,9 +73,27 @@ function customerId(session,subscription){
   return text(fromSession||fromSub)||null;
 }
 function priceId(subscription){
-  const items=subscription&&subscription.items&&subscription.items.data||[];
-  if(items.length!==1) return null;
-  return text(items[0]&&items[0].price&&items[0].price.id)||null;
+  // Stripe's subscription items are paginated. One visible matching price
+  // cannot prove single-seat $79/month terms if there are unseen items or
+  // more than one unit. Require a complete one-item provider snapshot.
+  const list=subscription&&subscription.items;
+  if(list?.object!=='list'||list.has_more!==false||
+      !Array.isArray(list.data)||list.data.length!==1||
+      list.data[0]?.quantity!==1)return null;
+  return text(list.data[0]?.price?.id)||null;
+}
+// A paid status is not enough to prove this offer's $79 first payment:
+// Stripe permits discounted or tax-adjusted invoices on the same recurring
+// Price. Only a fully reconciled USD $79 base amount can create paid profiles.
+function validPaidFirstCheckoutAmount(session){
+  const s=session||{},total=s.amount_total,subtotal=s.amount_subtotal;
+  const details=s.total_details;
+  if(s.currency!=='usd'||!Number.isSafeInteger(total)||total<7900)return false;
+  if(details==null)return total===7900&&
+    (subtotal==null||subtotal===7900);
+  return subtotal===7900&&Number.isSafeInteger(details.amount_tax)&&
+    details.amount_tax>=0&&details.amount_discount===0&&
+    details.amount_shipping===0&&total===subtotal+details.amount_tax;
 }
 function recipientEmail(session){
   return text(
@@ -115,15 +136,41 @@ function checkoutSubscriptionContext(input){
   const subscription=data.subscription||
     (session.subscription&&typeof session.subscription==='object'?session.subscription:null);
   const failures=[];
+  const expectedLink=text(data.expectedPaymentLink||PERMITPLATE_PAYMENT_LINK);
+  // A paid subscription's Checkout and Subscription must come from the
+  // same Stripe environment. In actual provider readback both expose a
+  // boolean livemode; if either exposes one, require both and exact parity.
+  // The known production Payment Link cannot accept TEST-mode records.
+  // Historical fixture-only inputs without either flag remain unchanged.
+  const checkoutLive=session.livemode,subscriptionLive=subscription?.livemode;
+  if(checkoutLive!==undefined||subscriptionLive!==undefined){
+    if(typeof checkoutLive!=='boolean'||typeof subscriptionLive!=='boolean'||
+       checkoutLive!==subscriptionLive||
+       (expectedLink===PERMITPLATE_PAYMENT_LINK&&checkoutLive!==true)){
+      failures.push('STRIPE_ENVIRONMENT_MISMATCH');
+    }
+  }
 
+  // Never create a paid subscriber without an exact traceable Checkout ID.
+  // A completed/payment-confirmed snapshot is not source-bound if its primary
+  // provider identity is missing or is not a Stripe Checkout identifier.
+  if(!/^cs_[A-Za-z0-9_]+$/.test(text(session.id))){
+    failures.push('CHECKOUT_SESSION_ID_INVALID');
+  }
   if(session.object&&session.object!=='checkout.session') failures.push('CHECKOUT_OBJECT_INVALID');
   if(text(session.payment_link)!==text(data.expectedPaymentLink||PERMITPLATE_PAYMENT_LINK)){
     failures.push('PAYMENT_LINK_MISMATCH');
   }
   if(text(session.mode)!=='subscription') failures.push('CHECKOUT_MODE_NOT_SUBSCRIPTION');
   if(text(session.status)!=='complete') failures.push('CHECKOUT_NOT_COMPLETE');
-  if(!['paid','no_payment_required'].includes(text(session.payment_status))){
+  // Paid subscriber profiles must have a provider-confirmed paid Checkout.
+  // A completed Checkout with 'no_payment_required' can represent a zero-cost
+  // trial or discounted first invoice; supervised trials remain separate.
+  if(text(session.payment_status)!=='paid'){
     failures.push('CHECKOUT_PAYMENT_NOT_CONFIRMED');
+  }
+  if(!validPaidFirstCheckoutAmount(session)){
+    failures.push('CHECKOUT_FIRST_PAYMENT_AMOUNT_INVALID');
   }
   if(projectMarker(session,subscription)!=='permitplate_nyc') failures.push('PROJECT_MARKER_MISMATCH');
 
@@ -139,7 +186,15 @@ function checkoutSubscriptionContext(input){
   if(!baselineAt) failures.push('SUBSCRIPTION_CREATED_MISSING');
 
   const status=text(subscription&&subscription.status).toLowerCase();
-  if(!['active','trialing'].includes(status)) failures.push('SUBSCRIPTION_STATUS_NOT_ELIGIBLE');
+  // The $79 paid entitlement requires an active billing subscription.
+  // A subscription still in Stripe trialing state belongs in review even
+  // when its Checkout shows an initial paid amount; the supervised trial is
+  // separate from this recurring paid enrollment path.
+  if(status!=='active') failures.push('SUBSCRIPTION_STATUS_NOT_ELIGIBLE');
+  // Stripe may keep status='active' while pause_collection stops invoice
+  // collection. A past paid Checkout does not authorize new paid onboarding
+  // during paused billing, regardless of preference source.
+  if(subscription?.pause_collection!=null) failures.push('SUBSCRIPTION_COLLECTION_PAUSED');
 
   // Provider session and subscription must refer to the same paying customer.
   // A mismatch (or missing side) cannot authorize a paid onboarding profile.
@@ -156,9 +211,16 @@ function checkoutSubscriptionContext(input){
   const clientReferenceId=text(session.client_reference_id)||null;
 
   const actualPriceId=priceId(subscription);
-  const expectedPriceId=text(data.expectedPriceId);
+  const callerPriceId=text(data.expectedPriceId);
+  // Pin the known production Payment Link to its exact advertised Price even
+  // when a caller omits expectedPriceId. Test-only alternate links require
+  // an explicit expected Price and their own trusted provider readback.
+  const expectedPriceId=expectedLink===PERMITPLATE_PAYMENT_LINK?
+    PERMITPLATE_PAID_PRICE:callerPriceId;
   if(!actualPriceId) failures.push('PRICE_ID_MISSING');
-  if(expectedPriceId&&actualPriceId&&actualPriceId!==expectedPriceId){
+  if(!expectedPriceId) failures.push('PRICE_ID_EXPECTATION_MISSING');
+  if((callerPriceId&&callerPriceId!==expectedPriceId)||
+      (actualPriceId&&expectedPriceId&&actualPriceId!==expectedPriceId)){
     failures.push('PRICE_ID_MISMATCH');
   }
 
@@ -203,8 +265,29 @@ function profileFromPreferences(input){
 
   const categories=preferences.categories||
     (preferences.category?[preferences.category]:[]);
-  const boroughs=preferences.boroughs||preferences.territory||'ALL NYC';
+  const boroughs=preferences.boroughs||preferences.territory;
+  // The external paid receipt must explicitly supply the selected NYC
+  // territory. The generic profile normalizer intentionally defaults blank
+  // territories to all NYC, but that cannot replace paid buyer consent.
+  if(!profiles.parseList(boroughs).length){
+    return reviewResult({id:context.checkoutSessionId},context.subscriptionId,
+      ['PAID_TERRITORY_PREFERENCE_REQUIRED'],{
+        preferenceSource:text(data.preferenceSource)||null,
+        preferenceReceiptId:text(data.preferenceReceiptId)||null
+      });
+  }
   const starter=preferences.starterSnapshotEnabled===true;
+  // The advertised $79 paid plan allows up to ten signals per brief. The
+  // external-receipt path must never grant the general profile's 25-signal
+  // allowance; explicit over-limit values require founder review.
+  const maxSignals=preferences.maxSignals==null?10:Number(preferences.maxSignals);
+  if(!Number.isInteger(maxSignals)||maxSignals<1||maxSignals>10){
+    return reviewResult({id:context.checkoutSessionId},context.subscriptionId,
+      ['PAID_PLAN_MAX_SIGNALS_INVALID'],{
+        preferenceSource:text(data.preferenceSource)||null,
+        preferenceReceiptId:text(data.preferenceReceiptId)||null
+      });
+  }
 
   const normalized=profiles.normalizeProfile({
     subscriberId:context.subscriptionId,
@@ -216,7 +299,7 @@ function profileFromPreferences(input){
     starterSnapshotEnabled:starter,
     starterDays:preferences.starterDays==null?7:preferences.starterDays,
     starterLimit:preferences.starterLimit==null?10:preferences.starterLimit,
-    maxSignals:preferences.maxSignals==null?25:preferences.maxSignals,
+    maxSignals,
     subscriptionStatus:context.subscriptionStatus,
     stripeCustomerId:context.customerId,
     stripeSubscriptionId:context.subscriptionId,
@@ -234,6 +317,16 @@ function profileFromPreferences(input){
         preferenceReceiptId:text(data.preferenceReceiptId)||null
       }
     );
+  }
+
+  // Only a successfully normalized paid profile may be activated, and
+  // never without an explicit traceable buyer-preference receipt. Validate
+  // other invalid fields first so original independent failure diagnoses remain.
+  if(!text(data.preferenceReceiptId)){
+    return reviewResult({id:context.checkoutSessionId},context.subscriptionId,
+      ['PAID_PREFERENCE_RECEIPT_REQUIRED'],{
+        preferenceSource:text(data.preferenceSource)||null
+      });
   }
 
   const result={
@@ -264,6 +357,16 @@ function profileFromCheckout(input){
   const territory=normalizeCheckoutTerritory(territoryRaw);
   const starterRaw=customFieldValue(session,'starter');
   const failures=[];
+  // The direct fulfillment adapter must enforce the same unique three-field
+  // Checkout contract as the restricted TEST-only provider reader. Otherwise
+  // taking the first duplicate can activate a contradictory paid preference.
+  const required=['category','territory','starter'];
+  const fields=Array.isArray(session.custom_fields)?session.custom_fields:[];
+  if(fields.length!==required.length||!required.every(key=>
+    fields.filter(field=>text(field?.key)===key&&field?.type==='dropdown').length===1
+  )){
+    failures.push('CHECKOUT_REQUIRED_DROPDOWNS_INVALID');
+  }
   if(!category) failures.push('CATEGORY_CUSTOM_FIELD_MISSING');
   if(!territoryRaw) failures.push('TERRITORY_CUSTOM_FIELD_MISSING');
   else if(!territory) failures.push('TERRITORY_CUSTOM_FIELD_INVALID');
@@ -285,7 +388,9 @@ function profileFromCheckout(input){
       minimumScore:data.minimumScore==null?60:data.minimumScore,
       starterDays:7,
       starterLimit:10,
-      maxSignals:25
+      // Public $79/month customer contract promises up to ten signals/brief.
+      // A private Stripe handoff must not inherit the old 25-signal profile.
+      maxSignals:10
     },
     preferenceSource:'STRIPE_CUSTOM_FIELDS',
     preferenceReceiptId:text(session.id)
@@ -296,7 +401,6 @@ function profileFromCheckoutAndPreferences(input){
   const data=input||{};
   const context=checkoutSubscriptionContext(data);
   if(context.status!=='VALID_SUBSCRIPTION') return context;
-
   return profileFromPreferences({
     context,
     preferences:data.preferences||{},
@@ -343,6 +447,7 @@ module.exports={
   subscriptionId,
   customerId,
   priceId,
+  validPaidFirstCheckoutAmount,
   recipientEmail,
   projectMarker,
   checkoutSubscriptionContext,

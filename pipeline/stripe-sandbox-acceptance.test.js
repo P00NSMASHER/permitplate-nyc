@@ -27,6 +27,7 @@ const checkout={
   object:'checkout.session',id:SESSION,livemode:false,
   payment_link:sandbox.TEST_LINK,status:'complete',
   payment_status:'paid',mode:'subscription',
+  currency:'usd',amount_total:7900,
   customer:CUSTOMER,customer_details:{email:'synthetic@example.invalid'},
   metadata:{project:'permitplate_nyc'},
   subscription:SUB,custom_fields:[
@@ -37,7 +38,8 @@ const checkout={
 };
 const subscription={
   id:SUB,livemode:false,status:'active',customer:CUSTOMER,
-  created:1792400000,items:{data:[{price:{id:sandbox.TEST_PRICE}}]}
+  created:1792400000,items:{object:'list',has_more:false,
+    data:[{quantity:1,price:{id:sandbox.TEST_PRICE}}]}
 };
 function provider({linkValue=link,items=lineItems,sessions=[checkout],sub=subscription,
                   extraSubscriptions={},hasMore=false}={}){
@@ -91,6 +93,123 @@ async function run(){
   });
   assert.deepEqual(again,accepted); // deterministic no-write/readback
 
+  // The public diagnostic deliberately returns aggregates only. The separate
+  // private adapter must produce a deterministic, non-delivering association
+  // containing category + borough + starter and the exact provider identities.
+  const privateProvider=provider();
+  const privateResult=await sandbox.privateNoSendHandoff({
+    key:'rk_test_synthetic_fixture',fetchImpl:privateProvider.fetchImpl
+  });
+  assert.equal(privateResult.status,'PRIVATE_ASSOCIATION_READY_NO_SEND');
+  assert.equal(privateResult.privateAssociations.length,1);
+  assert.equal(privateResult.externalSendCalls,0);
+  assert.equal(privateResult.paymentMutations,0);
+  assert.equal(privateResult.transportAllowed,false);
+  assert.equal(privateResult.ownerAuthorizationGranted,false);
+  assert(privateProvider.calls.every(c=>c.method==='GET'));
+  const association=privateResult.privateAssociations[0];
+  assert.equal(association.checkoutSessionId,SESSION);
+  assert.equal(association.subscriptionId,SUB);
+  assert.equal(association.privateSheetRow.Email,'synthetic@example.invalid');
+  assert.equal(association.privateSheetRow.Categories,'Equipment');
+  assert.equal(association.privateSheetRow['Boroughs/Territory'],'Brooklyn');
+  assert.equal(association.privateSheetRow['Starter Snapshot Enabled'],true);
+  // Paid PermitPlate contract: up to 10 source-linked signals, not legacy 25.
+  assert.equal(association.privateSheetRow['Max Signals'],10,
+    'paid brief contracted maximum is 10; private handoff must not authorize 25');
+  assert.equal(association.state,'PENDING_FOUNDER_REVIEW');
+  assert.equal(association.transportAllowed,false);
+  assert.equal(association.ownerAuthorizationGranted,false);
+  const stablePrivate=await sandbox.privateNoSendHandoff({
+    key:'rk_test_synthetic_fixture',fetchImpl:provider().fetchImpl
+  });
+  assert.deepEqual(stablePrivate,privateResult); // idempotent re-read
+  assert.equal(Object.hasOwn(accepted,'privateAssociations'),false);
+  assert(!JSON.stringify(accepted).includes('synthetic@example.invalid'));
+  const noPrivate=await sandbox.privateNoSendHandoff({
+    key:'rk_test_synthetic_fixture',fetchImpl:provider({sessions:[]}).fetchImpl
+  });
+  assert.equal(noPrivate.status,'NO_COMPLETED_PAID_HOSTED_CHECKOUT');
+  assert.deepEqual(noPrivate.privateAssociations,[]);
+  const heldPrivate=await sandbox.privateNoSendHandoff({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sub:{...subscription,status:'canceled'}}).fetchImpl
+  });
+  assert.equal(heldPrivate.status,'CHECKOUT_REVIEW_REQUIRED');
+  assert.deepEqual(heldPrivate.privateAssociations,[]);
+  const mixedPrivate=await sandbox.privateNoSendHandoff({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sessions:[checkout,{...checkout,
+      id:'cs_test_sandbox_cancelled_second',
+      subscription:'sub_sandbox_cancelled_second',
+      customer:'cus_sandbox_cancelled_second'}],
+      extraSubscriptions:{sub_sandbox_cancelled_second:{...subscription,
+        id:'sub_sandbox_cancelled_second',
+        customer:'cus_sandbox_cancelled_second',status:'canceled'}}}).fetchImpl
+  });
+  assert.equal(mixedPrivate.status,'CHECKOUT_REVIEW_REQUIRED');
+  assert.deepEqual(mixedPrivate.privateAssociations,[]);
+
+  // Red-team provider readback: Stripe's offered dropdown choices are a
+  // source contract, not merely arbitrary canonical vendor categories.
+  // A duplicate or a selection absent from this exact Payment Link must hold.
+  const duplicateCategory={...checkout,custom_fields:[
+    ...checkout.custom_fields,
+    {key:'category',type:'dropdown',dropdown:{value:'insurance'}}
+  ]};
+  await assert.rejects(sandbox.privateNoSendHandoff({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sessions:[duplicateCategory]}).fetchImpl
+  }),/SANDBOX_CHECKOUT_PREFERENCE_FIELDS_INVALID/);
+  const categoryNotOffered={...checkout,custom_fields:
+    checkout.custom_fields.map(f=>f.key==='category'?
+      {...f,dropdown:{value:'pos'}}:f)};
+  await assert.rejects(sandbox.privateNoSendHandoff({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sessions:[categoryNotOffered]}).fetchImpl
+  }),/SANDBOX_CHECKOUT_PREFERENCE_FIELDS_INVALID/);
+
+  // Red-team: Stripe 'paid' is insufficient for the advertised USD $79
+  // monthly first payment if Checkout itself charged $0 or non-USD.
+  for(const altered of [
+    {...checkout,amount_total:0},
+    {...checkout,currency:'eur'},
+    {...checkout,amount_total:undefined},
+    {...checkout,currency:undefined}
+  ]){
+    await assert.rejects(sandbox.privateNoSendHandoff({
+      key:'rk_test_synthetic_fixture',
+      fetchImpl:provider({sessions:[altered]}).fetchImpl
+    }),/SANDBOX_CHECKOUT_AMOUNT_INVALID/);
+  }
+
+  // Billing integrity: the source link establishes one $79 monthly item.
+  // A completed paid Checkout must not silently associate a profile when its
+  // total includes unexplained surcharges. Explicit provider-reported tax on
+  // the $79 subtotal is acceptable; absent or contradictory breakdown is not.
+  const taxedCheckout={...checkout,amount_subtotal:7900,amount_total:8557,
+    total_details:{amount_tax:657,amount_discount:0,amount_shipping:0}};
+  for(const altered of [
+    {...checkout,amount_total:15800},
+    {...checkout,amount_total:7901},
+    {...checkout,amount_subtotal:15800,amount_total:15800,
+      total_details:{amount_tax:0,amount_discount:0,amount_shipping:0}},
+    {...taxedCheckout,total_details:{amount_tax:50,
+      amount_discount:0,amount_shipping:0}},
+    {...taxedCheckout,amount_subtotal:8000}
+  ]){
+    await assert.rejects(sandbox.privateNoSendHandoff({
+      key:'rk_test_synthetic_fixture',
+      fetchImpl:provider({sessions:[altered]}).fetchImpl
+    }),/SANDBOX_CHECKOUT_AMOUNT_INVALID/);
+  }
+  const taxAccepted=await sandbox.privateNoSendHandoff({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sessions:[taxedCheckout]}).fetchImpl
+  });
+  assert.equal(taxAccepted.status,'PRIVATE_ASSOCIATION_READY_NO_SEND');
+  assert.equal(taxAccepted.privateAssociations.length,1);
+
   const none=await sandbox.snapshot({
     key:'rk_test_synthetic_fixture',fetchImpl:provider({sessions:[]}).fetchImpl
   });
@@ -112,6 +231,24 @@ async function run(){
   assert.equal(canceled.heldCount,1);
   assert.equal(canceled.paidHeldCount,1);
   assert.equal(canceled.status,'PAID_CHECKOUT_REVIEW_REQUIRED');
+  // Stripe can pause collection while keeping subscription.status='active'.
+  // A prior paid Checkout must not silently validate a currently uncollected
+  // $79 monthly plan as a normal, ongoing paid subscription.
+  const pausedBilling={...subscription,
+    pause_collection:{behavior:'void',resumes_at:null}};
+  const paused=await sandbox.snapshot({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sub:pausedBilling}).fetchImpl
+  });
+  assert.equal(paused.status,'PAID_CHECKOUT_REVIEW_REQUIRED');
+  assert.equal(paused.paidHeldCount,1);
+  assert.equal(paused.eligibleProfileCount,0);
+  const pausedPrivate=await sandbox.privateNoSendHandoff({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sub:pausedBilling}).fetchImpl
+  });
+  assert.equal(pausedPrivate.status,'CHECKOUT_REVIEW_REQUIRED');
+  assert.deepEqual(pausedPrivate.privateAssociations,[]);
   // A valid paid profile must not mask another already-paid checkout whose
   // subscription was canceled before the readback. Hold the entire receipt.
   const heldSubId='sub_sandbox_cancelled_fixture';
@@ -130,12 +267,45 @@ async function run(){
   assert.equal(mixed.eligibleProfileCount,1);
   assert.equal(mixed.paidHeldCount,1);
   assert.equal(mixed.status,'PAID_CHECKOUT_REVIEW_REQUIRED');
+  // A completed but unpaid Checkout cannot hide behind a second paid,
+  // valid Checkout and produce a misleading accepted aggregate receipt.
+  const unpaidSession={...checkout,
+    id:'cs_test_sandbox_unpaid_second',
+    subscription:'sub_sandbox_unpaid_second',
+    customer:'cus_sandbox_unpaid_second',
+    payment_status:'unpaid'};
+  const mixedPayment=await sandbox.snapshot({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sessions:[checkout,unpaidSession]}).fetchImpl
+  });
+  assert.equal(mixedPayment.completedSessionCount,2);
+  assert.equal(mixedPayment.paidSessionCount,1);
+  assert.equal(mixedPayment.eligibleProfileCount,1);
+  assert.equal(mixedPayment.heldCount,1);
+  assert.equal(mixedPayment.status,'CHECKOUT_REVIEW_REQUIRED');
+  const unpaidOnly=await sandbox.snapshot({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sessions:[unpaidSession]}).fetchImpl
+  });
+  assert.equal(unpaidOnly.status,'CHECKOUT_REVIEW_REQUIRED');
+  const mixedPaymentPrivate=await sandbox.privateNoSendHandoff({
+    key:'rk_test_synthetic_fixture',
+    fetchImpl:provider({sessions:[checkout,unpaidSession]}).fetchImpl
+  });
+  assert.equal(mixedPaymentPrivate.status,'CHECKOUT_REVIEW_REQUIRED');
+  assert.deepEqual(mixedPaymentPrivate.privateAssociations,[]);
   assert.equal(mixed.externalSendCalls,0);
   assert.equal(mixed.paymentMutations,0);
   for(const sub of [
     {...subscription,customer:'cus_other'},
     {...subscription,livemode:true},
-    {...subscription,items:{data:[{price:{id:'price_other'}}]}}
+    // A subscription-items page with an unseen second price cannot be treated
+    // as a verified single $79/month line; neither can altered quantity.
+    {...subscription,items:{...subscription.items,has_more:true}},
+    {...subscription,items:{...subscription.items,
+      data:[{quantity:2,price:{id:sandbox.TEST_PRICE}}]}},
+    {...subscription,items:{...subscription.items,
+      data:[{quantity:1,price:{id:'price_other'}}]}}
   ]){
     await assert.rejects(sandbox.snapshot({
       key:'rk_test_synthetic_fixture',fetchImpl:provider({sub}).fetchImpl
@@ -149,7 +319,7 @@ async function run(){
   ]){
     await assert.rejects(sandbox.snapshot({
       key:'rk_test_synthetic_fixture',fetchImpl:provider({sessions:[bad]}).fetchImpl
-    }),/SANDBOX_(?:CHECKOUT_IDENTITY_INVALID|SUBSCRIPTION_LINK_INVALID|PAID_PROFILE_REVIEW_REQUIRED)/);
+    }),/SANDBOX_(?:CHECKOUT_IDENTITY_INVALID|SUBSCRIPTION_LINK_INVALID|PAID_PROFILE_REVIEW_REQUIRED|CHECKOUT_PREFERENCE_FIELDS_INVALID)/);
   }
   await assert.rejects(sandbox.snapshot({
     key:'rk_test_synthetic_fixture',

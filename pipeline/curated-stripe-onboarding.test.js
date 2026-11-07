@@ -15,6 +15,8 @@ function session(overrides={}){
     id:SESSION,object:'checkout.session',
     payment_link:stripe.PERMITPLATE_PAYMENT_LINK,
     status:'complete',payment_status:'paid',mode:'subscription',
+    currency:'usd',amount_subtotal:7900,amount_total:7900,
+    total_details:{amount_tax:0,amount_discount:0,amount_shipping:0},
     customer:'cus_permitplate_unit',
     customer_details:{email:'internal-buyer@example.com'},
     metadata:{project:'permitplate_nyc'},
@@ -30,7 +32,7 @@ function subscription(overrides={}){
   return {
     id:SUB,status:'active',customer:'cus_permitplate_unit',
     created:Date.parse(NOW)/1000,
-    items:{data:[{price:{id:adapter.EXPECTED_PRICE_ID}}]},
+    items:{object:'list',has_more:false,data:[{quantity:1,price:{id:adapter.EXPECTED_PRICE_ID}}]},
     ...overrides
   };
 }
@@ -86,6 +88,27 @@ assert.equal(repeated.created,0);
 assert.equal(repeated.totalSubscribers,1);
 assert.equal(repeated.ledger.subscriptions[SUB].firstDiscoveredAt,AFTER);
 
+// A previously paid subscriber must never remain pending as a verified paid
+ // intake when a completed provider readback has lost that paid Checkout.
+ // A reversal/partial page is a review condition, not a quiet READY ledger.
+const reversedPaidCheckout=adapter.processSnapshot({
+  checkedAt:'2026-10-20T16:15:00Z',complete:true,
+  previousLedger:repeated.ledger,
+  sessions:[session({payment_status:'unpaid'})],subscriptionById:{}
+});
+assert.equal(reversedPaidCheckout.status,'REVIEW',
+  'an unpaid reversal cannot preserve a previously accepted paid subscriber');
+assert(reversedPaidCheckout.failures.includes('STRIPE_TRACKED_CHECKOUT_NOT_PAID'));
+assert.equal(reversedPaidCheckout.ledger,undefined);
+const absentPriorCheckout=adapter.processSnapshot({
+  checkedAt:'2026-10-20T16:30:00Z',complete:true,
+  previousLedger:repeated.ledger,sessions:[],subscriptionById:{}
+});
+assert.equal(absentPriorCheckout.status,'REVIEW',
+  'a completed source snapshot cannot silently omit a recorded paid Checkout');
+assert(absentPriorCheckout.failures.includes('STRIPE_TRACKED_CHECKOUT_MISSING'));
+assert.equal(absentPriorCheckout.ledger,undefined);
+
 const stopped=adapter.processSnapshot({
   checkedAt:'2026-10-20T17:00:00Z',complete:true,
   previousLedger:repeated.ledger,
@@ -101,6 +124,46 @@ const resumed=adapter.processSnapshot({
   sessions:[session()],subscriptionById:{[SUB]:subscription()}
 });
 assert.equal(resumed.ledger.subscriptions[SUB].state,'PENDING_FOUNDER_REVIEW');
+
+// RED: Stripe can report payment_status=paid after a discounted $1 first
+// payment. It is not an independently paid $79 enrollment and must not
+// create a private paid-fulfillment profile under the published contract.
+const discountedFirstPayment=adapter.processSnapshot({
+  checkedAt:AFTER,complete:true,previousLedger:empty.ledger,
+  sessions:[session({currency:'usd',amount_subtotal:7900,amount_total:100,
+    total_details:{amount_tax:0,amount_discount:7800,amount_shipping:0}})],
+  subscriptionById:{[SUB]:subscription()}
+});
+assert.equal(discountedFirstPayment.status,'REVIEW',
+  'discounted $1 payment must not activate $79/month onboarding');
+assert(discountedFirstPayment.failures.includes('STRIPE_CHECKOUT_AMOUNT_INVALID'));
+assert.equal(discountedFirstPayment.ledger,undefined);
+const foreignCurrencyPayment=adapter.processSnapshot({
+  checkedAt:AFTER,complete:true,previousLedger:empty.ledger,
+  sessions:[session({currency:'eur',amount_subtotal:7900,amount_total:7900,
+    total_details:{amount_tax:0,amount_discount:0,amount_shipping:0}})],
+  subscriptionById:{[SUB]:subscription()}
+});
+assert.equal(foreignCurrencyPayment.status,'REVIEW',
+  'paid non-USD Checkout cannot establish USD $79 acceptance');
+assert(foreignCurrencyPayment.failures.includes('STRIPE_CHECKOUT_AMOUNT_INVALID'));
+assert.equal(foreignCurrencyPayment.ledger,undefined);
+
+const paidWithProviderTax=adapter.processSnapshot({
+  checkedAt:AFTER,complete:true,previousLedger:empty.ledger,
+  sessions:[session({amount_total:8300,
+    total_details:{amount_tax:400,amount_discount:0,amount_shipping:0}})],
+  subscriptionById:{[SUB]:subscription()}
+});
+assert.equal(paidWithProviderTax.status,'READY',
+  'legitimate Stripe-reported tax on $79 subtotal remains eligible');
+const missingTotal=adapter.processSnapshot({
+  checkedAt:AFTER,complete:true,previousLedger:empty.ledger,
+  sessions:[session({amount_total:undefined})],
+  subscriptionById:{[SUB]:subscription()}
+});
+assert.equal(missingTotal.status,'REVIEW');
+assert(missingTotal.failures.includes('STRIPE_CHECKOUT_AMOUNT_INVALID'));
 
 const wrongCustomer=adapter.processSnapshot({
   checkedAt:AFTER,complete:true,previousLedger:empty.ledger,

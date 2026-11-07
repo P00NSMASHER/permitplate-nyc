@@ -3,6 +3,9 @@
 const crypto=require('crypto');
 
 const SUBSCRIBER_PROFILE_VERSION='PermitPlate-subscriber-profile-v1.0.0';
+// This verified $79/month Stripe Price is entitled to at most 10 signals/brief.
+// Preserve the legacy 25-signal policy for profiles unrelated to this Price.
+const PERMITPLATE_PAID_PRICE='price_1UFjcWDPW8riWrxQhnrPX6nc';
 const CATEGORY_ORDER=Object.freeze([
   'POS','Insurance','Equipment','Hood/Fire','Waste','Pest','Linen','Distribution'
 ]);
@@ -113,7 +116,13 @@ function normalizeProfile(input){
   }
   if(!categories.length) failures.push('NO_VALID_CATEGORY');
 
+  const paidPermitPlate=text(data.priceId)===PERMITPLATE_PAID_PRICE;
   const requestedBoroughs=parseList(data.boroughs||data.territory);
+  // A known $79 paid buyer must explicitly authorize their territory.
+  // Only legacy/non-price-bound profiles retain the all-NYC default.
+  if(paidPermitPlate&&!requestedBoroughs.length){
+    failures.push('PAID_TERRITORY_PREFERENCE_REQUIRED');
+  }
   let boroughs;
   if(!requestedBoroughs.length){
     boroughs=BOROUGH_ORDER.slice();
@@ -134,7 +143,8 @@ function normalizeProfile(input){
   const starterSnapshotEnabled=parseBoolean(data.starterSnapshotEnabled,false);
   const starterDaysRaw=data.starterDays==null||data.starterDays===''?7:Number(data.starterDays);
   const starterLimitRaw=data.starterLimit==null||data.starterLimit===''?10:Number(data.starterLimit);
-  const maxSignalsRaw=data.maxSignals==null||data.maxSignals===''?25:Number(data.maxSignals);
+  const maxSignalsRaw=data.maxSignals==null||data.maxSignals===''?
+    (paidPermitPlate?10:25):Number(data.maxSignals);
   if(!Number.isInteger(starterDaysRaw)||starterDaysRaw<0||starterDaysRaw>7){
     failures.push('STARTER_DAYS_INVALID');
   }
@@ -144,8 +154,16 @@ function normalizeProfile(input){
   if(!Number.isInteger(maxSignalsRaw)||maxSignalsRaw<1||maxSignalsRaw>25){
     failures.push('MAX_SIGNALS_INVALID');
   }
+  if(paidPermitPlate&&Number.isInteger(maxSignalsRaw)&&maxSignalsRaw>10){
+    failures.push('PAID_PLAN_MAX_SIGNALS_INVALID');
+  }
 
   const subscriptionStatus=text(data.subscriptionStatus||data.status).toLowerCase();
+  // Missing or trialing billing state is not proof of an ACTIVE $79 paid plan.
+  // Legacy/non-price-bound profiles retain their historical defaults.
+  if(paidPermitPlate&&subscriptionStatus!=='active'){
+    failures.push('PAID_PLAN_ACTIVE_STATUS_REQUIRED');
+  }
   if(subscriptionStatus&&!['active','trialing','canary'].includes(subscriptionStatus)){
     failures.push('SUBSCRIPTION_STATUS_NOT_ELIGIBLE');
   }
@@ -204,7 +222,7 @@ function fromSheetRow(row){
     starterDays:r['Starter Days']??r.starterDays,
     starterLimit:r['Starter Limit']??r.starterLimit,
     maxSignals:r['Max Signals']??r.maxSignals,
-    subscriptionStatus:r.Status||r.status||'active',
+    subscriptionStatus:r.Status??r.status,
     stripeCustomerId:r['Stripe Customer']||r.stripeCustomerId,
     stripeSubscriptionId:r['Stripe Subscription']||r.stripeSubscriptionId,
     priceId:r['Price ID']||r.priceId,

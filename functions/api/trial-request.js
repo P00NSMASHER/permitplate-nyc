@@ -7,6 +7,9 @@ const TERRITORIES=new Set(['AllNYC','Manhattan','Brooklyn','Queens','Bronx','Sta
   'ManhattanBrooklynQueens','BrooklynStatenIsland']);
 const FIELDS=new Set(['businessName','website','email','category','territory','consent','fax']);
 const MAX_BYTES=2048,MAX_IP_REQUESTS=5,MAX_PENDING=150;
+// These path-based profile hosts serve many unrelated businesses under one
+// hostname. Domain-keyed UNIQUE intake cannot distinguish their pages.
+const SHARED_PROFILE_HOSTS=new Set(['sites.google.com','facebook.com','instagram.com','linktr.ee']);
 const DISALLOWED=/(?:^|\.)(?:localhost|local|localdomain|internal|lan|home|test|example|invalid|onion)$/;
 function reply(status,payload){return new Response(JSON.stringify(payload),{status,headers:{
   'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store,max-age=0',
@@ -77,9 +80,14 @@ async function ipBucket(ip,secret,now){
 }
 const enabled=env=>env?.TRIAL_INTAKE_ENABLED==='1'&&env?.TRIAL_REQUEST_DB&&
   typeof env?.TRIAL_INTAKE_RATE_SECRET==='string'&&env.TRIAL_INTAKE_RATE_SECRET.length>=32;
+// This is a configuration check, NOT a D1 availability test. The shared D1
+// rows-read budget may already be exhausted even when all bindings are present.
+// Keep this endpoint zero-read and never label storage as operational without
+// an authenticated provider readback. A POST is the only intake receipt.
 export async function onRequestGet({env}){
   const yes=enabled(env);
-  return reply(yes?200:503,{status:yes?'REQUEST_INTAKE_READY':'REQUEST_INTAKE_UNAVAILABLE'});
+  return reply(yes?200:503,{status:yes?'REQUEST_INTAKE_CONFIGURED_UNVERIFIED':'REQUEST_INTAKE_UNAVAILABLE',
+    storageVerified:false});
 }
 export async function onRequestPost({request,env}){
   if(!enabled(env))return denied(503,'TEMPORARILY_UNAVAILABLE','Online requests are temporarily unavailable. Please use email.');
@@ -96,6 +104,16 @@ export async function onRequestPost({request,env}){
     'Please check the business, website, contact email and territory.');}
   // Never show a genuine receipt when a bot-trap field prevented storage.
   if(data.spam)return denied(400,'REQUEST_NOT_ACCEPTED','Please review the request fields.');
+  // Facebook, Instagram, Linktree and Google Sites can host unrelated
+  // vendors under separate page paths on the same domain or mobile aliases.
+  // Use an exact hostname or dot-delimited subdomain match (not a loose substring).
+  // Domain-keyed D1
+  // deduplication cannot acknowledge one without risking silently losing
+  // another. Fail closed to manual intake before touching production D1.
+  if([...SHARED_PROFILE_HOSTS].some(host=>
+    data.businessDomain===host||data.businessDomain.endsWith('.'+host)))
+    return denied(503,'SHARED_HOST_MANUAL_REVIEW',
+      'Shared-host business websites require manual review. Please use the email request option.');
   try{
     const db=env.TRIAL_REQUEST_DB,now=Date.now(),expires=now+86400000;
     const bucket=await ipBucket(ip,env.TRIAL_INTAKE_RATE_SECRET,now);
@@ -137,6 +155,21 @@ export async function onRequestPost({request,env}){
         return denied(503,'STORAGE_UNAVAILABLE','We could not confirm receipt. Please use email.');
       if(latest.count>=MAX_PENDING)
         return denied(503,'MANUAL_REVIEW_QUEUE_FULL','Online requests are paused. Please use email.');
+      // INSERT OR IGNORE also suppresses non-duplicate SQLite constraints.
+      // A zero-change insert proves nothing about a buyer's request unless
+      // the exact domain was already recorded. Check the UNIQUE-indexed key;
+      // never emit a success receipt for an unrecorded, ignored request.
+      const existing=await db.prepare(
+        'SELECT 1 AS existing, status FROM trial_intake_requests WHERE business_domain=?1 LIMIT 1'
+      ).bind(data.businessDomain).first();
+      if(existing?.existing!==1)
+        return denied(503,'STORAGE_UNAVAILABLE','We could not confirm receipt. Please use email.');
+      // A terminal request can no longer be promised a fresh pending review.
+      // Never rewrite or reopen declined/completed history from public input.
+      // The fallback reveals no prior applicant identity or decision status.
+      if(!['PENDING','REVIEWING'].includes(existing.status))
+        return denied(503,'REQUEST_MANUAL_REVIEW_REQUIRED',
+          'We could not confirm a new request. Please use email.');
     }
     // Duplicates intentionally share one neutral acknowledgment. Never reveal who applied.
     return reply(202,{status:'RECEIVED_FOR_REVIEW',

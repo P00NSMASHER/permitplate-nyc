@@ -64,6 +64,19 @@ function firstBriefBusinessDate(createdAt){
   }
   return cursor.toISOString().slice(0,10);
 }
+// Binding a $79 recurring Price ID is not proof of the first Checkout total.
+// Paid discounted/non-USD sessions require founder reconciliation, not an
+// automatic paid onboarding receipt. Explicit Stripe tax on $79 is allowed.
+function paidFirstCheckoutAmountValid(session){
+  const s=session||{},total=s.amount_total,subtotal=s.amount_subtotal;
+  const details=s.total_details;
+  if(s.currency!=='usd'||!Number.isSafeInteger(total)||total<7900)return false;
+  if(details==null)return total===7900&&
+    (subtotal==null||subtotal===7900);
+  return subtotal===7900&&Number.isSafeInteger(details.amount_tax)&&
+    details.amount_tax>=0&&details.amount_discount===0&&
+    details.amount_shipping===0&&total===subtotal+details.amount_tax;
+}
 function emptyLedger(now){
   if(!iso(now))throw Error('INTAKE_TIMESTAMP_INVALID');
   return seal({version:VERSION,initializedAt:now,checkedAt:now,subscriptions:{}});
@@ -97,6 +110,10 @@ function processSnapshot(input){
   }
   if(failures.length)return {status:'REVIEW',failures:[...new Set(failures)]};
   const entries=structuredClone(previous.subscriptions),seenSessionIds=new Set();
+  // Every previously accepted paid Checkout must remain in a COMPLETE
+  // provider snapshot; otherwise a reversed/omitted payment can retain an
+  // apparently pending paid subscriber without fresh authorization evidence.
+  const recordedCheckoutIds=new Set(Object.values(entries).map(x=>x.checkoutSessionId));
   let accepted=0,skipped=0,held=0,created=0;
   for(const session of data.sessions){
     if(!session||!String(session.id||'').startsWith('cs_')||
@@ -107,7 +124,13 @@ function processSnapshot(input){
     seenSessionIds.add(session.id);
     if(session.status!=='complete'){skipped++;continue}
     if(session.payment_status!=='paid'){
+      if(recordedCheckoutIds.has(session.id)){
+        failures.push('STRIPE_TRACKED_CHECKOUT_NOT_PAID');
+      }
       held++;continue;
+    }
+    if(!paidFirstCheckoutAmountValid(session)){
+      failures.push('STRIPE_CHECKOUT_AMOUNT_INVALID');continue;
     }
     const subId=typeof session.subscription==='string'?session.subscription:
       session.subscription?.id;
@@ -168,6 +191,9 @@ function processSnapshot(input){
       created++;
     }
     accepted++;
+  }
+  for(const id of recordedCheckoutIds){
+    if(!seenSessionIds.has(id))failures.push('STRIPE_TRACKED_CHECKOUT_MISSING');
   }
   if(failures.length)return {status:'REVIEW',failures:[...new Set(failures)]};
   const ledger=seal({
