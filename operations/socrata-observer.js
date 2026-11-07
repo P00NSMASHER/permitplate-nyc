@@ -104,6 +104,28 @@ async function readResponse(response) {
   return {text, json};
 }
 
+// Only retry idempotent source reads for transient upstream/network failures.
+// No redirects, credential failures, schema errors or count mismatches are retried.
+const RETRY_DELAYS_MS = Object.freeze([250, 750]);
+const RETRYABLE_SOURCE_STATUSES = new Set([429, 500, 502, 503, 504]);
+
+async function fetchReadWithRetry(fetchImpl, url, options, sleepFn) {
+  const sleep = sleepFn || ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
+  if (options?.method && String(options.method).toUpperCase() !== 'GET') {
+    throw new Error('Socrata retries are allowed only for GET reads');
+  }
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      const response = await fetchImpl(url, options);
+      if (!RETRYABLE_SOURCE_STATUSES.has(response?.status) ||
+          attempt === RETRY_DELAYS_MS.length) return response;
+    } catch (error) {
+      if (!(error instanceof TypeError) || attempt === RETRY_DELAYS_MS.length) throw error;
+    }
+    await sleep(RETRY_DELAYS_MS[attempt]);
+  }
+}
+
 function baseReceipt(source, scope, options, observedAt) {
   const normalizedScope = normalizeScope(scope);
   const fingerprint = queryFingerprint(source, normalizedScope);
@@ -171,13 +193,12 @@ async function observeSocrataQuery(source, scope, options) {
   const observedAt = new Date(observedAtMs).toISOString();
   const receipt = baseReceipt(source, scope, {pageSize, maxRows}, observedAt);
   const headers = fetchHeaders(o.appToken);
+  const request = (url) => fetchReadWithRetry(fetchImpl, url,
+    {headers, redirect: 'manual'}, o.sleepFn);
 
   let metadata;
   try {
-    const metadataResponse = await fetchImpl(
-      `https://${source.domain}/api/views/${source.datasetId}`,
-      {headers, redirect: 'manual'}
-    );
+    const metadataResponse = await request(`https://${source.domain}/api/views/${source.datasetId}`);
     if (metadataResponse.status >= 300 && metadataResponse.status < 400) {
       const moved = movedReceipt(receipt, metadataResponse);
       return {records: [], receipt: moved, classification: model.classifySourceObservation(moved)};
@@ -211,7 +232,7 @@ async function observeSocrataQuery(source, scope, options) {
 
   let publisherCount;
   try {
-    const countResponse = await fetchImpl(buildResourceUrl(source, countParams), {headers, redirect: 'manual'});
+    const countResponse = await request(buildResourceUrl(source, countParams));
     if (countResponse.status >= 300 && countResponse.status < 400) {
       const moved = movedReceipt(receipt, countResponse);
       return {records: [], receipt: moved, classification: model.classifySourceObservation(moved)};
@@ -244,7 +265,7 @@ async function observeSocrataQuery(source, scope, options) {
     if (normalized.order) emptyParams['$order'] = normalized.order;
 
     try {
-      const emptyResponse = await fetchImpl(buildResourceUrl(source, emptyParams), {headers, redirect: 'manual'});
+      const emptyResponse = await request(buildResourceUrl(source, emptyParams));
       if (emptyResponse.status >= 300 && emptyResponse.status < 400) {
         const moved = movedReceipt(receipt, emptyResponse);
         return {records: [], receipt: moved, classification: model.classifySourceObservation(moved)};
@@ -283,7 +304,7 @@ async function observeSocrataQuery(source, scope, options) {
 
     let pageResponse;
     try {
-      pageResponse = await fetchImpl(buildResourceUrl(source, params), {headers, redirect: 'manual'});
+      pageResponse = await request(buildResourceUrl(source, params));
       if (pageResponse.status >= 300 && pageResponse.status < 400) {
         movedReceipt(receipt, pageResponse);
         receipt.fetchedCount = records.length;
@@ -338,5 +359,6 @@ module.exports = {
   metadataUpdatedAt,
   isFresh,
   buildResourceUrl,
-  observeSocrataQuery
+  observeSocrataQuery,
+  fetchReadWithRetry
 };
