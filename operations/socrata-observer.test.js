@@ -248,6 +248,86 @@ const META = {
     assert.equal(result.classification.supportsAbsenceConclusion, false);
   }
 
+
+  // November 6 production DOB: the metadata and count succeeded, but the
+  // first data-page fetch returned HTTP 503. A bounded read-only retry can
+  // recover a genuinely complete source without inventing missing records.
+  {
+    const source = getSource('DOB');
+    const requests = {metadata:0, count:0, page:0};
+    const delays = [];
+    const fetchImpl = mockFetch((url) => {
+      if (url.pathname.includes('/api/views/')) {
+        requests.metadata++;
+        return requests.metadata === 1 ? response(503, {}) : response(200, META);
+      }
+      if (url.searchParams.get('$select') === 'count(*)') {
+        requests.count++;
+        return requests.count === 1 ? response(429, {}) : response(200, [{count:'2'}]);
+      }
+      requests.page++;
+      assert.equal(url.searchParams.get('$limit'), '2');
+      assert.equal(url.searchParams.get('$offset'), '0');
+      return requests.page === 1 ? response(503, {}) : response(200, [{id:'1'}, {id:'2'}]);
+    });
+    const result = await observeSocrataQuery(source, {order:'job_filing_number ASC'}, {
+      fetchImpl, nowMs:NOW, pageSize:2, maxRows:10,
+      sleepFn:async ms => delays.push(ms)
+    });
+    assert.deepEqual(requests, {metadata:2, count:2, page:2});
+    assert.deepEqual(delays, [250, 250, 250]);
+    assert.deepEqual(result.records, [{id:'1'}, {id:'2'}]);
+    assert.equal(result.receipt.publisherCount, 2);
+    assert.equal(result.receipt.cursorClosed, true);
+    assert.equal(result.receipt.rawPageHashes.length, 2, 'no failed response is counted as evidence');
+    assert.equal(result.classification.state, 'COMPLETE_NONEMPTY');
+    assert.equal(result.classification.supportsAbsenceConclusion, true);
+  }
+
+  // Persistent 503 is never upgraded to a complete receipt.
+  {
+    const source = getSource('DOB');
+    let attempts = 0;
+    const delays = [];
+    const fetchImpl = mockFetch((url) => {
+      if (url.pathname.includes('/api/views/')) return response(200, META);
+      if (url.searchParams.get('$select') === 'count(*)') return response(200, [{count:'2'}]);
+      attempts++;
+      return response(503, {});
+    });
+    const result = await observeSocrataQuery(source, {}, {
+      fetchImpl, nowMs:NOW, pageSize:2, maxRows:10,
+      sleepFn:async ms => delays.push(ms)
+    });
+    assert.equal(attempts, 3, 'only two additional GET attempts permitted');
+    assert.deepEqual(delays, [250, 750]);
+    assert.equal(result.receipt.httpStatus, 503);
+    assert.equal(result.receipt.transportOk, false);
+    assert.equal(result.receipt.cursorClosed, false);
+    assert.equal(result.records.length, 0);
+    assert.equal(result.classification.state, 'SOURCE_UNAVAILABLE');
+    assert.equal(result.classification.supportsAbsenceConclusion, false);
+  }
+
+  // Authorization errors must fail closed immediately, without repeated calls.
+  {
+    const source = getSource('DOB');
+    let attempts = 0;
+    const fetchImpl = mockFetch((url) => {
+      if (url.pathname.includes('/api/views/')) return response(200, META);
+      if (url.searchParams.get('$select') === 'count(*)') return response(200, [{count:'1'}]);
+      attempts++;
+      return response(403, {});
+    });
+    const result = await observeSocrataQuery(source, {}, {
+      fetchImpl, nowMs:NOW, pageSize:2, maxRows:10,
+      sleepFn:async () => { throw Error('403 must not be retried'); }
+    });
+    assert.equal(attempts, 1);
+    assert.equal(result.receipt.httpStatus, 403);
+    assert.equal(result.classification.supportsAbsenceConclusion, false);
+  }
+
   console.log('PermitPlate Socrata observer regression tests passed.');
 })().catch((error) => {
   console.error(error);
