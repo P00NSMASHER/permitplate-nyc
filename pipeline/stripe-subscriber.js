@@ -136,6 +136,20 @@ function checkoutSubscriptionContext(input){
   const subscription=data.subscription||
     (session.subscription&&typeof session.subscription==='object'?session.subscription:null);
   const failures=[];
+  const expectedLink=text(data.expectedPaymentLink||PERMITPLATE_PAYMENT_LINK);
+  // A paid subscription's Checkout and Subscription must come from the
+  // same Stripe environment. In actual provider readback both expose a
+  // boolean livemode; if either exposes one, require both and exact parity.
+  // The known production Payment Link cannot accept TEST-mode records.
+  // Historical fixture-only inputs without either flag remain unchanged.
+  const checkoutLive=session.livemode,subscriptionLive=subscription?.livemode;
+  if(checkoutLive!==undefined||subscriptionLive!==undefined){
+    if(typeof checkoutLive!=='boolean'||typeof subscriptionLive!=='boolean'||
+       checkoutLive!==subscriptionLive||
+       (expectedLink===PERMITPLATE_PAYMENT_LINK&&checkoutLive!==true)){
+      failures.push('STRIPE_ENVIRONMENT_MISMATCH');
+    }
+  }
 
   // Never create a paid subscriber without an exact traceable Checkout ID.
   // A completed/payment-confirmed snapshot is not source-bound if its primary
@@ -197,7 +211,6 @@ function checkoutSubscriptionContext(input){
   const clientReferenceId=text(session.client_reference_id)||null;
 
   const actualPriceId=priceId(subscription);
-  const expectedLink=text(data.expectedPaymentLink||PERMITPLATE_PAYMENT_LINK);
   const callerPriceId=text(data.expectedPriceId);
   // Pin the known production Payment Link to its exact advertised Price even
   // when a caller omits expectedPriceId. Test-only alternate links require
