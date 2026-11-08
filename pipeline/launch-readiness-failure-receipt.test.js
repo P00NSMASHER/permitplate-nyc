@@ -40,6 +40,7 @@ try {
     {message:'EXTERNAL_LAUNCH_PAYMENT_LINK_INVALID\n'+secret},
     null,
     new Error('EXTERNAL_LAUNCH_'+secret),
+    new Error('EXTERNAL_LAUNCH_SECRET_ABC123'),
   ]){
     const generic=runner.writeFailedLaunchReceipt(file,input);
     const text=fs.readFileSync(file,'utf8');
@@ -48,6 +49,10 @@ try {
     assert.equal(runner.shouldFailJob(generic),true);
     assert(!text.includes(secret));
   }
+  const knownHttp=runner.failedLaunchReceipt(new Error('EXTERNAL_LAUNCH_STRIPE_HTTP_403'));
+  assert.equal(knownHttp.failureCode,'EXTERNAL_LAUNCH_STRIPE_HTTP_403');
+  const bogusHttp=runner.failedLaunchReceipt(new Error('EXTERNAL_LAUNCH_STRIPE_HTTP_999'));
+  assert.equal(bogusHttp.failureCode,'LAUNCH_READINESS_EVALUATION_FAILED');
   assert.equal(fs.readFileSync(file,'utf8').endsWith('\n'),true);
 } finally {
   fs.rmSync(root,{recursive:true,force:true});
