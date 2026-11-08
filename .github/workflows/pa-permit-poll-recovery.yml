@@ -12,17 +12,45 @@ on:
       - '.github/workflows/pa-permit-poll-recovery.yml'
       - 'pipeline/pa-permit-poll-recovery.py'
       - 'tests/test_pa_permit_poll_recovery.py'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/pa-permit-poll-recovery.yml'
+      - 'pipeline/pa-permit-poll-recovery.py'
+      - 'tests/test_pa_permit_poll_recovery.py'
 
+# No PR can request a workflow dispatch or read a Stripe credential.
 permissions:
   contents: read
-  actions: write
 
 concurrency:
   group: permitplate-pa-provider-stale-recovery
   cancel-in-progress: false
 
 jobs:
+  recovery-policy:
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Check out immutable candidate without credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Use pinned Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Prove bounded first-party poll recovery and adverse cases
+        run: python -m unittest discover -s tests -p 'test_pa_permit_poll_recovery.py' -v
+
   recover:
+    permissions:
+      contents: read
+      actions: write
     if: >-
       vars.PERMITPLATE_PA_ORDER_INTAKE_ENABLED == 'true' &&
       github.ref == 'refs/heads/main' &&
