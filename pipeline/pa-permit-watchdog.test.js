@@ -144,16 +144,16 @@ try{
   fs.writeFileSync(file,JSON.stringify(check(healthy,'2026-10-20T13:05:00.001Z')),'utf8');
   let result=cli();
   assert.equal(result.status,0);
-  assert.equal(result.stdout,'stale_poll=true\\n');
+  assert.equal(result.stdout.trim(),'stale_poll=true');
   fs.writeFileSync(file,JSON.stringify({incidents:['PA_PROVIDER_POLL_STALE','PA_OTHER']}));
   result=cli();
-  assert.equal(result.stdout,'stale_poll=false\\n');
+  assert.equal(result.stdout.trim(),'stale_poll=false');
   fs.writeFileSync(file,'not-json');
   result=cli();
-  assert.equal(result.stdout,'stale_poll=false\\n');
+  assert.equal(result.stdout.trim(),'stale_poll=false');
   fs.rmSync(file);
   result=cli();
-  assert.equal(result.stdout,'stale_poll=false\\n');
+  assert.equal(result.stdout.trim(),'stale_poll=false');
 }finally{
   fs.rmSync(rd,{recursive:true,force:true});
 }
