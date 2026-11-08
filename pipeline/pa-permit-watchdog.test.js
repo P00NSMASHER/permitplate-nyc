@@ -4,6 +4,7 @@ const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const cp=require('node:child_process');
 const core=require('./pa-permit-orders');
 const watchdog=require('./run-pa-permit-watchdog');
+const recovery=require('./pa-watchdog-stale-recovery');
 
 const INIT='2026-10-20T03:15:00.000Z';
 const SCANNED='2026-10-20T04:05:00.000Z';
@@ -34,6 +35,23 @@ x=check(healthy,'2026-10-20T04:00:00.000Z');
 assert(x.incidents.includes('PA_WATCHDOG_CLOCK_BEFORE_LAST_PROVIDER_READ'));
 x=check(healthy,'2026-10-20T13:05:00.001Z');
 assert(x.incidents.includes('PA_PROVIDER_POLL_STALE'));
+assert.equal(recovery.eligible(x),true,'exact stale-only report admits existing no-send intake');
+assert.equal(recovery.eligible(check()),false,'healthy heartbeat must not dispatch');
+assert.equal(recovery.eligible(check(healthy,NOW,false)),false,'disabled monitoring cannot dispatch');
+assert.equal(recovery.eligible({...x,incidents:['PA_PROVIDER_POLL_STALE','PA_PAID_ORDER_AWAITING_FIRST_HUMAN_REVIEW']}),false);
+for(const unsafe of [
+  {...x,customerContactActions:1},
+  {...x,paymentMutations:1},
+  {...x,customerIdentifyingFieldsEmitted:true},
+  {...x,automaticResendAllowed:true},
+  {...x,automaticRefundAllowed:true},
+  {...x,checkedAt:x.lastProviderCheckAt},
+  {...x,lastProviderCheckAt:'invalid'},
+  {...x,incidents:['PA_PRIVATE_ORDER_INTEGRITY_INVALID']},
+  {...x,state:'MONITORING_HEALTHY'},
+  null,
+])assert.equal(recovery.eligible(unsafe),false,'denial for unsafe or unverified recovery');
+
 x=check(null,NOW);
 assert(x.incidents.includes('PA_PRIVATE_ORDER_PAIR_MISSING'));
 x=check(healthy,NOW,true,null);
@@ -115,6 +133,30 @@ assert(x.incidents.includes('PA_PREVIOUSLY_PAID_CHECKOUT_REQUIRES_RECONCILIATION
 assert.equal(x.health.financialReconciliations,1);
 const all=Object.values(x.orderPhaseCounts).reduce((a,b)=>a+b,0);
 assert.equal(all,x.paidOrdersTotal);
+
+// Recovery classifier emits one fixed key and never reads customer fields.
+const rd=fs.mkdtempSync(path.join(os.tmpdir(),'pa-watchdog-recovery-'));
+try{
+  const file=path.join(rd,'health.json');
+  const cli=()=>cp.spawnSync(process.execPath,[
+    path.join(__dirname,'pa-watchdog-stale-recovery.js'),file
+  ],{encoding:'utf8'});
+  fs.writeFileSync(file,JSON.stringify(check(healthy,'2026-10-20T13:05:00.001Z')),'utf8');
+  let result=cli();
+  assert.equal(result.status,0);
+  assert.equal(result.stdout,'stale_poll=true\\n');
+  fs.writeFileSync(file,JSON.stringify({incidents:['PA_PROVIDER_POLL_STALE','PA_OTHER']}));
+  result=cli();
+  assert.equal(result.stdout,'stale_poll=false\\n');
+  fs.writeFileSync(file,'not-json');
+  result=cli();
+  assert.equal(result.stdout,'stale_poll=false\\n');
+  fs.rmSync(file);
+  result=cli();
+  assert.equal(result.stdout,'stale_poll=false\\n');
+}finally{
+  fs.rmSync(rd,{recursive:true,force:true});
+}
 
 // CLI: no private data may be copied into public Actions logs under any path.
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'pa-watchdog-fixture-'));
