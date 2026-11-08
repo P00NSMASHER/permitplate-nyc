@@ -7,7 +7,7 @@ const origin='https://permitplate.retallyrecovery.com';
 const source=fs.readFileSync(path.resolve(__dirname,'../functions/api/trial-request.js'),'utf8');
 const modulePromise=import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 class FakeD1 {
-  constructor(){this.rates=new Map();this.requests=new Map();this.calls=[];this.fail=false;}
+  constructor(){this.rates=new Map();this.requests=new Map();this.calls=[];this.fail=false;this.rateWrites=0;}
   prepare(sql){
     this.calls.push(sql);
     const db=this;
@@ -16,10 +16,16 @@ class FakeD1 {
         async first(){
           if(db.fail)throw Error('DB_FAILURE');
           if(sql.startsWith('INSERT INTO trial_intake_limits')){
-            const [bucket,expires,now]=params;
+            const [bucket,expires,now,max]=params;
             const existing=db.rates.get(bucket);
+            // Fake D1 models the SQL WHERE conflict-update guard. Missing
+            // WHERE means every rejected request still writes a D1 row.
+            if(existing&&existing.expires>now&&
+                sql.includes('WHERE expires_at<=?3 OR trial_intake_limits.attempts<?4')&&
+                existing.attempts>=max)return null;
             const attempts=existing&&existing.expires>now?existing.attempts+1:1;
             db.rates.set(bucket,{expires,attempts});
+            db.rateWrites++;
             return {attempts};
           }
           if(sql.includes('COUNT(*) AS count')){
@@ -195,6 +201,31 @@ test('pseudonymous per-IP rate limit rejects sixth daily request without storing
   assert.match(savedKey,/^[0-9a-f]{64}$/);
   assert(!savedKey.includes('198.51.100.41'));
 });
+test('exhausted per-IP trial quota does not keep writing D1 on rejected requests',async()=>{
+  const {onRequestPost}=await modulePromise,d=new FakeD1(),e=env(d);
+  const codes=[];
+  for(let i=0;i<55;i++){
+    const result=await onRequestPost({
+      request:request({...eligible,website:'https://trial-vendor-'+i+'.com',
+        businessName:'Fictional Trial Vendor '+i,
+        email:'contact'+i+'@trial-vendor.com'}),
+      env:e
+    });
+    codes.push(result.status);
+  }
+  assert.deepEqual(codes.slice(0,5),[202,202,202,202,202],
+    'the first five legitimate requests must still be admitted');
+  assert(codes.slice(5).every(code=>code===429),
+    'requests after the documented five-per-IP quota must be rejected');
+  assert.equal(d.requests.size,5,'rejects cannot consume a queue slot');
+  assert.equal(d.rateWrites,5,
+    '50 rejected attempts must not add 50 D1 writes after the five allowed requests');
+  assert.equal([...d.rates.values()][0].attempts,5,
+    'rejected attempts must not mutate the persisted rate counter');
+  assert(source.includes('WHERE expires_at<=?3 OR trial_intake_limits.attempts<?4'),
+    'the SQL conflict update must fail closed at quota before a write');
+});
+
 test('concurrent arrivals at 149 pending cannot overflow the 150-record operator queue',async()=>{
   const {onRequestPost}=await modulePromise,d=new FakeD1(),e=env(d);
   for(let i=0;i<149;i++)d.requests.set('existing-'+i+'.example.org',{status:'PENDING'});
