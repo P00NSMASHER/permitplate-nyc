@@ -121,8 +121,13 @@ export async function onRequestPost({request,env}){
       'INSERT INTO trial_intake_limits(bucket,attempts,expires_at) VALUES(?1,1,?2) '+
       'ON CONFLICT(bucket) DO UPDATE SET '+
       'attempts=CASE WHEN expires_at<=?3 THEN 1 ELSE attempts+1 END, '+
-      'expires_at=CASE WHEN expires_at<=?3 THEN ?2 ELSE expires_at END RETURNING attempts'
-    ).bind(bucket,expires,now).first();
+      'expires_at=CASE WHEN expires_at<=?3 THEN ?2 ELSE expires_at END '+
+      'WHERE expires_at<=?3 OR trial_intake_limits.attempts<?4 RETURNING attempts'
+    ).bind(bucket,expires,now,MAX_IP_REQUESTS).first();
+    // A conflict whose quota has been consumed returns no row without a D1
+    // update. Distinguish that expected rejection from storage failures.
+    if(ratelimit===null)return denied(429,'TRY_LATER',
+      'Too many requests from this connection. Please use email.');
     if(!ratelimit||!Number.isInteger(ratelimit.attempts))
       return denied(503,'STORAGE_UNAVAILABLE','We could not confirm receipt. Please use email.');
     if(ratelimit.attempts>MAX_IP_REQUESTS)
