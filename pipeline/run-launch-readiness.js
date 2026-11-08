@@ -168,8 +168,64 @@ async function main(){
   }
 }
 
+// A provider or private-state evaluation error previously prevented the job
+// from creating its requested JSON artifact. Preserve the nonzero exit and
+// record only an allowlisted failure code, never error.stack, response bodies,
+// customer rows, keys or unverified launch-readiness claims.
+const VERIFIED_LAUNCH_FAILURE_CODES=new Set([
+  'EXTERNAL_LAUNCH_PUBLIC_BOUNDARY_INVALID',
+  'EXTERNAL_LAUNCH_ENDPOINT_NOT_ALLOWED',
+  'EXTERNAL_LAUNCH_STRIPE_READ_CREDENTIAL_MISSING',
+  'EXTERNAL_LAUNCH_READ_TRANSPORT_FAILURE',
+  'EXTERNAL_LAUNCH_RESPONSE_TOO_LARGE',
+  'EXTERNAL_LAUNCH_READ_RESPONSE_INVALID',
+  'EXTERNAL_LAUNCH_JSON_INVALID',
+  'EXTERNAL_LAUNCH_SOURCE_SHA_REQUIRED',
+  'EXTERNAL_LAUNCH_PUBLIC_MANIFEST_INVALID',
+  'EXTERNAL_LAUNCH_TIMESTAMP_INVALID',
+  'EXTERNAL_LAUNCH_PAYMENT_LINK_INVALID',
+  'EXTERNAL_LAUNCH_CHECKOUT_PREFERENCES_INVALID',
+  'EXTERNAL_LAUNCH_PRICE_CONTRACT_INVALID',
+  'EXTERNAL_LAUNCH_CUSTOMER_PORTAL_INVALID',
+  'EXTERNAL_LAUNCH_PUBLIC_BUILD_IDENTITY_MISMATCH',
+  'EXTERNAL_LAUNCH_PUBLIC_MANIFEST_MISMATCH',
+  'EXTERNAL_LAUNCH_PUBLIC_BYTES_MISMATCH'
+]);
+function failedLaunchReceipt(error){
+  const raw=typeof error?.message==='string'?error.message:'';
+  const knownCode=VERIFIED_LAUNCH_FAILURE_CODES.has(raw)||
+    /^EXTERNAL_LAUNCH_(?:STRIPE|SITE)_HTTP_(?:0|[1-5][0-9]{2})$/.test(raw);
+  const failureCode=knownCode?raw:'LAUNCH_READINESS_EVALUATION_FAILED';
+  return {
+    runnerVersion:RUNNER_VERSION,
+    receiptKind:'FAIL_CLOSED_EVALUATION_ERROR',
+    observedAt:new Date().toISOString(),
+    launchState:'EVALUATION_FAILED',
+    internalReady:null,
+    firstCustomerOperationallyReady:false,
+    commerciallyProven:false,
+    externalEvidenceVerified:false,
+    failureCode
+  };
+}
+function writeFailedLaunchReceipt(outputPath,error){
+  const receipt=failedLaunchReceipt(error);
+  fs.writeFileSync(outputPath,JSON.stringify(receipt,null,2)+'\n');
+  return receipt;
+}
+
 if(require.main===module){
-  main().catch((error)=>{console.error(error);process.exit(1);});
+  main().catch(error=>{
+    const outputPath=process.argv[2]||
+      path.join(__dirname,'launch-readiness-result.json');
+    try {
+      const receipt=writeFailedLaunchReceipt(outputPath,error);
+      console.error('PERMITPLATE_LAUNCH_READINESS_BLOCKED: '+receipt.failureCode);
+    }catch{
+      console.error('PERMITPLATE_LAUNCH_READINESS_RECEIPT_WRITE_FAILED');
+    }
+    process.exitCode=1;
+  });
 }
 
 module.exports={
@@ -177,6 +233,8 @@ module.exports={
   readJson,
   promotionEvidenceFrom,
   shouldFailJob,
+  failedLaunchReceipt,
+  writeFailedLaunchReceipt,
   run
 };
 

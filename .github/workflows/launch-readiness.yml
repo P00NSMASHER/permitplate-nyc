@@ -95,6 +95,9 @@ jobs:
       - name: Verify read-only external evidence renewal offline
         run: node pipeline/refresh-launch-external-evidence.test.js
 
+      - name: Verify fail-closed launch receipt on provider rejection offline
+        run: node pipeline/launch-readiness-failure-receipt.test.js
+
   launch-readiness:
     needs: policy
     if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')) }}
