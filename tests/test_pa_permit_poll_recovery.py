@@ -13,9 +13,11 @@ SHA = "a" * 40
 NOW = dt.datetime(2026, 11, 8, 18, 5, tzinfo=dt.timezone.utc)
 
 def run(i, name, when, status="completed", conclusion="success",
-        event="schedule", branch="main", repo=REPO):
+        event="schedule", branch="main", repo=REPO, *,
+        updated=None, attempt=1):
     return {"id": i, "name": name, "status": status, "conclusion": conclusion,
-            "created_at": when, "head_branch": branch,
+            "created_at": when, "updated_at": updated or when,
+            "run_attempt": attempt, "head_branch": branch,
             "head_repository": {"full_name": repo}, "event": event}
 
 def event(name="push", trigger_id=None):
@@ -32,9 +34,12 @@ def history(runs):
 W = run(7, mod.WATCHDOG_NAME, "2026-11-08T17:03:00Z", conclusion="failure")
 PA_OLD = run(11, mod.INTAKE_NAME, "2026-11-08T07:53:00Z")
 
-def job_reader(_):
+def job_reader(run_id):
+    at = "2026-11-08T07:53:12Z" if run_id == 11 else "2026-11-08T15:35:12Z"
     return {"jobs": [{"name": "policy", "conclusion": "success", "status": "completed"},
-                     {"name": "intake", "conclusion": "success", "status": "completed"}]}
+                     {"name": "intake", "run_id": run_id, "run_attempt": 1,
+                      "completed_at": at, "conclusion": "success",
+                      "status": "completed"}]}
 
 def check(w=None, polls=None, *, kind="push", jobs=job_reader, trigger=None):
     return mod.decide(kind, trigger or event(kind), SHA,
@@ -59,6 +64,38 @@ class PaPollRecoveryTests(unittest.TestCase):
                                    {"name": "intake", "status": "completed",
                                     "conclusion": "skipped"}]}),
                          "RECOVER_MISSED_PROVIDER_POLL")
+
+    def test_old_workflow_created_at_cannot_hide_a_fresh_exact_job_rerun(self):
+        rerun = run(11, mod.INTAKE_NAME, "2026-11-08T07:53:00Z",
+                    updated="2026-11-08T18:00:45Z", attempt=2)
+        def completed_attempt(run_id):
+            return {"jobs": [{"name": "intake", "run_id": run_id,
+                             "run_attempt": 2, "status": "completed",
+                             "conclusion": "success",
+                             "completed_at": "2026-11-08T18:00:44Z"}]}
+        self.assertEqual(
+            check(polls=[rerun], jobs=completed_attempt),
+            "VERIFIED_PROVIDER_POLL_WITHIN_NINE_HOURS",
+        )
+        for broken in (
+            {"run_id": 999, "run_attempt": 2, "completed_at": "2026-11-08T18:00:44Z"},
+            {"run_id": 11, "run_attempt": 1, "completed_at": "2026-11-08T18:00:44Z"},
+            {"run_id": 11, "run_attempt": 2, "completed_at": "2026-11-08T07:53:12Z"},
+        ):
+            with self.subTest(broken=broken):
+                def forged(run_id):
+                    return {"jobs": [{"name": "intake", "run_id": broken["run_id"],
+                        "run_attempt": broken["run_attempt"], "status": "completed",
+                        "conclusion": "success",
+                        "completed_at": broken["completed_at"]}]}
+                self.assertEqual(check(polls=[rerun], jobs=forged),
+                                 "RECOVER_MISSED_PROVIDER_POLL")
+        def future(_):
+            return {"jobs": [{"name": "intake", "run_id": 11,
+                "run_attempt": 2, "status": "completed", "conclusion": "success",
+                "completed_at": "2026-11-08T18:06:00Z"}]}
+        with self.assertRaises(mod.RecoveryHold):
+            check(polls=[rerun], jobs=future)
 
     def test_pending_poll_or_recent_recovery_is_not_duplicated(self):
         pending = run(13, mod.INTAKE_NAME, "2026-11-08T17:55:00Z",
