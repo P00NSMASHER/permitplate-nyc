@@ -102,21 +102,36 @@ def decide(event, trigger, source_sha, watch_doc, intake_doc, now, job_reader):
 
     # A green workflow badge can be policy-only: verify the actual authenticated
     # read-only intake job before treating a provider poll as fresh.
+    # A GitHub re-run retains the ORIGINAL workflow created_at even when the
+    # actual provider GET-only intake job completed minutes ago. Inspect the
+    # exact latest-attempt job completion, never a green parent run timestamp.
     recent_green = [r for r in eligible if r["status"] == "completed"
                     and r.get("conclusion") == "success"
-                    and now - stamp(r["created_at"]) <= PROVIDER_AGE]
+                    and now >= stamp(r.get("updated_at") or r["created_at"])
+                    and now - stamp(r.get("updated_at") or r["created_at"]) <= PROVIDER_AGE]
+    recent_green.sort(key=lambda r: stamp(
+        r.get("updated_at") or r["created_at"]), reverse=True)
     for r in recent_green[:8]:
         payload = job_reader(r["id"])
         jobs = payload.get("jobs") if isinstance(payload, dict) else None
         if not isinstance(jobs, list):
             raise RecoveryHold("Cannot attest actual provider intake job")
+        attempt = r.get("run_attempt")
+        if type(attempt) is not int or attempt < 1:
+            raise RecoveryHold("Provider run attempt identity missing")
         proofs = [j for j in jobs if j.get("name") == "intake"
                   and j.get("status") == "completed"
-                  and j.get("conclusion") == "success"]
-        if len(proofs) == 1:
-            return "VERIFIED_PROVIDER_POLL_WITHIN_NINE_HOURS"
+                  and j.get("conclusion") == "success"
+                  and j.get("run_id") == r["id"]
+                  and j.get("run_attempt") == attempt]
         if len(proofs) > 1:
             raise RecoveryHold("Ambiguous provider intake proof")
+        if len(proofs) == 1:
+            completed = stamp(proofs[0].get("completed_at"))
+            if completed > now or completed < stamp(r["created_at"]):
+                raise RecoveryHold("Invalid exact provider job completion clock")
+            if now - completed <= PROVIDER_AGE:
+                return "VERIFIED_PROVIDER_POLL_WITHIN_NINE_HOURS"
     return "RECOVER_MISSED_PROVIDER_POLL"
 
 def gh_jobs(run_id):
