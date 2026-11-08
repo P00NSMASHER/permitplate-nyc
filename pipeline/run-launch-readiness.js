@@ -168,8 +168,44 @@ async function main(){
   }
 }
 
+// A provider or private-state evaluation error previously prevented the job
+// from creating its requested JSON artifact. Preserve the nonzero exit and
+// record only an allowlisted failure code, never error.stack, response bodies,
+// customer rows, keys or unverified launch-readiness claims.
+function failedLaunchReceipt(error){
+  const raw=typeof error?.message==='string'?error.message:'';
+  const failureCode=/^EXTERNAL_LAUNCH_[A-Z0-9_]{1,96}$/.test(raw)
+    ?raw:'LAUNCH_READINESS_EVALUATION_FAILED';
+  return {
+    runnerVersion:RUNNER_VERSION,
+    receiptKind:'FAIL_CLOSED_EVALUATION_ERROR',
+    observedAt:new Date().toISOString(),
+    launchState:'EVALUATION_FAILED',
+    internalReady:null,
+    firstCustomerOperationallyReady:false,
+    commerciallyProven:false,
+    externalEvidenceVerified:false,
+    failureCode
+  };
+}
+function writeFailedLaunchReceipt(outputPath,error){
+  const receipt=failedLaunchReceipt(error);
+  fs.writeFileSync(outputPath,JSON.stringify(receipt,null,2)+'\n');
+  return receipt;
+}
+
 if(require.main===module){
-  main().catch((error)=>{console.error(error);process.exit(1);});
+  main().catch(error=>{
+    const outputPath=process.argv[2]||
+      path.join(__dirname,'launch-readiness-result.json');
+    try {
+      const receipt=writeFailedLaunchReceipt(outputPath,error);
+      console.error('PERMITPLATE_LAUNCH_READINESS_BLOCKED: '+receipt.failureCode);
+    }catch{
+      console.error('PERMITPLATE_LAUNCH_READINESS_RECEIPT_WRITE_FAILED');
+    }
+    process.exitCode=1;
+  });
 }
 
 module.exports={
@@ -177,6 +213,8 @@ module.exports={
   readJson,
   promotionEvidenceFrom,
   shouldFailJob,
+  failedLaunchReceipt,
+  writeFailedLaunchReceipt,
   run
 };
 
