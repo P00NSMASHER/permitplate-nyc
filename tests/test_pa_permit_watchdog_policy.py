@@ -45,6 +45,21 @@ def verify(s):
     assert "POST https://" not in s and "contents: write" not in s
     assert "send-email" not in s.lower() and "customer_details" not in s
     assert "workflow_dispatch:\n    inputs:" not in s
+    # A stale check stays RED, but an isolated Actions-write job may request
+    # the existing main-only no-send intake; never give that token to audit.
+    assert s.count("actions: write") == 1
+    assert "recover-stale-provider-poll:" in s
+    assert "needs: [policy, watchdog]" in s
+    assert "needs.policy.result == 'success'" in s
+    assert "needs.watchdog.result == 'failure'" in s
+    assert "needs.watchdog.outputs.stale_poll == 'true'" in s
+    assert "steps.audit.outcome == 'failure'" in s
+    assert "run: exit 1" in s
+    assert s.count("gh api --method POST") == 1
+    assert 'actions/workflows/pa-permit-intake.yml/dispatches' in s
+    assert "test \"$current\" = \"$GITHUB_SHA\"" in s
+    assert "node pipeline/pa-watchdog-stale-recovery.js" in s
+    assert s.count("actions: write") == 1
 
 class WatchdogPolicy(unittest.TestCase):
     @classmethod
@@ -70,6 +85,20 @@ class WatchdogPolicy(unittest.TestCase):
     def test_no_write_or_provider_credentials(self):
         with self.assertRaises(AssertionError):
             verify(self.src+"\n  contents: write\n  PERMITPLATE_STRIPE_READ_KEY: secret")
+    def test_recovery_requires_stale_only_and_keeps_original_failure(self):
+        for before, after in (
+            ("needs.watchdog.outputs.stale_poll == 'true'", "true"),
+            ("needs.watchdog.result == 'failure'", "true"),
+            ("needs.policy.result == 'success'", "true"),
+            ("steps.audit.outcome == 'failure'", "false"),
+            ("run: exit 1", "run: exit 0"),
+            ("actions/workflows/pa-permit-intake.yml/dispatches",
+             "actions/workflows/untrusted.yml/dispatches"),
+            ("actions: write", "actions: read"),
+        ):
+            with self.subTest(removed=before), self.assertRaises(AssertionError):
+                verify(self.src.replace(before, after))
+
     def test_no_unprotected_private_crossrun(self):
         with self.assertRaises(AssertionError):
             verify(self.src.replace(
