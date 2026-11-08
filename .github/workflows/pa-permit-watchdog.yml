@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - 'pipeline/run-pa-permit-watchdog.js'
+      - 'pipeline/pa-watchdog-stale-recovery.js'
       - 'pipeline/pa-permit-watchdog.test.js'
       - 'tests/test_pa_permit_watchdog_policy.py'
       - '.github/workflows/pa-permit-watchdog.yml'
@@ -15,6 +16,7 @@ on:
     branches: [main]
     paths:
       - 'pipeline/run-pa-permit-watchdog.js'
+      - 'pipeline/pa-watchdog-stale-recovery.js'
       - 'pipeline/pa-permit-watchdog.test.js'
       - 'tests/test_pa_permit_watchdog_policy.py'
       - '.github/workflows/pa-permit-watchdog.yml'
@@ -50,6 +52,8 @@ jobs:
     if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push') }}
     runs-on: ubuntu-latest
     timeout-minutes: 9
+    outputs:
+      stale_poll: ${{ steps.classify.outputs.stale_poll }}
     env:
       STATE_REPO: ${{ vars.PERMITPLATE_STATE_REPO }}
       PRIVATE_DIR: ${{ github.workspace }}/.private-state
@@ -97,11 +101,60 @@ jobs:
           current="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
           test -n "$current" && test "$current" = "$GITHUB_SHA"
       - name: Independently check the last live PA readback and outstanding cases
+        id: audit
+        continue-on-error: true
         env:
           PERMITPLATE_PA_ORDER_INTAKE_ENABLED: ${{ vars.PERMITPLATE_PA_ORDER_INTAKE_ENABLED }}
         shell: bash
         run: |
-          set -euo pipefail
+          set -o pipefail
           node pipeline/run-pa-permit-watchdog.js \
             "$PRIVATE_DIR/state/pa-permit-orders.json" \
-            "$PRIVATE_DIR/state/pa-permit-anchor.json"
+            "$PRIVATE_DIR/state/pa-permit-anchor.json" \
+            | tee "$RUNNER_TEMP/pa-watchdog-aggregate.json"
+      - name: Classify stale-only recovery without exposing private data
+        id: classify
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          node pipeline/pa-watchdog-stale-recovery.js \
+            "$RUNNER_TEMP/pa-watchdog-aggregate.json" >> "$GITHUB_OUTPUT"
+      - name: Preserve the original fail-closed watchdog result
+        if: ${{ steps.audit.outcome == 'failure' }}
+        run: exit 1
+
+  recover-stale-provider-poll:
+    needs: [policy, watchdog]
+    if: >-
+      ${{ always() && needs.policy.result == 'success' &&
+          needs.watchdog.result == 'failure' &&
+          needs.watchdog.outputs.stale_poll == 'true' &&
+          vars.PERMITPLATE_PA_ORDER_INTAKE_ENABLED == 'true' &&
+          github.ref == 'refs/heads/main' &&
+          (github.event_name == 'schedule' ||
+           github.event_name == 'workflow_dispatch' ||
+           github.event_name == 'push') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Dispatch only existing protected-main no-send PA intake
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = 'refs/heads/main'
+          test -n "$GH_TOKEN"
+          current="$(git ls-remote --exit-code \
+            "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/main | cut -f1)"
+          test -n "$current" && test "$current" = "$GITHUB_SHA"
+          # Dispatch a *different*, existing, separately scoped workflow.
+          # That workflow still enforces its own private-state CAS, provider
+          # GET-only contract and customer NO_SEND policy.
+          gh api --method POST \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/pa-permit-intake.yml/dispatches" \
+            -f ref=main
