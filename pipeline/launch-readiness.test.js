@@ -502,4 +502,20 @@ function internalInput(overrides){
   assert.equal(runner.shouldFailJob(out),true);
 }
 
+{
+  const out=readiness.evaluateLaunchReadiness(internalInput({
+    launchMode:'FOUNDER_CURATED_NO_SCORE_V1',
+    curatedCanary:curatedCanary(),
+    curatedFulfillmentRunbookPresent:true,
+    externalEvidence:readyExternal({stripe:{paymentLinkActiveVerified:false}})
+  }));
+  assert.equal(out.internalReady,true);
+  assert.equal(out.externalGates.stripePaymentLinkActiveVerified,false);
+  assert.equal(out.firstCustomerOperationallyReady,false);
+  assert.equal(out.commerciallyProven,false);
+  assert.equal(out.launchState,'EXTERNAL_INTEGRATION_BLOCKED');
+  assert(out.firstCustomerExternalFailures.includes('stripePaymentLinkActiveVerified'));
+  assert.equal(runner.shouldFailJob(out),true);
+}
+
 console.log('PermitPlate launch readiness controller tests passed.');
