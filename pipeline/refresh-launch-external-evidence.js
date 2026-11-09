@@ -94,8 +94,9 @@ async function refresh(options={}){
   const allowedUrls=new Set([...STRIPE_URLS,SITE+'build-info.json',...files.map(x=>SITE+x.path)]);
   const reads={key:options.key,fetchImpl:options.fetchImpl||fetch,allowedUrls};
   const link=await readJson(STRIPE_URLS[0],reads);
+  const paymentLinkActive=link.active===true;
   if(link.object!=='payment_link'||link.id!==stripe.LINK||link.livemode!==true||
-      link.active!==true||link.metadata?.project!=='permitplate_nyc'||
+      typeof link.active!=='boolean'||link.metadata?.project!=='permitplate_nyc'||
       link.metadata?.plan!=='monthly_79')throw Error('EXTERNAL_LAUNCH_PAYMENT_LINK_INVALID');
   if(!stripe.validRequiredDropdowns(link.custom_fields)){
     throw Error('EXTERNAL_LAUNCH_CHECKOUT_PREFERENCES_INVALID');
@@ -138,7 +139,7 @@ async function refresh(options={}){
     evidenceVersion:VERSION,observedAt,sourceCommit,
     stripe:{account:ACCOUNT,paymentLinkId:stripe.LINK,priceId:stripe.PRICE,
       accountBinding:'EXACT_EXISTING_PAYMENT_LINK_AND_PORTAL_IDS',
-      paymentLinkActiveVerified:true,checkoutPreferenceFieldsVerified:true,
+      paymentLinkActiveVerified:paymentLinkActive,checkoutPreferenceFieldsVerified:true,
       checkoutPreferenceFieldKeys:['category','starter','territory'],
       preferenceCaptureMode:'STRIPE_CUSTOM_FIELDS',
       customerPortalConfigurationId:PORTAL,customerPortalActiveVerified:true,
