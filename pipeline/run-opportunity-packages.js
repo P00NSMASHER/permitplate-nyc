@@ -48,6 +48,43 @@ function readDetectionResult(filePath){
   return JSON.parse(fs.readFileSync(filePath,'utf8'));
 }
 
+// Canonical promotion is a candidate-specific authorization decision, not a
+// global prerequisite to the explicitly approved LEGACY_LITERAL fallback.
+function buildDetectionPackages({graph,receipts,recordsById,observedAt,promotionEvidence}){
+  const candidatesById=new Map((graph.candidates||[])
+    .map(candidate=>[String(candidate.entityId),candidate]));
+  return receipts.map(receipt=>{
+    const candidate=candidatesById.get(String(receipt.entityId));
+    if(!candidate){
+      return {
+        packageVersion:candidatePackage.CANDIDATE_PACKAGE_VERSION,
+        status:'REVIEW',
+        entityId:receipt.entityId||null,
+        detectionReceiptId:receipt.receiptId||null,
+        failures:['DETECTED_ENTITY_NOT_IN_CURRENT_GRAPH']
+      };
+    }
+    return candidatePackage.buildCandidatePackage({
+      graph,candidate,detectionReceipt:receipt,recordsById,observedAt,
+      promotionEvidence
+    });
+  });
+}
+
+function packageGate(receipts,packages,promotion,preflightFailures=[]){
+  const readyCount=packages.filter(item=>item.status==='READY_FOR_PROFILE_MATCHING' &&
+    item.productionAuthorized===true && item.scoreReceipt?.productionAuthorized===true).length;
+  const reviewCount=packages.length-readyCount;
+  const failures=preflightFailures.slice();
+  if(!promotion.canaryReady && readyCount!==receipts.length){
+    failures.push('SCORING_PROMOTION_GATE_NOT_READY');
+  }
+  if(reviewCount>0) failures.push('CANDIDATE_PACKAGE_REVIEW_REQUIRED');
+  if(readyCount!==receipts.length) failures.push('DETECTION_PACKAGE_COUNT_MISMATCH');
+  return {readyCount,reviewCount,failures,
+    passed:failures.length===0 && readyCount===receipts.length};
+}
+
 async function run(options){
   const opts=options||{};
   const detectionPath=path.resolve(opts.detectionPath||path.join(__dirname,'detection-ledger-run-result.json'));
@@ -79,6 +116,21 @@ async function run(options){
 
   const receipts=Array.isArray(detectionResult.customerEligibleReceipts)?
     detectionResult.customerEligibleReceipts:[];
+  // A missing/truncated receipt array must never masquerade as a zero-event
+  // day, bypass a score gate, or cause the staged history to be committed.
+  if(!Array.isArray(detectionResult.customerEligibleReceipts) ||
+      !Number.isSafeInteger(detectionResult.customerEligibleReceiptCount) ||
+      detectionResult.customerEligibleReceiptCount<0 ||
+      receipts.length!==detectionResult.customerEligibleReceiptCount){
+    const result=Object.assign(base,{
+      passed:false,reason:'DETECTION_RECEIPT_COUNT_MISMATCH',
+      failures:['DETECTION_RECEIPT_COUNT_MISMATCH'],
+      packages:[],packageCount:0,readyCount:0,reviewCount:0
+    });
+    result.artifactFingerprint=sha256(stableStringify(result));
+    fs.writeFileSync(outputPath,JSON.stringify(result,null,2)+'\n');
+    return result;
+  }
 
   // A zero-event day is a successful no-op and should not require another source scan.
   if(receipts.length===0){
@@ -113,40 +165,14 @@ async function run(options){
   const historicalResult=historical.evaluateHistoricalFixture();
   const promotionEvidence=promotionEvidenceFrom(current,historicalResult);
   const promotion=policy.evaluateCanonicalPromotionEvidence(promotionEvidence);
-  if(!promotion.canaryReady) failures.push('SCORING_PROMOTION_GATE_NOT_READY');
-
   const recordsById=shadow.sourceMap(allRecords(batches));
-  const candidatesById=new Map((graph.candidates||[]).map((candidate)=>[String(candidate.entityId),candidate]));
-  const packages=[];
-
-  if(failures.length===0){
-    for(const receipt of receipts){
-      const candidate=candidatesById.get(String(receipt.entityId));
-      if(!candidate){
-        packages.push({
-          packageVersion:candidatePackage.CANDIDATE_PACKAGE_VERSION,
-          status:'REVIEW',
-          entityId:receipt.entityId||null,
-          detectionReceiptId:receipt.receiptId||null,
-          failures:['DETECTED_ENTITY_NOT_IN_CURRENT_GRAPH']
-        });
-        continue;
-      }
-      packages.push(candidatePackage.buildCandidatePackage({
-        graph,
-        candidate,
-        detectionReceipt:receipt,
-        recordsById,
-        observedAt,
-        promotionEvidence
-      }));
-    }
-  }
-
-  const readyCount=packages.filter((item)=>item.status==='READY_FOR_PROFILE_MATCHING').length;
-  const reviewCount=packages.filter((item)=>item.status!=='READY_FOR_PROFILE_MATCHING').length;
-  if(reviewCount>0) failures.push('CANDIDATE_PACKAGE_REVIEW_REQUIRED');
-  if(readyCount!==receipts.length) failures.push('DETECTION_PACKAGE_COUNT_MISMATCH');
+  // A partial/drifted graph still aborts before evaluating any package.
+  // Otherwise each candidate must satisfy the unchanged scoring policy.
+  const packages=failures.length?[]:buildDetectionPackages({
+    graph,receipts,recordsById,observedAt,promotionEvidence
+  });
+  const gate=packageGate(receipts,packages,promotion,failures);
+  const {readyCount,reviewCount}=gate;
 
   const result=Object.assign(base,{
     observedAt,
@@ -158,9 +184,9 @@ async function run(options){
     packageCount:packages.length,
     readyCount,
     reviewCount,
-    failures,
-    passed:failures.length===0 && readyCount===receipts.length,
-    reason:failures.length?'FAIL_CLOSED':'ALL_DETECTIONS_PACKAGED'
+    failures:gate.failures,
+    passed:gate.passed,
+    reason:gate.passed?'ALL_DETECTIONS_PACKAGED':'FAIL_CLOSED'
   });
   result.artifactFingerprint=sha256(stableStringify(result));
   fs.writeFileSync(outputPath,JSON.stringify(result,null,2)+'\n');
@@ -186,5 +212,7 @@ module.exports={
   allRecords,
   promotionEvidenceFrom,
   readDetectionResult,
+  buildDetectionPackages,
+  packageGate,
   run
 };
