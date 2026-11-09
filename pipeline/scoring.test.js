@@ -112,6 +112,24 @@ const authority = authorityRecord();
   assert(out.errors.includes('LEGACY_AUTHORITY_SUPERSEDED_BY_NEWER_STATE'));
 }
 
+// A missing or malformed live-source clock cannot prove that a pinned
+// historical score has not been superseded. This was previously fail-open.
+{
+  for(const clock of [undefined,null,'','not-a-timestamp']){
+    const out=scoring.resolveScoreAuthority(candidateFrom(authority,{
+      sourceLatestEffectiveAt:clock
+    }));
+    assert.equal(out.status,'REVIEW','Missing or malformed source clock must not authorize a legacy score');
+    assert(out.errors.includes('LEGACY_AUTHORITY_SOURCE_TIME_INVALID'));
+    assert(!Object.prototype.hasOwnProperty.call(out,'scores'));
+  }
+  const cutoff=scoring.verifyAuthorityMatch(candidateFrom(authority),{
+    ...authority,lastUpdated:'not-a-timestamp'
+  });
+  assert.equal(cutoff.matched,false,'Unparseable authority cutoff must not authorize a legacy score');
+  assert(cutoff.errors.includes('LEGACY_AUTHORITY_CUTOFF_INVALID'));
+}
+
 // Delivery suppression cannot be bypassed by an old score row.
 {
   const out = scoring.resolveScoreAuthority(candidateFrom(authority,{
