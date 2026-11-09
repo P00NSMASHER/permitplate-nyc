@@ -59,8 +59,20 @@ async function main(){
   assert(!JSON.stringify(response).includes(SECRET));
   assert(calls.every(x=>!/(checkout\/sessions|subscriptions\/|customers\/|emails)/.test(x.url)));
 
+  // An intentionally inactive Checkout must remain observable for prelaunch
+  // readiness, without being misreported as active or creating a paid path.
+  const inactive=fixture();inactive.get(refresh.STRIPE_URLS[0]).active=false;
+  const heldCalls=[];
+  const held=await execute(inactive,{fetchImpl:reader(inactive,heldCalls)});
+  assert.equal(held.stripe.paymentLinkActiveVerified,false);
+  assert.equal(held.stripe.checkoutPreferenceFieldsVerified,true);
+  assert.equal(held.externalSendCalls,0);
+  assert.equal(held.paymentMutations,0);
+  assert.equal(held.privateCustomerDataRead,false);
+  assert.equal(heldCalls.length,5);
+
   const cases=[
-    [0,x=>x.active=false,/PAYMENT_LINK_INVALID/],
+    [0,x=>x.active=null,/PAYMENT_LINK_INVALID/],
     [0,x=>x.livemode=false,/PAYMENT_LINK_INVALID/],
     [0,x=>x.id='plink_other',/PAYMENT_LINK_INVALID/],
     [0,x=>x.metadata.project='another_business',/PAYMENT_LINK_INVALID/],

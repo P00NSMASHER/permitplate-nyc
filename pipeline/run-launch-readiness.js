@@ -142,12 +142,10 @@ async function run(options){
 
 function shouldFailJob(result){
   if(result?.internalReady!==true)return true;
-  // The founder-curated public Checkout path can accept money. A missing
-  // private paid-customer polling heartbeat is a material operational fault,
-  // not merely an advisory external-evidence warning.
+  // An inactive live Checkout, broken intake, or another failed first-customer
+  // prerequisite must never turn a prelaunch diagnostics receipt green.
   return result.launchMode===readiness.CURATED_LAUNCH_MODE &&
-    Array.isArray(result.firstCustomerExternalFailures) &&
-    result.firstCustomerExternalFailures.includes('stripeIntakeMonitoringVerified');
+    result.firstCustomerOperationallyReady!==true;
 }
 
 async function main(){
