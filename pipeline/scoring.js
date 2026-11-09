@@ -129,6 +129,10 @@ function verifyAuthorityMatch(candidate, record) {
 
   const candidateLatest = parseTime(c.sourceLatestEffectiveAt);
   const authorityCutoff = parseTime(a.lastUpdated);
+  // Missing or malformed clocks cannot prove a frozen literal score is still
+  // current. Do not silently skip the supersession check in those cases.
+  if (candidateLatest === null) errors.push('LEGACY_AUTHORITY_SOURCE_TIME_INVALID');
+  if (authorityCutoff === null) errors.push('LEGACY_AUTHORITY_CUTOFF_INVALID');
   if (candidateLatest !== null && authorityCutoff !== null && candidateLatest > authorityCutoff) {
     errors.push('LEGACY_AUTHORITY_SUPERSEDED_BY_NEWER_STATE');
   }
