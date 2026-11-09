@@ -120,6 +120,9 @@ jobs:
       - name: Run persistent opportunity ledger regression
         run: node pipeline/opportunity-ledger.test.js
 
+      - name: Verify detection package legacy authority and fail-closed receipt integrity
+        run: node pipeline/run-opportunity-packages.test.js
+
       - name: Verify private operational state boundary
         run: node pipeline/private-state-boundary.test.js
 
