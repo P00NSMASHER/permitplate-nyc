@@ -518,4 +518,105 @@ function internalInput(overrides){
   assert.equal(runner.shouldFailJob(out),true);
 }
 
+
+// PRE-ACTIVATION PHASE: a held Stripe link is a requirement, not an
+// activation instruction. A green configuration review MUST leave the actual
+// paid-launch job red and all real customer-proof claims false.
+function heldCuratedInput(overrides){
+  return internalInput(Object.assign({
+    launchMode:'FOUNDER_CURATED_NO_SCORE_V1',
+    curatedCanary:curatedCanary(),
+    curatedFulfillmentRunbookPresent:true,
+    externalEvidence:readyExternal({stripe:{paymentLinkActiveVerified:false}})
+  },overrides||{}));
+}
+{
+  const out=readiness.evaluateLaunchReadiness(heldCuratedInput());
+  assert.equal(out.internalReady,true);
+  assert.equal(out.preActivationReady,true);
+  assert.equal(out.preActivationGates.checkoutStillInactiveVerified,true);
+  assert.deepEqual(out.preActivationFailures,[]);
+  assert.deepEqual(out.preActivationRecommendedActions,[]);
+  assert.equal(out.firstCustomerOperationallyReady,false);
+  assert.equal(out.commerciallyProven,false);
+  assert.equal(out.launchState,'EXTERNAL_INTEGRATION_BLOCKED');
+  assert(out.firstCustomerExternalFailures.includes('stripePaymentLinkActiveVerified'));
+  assert(out.firstCustomerExternalFailures.includes('preferenceCaptureReady'));
+  assert.equal(runner.shouldFailJob(out),true);
+}
+{
+  const missingLinkState=readyExternal({stripe:{paymentLinkActiveVerified:undefined}});
+  const out=readiness.evaluateLaunchReadiness(heldCuratedInput({
+    externalEvidence:missingLinkState
+  }));
+  assert.equal(out.preActivationReady,false);
+  assert(out.preActivationFailures.includes('checkoutStillInactiveVerified'));
+  assert.equal(runner.shouldFailJob(out),true);
+}
+{
+  const nowActive=readiness.evaluateLaunchReadiness(heldCuratedInput({
+    externalEvidence:readyExternal({stripe:{paymentLinkActiveVerified:true}})
+  }));
+  assert.equal(nowActive.preActivationReady,false);
+  assert(nowActive.preActivationFailures.includes('checkoutStillInactiveVerified'));
+  assert.equal(nowActive.firstCustomerOperationallyReady,true);
+  assert.equal(nowActive.commerciallyProven,false);
+}
+{
+  const missingField=readiness.evaluateLaunchReadiness(heldCuratedInput({
+    externalEvidence:readyExternal({stripe:{
+      paymentLinkActiveVerified:false,checkoutPreferenceFieldKeys:['category','territory']
+    }})
+  }));
+  assert.equal(missingField.preActivationReady,false);
+  assert(missingField.preActivationFailures.includes('stripeCheckoutPreferenceFieldsVerified'));
+}
+{
+  const staleProvider=readiness.evaluateLaunchReadiness(heldCuratedInput({
+    stripeIntake:{
+      valid:false,failures:['STRIPE_INTAKE_PROVIDER_READBACK_STALE_OR_MISSING'],
+      monitoringEnabled:true
+    }
+  }));
+  assert.equal(staleProvider.preActivationReady,false);
+  assert(staleProvider.preActivationFailures.includes('stripeIntakeMonitoringVerified'));
+  assert(staleProvider.preActivationRecommendedActions.includes(
+    'ENABLE_AND_VERIFY_READ_ONLY_STRIPE_SUBSCRIBER_POLL'));
+  assert.equal(runner.shouldFailJob(staleProvider),true);
+}
+{
+  const staleExternal=readiness.evaluateLaunchReadiness(heldCuratedInput({
+    externalEvidence:readyExternal({
+      stripe:{paymentLinkActiveVerified:false},
+      observedAt:'2026-09-19T17:40:00Z'
+    })
+  }));
+  assert.equal(staleExternal.preActivationReady,false);
+  assert(staleExternal.preActivationFailures.includes('externalEvidenceFresh'));
+}
+{
+  const failedCanary=readiness.evaluateLaunchReadiness(heldCuratedInput({
+    curatedCanary:curatedCanary({scoreFree:false})
+  }));
+  assert.equal(failedCanary.preActivationReady,false);
+  assert.equal(failedCanary.internalReady,false);
+}
+{
+  const wrongPortal=readiness.evaluateLaunchReadiness(heldCuratedInput({
+    externalEvidence:readyExternal({stripe:{
+      paymentLinkActiveVerified:false,customerPortalCancellationMode:'immediately'
+    }})
+  }));
+  assert.equal(wrongPortal.preActivationReady,false);
+  assert(wrongPortal.preActivationFailures.includes('stripeCustomerPortalCancellationVerified'));
+}
+{
+  const scoredOnly=readiness.evaluateLaunchReadiness(internalInput({
+    externalEvidence:readyExternal({stripe:{paymentLinkActiveVerified:false}})
+  }));
+  assert.equal(scoredOnly.preActivationReady,false);
+  assert.equal(scoredOnly.preActivationGates,null);
+  assert.deepEqual(scoredOnly.preActivationFailures,[]);
+}
+
 console.log('PermitPlate launch readiness controller tests passed.');
