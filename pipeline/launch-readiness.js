@@ -9,7 +9,7 @@ const scoringPolicy=require('./scoring-policy');
 const firstSubscriber=require('./run-first-subscriber-canary');
 const publicBuild=require('../build-site');
 
-const LAUNCH_READINESS_VERSION='PermitPlate-launch-readiness-v1.6.0';
+const LAUNCH_READINESS_VERSION='PermitPlate-launch-readiness-v1.7.0';
 const CURATED_LAUNCH_MODE='FOUNDER_CURATED_NO_SCORE_V1';
 const EXTERNAL_EVIDENCE_MAX_AGE_MS=24*60*60*1000;
 
@@ -57,6 +57,7 @@ function remediationFor(gate){
     stripeIntakeMonitoringVerified:'ENABLE_AND_VERIFY_READ_ONLY_STRIPE_SUBSCRIBER_POLL',
     stripeCheckoutPreferenceFieldsVerified:'APPLY_AND_VERIFY_STRIPE_CHECKOUT_PREFERENCES',
     stripePaymentLinkActiveVerified:'VERIFY_STRIPE_PAYMENT_LINK_ACTIVE',
+    checkoutStillInactiveVerified:'RESTORE_INACTIVE_CHECKOUT_HOLD_BEFORE_REVIEW',
     stripeCustomerPortalActiveVerified:'CONFIGURE_AND_VERIFY_STRIPE_CUSTOMER_PORTAL',
     stripeCustomerPortalCancellationVerified:'CONFIGURE_AND_VERIFY_STRIPE_CUSTOMER_PORTAL',
     preferenceCaptureReady:'APPLY_AND_VERIFY_STRIPE_CHECKOUT_PREFERENCES',
@@ -266,6 +267,33 @@ function evaluateLaunchReadiness(input){
   const firstCustomerOperationallyReady=
     internalReady&&firstCustomerExternalFailures.length===0;
 
+  // A staged paid offer needs a pre-activation decision gate: requiring
+  // paymentLinkActiveVerified=true before permission to activate it is
+  // circular. This read-only phase requires the link to remain inactive and
+  // every *other* first-customer prerequisite to be freshly verified.
+  // It confers NO billing, checkout-activation, send, scoring or customer-proof
+  // authority. The existing live firstCustomerOperationallyReady remains
+  // strict and the workflow exit status must stay nonzero while checkout is held.
+  const preActivationGates=curatedMode?{
+    checkoutStillInactiveVerified:stripe.paymentLinkActiveVerified===false,
+    stripeCheckoutPreferenceFieldsVerified:externalGates.stripeCheckoutPreferenceFieldsVerified,
+    externalEvidenceFresh:externalGates.externalEvidenceFresh,
+    stripeIntakeMonitoringVerified:externalGates.stripeIntakeMonitoringVerified,
+    stripeCustomerPortalActiveVerified:externalGates.stripeCustomerPortalActiveVerified,
+    stripeCustomerPortalCancellationVerified:
+      externalGates.stripeCustomerPortalCancellationVerified,
+    githubPagesEnabled:externalGates.githubPagesEnabled,
+    verifiedPublicBuildMatchesCurrentSource:
+      externalGates.verifiedPublicBuildMatchesCurrentSource,
+    githubPagesProductionDeployVerified:
+      externalGates.githubPagesProductionDeployVerified,
+    githubPagesLiveBuildIdentityVerified:
+      externalGates.githubPagesLiveBuildIdentityVerified
+  }:null;
+  const preActivationFailures=preActivationGates?
+    Object.entries(preActivationGates).filter(([,ok])=>ok!==true).map(([gate])=>gate):[];
+  const preActivationReady=curatedMode&&internalReady&&preActivationFailures.length===0;
+
   const commercialProofGates={
     realPaidSubscriberEndToEndVerified:externalGates.realPaidSubscriberEndToEndVerified,
     providerBackedDeliveryVerified:externalGates.providerBackedDeliveryVerified,
@@ -307,6 +335,8 @@ function evaluateLaunchReadiness(input){
     launchState,
     internalReady,
     firstCustomerOperationallyReady,
+    // REVIEW-ONLY, not permission to activate Stripe or claim paid launch.
+    preActivationReady,
     commerciallyProven,
     graph:{
       state:graph.graphState||null,
@@ -389,6 +419,11 @@ function evaluateLaunchReadiness(input){
     internalFailures,
     externalGates,
     firstCustomerExternalFailures,
+    preActivationGates,
+    preActivationFailures,
+    preActivationRecommendedActions:Array.from(new Set(
+      preActivationFailures.map((gate)=>remediationFor(gate))
+    )),
     commercialProofFailures,
     blockers:allBlockers,
     criticalPathClass,
