@@ -7,13 +7,14 @@ const path=require('node:path');
 const {createHash}=require('node:crypto');
 const c=require('./calibration-cohort');
 const e=require('./calibration-evaluation');
+const reviewProgress=require('./calibration-review-progress');
 const {renderWorkbench}=require('./calibration-workbench');
 const clock=require('./event-time');
 const ROOT=path.resolve(__dirname,'..');
 const INPUT_FILES=['pipeline/shadow-scoring-v3.js','pipeline/shadow-scoring-v4.js','pipeline/event-time.js',
   'pipeline/commercial-fit.js','model-v7.js','pipeline/candidate-builder.js','pipeline/material-change.js',
   'pipeline/source-adapters.js','pipeline/calibration-cohort.js','pipeline/calibration-evaluation.js',
-  'pipeline/calibration-workbench.js'];
+  'pipeline/calibration-workbench.js','pipeline/calibration-review-progress.js'];
 const STATE_FILES=['state/detection-ledger.json','state/opportunity-ledger.json'];
 function fileHash(file){return fs.existsSync(file)?createHash('sha256').update(fs.readFileSync(file)).digest('hex'):null;}
 function hashes(files){return Object.fromEntries(files.map(f=>[f,fileHash(path.join(ROOT,f))]));}
@@ -85,13 +86,22 @@ async function prepare(output,focusCategory){
     passed:unchanged&&blocked.status==='BLOCKED'&&packet.cards.every(card=>!('predictions' in card)),
     limitation:'This is a review instrument, not completed buyer calibration. No relevance labels, calibrated thresholds, customer outcomes, or longitudinal validation are claimed.'});
   write(path.join(out,'summary.json'),summary);
-  write(path.join(out,'README.txt'),`PermitPlate blind calibration kit\n\nNo send or production policy changes.\n\nShare only reviewer/ with each independent domain reviewer. Do NOT share operator/: it contains model scores and hidden holdout cases. Reviewers open review-workbench.html, judge sources without model scores, and export completed JSON locally. No labels are prefilled. Keep completed reviews private.\n\nThe first phase contains ${packet.cards.length} blinded cases across ${cohort.categories.join(', ')}. Diagnostics (if present) are excluded from threshold metrics. Holdout cases are NOT in the first reviewer packet. Two complete genuine independent reviews are required. The focused one-category option preserves exactly the same 70 tuning/30 holdout sample and independent evidence thresholds as the original benchmark, while eliminating nonessential diagnostic and category judgments.\n\nRun from the matching source revision:\nnode pipeline/calibration-runner.js lock operator/cohort.json threshold-lock.json reviewer-a.json reviewer-b.json\nnode pipeline/calibration-runner.js holdout operator/cohort.json threshold-lock.json heldout-reviewer\nnode pipeline/calibration-runner.js evaluate operator/cohort.json threshold-lock.json holdout-result.json holdout-a.json holdout-b.json\n\nA lock failure is expected until real labels exist; changing cutoffs to match old volume is not allowed. No command enables production or sends mail. Reviewer attestations require manual identity/independence verification. This snapshot sample estimates evidence relevance within sampled site groups, not delivered-feed quality or purchasing. Actual longitudinal evidence and an explicit promotion are separate gates.\n`);
+  write(path.join(out,'README.txt'),`PermitPlate blind calibration kit\n\nNo send or production policy changes.\n\nShare only reviewer/ with each independent domain reviewer. Do NOT share operator/: it contains model scores and hidden holdout cases. Reviewers open review-workbench.html, judge sources without model scores, and export completed JSON locally. No labels are prefilled. Reviewers can save resumable DRAFT files while working; draft files cannot count toward independent scoring authority. The FINAL export button requires every visible case to be completed and a fresh independent-review attestation. Keep all exports private.\n\nThe first phase contains ${packet.cards.length} blinded cases across ${cohort.categories.join(', ')}. Diagnostics (if present) are excluded from threshold metrics. Holdout cases are NOT in the first reviewer packet. Two complete genuine independent reviews are required. The focused one-category option preserves exactly the same 70 tuning/30 holdout sample and independent evidence thresholds as the original benchmark, while eliminating nonessential diagnostic and category judgments.\n\nRun from the matching source revision:\nnode pipeline/calibration-runner.js status operator/cohort.json [reviewer-a-complete.json reviewer-b-complete.json]\nnode pipeline/calibration-runner.js lock operator/cohort.json threshold-lock.json reviewer-a.json reviewer-b.json\nnode pipeline/calibration-runner.js holdout operator/cohort.json threshold-lock.json heldout-reviewer\nnode pipeline/calibration-runner.js evaluate operator/cohort.json threshold-lock.json holdout-result.json holdout-a.json holdout-b.json\n\nA lock failure is expected until real labels exist; changing cutoffs to match old volume is not allowed. No command enables production or sends mail. Reviewer attestations require manual identity/independence verification. This snapshot sample estimates evidence relevance within sampled site groups, not delivered-feed quality or purchasing. Actual longitudinal evidence and an explicit promotion are separate gates.\n`);
   return summary;
 }
 async function main(args=process.argv.slice(2)){
   const [command,...a]=args;
   if(command==='prepare'){
     const summary=await prepare(a[0],a[1]);console.log(JSON.stringify(summary,null,2));if(!summary.passed)process.exitCode=1;return summary;
+  }
+  if(command==='status'){
+    const [cohortFile,...files]=a;
+    if(!cohortFile)throw Error('COHORT_FILE_REQUIRED');
+    const result=reviewProgress.evaluateReviewProgress(read(cohortFile),reviewers(files));
+    console.log(JSON.stringify(result,null,2));
+    // This command is for read-only visibility. A 0 process exit does not
+    // authorize customer scoring, unlock the holdout, or claim live precision.
+    return result;
   }
   if(command==='lock'){
     const [cohortFile,output,...reviews]=a,cohort=read(cohortFile);
@@ -108,7 +118,7 @@ async function main(args=process.argv.slice(2)){
     const result=e.evaluateHoldout(read(cohortFile),read(lockFile),reviewers(reviews));write(output,result);
     console.log(JSON.stringify(result,null,2));if(result.status!=='ELIGIBLE_FOR_MANUAL_REVIEW_ONLY')process.exitCode=2;return result;
   }
-  throw new Error('Usage: calibration-runner.js prepare OUTPUT [Equipment|POS|Insurance] | lock COHORT OUTPUT REVIEW_A REVIEW_B | holdout COHORT LOCK OUTPUT_DIR | evaluate COHORT LOCK OUTPUT REVIEW_A REVIEW_B');
+  throw new Error('Usage: calibration-runner.js prepare OUTPUT [Equipment|POS|Insurance] | status COHORT [REVIEW_A REVIEW_B] | lock COHORT OUTPUT REVIEW_A REVIEW_B | holdout COHORT LOCK OUTPUT_DIR | evaluate COHORT LOCK OUTPUT REVIEW_A REVIEW_B');
 }
 if(require.main===module)main().catch(error=>{console.error(error.message);process.exitCode=1;});
 module.exports={INPUT_FILES,STATE_FILES,FOCUS_CATEGORIES,calibrationScope,fileHash,hashes,safeOutput,prepare,main};

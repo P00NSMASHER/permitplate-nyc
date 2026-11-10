@@ -53,6 +53,50 @@ The exported review JSON is the *only* way to supply actual human judgments;
 the instrument never fills labels automatically and cannot attest to human
 expertise. No one has been contacted or given access to private material.
 
+### How to complete the first real review
+
+1. The owner opens **only the latest private** `research/blind-calibration/LATEST.json`
+   in `P00NSMASHER/permitplate-state` and follows its `runId` to
+   `research/blind-calibration/<runId>/reviewer/review-workbench.html`.
+   Download the raw HTML for offline use; it contains no model predictions,
+   no hidden holdout, and no automatic network/upload actions. Do not publish
+   or share `operator/`, the private cohort, or source-code credentials.
+2. Two genuinely separate vendor-domain reviewers must independently examine
+   the *same* frozen, source-linked **70 Equipment tuning cases**. Each enters
+   an opaque reviewer code, chooses a role, cites a source record, and writes
+   a real supporting reason for each verdict. A reviewer may **Save progress
+   draft** and resume the exact packet later. A draft is not valid label
+   evidence and is rejected by the calibration evaluator.
+3. **Export final review** is available only after all 70 judgments are
+   complete and the reviewer attests to having reviewed the sources without
+   consulting model scores or another reviewer's conclusions. Keep those
+   two completed JSON files private, with the source-locked cohort.
+4. Read-only operator progress check from the matching public source revision:
+
+   ```sh
+   node pipeline/calibration-runner.js status operator/cohort.json \
+     reviewer-alpha-complete.json reviewer-beta-complete.json
+   ```
+
+   The status command creates **no output files and no score authority**.
+   It reports received reviewer-code counts, incomplete cases, disagreements,
+   and invalid/draft exports, without publishing names, judgments or hidden
+   scores. Reviewer identity and genuine independence must still be
+   authenticated by the owner separately; two different strings are
+   not proof of two human experts.
+5. Once real tuning evidence passes the existing protocol, lock the tuning
+   threshold before releasing the 30 hidden holdout cases. Obtain the
+   genuinely independent holdout judgments and evaluate without retuning.
+   Verified longitudinal source-event evidence, customer-feed no-send checks,
+   and separately explicit new-version owner promotion remain mandatory.
+   A structural review pass never toggles `productionAuthorized`.
+
+**Observed private source state (November 10, 2026):** the latest Equipment
+packet is `42723502758` (source SHA `f2012b0`), with **0 completed
+independent review exports**. This is an evidence bottleneck, not a
+network or CI error. The already-active V4 research scoring snapshot must
+continue to report `customerDeliveryAllowed:false`.
+
 The packet is **not a validated lead feed**. It does not prove a restaurant
 is about to open, a customer will buy, or any model's precision.
 

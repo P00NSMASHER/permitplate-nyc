@@ -17,6 +17,8 @@ on:
       - 'pipeline/calibration-cohort.js'
       - 'pipeline/calibration-evaluation.js'
       - 'pipeline/calibration-workbench.js'
+      - 'pipeline/calibration-review-progress.js'
+      - 'pipeline/calibration-review-progress.test.js'
       - 'pipeline/calibration-focused.test.js'
 
 permissions:
@@ -41,7 +43,7 @@ jobs:
         with:
           node-version: '22.23.4'
       - name: Test blinded calibration source integrity and private outputs
-        run: node --test pipeline/calibration.test.js pipeline/calibration-integrity.test.js pipeline/calibration-cli.test.js pipeline/calibration-focused.test.js
+        run: node --test pipeline/calibration.test.js pipeline/calibration-integrity.test.js pipeline/calibration-cli.test.js pipeline/calibration-focused.test.js pipeline/calibration-review-progress.test.js
       - name: Defend private blind-calibration workflow
         run: python3 -m unittest discover -s tests -p 'test_blind_calibration_workflow_policy.py' -v
 
@@ -95,6 +97,11 @@ jobs:
         run: |
           set -euo pipefail
           node pipeline/calibration-runner.js prepare "$CALIBRATION_DIR" Equipment
+      - name: Record private, read-only reviewer progress receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          node pipeline/calibration-runner.js status "$CALIBRATION_DIR/operator/cohort.json" > "$CALIBRATION_DIR/operator/review-progress.json"
       - name: Verify sealed cohort, blinded reviewer packet, and blocked promotion
         shell: bash
         run: |
@@ -109,12 +116,18 @@ jobs:
           const operator=read('operator/cohort.json');
           const packet=read('reviewer/review-packet.json');
           const blocked=read('operator/label-readiness.json');
+          const progress=read('operator/review-progress.json');
           cohort.validateCohort(operator);
           if(!cohort.verify(packet)||packet.cohortFingerprint!==operator.fingerprint||
               packet.phase!=='TUNING'||packet.isSynthetic!==false||
               packet.cards.some(card=>'predictions' in card||'scores' in card||
                 'v3' in card||'v4' in card)||
-              blocked.status!=='BLOCKED'||summary.productionAuthorized!==false||
+              blocked.status!=='BLOCKED'||
+              !cohort.verify(progress)||progress.status!=='AWAITING_INDEPENDENT_REVIEW_EXPORTS'||
+              progress.reviewerCodesReceived!==0||progress.categories?.Equipment?.tuningCases!==70||
+              progress.productionAuthorized!==false||progress.customerDeliveryAllowed!==false||
+              progress.externalSendCalls!==0||progress.holdoutReleased!==false||
+              summary.productionAuthorized!==false||
               operator.categories.length!==1||operator.categories[0]!=='Equipment'||
               operator.counts.benchmark!==100||operator.counts.tuning!==70||
               operator.counts.holdout!==30||operator.counts.diagnostic!==0||

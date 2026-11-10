@@ -43,6 +43,13 @@ def verify(s):
     assert "packet.cards.length!==70" in s
     assert "summary.reviewScope!=='ONE_CATEGORY_INDEPENDENT_REVIEW'" in s
     assert "operator.sourceRevision!==process.env.GITHUB_SHA" in s
+    assert "node pipeline/calibration-runner.js status" in s
+    assert 'operator/review-progress.json' in s
+    assert "progress.status!=='AWAITING_INDEPENDENT_REVIEW_EXPORTS'" in s
+    assert "progress.productionAuthorized!==false" in s
+    assert "progress.customerDeliveryAllowed!==false" in s
+    assert "progress.holdoutReleased!==false" in s
+    assert "pipeline/calibration-review-progress.test.js" in s
     assert "summary.productionStateWrites!==0" in s
     assert "summary.externalSendCalls!==0" in s
     assert "AWAITING_REAL_INDEPENDENT_LABELS" in s

@@ -15,7 +15,7 @@ function renderWorkbench(packet){
 </style></head><body><header><div class="eyebrow">PERMITPLATE / INTERNAL RESEARCH</div><h1>Would this deserve a vendor’s attention?</h1><p>Review official evidence without seeing the ranking. Your judgment is about whether research is worthwhile—not whether a business will buy.</p></header><main>
 <section class="panel"><h2>Independent review</h2><p id="instructions"></p><p id="synthetic" class="warning" hidden>Synthetic test cohort. This cannot establish real buyer relevance.</p>
 <div class="tools"><label>Reviewer code (not an email)<input id="reviewer" autocomplete="off" placeholder="e.g. reviewer-alpha" pattern="[a-zA-Z0-9_-]{3,64}" maxlength="64"></label><label>Your review role<select id="role"><option value="">Choose your role</option>${REVIEWER_ROLES.map(v=>'<option value="'+v+'">'+v.replaceAll('_',' ')+'</option>').join('')}</select></label><label class="wide"><input id="attest" type="checkbox"> I independently reviewed these sources, without consulting the model’s scores or another reviewer’s labels.</label></div>
-<div class="actions"><button id="export">Export completed judgments</button><button id="importButton" class="secondary">Resume a saved review</button><input type="file" id="import" accept="application/json,.json" hidden><span id="progress" aria-live="polite"></span></div><p class="small">Nothing is sent, uploaded or saved automatically. Export your file before closing. Use an opaque reviewer code. Keep completed reviews private. External source links open only when you click.</p><p id="notice" role="status"></p></section>
+<div class="actions"><button id="export">Export final 70-case review</button><button id="saveDraft" class="secondary">Save progress draft</button><button id="importButton" class="secondary">Resume a saved review</button><input type="file" id="import" accept="application/json,.json" hidden><span id="progress" aria-live="polite"></span></div><p class="small">Nothing is sent, uploaded or saved automatically. Save a progress draft any time, then resume it later on this exact packet. A final independent review can be exported only after all cases are complete and the reviewer attests to independent source review. Drafts are never accepted for scoring calibration. Keep exports private. External source links open only when you click.</p><p id="notice" role="status"></p></section>
 <section class="panel"><div class="pager"><button id="previous" class="secondary">Previous</button><strong id="page"></strong><button id="next" class="secondary">Next</button></div></section><div id="cards"></div>
 <footer id="provenance"></footer></main><script type="application/json" id="packet">${json}</script><script>
 'use strict';
@@ -63,18 +63,36 @@ function render(){
  progress();
 }
 el('previous').onclick=()=>{page=Math.max(0,page-1);render();};el('next').onclick=()=>{page++;render();};
-el('export').onclick=()=>{
+function exportReview(draft){
  const reviewerId=el('reviewer').value.trim();
- if(!/^[a-zA-Z0-9_-]{3,64}$/.test(reviewerId)||!el('role').value||!el('attest').checked){el('notice').textContent='Enter a reviewer code and role, then confirm independent review.';return;}
+ if(!/^[a-zA-Z0-9_-]{3,64}$/.test(reviewerId)){
+  el('notice').textContent='Enter an opaque reviewer code before saving progress or exporting a final review.';return;
+ }
  const judgments=[...answers.values()].filter(complete);
- if(!judgments.length){el('notice').textContent='No completed judgments yet. Each needs a decision, explanation and source reference.';return;}
- const envelope={version:packet.version,cohortFingerprint:packet.cohortFingerprint,packetFingerprint:packet.fingerprint,
-  phase:packet.phase,lockFingerprint:packet.lockFingerprint,reviewerId,reviewerRole:el('role').value,
-  attestation:'INDEPENDENT_HUMAN_SOURCE_REVIEW',blinded:true,isSynthetic:packet.isSynthetic,judgments};
- const blob=new Blob([JSON.stringify(envelope,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=node('a');
- a.href=url;a.download='permitplate-review-'+reviewerId+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);
- el('notice').textContent='Exported '+judgments.length+' completed judgments. Nothing was uploaded.';
-};
+ const expected=packet.cards.length*packet.categories.length;
+ if(!draft && (!el('role').value || !el('attest').checked)){
+  el('notice').textContent='Choose your reviewer role and attest to independent source review before final export.';return;
+ }
+ if(!draft && judgments.length!==expected){
+  el('notice').textContent='Final review blocked: '+judgments.length+' of '+expected+' judgments complete. Save a draft, finish all cases and then export.';return;
+ }
+ // Progress files remain explicitly ineligible even if a reviewer manually
+ // adds all labels later. Final export must happen with fresh attestation.
+ const envelope={version:packet.version,cohortFingerprint:packet.cohortFingerprint,
+  packetFingerprint:packet.fingerprint,phase:packet.phase,lockFingerprint:packet.lockFingerprint,
+  reviewerId,reviewerRole:el('role').value||null,draft,
+  attestation:draft?'DRAFT_NOT_ATTESTED':'INDEPENDENT_HUMAN_SOURCE_REVIEW',
+  blinded:true,isSynthetic:packet.isSynthetic,judgments};
+ const blob=new Blob([JSON.stringify(envelope,null,2)],{type:'application/json'}),
+  url=URL.createObjectURL(blob),a=node('a');
+ a.href=url;a.download='permitplate-review-'+reviewerId+(draft?'-draft':'-complete')+'.json';
+ a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);
+ el('notice').textContent=draft?
+  'Saved a local progress draft: '+judgments.length+' / '+expected+'. Nothing uploaded; return to this exact packet to continue.':
+  'Exported '+expected+' completed judgments. The operator must still verify your independence and all source evidence.';
+}
+el('export').onclick=()=>exportReview(false);
+el('saveDraft').onclick=()=>exportReview(true);
 el('importButton').onclick=()=>el('import').click();
 el('import').onchange=async()=>{
  try{
