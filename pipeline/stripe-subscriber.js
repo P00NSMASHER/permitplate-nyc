@@ -122,7 +122,9 @@ function checkoutSubscriptionContext(input){
   }
   if(text(session.mode)!=='subscription') failures.push('CHECKOUT_MODE_NOT_SUBSCRIPTION');
   if(text(session.status)!=='complete') failures.push('CHECKOUT_NOT_COMPLETE');
-  if(!['paid','no_payment_required'].includes(text(session.payment_status))){
+  // A paid PermitPlate membership requires an actual paid Checkout. Stripe's
+  // no_payment_required status may represent a free or trial enrollment.
+  if(text(session.payment_status)!=='paid'){
     failures.push('CHECKOUT_PAYMENT_NOT_CONFIRMED');
   }
   if(projectMarker(session,subscription)!=='permitplate_nyc') failures.push('PROJECT_MARKER_MISMATCH');
@@ -139,7 +141,8 @@ function checkoutSubscriptionContext(input){
   if(!baselineAt) failures.push('SUBSCRIPTION_CREATED_MISSING');
 
   const status=text(subscription&&subscription.status).toLowerCase();
-  if(!['active','trialing'].includes(status)) failures.push('SUBSCRIPTION_STATUS_NOT_ELIGIBLE');
+  // A trialing subscription is not an active paid membership.
+  if(status!=='active') failures.push('SUBSCRIPTION_STATUS_NOT_ELIGIBLE');
 
   // Provider session and subscription must refer to the same paying customer.
   // A mismatch (or missing side) cannot authorize a paid onboarding profile.
