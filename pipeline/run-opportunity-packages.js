@@ -80,7 +80,7 @@ function packageGate(receipts,packages,promotion,preflightFailures=[]){
     failures.push('SCORING_PROMOTION_GATE_NOT_READY');
   }
   if(reviewCount>0) failures.push('CANDIDATE_PACKAGE_REVIEW_REQUIRED');
-  if(readyCount!==receipts.length) failures.push('DETECTION_PACKAGE_COUNT_MISMATCH');
+  if(packages.length!==receipts.length) failures.push('DETECTION_PACKAGE_COUNT_MISMATCH');
   return {readyCount,reviewCount,failures,
     passed:failures.length===0 && readyCount===receipts.length};
 }
