@@ -92,6 +92,26 @@ function deliveryBoundaryProbe(candidate,scoreReceipt,graphDigest,observedAt) {
   };
 }
 
+// Report the *specific* scored-customer acceptance gates that are withheld.
+// This does not grant authority or turn a failed promotion into successful CI.
+function evaluateCanaryAcceptance(result) {
+  const r=result||{};
+  const checks=[
+    ['SOURCE_GRAPH_NOT_COMPLETE',r.graphState==='COMPLETE'],
+    ['CURRENT_PROMOTION_EVIDENCE_NOT_READY',r.promotion?.canaryReady===true],
+    ['SCORING_MODE_UNEXPECTED',r.productionScoringMode==='CANONICAL_V3_WITH_LEGACY_FALLBACK'],
+    ['CANONICAL_PRODUCTION_RECEIPTS_INCOMPLETE',r.canonicalProductionReceiptCount===r.candidateCount],
+    ['PRODUCTION_AUTHORIZED_RECEIPTS_INCOMPLETE',r.productionAuthorizedReceiptCount===r.candidateCount],
+    ['CANONICAL_CANARY_RECEIPT_MISSING',r.canonicalCanaryProbeReceiptCount===1],
+    ['CANARY_UNEXPECTEDLY_PRODUCTION_AUTHORIZED',r.canonicalCanaryProductionAuthorizedCount===0],
+    ['CANARY_DELIVERY_NOT_BLOCKED',r.canaryDeliveryBoundaryProbe?.blocked===true],
+    ['PRODUCTION_DELIVERY_NOT_ACCEPTED',r.productionDeliveryBoundaryProbe?.accepted===true],
+    ['EXTERNAL_SEND_CALLS_NONZERO',r.externalSendCalls===0]
+  ];
+  const failures=checks.filter(([,passed])=>!passed).map(([name])=>name);
+  return {passed:failures.length===0,failures};
+}
+
 async function run(nowIso) {
   const {observedAt,batches}=await scanBatches(nowIso);
   const graph=buildCurrentGraph({
@@ -183,18 +203,9 @@ async function run(nowIso) {
     productionDeliveryBoundaryProbe:productionProbe
   };
 
-  result.passed=Boolean(
-    graph.graphState==='COMPLETE' &&
-    promotion.canaryReady===true &&
-    policy.PRODUCTION_SCORING_MODE==='CANONICAL_V3_WITH_LEGACY_FALLBACK' &&
-    canonicalProductionReceiptCount===(graph.candidates||[]).length &&
-    productionAuthorizedReceiptCount===(graph.candidates||[]).length &&
-    result.canonicalCanaryProbeReceiptCount===1 &&
-    result.canonicalCanaryProductionAuthorizedCount===0 &&
-    canaryProbe.blocked===true &&
-    productionProbe.accepted===true &&
-    result.externalSendCalls===0
-  );
+  const acceptance=evaluateCanaryAcceptance(result);
+  result.acceptanceFailures=acceptance.failures;
+  result.passed=acceptance.passed;
   result.artifactFingerprint=sha256(stableStringify(result));
   return result;
 }
@@ -217,5 +228,6 @@ module.exports={
   sha256,
   promotionEvidenceFrom,
   deliveryBoundaryProbe,
+  evaluateCanaryAcceptance,
   run
 };
