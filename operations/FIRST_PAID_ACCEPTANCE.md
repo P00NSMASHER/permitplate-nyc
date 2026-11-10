@@ -4,6 +4,17 @@ Existing product: $79/month PermitPlate NYC, founder-curated no-score lane.
 No payment, customer message, external outreach, or provider submission is
 authorized by this document.
 
+- **Pre-activation:** while the live Payment Link is inactive, require a fresh
+  `preActivationReady: true` from the founder-curated launch controller. It
+  validates the independent internal, source, checkout-field, portal, private
+  Stripe monitoring and published-build gates **without accepting payment**.
+  If false, fix the reported `preActivationFailures` without activating checkout.
+- **Activation boundary:** a pre-activation pass is a read-only configuration
+  review, not permission to change Stripe. Only a separate explicit owner
+  authorization may activate the exact existing link. Immediately afterward,
+  verify the live provider and require `firstCustomerOperationallyReady: true`.
+  If that check fails, do not accept a buyer until the link has been placed
+  back on hold through an authorized provider action.
 - Configuration readiness allows considering a real subscriber. A green CI
   run is not paid customer acceptance, provider-confirmed delivery, or proof
   of next-week suppression. Do not flip commercial proof flags from simulations.
