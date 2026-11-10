@@ -8,13 +8,15 @@ const {createHash}=require('node:crypto');
 const c=require('./calibration-cohort');
 const e=require('./calibration-evaluation');
 const reviewProgress=require('./calibration-review-progress');
+const aiProxy=require('./ai-proxy-calibration');
 const {renderWorkbench}=require('./calibration-workbench');
 const clock=require('./event-time');
 const ROOT=path.resolve(__dirname,'..');
 const INPUT_FILES=['pipeline/shadow-scoring-v3.js','pipeline/shadow-scoring-v4.js','pipeline/event-time.js',
   'pipeline/commercial-fit.js','model-v7.js','pipeline/candidate-builder.js','pipeline/material-change.js',
   'pipeline/source-adapters.js','pipeline/calibration-cohort.js','pipeline/calibration-evaluation.js',
-  'pipeline/calibration-workbench.js','pipeline/calibration-review-progress.js'];
+  'pipeline/calibration-workbench.js','pipeline/calibration-review-progress.js',
+  'pipeline/ai-proxy-calibration.js','scoring/ai-proxy-review-owner-authorization.json'];
 const STATE_FILES=['state/detection-ledger.json','state/opportunity-ledger.json'];
 function fileHash(file){return fs.existsSync(file)?createHash('sha256').update(fs.readFileSync(file)).digest('hex'):null;}
 function hashes(files){return Object.fromEntries(files.map(f=>[f,fileHash(path.join(ROOT,f))]));}
@@ -103,6 +105,16 @@ async function main(args=process.argv.slice(2)){
     // authorize customer scoring, unlock the holdout, or claim live precision.
     return result;
   }
+  if(command==='ai-proxy-evaluate'){
+    const [cohortFile,simulatedEvidenceFile]=a;
+    if(!cohortFile||!simulatedEvidenceFile)throw Error('AI_PROXY_COHORT_AND_EVIDENCE_FILES_REQUIRED');
+    const result=aiProxy.evaluateAIProxy(read(cohortFile),read(simulatedEvidenceFile));
+    // Output contains only source-bound aggregate evidence and no reviewer
+    // source judgments. It never modifies production scoring or private state.
+    console.log(JSON.stringify(result,null,2));
+    if(!result.aiProxyTuningGatePassed)process.exitCode=2;
+    return result;
+  }
   if(command==='lock'){
     const [cohortFile,output,...reviews]=a,cohort=read(cohortFile);
     const result=e.lockThresholds(cohort,reviewers(reviews),new Date().toISOString());
@@ -118,7 +130,7 @@ async function main(args=process.argv.slice(2)){
     const result=e.evaluateHoldout(read(cohortFile),read(lockFile),reviewers(reviews));write(output,result);
     console.log(JSON.stringify(result,null,2));if(result.status!=='ELIGIBLE_FOR_MANUAL_REVIEW_ONLY')process.exitCode=2;return result;
   }
-  throw new Error('Usage: calibration-runner.js prepare OUTPUT [Equipment|POS|Insurance] | status COHORT [REVIEW_A REVIEW_B] | lock COHORT OUTPUT REVIEW_A REVIEW_B | holdout COHORT LOCK OUTPUT_DIR | evaluate COHORT LOCK OUTPUT REVIEW_A REVIEW_B');
+  throw new Error('Usage: calibration-runner.js prepare OUTPUT [Equipment|POS|Insurance] | status COHORT [REVIEW_A REVIEW_B] | ai-proxy-evaluate COHORT SIMULATED_EVIDENCE | lock COHORT OUTPUT REVIEW_A REVIEW_B | holdout COHORT LOCK OUTPUT_DIR | evaluate COHORT LOCK OUTPUT REVIEW_A REVIEW_B');
 }
 if(require.main===module)main().catch(error=>{console.error(error.message);process.exitCode=1;});
 module.exports={INPUT_FILES,STATE_FILES,FOCUS_CATEGORIES,calibrationScope,fileHash,hashes,safeOutput,prepare,main};
