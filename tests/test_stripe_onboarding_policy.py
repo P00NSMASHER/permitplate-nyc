@@ -19,6 +19,15 @@ def verify(source):
     assert MAIN in source
     assert OPT_IN in source
     assert "schedule:" in source
+    # An enabled $79 sales surface must not outlive its last private intake
+    # readback merely because the release changes static pages instead of
+    # the onboarding code. Preserve the existing main-only + opt-in guards.
+    assert "  push:\n" in source and "  pull_request:\n" in source
+    push = source.split("  push:\n", 1)[1].split("  pull_request:\n", 1)[0]
+    pr = source.split("  pull_request:\n", 1)[1].split("\npermissions:", 1)[0]
+    for path in ("index.html", "start.html", "release-manifest.json"):
+        assert f"      - '{path}'" in push
+        assert f"      - '{path}'" in pr
     assert "permissions:\n  contents: read" in source
     assert "contents: write" not in source
     assert "cancel-in-progress: ${{ github.event_name == 'pull_request' }}" in source
