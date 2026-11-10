@@ -125,13 +125,13 @@ try{
   ]) assert.equal(index.includes(stale),false,'stale public claim: '+stale);
 
   const start=fs.readFileSync(path.join(build.OUT,'start.html'),'utf8');
-  assert(!start.includes(STRIPE_URL));
-  assert.equal(start.split(STRIPE_URL).length-1,0);
-  assert(start.includes('Request a supervised free trial'));
-  assert(start.includes('Paid membership enrollment is on hold'));
-  assert(start.includes('data-paid-enrollment="hold"'));
-  assert(start.includes('First brief within 5 business days'));
-  assert(start.includes('7-day refund after first brief'));
+  assert(start.includes('href="'+STRIPE_URL+'" rel="noopener noreferrer"'));
+  assert.equal(start.split(STRIPE_URL).length-1,1);
+  assert(start.includes('Continue to secure Stripe checkout'));
+  assert(start.includes('Request a 14-day supervised free trial'));
+  assert(start.includes('data-paid-enrollment="open"'));
+  assert(start.includes('within five business days after successful payment'));
+  assert(start.includes('7-day first-brief refund policy'));
   assert(start.includes('href="/permitplate-nyc/trial.html"'));
   assert(!start.includes('<form'));
 
@@ -141,7 +141,8 @@ try{
     const count=html.split(STRIPE_URL).length-1;
     if(count) stripeOccurrences.push({file,count});
   }
-  assert.deepEqual(stripeOccurrences,[]);
+  assert.deepEqual(stripeOccurrences,[{file:'start.html',count:1}],
+    'the only permitted subscription checkout surface is start.html');
 
   const methodology=fs.readFileSync(path.join(build.OUT,'methodology.html'),'utf8');
   const terms=fs.readFileSync(path.join(build.OUT,'terms.html'),'utf8');
@@ -173,7 +174,7 @@ try{
   assert(start.indexOf('class="checkout-card"')<start.indexOf('class="checkout-explainer"'));
   assert(pa.includes('data-menu-toggle') && pa.includes('data-menu'));
   assert(pa.includes('<script src="/permitplate-nyc/site.js" defer></script>'));
-  assert(start.indexOf('Request a supervised free trial')<start.indexOf('<ul>'));
+  assert(start.indexOf('Continue to secure Stripe checkout')<start.indexOf('<ul>'));
   assert(pa.indexOf('Buy securely for $29')<pa.indexOf('<ul>'));
   assert(pa.indexOf('class="checkout-card"')<pa.indexOf('class="checkout-explainer"'));
   assert(!welcome.includes('Payment complete'));

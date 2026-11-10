@@ -124,12 +124,20 @@ Current revenue reporting is deliberately strict: directory registrations, unpai
 
 The controlled first-subscriber state and commercial-proof state are deliberately separate. Do not describe PermitPlate as commercially proven until a genuine paid subscriber has completed provider-backed delivery/reconciliation and the next run has verified duplicate suppression.
 
-For the founder-curated offer, the Payment Link stays inactive while a read-only
-launch check verifies `preActivationReady: true` against exact current source,
-fresh provider evidence, private intake monitoring and a verified public build.
-This is **configuration review only**, not approval to activate billing or send
-messages. An actual checkout activation requires separate, explicit owner
-authorization. After an authorized activation, verify
-`firstCustomerOperationallyReady: true` against the live provider and preserve
-the paid-intake, delivery and no-send gates. `commerciallyProven` cannot become
-true until genuine paid customer, delivery and next-run deduplication proof.
+The **$79/month founder-curated, no-score membership is accepting Stripe
+checkout** at the existing reviewed `start.html` sales surface. The exact
+live Payment Link and recurring price, required category/territory/Starter
+fields, fresh private intake monitoring and `firstCustomerOperationallyReady:
+true` were verified before publication (November 10, 2026, [launch gate
+receipt](https://github.com/P00NSMASHER/permitplate-nyc/actions/runs/42781507293)).
+The no-card supervised trial remains separate, with no automatic upgrade.
+
+If the provider link becomes inactive or live monitoring/readiness fails,
+**stop promoting or accepting new paid checkouts** and correct the public
+sales surface through another protected release. Do not claim a provider
+change solely from a static website source edit. `preActivationReady`
+is only used when the link is inactive; `firstCustomerOperationallyReady`
+is the active-link intake configuration gate. `commerciallyProven` remains
+**false** until a genuine paid customer, provider-backed delivery/reconciliation
+and a later verified duplicate-suppression run exist. No message is sent
+without separately authorized owner review.

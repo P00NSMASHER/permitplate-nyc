@@ -1,6 +1,6 @@
 {
-  "release": "PermitPlate founder-curated launch v9",
-  "date": "2026-09-23",
+  "release": "PermitPlate founder-curated live checkout v10",
+  "date": "2026-11-10",
   "target_repository": "P00NSMASHER/permitplate-nyc",
   "deployment": {
     "provider": "GitHub Pages",
@@ -18,9 +18,11 @@
       "NYC territory",
       "Starter Snapshot preference"
     ],
-    "public_enrollment": "ON_HOLD",
-    "hold_reason": "Provider-backed preference capture, live onboarding, and fulfillment acceptance not verified.",
-    "external_saved_payment_link_bypass_remains": true
+    "public_enrollment": "OPEN",
+    "external_saved_payment_link_bypass_remains": false,
+    "payment_link_id": "plink_1UG3RUDPW8riWrxQpZwHExK2",
+    "public_checkout_url": "https://buy.stripe.com/4gM28r1cL81x8dF9Xj9sk02",
+    "price_id": "price_1UFjcWDPW8riWrxQhnrPX6nc"
   },
   "customer_portal": {
     "provider": "Stripe hosted customer portal",
@@ -40,7 +42,7 @@
   },
   "free_trial": {
     "public_entry": "trial.html",
-    "admission": "Supervised scope review after customer sends an email request",
+    "admission": "Private manual review of online form applications or customer-initiated email requests; a request is not automatic admission",
     "cohort_limit": 10,
     "max_signals_per_report": 5,
     "max_reports": 2,
@@ -49,6 +51,6 @@
     "card_required": false,
     "automatic_upgrade": false
   },
-  "release_stage": "Supervised free-trial requests; paid enrollment staged pending verified provider readiness.",
+  "release_stage": "Live $79/month founder-curated checkout enabled after verified provider and operational readiness; supervised no-card trial requests also available. No paid-customer proof claimed.",
   "commercial_proof": "Not claimed until a real paid subscriber, provider-backed delivery, and next-run duplicate suppression are verified"
 }

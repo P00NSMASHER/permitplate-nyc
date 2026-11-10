@@ -21,19 +21,27 @@ paid customer promise.
 
 ## Paid activation is a separate authority boundary
 
-Before accepting any paid checkout, run the current-main launch controller
-with fresh restricted-key Stripe reads and the initialized private ledgers.
-While the exact $79 link remains deliberately inactive, a complete
-`preActivationReady: true` indicates that all *other* first-customer
-configuration gates are verified. It does not allow a Stripe mutation,
-customer send, model-score promotion or claim of commercial proof.
+For an **inactive** checkout, first run the current-main launch controller
+with fresh restricted-key Stripe reads and initialized private ledgers.
+`preActivationReady: true` establishes configuration readiness only: it is
+not permission to activate Stripe, send messages or promote scores.
+Activation itself requires separate explicit owner authorization.
 
-Only a separately explicit owner-approved change may activate the exact
-Stripe link. An immediate fresh post-activation read must confirm
-`firstCustomerOperationallyReady: true`; otherwise restore the hold
-through a separately authorized operation before accepting a buyer.
-The first paid customer, provider-accepted delivery and later deduplication
-remain separate genuine-evidence milestones.
+**Current live launch (November 10, 2026):** the existing $79 monthly Stripe
+link was already active when inspected, and the subsequent exact-current-main
+readiness run reported `firstCustomerOperationallyReady: true` with fresh
+provider, intake, portal, preference and published-source checks. The public
+membership page can now link to that verified checkout. Every future use
+still relies on the actual provider being active, monitoring remaining fresh,
+and the relevant customer being verified after purchase; a past green result
+does not override subsequent failures. If readiness turns red, cease offering
+new checkouts and reestablish a verified hold before further sales.
+
+`commerciallyProven` remains false until the first real paid buyer,
+authenticated provider-accepted reviewed delivery, and next actual
+duplicate-suppression run. Do not fabricate customers, send without
+recipient/attempt-bound explicit owner authorization, or enable scored leads
+because the no-score membership is open.
 
 ## First-customer checklist
 
