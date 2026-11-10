@@ -86,7 +86,23 @@ assert.equal(mixed.readyCount,1);
 assert.equal(mixed.reviewCount,1);
 assert(mixed.failures.includes('SCORING_PROMOTION_GATE_NOT_READY'));
 assert(mixed.failures.includes('CANDIDATE_PACKAGE_REVIEW_REQUIRED'));
-assert(mixed.failures.includes('DETECTION_PACKAGE_COUNT_MISMATCH'));
+assert(!mixed.failures.includes('DETECTION_PACKAGE_COUNT_MISMATCH'),
+  'A review hold is not a missing package when all detection packages exist');
+
+const allHeld=runner.packageGate(inputs.receipts,
+  packages.map(item=>({...item,status:'REVIEW',productionAuthorized:false,scoreReceipt:null})),
+  promotion,[]);
+assert.equal(allHeld.passed,false,'A complete but unscored batch must still fail closed');
+assert.equal(allHeld.readyCount,0);
+assert.equal(allHeld.reviewCount,inputs.receipts.length);
+assert(allHeld.failures.includes('CANDIDATE_PACKAGE_REVIEW_REQUIRED'));
+assert(!allHeld.failures.includes('DETECTION_PACKAGE_COUNT_MISMATCH'),
+  'The original all-held case must not claim packages were missing');
+
+const missingPackage=runner.packageGate(inputs.receipts,[packages[0]],promotion,[]);
+assert.equal(missingPackage.passed,false);
+assert(missingPackage.failures.includes('DETECTION_PACKAGE_COUNT_MISMATCH'),
+  'An actually missing package must still fail closed with count mismatch');
 
 const legacyOnly=runner.packageGate([trustedReceipt],[packages[0]],promotion,[]);
 assert.equal(legacyOnly.passed,true,
