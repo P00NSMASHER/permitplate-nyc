@@ -124,6 +124,12 @@ Current revenue reporting is deliberately strict: directory registrations, unpai
 
 The controlled first-subscriber state and commercial-proof state are deliberately separate. Do not describe PermitPlate as commercially proven until a genuine paid subscriber has completed provider-backed delivery/reconciliation and the next run has verified duplicate suppression.
 
-Do not activate the Payment Link until the launch-readiness controller reports
-`firstCustomerOperationallyReady: true` for the founder-curated launch mode,
-against initialized private state and a verified live Pages build.
+For the founder-curated offer, the Payment Link stays inactive while a read-only
+launch check verifies `preActivationReady: true` against exact current source,
+fresh provider evidence, private intake monitoring and a verified public build.
+This is **configuration review only**, not approval to activate billing or send
+messages. An actual checkout activation requires separate, explicit owner
+authorization. After an authorized activation, verify
+`firstCustomerOperationallyReady: true` against the live provider and preserve
+the paid-intake, delivery and no-send gates. `commerciallyProven` cannot become
+true until genuine paid customer, delivery and next-run deduplication proof.

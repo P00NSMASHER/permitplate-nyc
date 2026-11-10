@@ -19,6 +19,22 @@ paid customer promise.
   five-business-day first-send deadline or undeliverable first message gives
   the buyer a first-payment refund option.
 
+## Paid activation is a separate authority boundary
+
+Before accepting any paid checkout, run the current-main launch controller
+with fresh restricted-key Stripe reads and the initialized private ledgers.
+While the exact $79 link remains deliberately inactive, a complete
+`preActivationReady: true` indicates that all *other* first-customer
+configuration gates are verified. It does not allow a Stripe mutation,
+customer send, model-score promotion or claim of commercial proof.
+
+Only a separately explicit owner-approved change may activate the exact
+Stripe link. An immediate fresh post-activation read must confirm
+`firstCustomerOperationallyReady: true`; otherwise restore the hold
+through a separately authorized operation before accepting a buyer.
+The first paid customer, provider-accepted delivery and later deduplication
+remain separate genuine-evidence milestones.
+
 ## First-customer checklist
 
 1. Confirm the subscription is `active` in Stripe and matches price
