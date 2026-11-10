@@ -4,6 +4,15 @@ Existing product: $79/month PermitPlate NYC, founder-curated no-score lane.
 No payment, customer message, external outreach, or provider submission is
 authorized by this document.
 
+**Activation checkpoint (November 10, 2026):** The existing $79/month
+Payment Link was verified active and the live launch controller reported
+`firstCustomerOperationallyReady: true` on the exact deployed release.
+This is permission to display the existing reviewed checkout offer, **not**
+proof that a buyer has paid or received anything. Do not reactivate, recreate,
+or change the provider link merely because this runbook is read. If any
+current provider or intake check fails, stop promoting paid checkout and
+reconcile the live state before further acceptance.
+
 - **Pre-activation:** while the live Payment Link is inactive, require a fresh
   `preActivationReady: true` from the founder-curated launch controller. It
   validates the independent internal, source, checkout-field, portal, private
