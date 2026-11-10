@@ -12,17 +12,19 @@ function adapterResult(){
   return stripe.profileFromCheckout({
     session:{
       id:'cs_mapping_test',object:'checkout.session',payment_link:stripe.PERMITPLATE_PAYMENT_LINK,
-      mode:'subscription',status:'complete',payment_status:'paid',customer:'cus_mapping',
+      mode:'subscription',status:'complete',payment_status:'paid',
+      currency:'usd',amount_subtotal:7900,amount_total:7900,
+      total_details:{amount_tax:0,amount_discount:0,amount_shipping:0},customer:'cus_mapping',
       customer_details:{email:'buyer@example.com'},metadata:{project:'permitplate_nyc'},subscription:'sub_mapping',
       custom_fields:[
         {key:'category',type:'dropdown',dropdown:{value:'equipment'}},
-        {key:'territory',type:'text',text:{value:'Manhattan, Queens'}},
+        {key:'territory',type:'dropdown',dropdown:{value:'ManhattanQueens'}},
         {key:'starter',type:'dropdown',dropdown:{value:'yes'}}
       ]
     },
     subscription:{
       id:'sub_mapping',object:'subscription',created:1790003600,status:'active',customer:'cus_mapping',
-      metadata:{project:'permitplate_nyc'},items:{data:[{price:{id:'price_1UFjcWDPW8riWrxQhnrPX6nc'}}]}
+      metadata:{project:'permitplate_nyc'},items:{object:'list',has_more:false,data:[{quantity:1,price:{id:'price_1UFjcWDPW8riWrxQhnrPX6nc'}}]}
     }
   });
 }

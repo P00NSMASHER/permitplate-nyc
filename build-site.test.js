@@ -114,7 +114,16 @@ try{
   assert(index.includes('The right project.'));
   assert(index.includes('Founder-reviewed'));
   assert(index.includes('Up to 10'));
-  assert(index.includes('First brief in 5 business days'));
+  // Separate supervised trial eligibility from paid-only delivery/refund/cancellation promises.
+  assert(index.includes('Request a supervised 14-day trial'));
+  assert(index.includes('Free trial: requests require individual review and do not reserve a place; no card or automatic upgrade'));
+  assert(index.includes('Paid $79/month plan only (enrollment on hold): first brief within 5 business days after payment'));
+  assert(index.includes('Paid plan only: first payment refundable through 7 days after first brief is sent'));
+  assert(index.includes('Paid plan only: cancel future renewals anytime'));
+  assert(index.includes('<strong>Paid plan</strong><span>First brief within 5 business days after payment</span>'));
+  assert(index.includes('Does a trial request guarantee a place?'));
+  assert(!index.includes('aria-label="Membership terms"'), 'unqualified paid benefits must not flank trial CTA');
+  assert(!index.includes('<span>Cancel anytime</span>'), 'cancellation claim must be scoped to paid members');
   assert(index.includes('data-source-freshness'));
   assert(index.includes('data-product-build'));
   assert((index.match(/<img /g)||[]).length>=6,'homepage should use all six image scenes');

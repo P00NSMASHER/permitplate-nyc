@@ -14,6 +14,8 @@ function session(){
     mode:'subscription',
     status:'complete',
     payment_status:'paid',
+    currency:'usd',amount_subtotal:7900,amount_total:7900,
+    total_details:{amount_tax:0,amount_discount:0,amount_shipping:0},
     customer:'cus_mapping',
     customer_details:{email:'buyer@example.com'},
     client_reference_id:null,
@@ -34,7 +36,7 @@ function subscription(){
     status:'active',
     customer:'cus_mapping',
     metadata:{project:'permitplate_nyc'},
-    items:{data:[{price:{id:'price_1UFjcWDPW8riWrxQhnrPX6nc'}}]}
+    items:{object:'list',has_more:false,data:[{quantity:1,price:{id:'price_1UFjcWDPW8riWrxQhnrPX6nc'}}]}
   };
 }
 function activationResult(){
