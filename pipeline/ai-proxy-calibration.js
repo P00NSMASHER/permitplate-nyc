@@ -32,7 +32,8 @@ function evaluateAIProxy(cohort,artifact,nowIso=new Date().toISOString()){
   if(authorization.status!=='OWNER_AUTHORIZED_AI_REVIEW_SUBSTITUTION_FOR_EXPERIMENTAL_CALIBRATION'||
       authorization.allowAIProxyForTuningEvidence!==true||
       authorization.allowCustomerScoredFeed!==false||
-      authorization.automaticProductionAuthorization!==false||
+      authorization.automaticPromotionAllowed!==false||
+      authorization.automaticExternalSendAllowed!==false||
       authorization.allowAIProxyForHumanPrecisionClaim!==false||
       authorization.allowAIProxyForBuyerPrecisionClaim!==false||
       authorization.numericProtocolUnchanged!==true||
