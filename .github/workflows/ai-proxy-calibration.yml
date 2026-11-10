@@ -1,0 +1,169 @@
+name: PermitPlate owner-authorized AI proxy calibration (NO_SEND)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scoring/ai-proxy-review-owner-authorization.json'
+      - 'pipeline/ai-proxy-calibration.js'
+      - 'pipeline/ai-proxy-calibration.test.js'
+      - 'pipeline/calibration-runner.js'
+      - '.github/workflows/ai-proxy-calibration.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scoring/ai-proxy-review-owner-authorization.json'
+      - 'pipeline/ai-proxy-calibration.js'
+      - 'pipeline/ai-proxy-calibration.test.js'
+      - 'pipeline/calibration-runner.js'
+      - '.github/workflows/ai-proxy-calibration.yml'
+      - 'tests/test_ai_proxy_calibration_workflow_policy.py'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('permitplate-ai-proxy-pr-{0}',github.event.pull_request.number) || format('permitplate-private-state-{0}', vars.PERMITPLATE_STATE_REPO) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check out exact tested source without credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Set up pinned Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.4'
+      - name: Test simulated label integrity and unchanged numeric calibration policy
+        run: node --test pipeline/ai-proxy-calibration.test.js
+      - name: Verify main-only private AI calibration trust boundaries
+        run: python3 -m unittest discover -s tests -p test_ai_proxy_calibration_workflow_policy.py -v
+
+  evaluate-private:
+    needs: policy
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      STATE_REPO: ${{ vars.PERMITPLATE_STATE_REPO }}
+      PRIVATE_DIR: ${{ github.workspace }}/.private-state
+      AI_REVIEW_DIR: ${{ github.workspace }}/.private-state/research/ai-proxy-calibration/42842957840
+    steps:
+      - name: Check out exact current main without credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Admit exact current main before private credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = 'refs/heads/main'
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          current="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          test -n "$current" && test "$current" = "$GITHUB_SHA"
+      - name: Set up pinned Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.4'
+      - name: Confirm dedicated private state repository
+        env:
+          GH_TOKEN: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$STATE_REPO" && test -n "${GH_TOKEN:-}"
+          test "$STATE_REPO" != "$GITHUB_REPOSITORY"
+          test "$(gh api "repos/$STATE_REPO" --jq '.visibility')" = "private"
+      - name: Check out protected private state without persistent credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: ${{ vars.PERMITPLATE_STATE_REPO }}
+          token: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
+          ref: main
+          path: .private-state
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Evaluate owner-approved AI proxy labels against unchanged numerical support
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$AI_REVIEW_DIR/ai-reviewer-simulation.json"
+          cohort="$PRIVATE_DIR/research/blind-calibration/42842957840/operator/cohort.json"
+          test -f "$evidence" && test -f "$cohort"
+          set +e
+          node pipeline/calibration-runner.js ai-proxy-evaluate "$cohort" "$evidence" > "$AI_REVIEW_DIR/ai-proxy-gate-result.json"
+          status=$?
+          set -e
+          # An unchanged-policy FAIL_CLOSED result is the only preapproved outcome.
+          test "$status" = "2"
+          node - <<'NODE'
+          const fs=require('node:fs');
+          const c=require('./pipeline/calibration-cohort');
+          const report=JSON.parse(fs.readFileSync(process.env.AI_REVIEW_DIR+'/ai-proxy-gate-result.json','utf8'));
+          if(!c.verify(report)||
+             report.status!=='AI_PROXY_CALIBRATION_BLOCKED'||
+             report.sourceRevision!=='78c205cd742462831eaa30fed6ae96346a82202b'||
+             report.tuningCases!==70||report.simulatedReviewerCount!==2||
+             report.independentHumanReviewerCount!==0||
+             report.aiProxyTuningGatePassed!==false||
+             report.productionAuthorized!==false||
+             report.customerDeliveryAllowed!==false||
+             report.verifiedBuyerPrecision!==null||
+             report.externalSendCalls!==0||
+             !report.failures.includes('AI_PROXY_PRECISION_OR_SUPPORT_FAILED')){
+            throw Error('AI_PROXY_GATE_UNEXPECTED_RESULT_FAIL_CLOSED');
+          }
+          console.log(JSON.stringify({
+            status:report.status,sourceRevision:report.sourceRevision,
+            tuningCases:report.tuningCases,disagreements:report.disagreementCount,
+            aiProxyPrecisionSupported:false,productionAuthorized:false,
+            customerDeliveryAllowed:false,externalSendCalls:0
+          }));
+          NODE
+      - name: Recheck exact approved public source after private evaluation
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          current="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          test -n "$current" && test "$current" = "$GITHUB_SHA"
+      - name: Stage only private AI proxy diagnostics
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C "$PRIVATE_DIR" config user.name 'PermitPlate AI Proxy Research'
+          git -C "$PRIVATE_DIR" config user.email 'actions@users.noreply.github.com'
+          git -C "$PRIVATE_DIR" add -- research/ai-proxy-calibration/42842957840/ai-proxy-gate-result.json
+          if git -C "$PRIVATE_DIR" diff --cached --quiet; then
+            echo 'No change in private AI proxy diagnostic'
+          else
+            git -C "$PRIVATE_DIR" commit -m "research: blocked AI proxy scoring calibration ($GITHUB_RUN_ID)"
+          fi
+      - name: Publish private diagnostics with current-main compare and swap
+        env:
+          GH_TOKEN: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${GH_TOKEN:-}"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          current="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          test -n "$current" && test "$current" = "$GITHUB_SHA"
+          gh auth setup-git
+          remote="$(git -C "$PRIVATE_DIR" ls-remote origin refs/heads/main | cut -f1)"
+          local_head="$(git -C "$PRIVATE_DIR" rev-parse HEAD)"
+          if [ "$remote" = "$local_head" ]; then
+            echo 'No private AI calibration push needed'
+            exit 0
+          fi
+          parent="$(git -C "$PRIVATE_DIR" rev-parse HEAD^)"
+          test "$remote" = "$parent"
+          git -C "$PRIVATE_DIR" push origin HEAD:main
