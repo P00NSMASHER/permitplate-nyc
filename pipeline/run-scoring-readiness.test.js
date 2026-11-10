@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const readiness = require('./run-scoring-readiness');
+const promotionCanary = require('./run-scoring-promotion-canary');
 
 function batch(sourceId, overrides={}) {
   return {
@@ -103,6 +104,43 @@ function batch(sourceId, overrides={}) {
       ['SLA_PENDING','VERIFIED_EMPTY',0]
     ]
   );
+}
+
+{
+  // Replay the exact aggregate status from the November 10 failed canary.
+  const blocked={
+    graphState:'COMPLETE',candidateCount:4254,
+    productionScoringMode:'CANONICAL_V3_WITH_LEGACY_FALLBACK',
+    promotion:{canaryReady:false},
+    canonicalProductionReceiptCount:0,
+    productionAuthorizedReceiptCount:0,
+    canonicalCanaryProbeReceiptCount:1,
+    canonicalCanaryProductionAuthorizedCount:0,
+    canaryDeliveryBoundaryProbe:{blocked:true},
+    productionDeliveryBoundaryProbe:{accepted:false},
+    externalSendCalls:0
+  };
+  const diagnostic=promotionCanary.evaluateCanaryAcceptance(blocked);
+  assert.equal(diagnostic.passed,false,'No current overlap must never authorize customer scoring');
+  assert.deepEqual(diagnostic.failures,[
+    'CURRENT_PROMOTION_EVIDENCE_NOT_READY',
+    'CANONICAL_PRODUCTION_RECEIPTS_INCOMPLETE',
+    'PRODUCTION_AUTHORIZED_RECEIPTS_INCOMPLETE',
+    'PRODUCTION_DELIVERY_NOT_ACCEPTED'
+  ]);
+  const ready={...blocked,promotion:{canaryReady:true},
+    canonicalProductionReceiptCount:4254,
+    productionAuthorizedReceiptCount:4254,
+    productionDeliveryBoundaryProbe:{accepted:true}};
+  assert.deepEqual(promotionCanary.evaluateCanaryAcceptance(ready),{passed:true,failures:[]});
+  assert.equal(promotionCanary.evaluateCanaryAcceptance({...ready,
+    promotion:{canaryReady:false}}).passed,false,'Numeric receipts do not override evidence hold');
+  assert.equal(promotionCanary.evaluateCanaryAcceptance({...ready,
+    canaryDeliveryBoundaryProbe:{blocked:false}}).passed,false,'Unsafe canary cannot pass');
+  assert.equal(promotionCanary.evaluateCanaryAcceptance({...ready,
+    externalSendCalls:1}).passed,false,'External sends cannot pass');
+  assert.equal(promotionCanary.evaluateCanaryAcceptance({...ready,
+    canonicalCanaryProductionAuthorizedCount:1}).passed,false,'Canary must remain unpromoted');
 }
 
 console.log('PermitPlate scoring readiness diagnostics regression tests passed.');
