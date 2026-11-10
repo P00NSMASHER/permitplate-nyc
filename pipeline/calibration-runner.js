@@ -7,6 +7,7 @@ const path=require('node:path');
 const {createHash}=require('node:crypto');
 const c=require('./calibration-cohort');
 const e=require('./calibration-evaluation');
+const reviewProgress=require('./calibration-review-progress');
 const {renderWorkbench}=require('./calibration-workbench');
 const clock=require('./event-time');
 const ROOT=path.resolve(__dirname,'..');
@@ -93,6 +94,15 @@ async function main(args=process.argv.slice(2)){
   if(command==='prepare'){
     const summary=await prepare(a[0],a[1]);console.log(JSON.stringify(summary,null,2));if(!summary.passed)process.exitCode=1;return summary;
   }
+  if(command==='status'){
+    const [cohortFile,...files]=a;
+    if(!cohortFile)throw Error('COHORT_FILE_REQUIRED');
+    const result=reviewProgress.evaluateReviewProgress(read(cohortFile),reviewers(files));
+    console.log(JSON.stringify(result,null,2));
+    // This command is for read-only visibility. A 0 process exit does not
+    // authorize customer scoring, unlock the holdout, or claim live precision.
+    return result;
+  }
   if(command==='lock'){
     const [cohortFile,output,...reviews]=a,cohort=read(cohortFile);
     const result=e.lockThresholds(cohort,reviewers(reviews),new Date().toISOString());
@@ -108,7 +118,7 @@ async function main(args=process.argv.slice(2)){
     const result=e.evaluateHoldout(read(cohortFile),read(lockFile),reviewers(reviews));write(output,result);
     console.log(JSON.stringify(result,null,2));if(result.status!=='ELIGIBLE_FOR_MANUAL_REVIEW_ONLY')process.exitCode=2;return result;
   }
-  throw new Error('Usage: calibration-runner.js prepare OUTPUT [Equipment|POS|Insurance] | lock COHORT OUTPUT REVIEW_A REVIEW_B | holdout COHORT LOCK OUTPUT_DIR | evaluate COHORT LOCK OUTPUT REVIEW_A REVIEW_B');
+  throw new Error('Usage: calibration-runner.js prepare OUTPUT [Equipment|POS|Insurance] | status COHORT [REVIEW_A REVIEW_B] | lock COHORT OUTPUT REVIEW_A REVIEW_B | holdout COHORT LOCK OUTPUT_DIR | evaluate COHORT LOCK OUTPUT REVIEW_A REVIEW_B');
 }
 if(require.main===module)main().catch(error=>{console.error(error.message);process.exitCode=1;});
 module.exports={INPUT_FILES,STATE_FILES,FOCUS_CATEGORIES,calibrationScope,fileHash,hashes,safeOutput,prepare,main};
