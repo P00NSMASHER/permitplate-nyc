@@ -267,6 +267,9 @@ jobs:
       - name: Verify synthetic independent-review simulation never grants scoring authority
         run: node --test pipeline/simulated-independent-review.test.js
 
+      - name: Require complete blind human review and reject draft scoring authority
+        run: node --test pipeline/calibration-review-progress.test.js
+
       - name: Verify exact Cloudflare Pages standalone publication build
         run: |
           node build-site.test.js
