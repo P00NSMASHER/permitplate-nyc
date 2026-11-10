@@ -11,6 +11,11 @@ on:
       - 'pipeline/stripe-readonly-checkout-poll.js'
       - 'pipeline/run-curated-stripe-onboarding.js'
       - 'pipeline/curated-stripe-onboarding.test.js'
+      # A live sales-surface release must refresh verified private onboarding
+      # on exact current main before relying on recurring monitoring.
+      - 'index.html'
+      - 'start.html'
+      - 'release-manifest.json'
       - '.github/workflows/stripe-onboarding.yml'
   pull_request:
     branches: [main]
@@ -19,6 +24,9 @@ on:
       - 'pipeline/stripe-readonly-checkout-poll.js'
       - 'pipeline/run-curated-stripe-onboarding.js'
       - 'pipeline/curated-stripe-onboarding.test.js'
+      - 'index.html'
+      - 'start.html'
+      - 'release-manifest.json'
       - 'tests/test_stripe_onboarding_policy.py'
       - '.github/workflows/stripe-onboarding.yml'
 
