@@ -76,7 +76,8 @@ test('owner authorization is explicitly AI only, never human-precision or automa
   assert.equal(authorization.allowAIProxyForHumanPrecisionClaim,false);
   assert.equal(authorization.allowAIProxyForBuyerPrecisionClaim,false);
   assert.equal(authorization.allowCustomerScoredFeed,false);
-  assert.equal(authorization.automaticProductionAuthorization,false);
+  assert.equal(authorization.automaticPromotionAllowed,false);
+  assert.equal(authorization.automaticExternalSendAllowed,false);
 });
 test('3-vs-6 simulated positives fail unchanged support and cannot unlock customer scores',()=>{
   const out=gate.evaluateAIProxy(fakeRealShape,artifactFor());
