@@ -270,6 +270,9 @@ jobs:
       - name: Require complete blind human review and reject draft scoring authority
         run: node --test pipeline/calibration-review-progress.test.js
 
+      - name: Verify owner-authorized AI proxy calibration never invents human or buyer precision
+        run: node --test pipeline/ai-proxy-calibration.test.js
+
       - name: Verify exact Cloudflare Pages standalone publication build
         run: |
           node build-site.test.js
