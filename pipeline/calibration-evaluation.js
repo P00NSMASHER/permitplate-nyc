@@ -16,6 +16,11 @@ function validateReviews(cohort,envelopes,phase,lock=null){
       e.packetFingerprint!==packet.fingerprint||e.phase!==phase||e.lockFingerprint!==packet.lockFingerprint){
       errors.push('REVIEW_PACKET_BINDING_INVALID');continue;
     }
+    // Offline progress exports are useful to resume review, never evidence
+    // that a human completed and attested to a full independent packet.
+    if(e.draft!==undefined && e.draft!==false){
+      errors.push('DRAFT_REVIEW_NOT_ACCEPTED');continue;
+    }
     if(!/^[a-zA-Z0-9_-]{3,64}$/.test(e.reviewerId||'')||reviewers.has(e.reviewerId)){
       errors.push('REVIEWER_ID_INVALID_OR_DUPLICATE');continue;
     }
