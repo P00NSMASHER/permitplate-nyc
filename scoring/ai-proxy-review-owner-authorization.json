@@ -1,0 +1,26 @@
+{
+  "version": "PermitPlate-owner-ai-proxy-review-authorization-v1.0.0",
+  "status": "OWNER_AUTHORIZED_AI_REVIEW_SUBSTITUTION_FOR_EXPERIMENTAL_CALIBRATION",
+  "ownerAuthorizedOn": "2026-11-10",
+  "ownerInstruction": "Accept the two clearly labeled AI-simulated reviewer judgments as substitutes for independent human reviews in a separate experimental calibration evaluation",
+  "privateEvidencePath": "research/ai-proxy-calibration/42842957840/ai-reviewer-simulation.json",
+  "privateEvidenceRunId": "42842957840",
+  "sourceRevision": "78c205cd742462831eaa30fed6ae96346a82202b",
+  "permittedCategories": [
+    "Equipment"
+  ],
+  "expectedReviewerCodes": [
+    "AI_SOURCE_TIME_CONSERVATIVE",
+    "AI_VENDOR_RESEARCH_EXPANSIVE"
+  ],
+  "reviewType": "AI_SIMULATED_NOT_HUMAN",
+  "humanIndependentReviewClaimAllowed": false,
+  "numericProtocolUnchanged": true,
+  "allowAIProxyForTuningEvidence": true,
+  "allowAIProxyForHumanPrecisionClaim": false,
+  "allowAIProxyForBuyerPrecisionClaim": false,
+  "allowCustomerScoredFeed": false,
+  "automaticPromotionAllowed": false,
+  "automaticExternalSendAllowed": false,
+  "note": "This authorizes an explicitly simulated two-rubric calibration gate only; unchanged sample support, agreement, threshold, confidence and holdout requirements still apply. An AI label is not verified buyer behavior or an independent human label."
+}
