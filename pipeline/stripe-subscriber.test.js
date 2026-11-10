@@ -83,13 +83,48 @@ function subscription(overrides){
         {key:'starter',type:'dropdown',dropdown:{value:'no'}}
       ]
     }),
-    subscription:subscription({status:'trialing'})
+    subscription:subscription()
   });
   assert.equal(out.status,'ACTIVE');
   assert.deepEqual(out.profile.categories,['POS']);
   assert.equal(out.profile.starterSnapshotEnabled,false);
   assert.equal(out.profile.boroughs.length,5);
   assert.equal(s.toPrivateSheetRow(out)['Boroughs/Territory'],'ALL NYC');
+}
+
+{
+  // RED regression: a completed Checkout with no first payment must never
+  // create a paid subscriber, even when a subscription appears active.
+  const noPayment=session({payment_status:'no_payment_required'});
+  const active=subscription({status:'active'});
+  const direct=s.profileFromCheckout({session:noPayment,subscription:active});
+  const external=s.profileFromCheckoutAndPreferences({
+    session:session({payment_status:'no_payment_required',custom_fields:[]}),
+    subscription:active,
+    preferences:{category:'Equipment',boroughs:['Manhattan']}
+  });
+  for(const result of [direct,external]){
+    assert.equal(result.status,'REVIEW','unpaid Checkout must not establish paid entitlement');
+    assert(result.failures.includes('CHECKOUT_PAYMENT_NOT_CONFIRMED'));
+    assert.equal(result.profile,null);
+  }
+}
+
+{
+  // RED regression: Stripe trialing is not this product's paid subscription.
+  const paid=session({payment_status:'paid'});
+  const trial=subscription({status:'trialing'});
+  const direct=s.profileFromCheckout({session:paid,subscription:trial});
+  const external=s.profileFromCheckoutAndPreferences({
+    session:session({payment_status:'paid',custom_fields:[]}),
+    subscription:trial,
+    preferences:{category:'Equipment',boroughs:['Manhattan']}
+  });
+  for(const result of [direct,external]){
+    assert.equal(result.status,'REVIEW','trialing subscription must not grant paid entitlement');
+    assert(result.failures.includes('SUBSCRIPTION_STATUS_NOT_ELIGIBLE'));
+    assert.equal(result.profile,null);
+  }
 }
 
 {
