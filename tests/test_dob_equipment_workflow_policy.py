@@ -17,8 +17,8 @@ def verify(flow,source,runner):
     assert flow.index("Verify exact current main before loading private token") < flow.index("secrets.PERMITPLATE_STATE_TOKEN")
     assert flow.index("Recheck exact protected main immediately before private commit") < flow.index("Publish to private repository with compare-and-swap")
     assert flow.count("git ls-remote --exit-code origin refs/heads/main") == 3
-    assert flow.count("persist-credentials: false") == 3
-    assert flow.count("actions/checkout@11d5960a326750d5838078e36cf38b85af677262") == 3
+    assert flow.count("persist-credentials: false") == 4
+    assert flow.count("actions/checkout@11d5960a326750d5838078e36cf38b85af677262") == 4
     assert "test \"$STATE_REPO\" != \"$GITHUB_REPOSITORY\"" in flow
     assert "gh api \"repos/$STATE_REPO\" --jq '.visibility'" in flow
     assert "research/dob-equipment/$GITHUB_RUN_ID" in flow
@@ -48,7 +48,7 @@ class Policy(unittest.TestCase):
         verify(self.f,self.s,self.r)
 
     def test_reject_token_before_main_verification(self):
-        with self.assertRaises(AssertionError):
+        with self.assertRaises((AssertionError, ValueError)):
             verify(self.f.replace("Verify exact current main before loading private token",
                 "No exact main admission",1),self.s,self.r)
 
