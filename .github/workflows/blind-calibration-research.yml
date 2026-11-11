@@ -20,6 +20,7 @@ on:
       - 'pipeline/calibration-review-progress.js'
       - 'pipeline/calibration-review-progress.test.js'
       - 'pipeline/calibration-focused.test.js'
+      - 'pipeline/calibration-dated-prepermit.test.js'
 
 permissions:
   contents: read
@@ -43,9 +44,79 @@ jobs:
         with:
           node-version: '22.23.4'
       - name: Test blinded calibration source integrity and private outputs
-        run: node --test pipeline/calibration.test.js pipeline/calibration-integrity.test.js pipeline/calibration-cli.test.js pipeline/calibration-focused.test.js pipeline/calibration-review-progress.test.js
+        run: node --test pipeline/calibration.test.js pipeline/calibration-integrity.test.js pipeline/calibration-cli.test.js pipeline/calibration-focused.test.js pipeline/calibration-review-progress.test.js pipeline/calibration-dated-prepermit.test.js
       - name: Defend private blind-calibration workflow
         run: python3 -m unittest discover -s tests -p 'test_blind_calibration_workflow_policy.py' -v
+
+  # Public source-only eligibility check. Never reads private cohorts, review
+  # exports, Stripe, customer data or state. A failing source-support check is
+  # an evidence deficit, not an invitation to lower the 100-case sample.
+  dated-population-preflight:
+    needs: policy
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact PR source without credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Pinned Node for source-only research
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.4'
+      - name: Verify real, source-dated 100-site Equipment research support
+        env:
+          SOURCE_COMMIT: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          'use strict';
+          const c=require('./pipeline/calibration-cohort');
+          const run=require('./pipeline/calibration-runner');
+          const {scanBatches}=require('./pipeline/run-source-health');
+          const {buildCurrentGraph}=require('./pipeline/candidate-builder');
+          (async()=>{
+            const {observedAt,batches}=await scanBatches();
+            const graph=buildCurrentGraph({
+              dohmhBatch:batches.DOHMH,
+              slaBatch:batches.SLA_PENDING,
+              dobBatch:batches.DOB_NOW,
+              reviewedIdentityBridges:[]
+            });
+            const cohort=c.buildCohort({graph,batches,observedAt,
+              sourceRevision:process.env.SOURCE_COMMIT,
+              codeHashes:run.hashes(run.INPUT_FILES),
+              categories:['Equipment'],benchmarkSize:100,diagnosticSize:0,
+              populationScope:c.DATED_SCOPE});
+            c.validateCohort(cohort);
+            if(cohort.counts.benchmark!==100||
+               cohort.counts.tuning!==70||cohort.counts.holdout!==30||
+               cohort.productionAuthorized!==false){
+              throw Error('DATED_SAMPLE_INTEGRITY_FAILED');
+            }
+            // Only aggregate support and source revision, never case IDs,
+            // private reviews, source records, or model predictions.
+            console.log(JSON.stringify({
+              status:'SOURCE_DATED_RESEARCH_SAMPLE_SUPPORTED',
+              sourceRevision:cohort.sourceRevision,
+              sourceGraphState:graph.graphState,
+              graphCandidateCount:cohort.counts.graphCandidates,
+              eligibleDatedSiteGroups:cohort.counts.eligibleSiteGroups,
+              benchmark:cohort.counts.benchmark,
+              tuning:cohort.counts.tuning,
+              hiddenHoldout:cohort.counts.holdout,
+              productionAuthorized:false,
+              externalSendCalls:0
+            }));
+          })().catch(e=>{
+            console.error(/^DATED_PREPERMIT_SUPPORT_BELOW_100:\d+$/.test(e.message)?
+              e.message:'DATED_RESEARCH_PREFLIGHT_FAILED');
+            process.exitCode=1;
+          });
+          NODE
 
   prepare-private-cohort:
     needs: policy
