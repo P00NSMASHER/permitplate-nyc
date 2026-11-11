@@ -17,6 +17,15 @@ const PROTOCOL=Object.freeze({
   currentDefaultThreshold:60,
   automaticPromotion:false
 });
+// Alternative prospective research population, NEVER a replacement for the
+// original all-sites benchmark or a production scoring authorization.
+const DATED_SCOPE='DATED_DOHMH_PREPERMIT_30D_V1';
+const DATED_PROTOCOL=Object.freeze({
+  ...PROTOCOL,
+  id:'PermitPlate-dated-prepermit-equipment-relevance-v1',
+  population:'CURRENT_OFFICIAL_DOHMH_INSPECTION_WITHIN_30_DAYS_PER_SITE',
+  automaticPromotion:false
+});
 const stable=clock.stable;
 const hash=value=>createHash('sha256').update(stable(value)).digest('hex');
 const text=v=>typeof v==='string'?v.trim():'';
@@ -54,8 +63,23 @@ function diagnosticBucket(item){
   if(Object.keys(item.predictions.v3).some(k=>item.predictions.v3[k]>=60&&item.predictions.v4[k]<60)) return 'CUTOFF_DISAGREEMENT';
   return 'UNDATED_OTHER';
 }
+function officialDatedPrepermit(candidate,chronology,accepted){
+  if(candidate?.lifecycleStage!=='HEALTH PRE-PERMIT' ||
+    chronology?.status!=='KNOWN' ||
+    chronology.eventDateBasis!=='DOHMH_INSPECTION_DATE' ||
+    !Number.isInteger(chronology.businessEventAgeCalendarDays) ||
+    chronology.businessEventAgeCalendarDays<0 ||
+    chronology.businessEventAgeCalendarDays>30 ||
+    accepted?.failures?.length) return false;
+  return accepted.records.some(record=>
+    record.sourceSystem==='DOHMH' &&
+    record.sourceRecordId===chronology.eventSourceRecordId &&
+    clock.calendarDate(record.facts?.inspection_date)===chronology.latestKnownEventDate
+  );
+}
 function buildCohort({graph,batches,observedAt,sourceRevision,codeHashes,seed='permitplate-issue10-v1',
-  categories=['POS','Insurance','Equipment'],benchmarkSize=100,diagnosticSize=24,isSynthetic=false}){
+  categories=['POS','Insurance','Equipment'],benchmarkSize=100,diagnosticSize=24,isSynthetic=false,
+  populationScope=null}){
   if(graph?.graphState!=='COMPLETE'||!text(graph.graphDigest)) throw new Error('COMPLETE_GRAPH_REQUIRED');
   if(!clock.instant(observedAt)) throw new Error('VALID_OBSERVATION_REQUIRED');
   observedAt=clock.instant(observedAt);
@@ -63,6 +87,12 @@ function buildCohort({graph,batches,observedAt,sourceRevision,codeHashes,seed='p
   if(!codeHashes||Object.keys(codeHashes).length<3||Object.values(codeHashes).some(h=>!/^[a-f0-9]{64}$/.test(h))) throw new Error('CODE_HASHES_REQUIRED');
   if(!Array.isArray(categories)||!categories.length||new Set(categories).size!==categories.length||categories.some(c=>!v4.CATEGORIES.includes(c))) throw new Error('CATEGORIES_INVALID');
   if(!Number.isInteger(benchmarkSize)||benchmarkSize<2||benchmarkSize>500||!Number.isInteger(diagnosticSize)||diagnosticSize<0||diagnosticSize>100) throw new Error('SAMPLE_SIZE_INVALID');
+  const dated=populationScope===DATED_SCOPE;
+  if(populationScope!==null&&!dated)throw new Error('UNKNOWN_CALIBRATION_POPULATION');
+  if(dated&&(categories.length!==1||categories[0]!=='Equipment'||
+     benchmarkSize!==100||diagnosticSize!==0)){
+    throw new Error('DATED_CALIBRATION_SCOPE_OR_SAMPLE_INVALID');
+  }
   const records=v3.sourceMap(Object.values(batches||{}).flatMap(b=>b.records||[]));
   const seen=new Set(),items=[];
   for(const c of graph.candidates||[]){
@@ -71,8 +101,9 @@ function buildCohort({graph,batches,observedAt,sourceRevision,codeHashes,seed='p
     const before=v3.computeShadowScores(c,records,observedAt),after=v4.computeShadowScores(c,records,observedAt);
     const chronology=after.eventChronology||clock.describe(c,records,observedAt);
     const accepted=clock.acceptedSources(c,records);
-    const eligible=after.status==='SHADOW_SCORED'&&before.status==='SHADOW_SCORED'&&
+    const baselineEligible=after.status==='SHADOW_SCORED'&&before.status==='SHADOW_SCORED'&&
       after.fitReceipt?.fit!=='EXCLUDE'&&c.deliverySuppressed!==true&&!(c.crossCamisOperationalConflicts||[]).length;
+    const eligible=baselineEligible&&(!dated||officialDatedPrepermit(c,chronology,accepted));
     const card={businessName:text(c.canonicalName),address:text(c.address),borough:text(c.borough),
       stage:clock.customerStage(c.lifecycleStage),businessEventDate:chronology.latestKnownEventDate,
       eventDateBasis:chronology.eventDateBasis,eventTimeStatus:chronology.status,
@@ -80,6 +111,7 @@ function buildCohort({graph,batches,observedAt,sourceRevision,codeHashes,seed='p
       identityCaveat:c.deliverySuppressed===true||(c.crossCamisOperationalConflicts||[]).length?
         'Conflicting business identity at these premises; requires resolution.':null,
       chronologyLimitation:chronology.limitation,
+      ...(dated?{eventSourceRecordId:chronology.eventSourceRecordId}:{}),
       evidence:accepted.records.map(sourceCard)};
     items.push({entityId:c.entityId,groupId:hash(siteKey(c)),eligible,chronology,
       evidenceFingerprint:hash(card),card,
@@ -89,6 +121,9 @@ function buildCohort({graph,batches,observedAt,sourceRevision,codeHashes,seed='p
   for(const item of items.filter(i=>i.eligible)){
     if(!groups.has(item.groupId)) groups.set(item.groupId,[]);groups.get(item.groupId).push(item);
   }
+  // Never relabel a seven-case dated subsample as a supported 100-case cohort.
+  // An inadequate official dated population is an explicit research hold.
+  if(dated&&groups.size<100)throw new Error('DATED_PREPERMIT_SUPPORT_BELOW_100:'+groups.size);
   const ordered=[...groups.keys()].sort((a,b)=>hash([seed,'sample',a]).localeCompare(hash([seed,'sample',b])));
   const representatives=ordered.slice(0,benchmarkSize).map(g=>groups.get(g).slice().sort((a,b)=>
     hash([seed,'representative',a.entityId]).localeCompare(hash([seed,'representative',b.entityId])))[0]);
@@ -118,15 +153,24 @@ function buildCohort({graph,batches,observedAt,sourceRevision,codeHashes,seed='p
   const counts={graphCandidates:items.length,eligibleCandidates:items.filter(i=>i.eligible).length,
     eligibleSiteGroups:groups.size,benchmark:representatives.length,holdout:holdoutCount,
     tuning:representatives.length-holdoutCount,diagnostic:diagnostics.length};
-  return sealed({version:VERSION,cohortId:'COHORT-'+hash([graph.graphDigest,seed,sourceRevision,categories,codeHashes]).slice(0,24),
-    observedAt,sourceRevision,graphDigest:graph.graphDigest,codeHashes,seed,categories,protocol:PROTOCOL,
-    isSynthetic:isSynthetic===true,population:PROTOCOL.population,
-    sampling:'Deterministic uniform hash sample of site groups, one hash-selected eligible entity per group; diagnostic oversampling excluded from threshold metrics.',
+  const protocol=dated?DATED_PROTOCOL:PROTOCOL;
+  return sealed({version:VERSION,cohortId:'COHORT-'+hash([graph.graphDigest,seed,sourceRevision,categories,codeHashes,dated?DATED_SCOPE:null]).slice(0,24),
+    observedAt,sourceRevision,graphDigest:graph.graphDigest,codeHashes,seed,categories,protocol,
+    ...(dated?{populationScope:DATED_SCOPE}:{}),
+    isSynthetic:isSynthetic===true,population:protocol.population,
+    sampling:dated?
+      'Separate prospective 0-30-day official DOHMH pre-permit source-event population. Deterministic uniform site-group sample; one entity per site; 70 tuning/30 hidden holdout; not generalizable to undated applicants.':
+      'Deterministic uniform hash sample of site groups, one hash-selected eligible entity per group; diagnostic oversampling excluded from threshold metrics.',
     counts,rows,productionAuthorized:false,transportMode:'NO_SEND'});
 }
 function validateCohort(cohort){
+  const dated=cohort?.populationScope===DATED_SCOPE;
+  const protocol=dated?DATED_PROTOCOL:PROTOCOL;
   if(!verify(cohort)||cohort.version!==VERSION||cohort.productionAuthorized!==false||
-    cohort.transportMode!=='NO_SEND'||stable(cohort.protocol)!==stable(PROTOCOL)) throw new Error('COHORT_INTEGRITY_INVALID');
+    cohort.transportMode!=='NO_SEND'||
+    (cohort.populationScope!==undefined&&!dated)||
+    stable(cohort.protocol)!==stable(protocol)||
+    cohort.population!==protocol.population) throw new Error('COHORT_INTEGRITY_INVALID');
   if(!Array.isArray(cohort.categories)||!cohort.categories.length||
     new Set(cohort.categories).size!==cohort.categories.length||
     cohort.categories.some(category=>!v4.CATEGORIES.includes(category))) throw new Error('COHORT_CATEGORIES_INVALID');
@@ -149,6 +193,22 @@ function validateCohort(cohort){
     if(row.panel==='DIAGNOSTIC'&&row.split!=='DIAGNOSTIC')throw new Error('DIAGNOSTIC_SPLIT_INVALID');
     if(row.panel==='BENCHMARK'&&!row.eligible)throw new Error('INELIGIBLE_BENCHMARK_CASE');
     if(hash(row.card)!==row.evidenceFingerprint)throw new Error('EVIDENCE_FINGERPRINT_MISMATCH');
+    if(dated){
+      const card=row.card,asOf=clock.nycDate(cohort.observedAt);
+      const event=clock.calendarDate(card.businessEventDate);
+      const age=event&&asOf?Math.round((Date.parse(asOf)-Date.parse(event))/86400000):NaN;
+      if(!row.eligible||row.panel!=='BENCHMARK'||
+        card.stage!=='HEALTH PRE-PERMIT'||
+        card.eventTimeStatus!=='KNOWN'||
+        card.eventDateBasis!=='DOHMH_INSPECTION_DATE'||
+        !Number.isInteger(age)||age<0||age>30||
+        !card.evidence?.some(record=>
+          record.sourceSystem==='DOHMH'&&
+          record.recordId===card.eventSourceRecordId&&
+          clock.calendarDate(record.facts?.inspection_date)===event)){
+        throw new Error('DATED_PREPERMIT_SOURCE_EVIDENCE_INVALID');
+      }
+    }
     actual[row.panel==='BENCHMARK'?'benchmark':'diagnostic']++;
     if(row.split==='TUNING')actual.tuning++;
     if(row.split==='HOLDOUT')actual.holdout++;
@@ -166,6 +226,9 @@ function validateCohort(cohort){
     }
   }
   const counts=cohort.counts,fields=['graphCandidates','eligibleCandidates','eligibleSiteGroups',...Object.keys(actual)];
+  if(dated&&(cohort.categories.length!==1||cohort.categories[0]!=='Equipment'||
+    counts?.benchmark!==100||counts?.tuning!==70||counts?.holdout!==30||
+    counts?.diagnostic!==0))throw new Error('DATED_PREPERMIT_SAMPLE_INVALID');
   if(!counts||fields.some(key=>!Number.isInteger(counts[key])||counts[key]<0)||
     Object.entries(actual).some(([key,value])=>counts[key]!==value)||
     counts.graphCandidates<cohort.rows.length||counts.graphCandidates<counts.eligibleCandidates||
@@ -188,4 +251,4 @@ function blindPacket(cohort,phase='TUNING',lock=null){
     // No scores, model names, threshold membership, sampling bucket, fit, or split.
     instructions:'Judge the source evidence independently. PURSUE_NOW means worth researching now, not confirmed buying intent. WATCH is plausible fit without timely action evidence. NOT_RELEVANT is wrong-fit/identity. INSUFFICIENT_EVIDENCE is a valid negative actionability judgment. Explain with source record IDs. Do not contact anyone.'});
 }
-module.exports={VERSION,PROTOCOL,stable,hash,sealed,verify,siteKey,sourceCard,buildCohort,validateCohort,blindPacket};
+module.exports={VERSION,PROTOCOL,DATED_SCOPE,DATED_PROTOCOL,officialDatedPrepermit,stable,hash,sealed,verify,siteKey,sourceCard,buildCohort,validateCohort,blindPacket};
