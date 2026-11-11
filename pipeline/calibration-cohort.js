@@ -154,7 +154,7 @@ function buildCohort({graph,batches,observedAt,sourceRevision,codeHashes,seed='p
     eligibleSiteGroups:groups.size,benchmark:representatives.length,holdout:holdoutCount,
     tuning:representatives.length-holdoutCount,diagnostic:diagnostics.length};
   const protocol=dated?DATED_PROTOCOL:PROTOCOL;
-  return sealed({version:VERSION,cohortId:'COHORT-'+hash([graph.graphDigest,seed,sourceRevision,categories,codeHashes,dated?DATED_SCOPE:null]).slice(0,24),
+  return sealed({version:VERSION,cohortId:'COHORT-'+hash(dated?[graph.graphDigest,seed,sourceRevision,categories,codeHashes,DATED_SCOPE]:[graph.graphDigest,seed,sourceRevision,categories,codeHashes]).slice(0,24),
     observedAt,sourceRevision,graphDigest:graph.graphDigest,codeHashes,seed,categories,protocol,
     ...(dated?{populationScope:DATED_SCOPE}:{}),
     isSynthetic:isSynthetic===true,population:protocol.population,
