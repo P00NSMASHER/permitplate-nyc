@@ -23,11 +23,11 @@ function dateAge(date,asOf){
 // produce a positive purchase/installation-scope finding.
 const ACTION=/\b(?:install(?:ation|ing|ed)?|replace(?:ment|d|ing)?|new|proposed|construct(?:ion)?|provide|upgrade|alter(?:ation)?)\b/i;
 const NON_ACTION=/\b(?:no\s+(?:new|proposed|equipment|kitchen|work)|not\s+(?:install|proposed)|existing\s+to\s+remain|remove\s+only|demolition\s+only|no\s+change\s+to)\b/i;
-const EXPLICIT_EQUIPMENT=/\b(?:commercial\s+kitchen\s+equipment|kitchen\s+equipment|cooking\s+(?:appliances?|equipment)|food\s+service\s+equipment|walk[\s-]?in\s+(?:cooler|freezer)|commercial\s+refrigerat(?:or|ion)|grease\s+(?:hood|duct|exhaust)|(?:type\s*1|type\s*i)\s+(?:kitchen\s+)?(?:exhaust\s+)?hood|(?:commercial|kitchen)\s+exhaust\s+hood|kitchen\s+fire\s+suppression\s+system)\b/i;
+const EXPLICIT_EQUIPMENT=/\b(?:commercial\s+kitchen\s+equipment|kitchen\s+equipment|cooking\s+(?:appliances?|equipment)|food\s+service\s+equipment|walk[\s-]?in\s+(?:cooler|freezer)|commercial\s+refrigerat(?:or|ion)|grease\s+(?:hood|duct|exhaust)|(?:type\s*1|type\s*i)\s+(?:kitchen\s+)?(?:exhaust\s+)?hood|(?:commercial|kitchen)\s+exhaust\s+hood|kitchen\s+fire\s+suppression\s+system|(?:commercial\s+)?kitchen\s+exhaust\s+(?:system|fan|duct(?:work)?))\b/i;
 const KITCHEN_BUILDOUT=/\b(?:kitchen|restaurant|food\s+(?:service|preparation))\b.{0,90}\b(?:fit[\s-]?out|renovat(?:e|ion)|alter(?:ation)?|construct(?:ion)?|build[\s-]?out|plumbing|mechanical|ventilation|exhaust|cook(?:ing)?)\b|\b(?:fit[\s-]?out|renovat(?:e|ion)|alter(?:ation)?|construct(?:ion)?|build[\s-]?out)\b.{0,90}\b(?:commercial\s+kitchen|restaurant|food\s+service)\b/i;
-const RESIDENTIAL_UNIT=/\\b(?:apt\\.?\\s*#?\\s*\\w+|apartment\\b|dwelling\\s+unit|residential\\s+(?:kitchen|unit)|condo(?:minium)?\\s+unit)\\b/i;
-const DEMOLITION=/\\b(?:selective\\s+|interior\\s+)?demolition\\b/i;
-const POSITIVE_NON_DEMOLITION_WORK=/\\b(?:install(?:ation|ing|ed)?|replace(?:ment|d|ing)?|new\\s+(?:commercial\\s+)?(?:kitchen|equipment|hood|exhaust|ventilation)|construct(?:ion)?\\s+of\\s+(?:new|commercial))\\b/i;
+const RESIDENTIAL_UNIT=/\b(?:apt\.?\s*#?\s*\w+|apartment\b|dwelling\s+unit|residential\s+(?:kitchen|unit)|condo(?:minium)?\s+unit)\b/i;
+const DEMOLITION=/\b(?:selective\s+|interior\s+)?demolition\b/i;
+const POSITIVE_NON_DEMOLITION_WORK=/\b(?:install(?:ation|ing|ed)?|replace(?:ment|d|ing)?|new\s+(?:commercial\s+)?(?:kitchen|equipment|hood|exhaust|ventilation)|construct(?:ion)?\s+of\s+(?:new|commercial))\b/i;
 const BAD_STATUS=/\b(?:withdrawn?|disapprov(?:ed|al)?|cancel(?:led|ed|ation)?|void(?:ed)?|revok(?:ed|ation)|abandon(?:ed)?|expired|superseded)\b/i;
 function classifyDobFiling(record,observedAt){
   if(record?.sourceSystem!=='DOB_NOW'||record.sourceDatasetId!==SOURCE_ID ||
