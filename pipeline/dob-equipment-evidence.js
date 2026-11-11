@@ -12,7 +12,6 @@ const SOURCE_PAGE='https://data.cityofnewyork.us/d/w9ak-ipjd';
 const MAX_MATCHED_FILINGS=3000;
 const sourceText=v=>typeof v==='string'?v.trim():'';
 const norm=v=>project.norm(v);
-const hasOwn=(o,k)=>Object.prototype.hasOwnProperty.call(o||{},k);
 function dateAge(date,asOf){
   const d=clock.calendarDate(date);
   const today=clock.calendarDate(asOf);
@@ -133,9 +132,10 @@ function audit({dohmhBatch,dobBatch,observedAt}){
     sharedPremise=0,binConflicts=0,otherPremise=0,duplicateConflicts=0;
   const byFiling=new Map(),findings=[];
   for(const record of dobBatch.records){
-    const id=sourceText(record.sourceRecordId),prior=byFiling.get(id);
-    if(prior){
-      if(prior!==record.rawFactFingerprint){duplicateConflicts++;byFiling.set(id,null);}
+    const id=sourceText(record.sourceRecordId);
+    if(byFiling.has(id)){
+      const prior=byFiling.get(id);
+      if(prior!==null&&prior!==record.rawFactFingerprint){duplicateConflicts++;byFiling.set(id,null);}
       continue;
     }
     byFiling.set(id,record.rawFactFingerprint);
