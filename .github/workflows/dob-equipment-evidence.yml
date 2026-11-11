@@ -1,0 +1,196 @@
+name: PermitPlate DOB equipment evidence research (NO_SEND)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/dob-equipment-evidence.yml'
+      - 'pipeline/dob-equipment-evidence.js'
+      - 'pipeline/dob-equipment-evidence.test.js'
+      - 'pipeline/run-dob-equipment-evidence.js'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/dob-equipment-evidence.yml'
+      - 'pipeline/dob-equipment-evidence.js'
+      - 'pipeline/dob-equipment-evidence.test.js'
+      - 'pipeline/run-dob-equipment-evidence.js'
+      - 'tests/test_dob_equipment_workflow_policy.py'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('permitplate-dob-research-pr-{0}', github.event.pull_request.number) || format('permitplate-private-state-{0}', vars.PERMITPLATE_STATE_REPO) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check out tested source without persisted credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Pinned Node 22 environment
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.4'
+      - name: Reject false equipment attribution, expired filings and score promotion
+        run: node --test pipeline/dob-equipment-evidence.test.js
+      - name: Verify research-only publisher and credential boundaries
+        run: python3 -m unittest discover -s tests -p 'test_dob_equipment_workflow_policy.py' -v
+
+  public-source-preflight:
+    needs: policy
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out exact source (no private state or credentials)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Pinned Node 22 environment
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.4'
+      - name: Verify real 90-day NYC official equipment filing descriptions (no send)
+        run: node pipeline/run-dob-equipment-evidence.js "$RUNNER_TEMP/dob-equipment-preflight.json"
+      - name: Independently check public preflight result and no authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs=require('node:fs');
+          const r=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+'/dob-equipment-preflight.json','utf8'));
+          if(r.status!=='VERIFIED_OFFICIAL_DOB_CONSTRUCTION_SCOPE_RESEARCH_ONLY'||
+            !r.reportFingerprint||!r.counts||
+            r.productionAuthorized!==false||
+            r.customerDeliveryAllowed!==false||
+            r.externalSendCalls!==0||
+            r.holdoutReleased!==false||
+            !r.sourceProvenance?.DOB_NOW?.queryScopeHash){
+            throw Error('DOB_SOURCE_PREFLIGHT_NOT_VALID');
+          }
+          console.log(JSON.stringify({status:'PUBLIC_SOURCE_VERIFIED_NO_SEND',
+            reportFingerprint:r.reportFingerprint,counts:r.counts,
+            productionAuthorized:false,externalSendCalls:0}));
+          NODE
+
+  publish-private:
+    needs: policy
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      STATE_REPO: ${{ vars.PERMITPLATE_STATE_REPO }}
+      PRIVATE_DIR: ${{ github.workspace }}/.private-state
+      RESEARCH_DIR: ${{ github.workspace }}/.private-state/research/dob-equipment/${{ github.run_id }}
+    steps:
+      - name: Check out immutable protected main without persisted credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Verify exact current main before loading private token
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = 'refs/heads/main'
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          current="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          test -n "$current" && test "$current" = "$GITHUB_SHA"
+      - name: Pinned Node 22 environment
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.4'
+      - name: Validate dedicated private state repository
+        env:
+          GH_TOKEN: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$STATE_REPO" && test -n "${GH_TOKEN:-}"
+          test "$STATE_REPO" != "$GITHUB_REPOSITORY"
+          test "$(gh api "repos/$STATE_REPO" --jq '.visibility')" = 'private'
+      - name: Check out protected private state
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: ${{ vars.PERMITPLATE_STATE_REPO }}
+          token: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
+          ref: main
+          path: .private-state
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Write source-bound official DOB evidence privately, no send
+        shell: bash
+        run: |
+          set -euo pipefail
+          node pipeline/run-dob-equipment-evidence.js "$RESEARCH_DIR/evidence.json"
+      - name: Verify exact evidence fingerprint and no customer authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs=require('node:fs');
+          const {sha256,stableStringify}=require('./pipeline/socrata-reader');
+          const report=JSON.parse(fs.readFileSync(process.env.RESEARCH_DIR+'/evidence.json','utf8'));
+          const {reportFingerprint,...body}=report;
+          if(reportFingerprint!==sha256(stableStringify(body))||
+              report.status!=='VERIFIED_OFFICIAL_DOB_CONSTRUCTION_SCOPE_RESEARCH_ONLY'||
+              !report.counts||
+              report.sourceProvenance.DOB_NOW.sourceId!=='nyc-open-data:w9ak-ipjd'||
+              report.sourceProvenance.DOB_NOW.fetchedCount!==report.counts.dobSourceRows||
+              report.findings.length!==report.counts.siteMatchedFilings||
+              report.productionAuthorized!==false||report.customerDeliveryAllowed!==false||
+              report.holdoutReleased!==false||report.externalSendCalls!==0||
+              report.findings.some(f=>f.operatorIdentityProven!==false||
+                f.purchaseProven!==false||f.installationCompletedProven!==false||
+                f.site?.consumerIdentityProven!==false)){
+            throw Error('PRIVATE_DOB_EVIDENCE_BOUNDARY_FAILED');
+          }
+          fs.writeFileSync(process.env.RESEARCH_DIR+'/summary.json',JSON.stringify({
+            version:report.runnerVersion,status:report.status,
+            sourceRevision:process.env.GITHUB_SHA,observedAt:report.observedAt,
+            reportFingerprint,counts:report.counts,
+            sourceObservationIds:Object.fromEntries(Object.entries(report.sourceProvenance).map(([k,v])=>[k,v.observationId])),
+            productionAuthorized:false,customerDeliveryAllowed:false,externalSendCalls:0
+          },null,2)+'\n',{flag:'wx'});
+          console.log(JSON.stringify({status:'PRIVATE_EVIDENCE_VERIFIED',
+            reportFingerprint,counts:report.counts,productionAuthorized:false,externalSendCalls:0}));
+          NODE
+      - name: Recheck exact protected main immediately before private commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          current="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          test -n "$current" && test "$current" = "$GITHUB_SHA"
+      - name: Commit only append-only private research report
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C "$PRIVATE_DIR" config user.name 'PermitPlate Research'
+          git -C "$PRIVATE_DIR" config user.email 'actions@users.noreply.github.com'
+          git -C "$PRIVATE_DIR" add -- "research/dob-equipment/$GITHUB_RUN_ID"
+          git -C "$PRIVATE_DIR" commit -m "research: source-bound DOB equipment evidence ($GITHUB_RUN_ID)"
+      - name: Publish to private repository with compare-and-swap
+        env:
+          GH_TOKEN: ${{ secrets.PERMITPLATE_STATE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${GH_TOKEN:-}"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          current="$(git ls-remote --exit-code origin refs/heads/main | cut -f1)"
+          test -n "$current" && test "$current" = "$GITHUB_SHA"
+          gh auth setup-git
+          remote="$(git -C "$PRIVATE_DIR" ls-remote origin refs/heads/main | cut -f1)"
+          parent="$(git -C "$PRIVATE_DIR" rev-parse HEAD^)"
+          test "$remote" = "$parent" || { echo 'PRIVATE_STATE_MOVED_NO_FORCE_PUSH'; exit 1; }
+          git -C "$PRIVATE_DIR" push origin HEAD:main
