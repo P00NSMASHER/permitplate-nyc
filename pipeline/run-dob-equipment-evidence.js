@@ -37,11 +37,11 @@ async function run(nowIso,fetchImpl){
     productionAuthorized:false,customerDeliveryAllowed:false,externalSendCalls:0
   };
   const body={runnerVersion:RUNNER_VERSION,
+    ...report,
     status:'VERIFIED_OFFICIAL_DOB_CONSTRUCTION_SCOPE_RESEARCH_ONLY',
     sourceScope:'NYC_DOB_NOW_JOB_DESCRIPTIONS_MATCHING_EXPLICIT_RESEARCH_TERMS_IN_PRIOR_90_DAYS',
     sourceLimits:'DOB NOW Build job application filings are not all DOB jobs. Matching site is not matching tenant or purchasing decision.',
-    selectedSourcePredicate:scopeWhere(observedAt),
-    ...report};
+    selectedSourcePredicate:scopeWhere(observedAt)};
   const hash=sha256(stableStringify(body));
   return {...body,reportFingerprint:hash};
 }
