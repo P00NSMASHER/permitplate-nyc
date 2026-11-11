@@ -146,3 +146,25 @@ test('there is no scoring, transport or private-state import in the independent 
   }
   assert.equal(clock.nycDate(OBSERVED),'2026-11-10');
 });
+
+
+test('real-world negative: apartment kitchen plumbing in multi-tenant building is NOT a restaurant opportunity',()=>{
+  const r=run([dohmh()],[dob('M01445903-S1',{
+    job_description:'REPLACEMENT OF ALL PLUMBING FIXTURES IN THE KITCHEN AND BATHROOM IN APT 16 on 5TH FLOOR to facilitate the renovation work filed under M01445903-I1 . NO CHANGES IN THE USE, EGRESS AND OCCUPANCY.'
+  })]);
+  assert.equal(r.findings.length,0,'residential apartment scope must not attach to a restaurant merely by BIN');
+});
+test('real-world negative: demolition-only restaurant counter is NOT equipment installation',()=>{
+  const r=run([dohmh()],[dob('M01473729-I1',{
+    job_description:'SELECTIVE INTERIOR DEMOLITION OF EXISTING RESTAURANT COUNTER AS PART OF A MINOR RENOVATION. NO STRUCTURAL WORK OR CHANGES TO EXISTING BUILDING LAYOUT, OCCUPANCY, OR EGRESS ARE PROPOSED.'
+  })]);
+  assert.equal(r.findings.length,0,'selective demolition cannot prove equipment procurement or installation');
+});
+test('real-world positive: installation of a new restaurant kitchen exhaust system is direct scope',()=>{
+  const r=run([dohmh()],[dob('M01296954-P3',{
+    job_description:'Replacement of existing storefront with new aluminum system and interior renovation as per approved plans. HVAC modifications and installation of new kitchen exhaust system as shown on plans. No change in use, occupancy, and means of egress.'
+  })]);
+  assert.equal(r.findings.length,1);
+  assert.equal(r.findings[0].scope,'EXPLICIT_KITCHEN_EQUIPMENT_OR_HOOD_SCOPE');
+  assert.equal(r.findings[0].purchaseProven,false);
+});
