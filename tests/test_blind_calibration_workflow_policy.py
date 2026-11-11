@@ -32,7 +32,7 @@ def verify(s):
     assert 'gh api "repos/$STATE_REPO" --jq \'.visibility\'' in s
     assert 'test "$STATE_REPO" != "$GITHUB_REPOSITORY"' in s
     assert "node --test pipeline/calibration.test.js pipeline/calibration-integrity.test.js pipeline/calibration-cli.test.js pipeline/calibration-focused.test.js" in s
-    assert 'node pipeline/calibration-runner.js prepare "$CALIBRATION_DIR" Equipment' in s
+    assert 'node pipeline/calibration-runner.js prepare "$CALIBRATION_DIR" Equipment DATED_DOHMH_PREPERMIT_30D_V1' in s
     assert "cohort.validateCohort(operator)" in s
     assert "packet.cards.some(card=>'predictions' in card" in s
     assert "blocked.status!=='BLOCKED'" in s
@@ -41,7 +41,9 @@ def verify(s):
     assert "operator.counts.tuning!==70" in s
     assert "operator.counts.holdout!==30" in s
     assert "packet.cards.length!==70" in s
-    assert "summary.reviewScope!=='ONE_CATEGORY_INDEPENDENT_REVIEW'" in s
+    assert "summary.reviewScope!=='SOURCE_DATED_EQUIPMENT_REVIEW'" in s
+    assert "operator.populationScope!==cohort.DATED_SCOPE" in s
+    assert "operator.protocol.id!==cohort.DATED_PROTOCOL.id" in s
     assert "operator.sourceRevision!==process.env.GITHUB_SHA" in s
     assert "node pipeline/calibration-runner.js status" in s
     assert 'operator/review-progress.json' in s
@@ -95,6 +97,12 @@ class BlindCalibrationPolicy(unittest.TestCase):
     def test_workflow_cannot_share_unsanitized_model_scores(self):
         with self.assertRaises(AssertionError):
             verify(self.source.replace("packet.cards.some(card=>'predictions' in card", "false"))
+
+    def test_cannot_switch_back_to_unqualified_applicant_cohort(self):
+        with self.assertRaises(AssertionError):
+            verify(self.source.replace(
+                'Equipment DATED_DOHMH_PREPERMIT_30D_V1',
+                'Equipment', 1))
 
     def test_correct_private_state_serialization(self):
         with self.assertRaises(AssertionError):
