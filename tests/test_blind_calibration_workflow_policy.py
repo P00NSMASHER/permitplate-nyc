@@ -25,9 +25,9 @@ def verify(s):
     assert s.index(RECHECK) < s.index(PUBLISH)
     assert s.count("git ls-remote --exit-code origin refs/heads/main") == 3
     assert s.count('test "$(git rev-parse HEAD)" = "$GITHUB_SHA"') == 3
-    assert s.count(CHECKOUT) == 3
-    assert s.count(NODE) == 2
-    assert s.count("persist-credentials: false") == 3
+    assert s.count(CHECKOUT) == 4
+    assert s.count(NODE) == 3
+    assert s.count("persist-credentials: false") == 4
     assert "actions/checkout@v4" not in s and "actions/setup-node@v4" not in s
     assert 'gh api "repos/$STATE_REPO" --jq \'.visibility\'' in s
     assert 'test "$STATE_REPO" != "$GITHUB_REPOSITORY"' in s
@@ -50,6 +50,12 @@ def verify(s):
     assert "progress.customerDeliveryAllowed!==false" in s
     assert "progress.holdoutReleased!==false" in s
     assert "pipeline/calibration-review-progress.test.js" in s
+    assert "pipeline/calibration-dated-prepermit.test.js" in s
+    assert "dated-population-preflight:" in s
+    assert "populationScope:c.DATED_SCOPE" in s
+    assert "SOURCE_DATED_RESEARCH_SAMPLE_SUPPORTED" in s
+    assert s.index("dated-population-preflight:") < s.index("prepare-private-cohort:")
+    assert "if: ${{ github.event_name == 'pull_request' }}" in s
     assert "summary.productionStateWrites!==0" in s
     assert "summary.externalSendCalls!==0" in s
     assert "AWAITING_REAL_INDEPENDENT_LABELS" in s
