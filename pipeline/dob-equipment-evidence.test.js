@@ -13,7 +13,7 @@ const observation=(sourceKey,records,state='COMPLETE_NONEMPTY')=>({
 });
 const dohmh=(camis='51000001',extra={})=>adapters.normalizeDohmhRow({
   camis,dba:'Example Diner',building:'101',street:'MAIN STREET',boro:'Manhattan',
-  bin:'1000001',bbl:'1000010001',inspection_date:'2026-11-03T00:00:00.000',
+  bin:'1000001',bbl:'1000100001',inspection_date:'2026-11-03T00:00:00.000',
   inspection_type:'Pre-permit (Operational) / Initial Inspection',
   cuisine_description:'American',...extra
 },{observedAt:OBSERVED});
