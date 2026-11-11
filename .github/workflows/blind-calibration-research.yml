@@ -20,6 +20,7 @@ on:
       - 'pipeline/calibration-review-progress.js'
       - 'pipeline/calibration-review-progress.test.js'
       - 'pipeline/calibration-focused.test.js'
+      - 'pipeline/calibration-dated-prepermit.test.js'
 
 permissions:
   contents: read
@@ -43,9 +44,79 @@ jobs:
         with:
           node-version: '22.23.4'
       - name: Test blinded calibration source integrity and private outputs
-        run: node --test pipeline/calibration.test.js pipeline/calibration-integrity.test.js pipeline/calibration-cli.test.js pipeline/calibration-focused.test.js pipeline/calibration-review-progress.test.js
+        run: node --test pipeline/calibration.test.js pipeline/calibration-integrity.test.js pipeline/calibration-cli.test.js pipeline/calibration-focused.test.js pipeline/calibration-review-progress.test.js pipeline/calibration-dated-prepermit.test.js
       - name: Defend private blind-calibration workflow
         run: python3 -m unittest discover -s tests -p 'test_blind_calibration_workflow_policy.py' -v
+
+  # Public source-only eligibility check. Never reads private cohorts, review
+  # exports, Stripe, customer data or state. A failing source-support check is
+  # an evidence deficit, not an invitation to lower the 100-case sample.
+  dated-population-preflight:
+    needs: policy
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact PR source without credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Pinned Node for source-only research
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.4'
+      - name: Verify real, source-dated 100-site Equipment research support
+        env:
+          SOURCE_COMMIT: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          'use strict';
+          const c=require('./pipeline/calibration-cohort');
+          const run=require('./pipeline/calibration-runner');
+          const {scanBatches}=require('./pipeline/run-source-health');
+          const {buildCurrentGraph}=require('./pipeline/candidate-builder');
+          (async()=>{
+            const {observedAt,batches}=await scanBatches();
+            const graph=buildCurrentGraph({
+              dohmhBatch:batches.DOHMH,
+              slaBatch:batches.SLA_PENDING,
+              dobBatch:batches.DOB_NOW,
+              reviewedIdentityBridges:[]
+            });
+            const cohort=c.buildCohort({graph,batches,observedAt,
+              sourceRevision:process.env.SOURCE_COMMIT,
+              codeHashes:run.hashes(run.INPUT_FILES),
+              categories:['Equipment'],benchmarkSize:100,diagnosticSize:0,
+              populationScope:c.DATED_SCOPE});
+            c.validateCohort(cohort);
+            if(cohort.counts.benchmark!==100||
+               cohort.counts.tuning!==70||cohort.counts.holdout!==30||
+               cohort.productionAuthorized!==false){
+              throw Error('DATED_SAMPLE_INTEGRITY_FAILED');
+            }
+            // Only aggregate support and source revision, never case IDs,
+            // private reviews, source records, or model predictions.
+            console.log(JSON.stringify({
+              status:'SOURCE_DATED_RESEARCH_SAMPLE_SUPPORTED',
+              sourceRevision:cohort.sourceRevision,
+              sourceGraphState:graph.graphState,
+              graphCandidateCount:cohort.counts.graphCandidates,
+              eligibleDatedSiteGroups:cohort.counts.eligibleSiteGroups,
+              benchmark:cohort.counts.benchmark,
+              tuning:cohort.counts.tuning,
+              hiddenHoldout:cohort.counts.holdout,
+              productionAuthorized:false,
+              externalSendCalls:0
+            }));
+          })().catch(e=>{
+            console.error(/^DATED_PREPERMIT_SUPPORT_BELOW_100:\d+$/.test(e.message)?
+              e.message:'DATED_RESEARCH_PREFLIGHT_FAILED');
+            process.exitCode=1;
+          });
+          NODE
 
   prepare-private-cohort:
     needs: policy
@@ -96,7 +167,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node pipeline/calibration-runner.js prepare "$CALIBRATION_DIR" Equipment
+          node pipeline/calibration-runner.js prepare "$CALIBRATION_DIR" Equipment DATED_DOHMH_PREPERMIT_30D_V1
       - name: Record private, read-only reviewer progress receipt
         shell: bash
         run: |
@@ -131,19 +202,29 @@ jobs:
               operator.categories.length!==1||operator.categories[0]!=='Equipment'||
               operator.counts.benchmark!==100||operator.counts.tuning!==70||
               operator.counts.holdout!==30||operator.counts.diagnostic!==0||
-              packet.cards.length!==70||summary.reviewScope!=='ONE_CATEGORY_INDEPENDENT_REVIEW'||
+              packet.cards.length!==70||summary.reviewScope!=='SOURCE_DATED_EQUIPMENT_REVIEW'||
+              summary.protocolId!==cohort.DATED_PROTOCOL.id||
+              summary.population!==cohort.DATED_PROTOCOL.population||
+              operator.populationScope!==cohort.DATED_SCOPE||
+              operator.protocol.id!==cohort.DATED_PROTOCOL.id||
+              operator.rows.some(row=>
+                row.card.eventTimeStatus!=='KNOWN'||
+                row.card.eventDateBasis!=='DOHMH_INSPECTION_DATE'||
+                row.card.stage!=='HEALTH PRE-PERMIT')||
               summary.productionStateWrites!==0||summary.externalSendCalls!==0||
               summary.passed!==true||summary.holdoutReleased!==false||
               operator.sourceRevision!==process.env.GITHUB_SHA){
             throw Error('LIVE_BLIND_CALIBRATION_BOUNDARY_FAILED');
           }
           console.log(JSON.stringify({
-            status:'REAL_SOURCE_BLIND_REVIEW_AWAITING_INDEPENDENT_LABELS',
+            status:'REAL_DATED_PREPERMIT_BLIND_REVIEW_AWAITING_INDEPENDENT_LABELS',
             cohortId:summary.cohortId,
             graphCandidates:summary.counts.graphCandidates,
             benchmarkCases:summary.counts.benchmark,
             firstReviewerCases:packet.cards.length,
             category:operator.categories[0],
+            populationScope:operator.populationScope,
+            datedSiteGroups:operator.counts.eligibleSiteGroups,
             hiddenHoldoutCases:operator.counts.holdout,
             labelState:blocked.status,
             productionAuthorized:false,
@@ -162,7 +243,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$PRIVATE_DIR/research/blind-calibration"
-          printf '{"runId":"%s","sourceSha":"%s","reviewStatus":"AWAITING_REAL_INDEPENDENT_LABELS","productionAuthorized":false,"customerContacted":false}\n' \
+          printf '{"runId":"%s","sourceSha":"%s","reviewStatus":"AWAITING_REAL_INDEPENDENT_LABELS_DATED_PREPERMIT","populationScope":"DATED_DOHMH_PREPERMIT_30D_V1","productionAuthorized":false,"customerContacted":false}\n' \
             "$GITHUB_RUN_ID" "$GITHUB_SHA" > "$PRIVATE_DIR/research/blind-calibration/LATEST.json"
           git -C "$PRIVATE_DIR" config user.name "PermitPlate Blind Calibration"
           git -C "$PRIVATE_DIR" config user.email "actions@users.noreply.github.com"

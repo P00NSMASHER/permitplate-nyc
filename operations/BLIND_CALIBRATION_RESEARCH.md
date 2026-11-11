@@ -37,21 +37,32 @@ public-main commit and hash-pinned source/scoring/evaluation code. Its
 reviewer packet contains only evidence. It contains a deterministic site
 group sample, with diagnostic cases excluded from threshold selection.
 
-### Focused first calibration: Equipment
+### Separate source-dated Equipment calibration
 
-To make genuine independent review achievable, the active weekly packet now
-targets **Equipment** only. It still samples 100 eligible site groups, with
-70 tuning and 30 hidden holdout cases. No diagnostic extras or POS/Insurance
-judgments are required for this first Equipment-focused evaluation.
-Two independent reviewers must each judge the full 70-case first packet.
-The 30-case hidden holdout remains unavailable until thresholds are locked.
-All minimum precision, reviewer agreement, coverage and holdout checks remain
-unchanged. The older three-category research packet remains archived privately,
-and separate POS and Insurance calibration is deferred, not silently passed.
+The original uniform 100-case Equipment sample (private source run `42842957840`)
+contains 93 undated applicant-only rows and seven official dated pre-permit
+inspections. Two explicitly AI-simulated review rubrics found only three to
+six positive cases among the 70 tuning rows, which cannot satisfy the
+unchanged minimum of 20 selected cases at 80% precision.
 
-The exported review JSON is the *only* way to supply actual human judgments;
-the instrument never fills labels automatically and cannot attest to human
-expertise. No one has been contacted or given access to private material.
+The new weekly packet targets a **different, prospectively defined source**
+population: a verified NYC DOHMH pre-permit inspection dated within 0–30 NYC
+calendar days, bound to the exact original public source record, with
+non-suppressed identity and one candidate per premises. The sample must
+include at least 100 unique qualifying sites; otherwise private publication
+fails closed. The first 70 tuning cases remain blind to the source scorer
+and 30 unseen holdout cases remain sealed until threshold locking.
+
+At November 10's PR #181 public source-only preflight, the current graph
+contained **4,265 candidates and 238 eligible dated site groups**.
+This confirms sample support, **not buyer relevance, future openings, paid
+subscriptions, or precision**. The original all-site sample remains privately
+archived and cannot be pooled with or generalized from the dated sample.
+
+Numeric thresholds, two genuine independent review requirements, min support
+20, precision 0.80, Wilson lower 0.60, reviewer agreement and 70/30 split
+remain unchanged. POS and Insurance are not silently calibrated by the
+Equipment results. No code or research artifact promotes customer scoring.
 
 ### How to complete the first real review
 
@@ -91,11 +102,12 @@ expertise. No one has been contacted or given access to private material.
    and separately explicit new-version owner promotion remain mandatory.
    A structural review pass never toggles `productionAuthorized`.
 
-**Observed private source state (November 10, 2026):** the latest Equipment
-packet is `42723502758` (source SHA `f2012b0`), with **0 completed
-independent review exports**. This is an evidence bottleneck, not a
-network or CI error. The already-active V4 research scoring snapshot must
-continue to report `customerDeliveryAllowed:false`.
+**Current review limitation:** The original privately archived Equipment
+experiment (run `42842957840`, source `78c205c`) has **zero completed
+independent human review exports**. PR #181's source preflight alone does
+not publish the new private cohort; consult `research/blind-calibration/LATEST.json`
+for the actual private run before claiming a reviewer-ready packet.
+The V4 research snapshot must remain `customerDeliveryAllowed:false`.
 
 The packet is **not a validated lead feed**. It does not prove a restaurant
 is about to open, a customer will buy, or any model's precision.
