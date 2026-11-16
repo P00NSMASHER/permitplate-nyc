@@ -247,4 +247,6 @@
       if(submit){submit.disabled=false;submit.textContent='Send my free-trial request';}
     });
   });
+  // Do not offer a live submit control unless this handler is installed.
+  if(submit) submit.disabled=false;
 })(typeof window==='undefined'?globalThis:window);

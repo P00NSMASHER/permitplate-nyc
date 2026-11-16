@@ -69,6 +69,8 @@ test('public trial options match supported fulfillment categories and territorie
   assert(html.includes('name="permitplate-product-version" content="4.0"'));
   assert(html.includes('name="email" type="email"'));
   assert(html.includes('Send my free-trial request'));
+  assert.match(html, /<button\b[^>]*type="submit"[^>]*\bdisabled\b/, 'without JavaScript the online submit control must be disabled');
+  assert.match(html, /<noscript>[\s\S]*?mailto:jay@retallyrecovery\.com/, 'non-JS customers keep the direct email path');
   assert(html.includes('Work email for our reply'));
   assert(html.includes('data-trial-copy'));
   assert(!html.includes('data-trial-consent'));
@@ -84,6 +86,7 @@ test('public trial options match supported fulfillment categories and territorie
   assert(js.includes("redirect:'error'"));
   assert(!js.includes("root.fetch('https://"));
   assert(js.includes('event.preventDefault()'));
+  assert(js.includes('if(submit) submit.disabled=false;'), 'enabled only after binding JavaScript handler');
   const transformed=build.standaloneContent('trial.html',Buffer.from(html),build.STANDALONE_SITE_BASE).toString();
   assert(transformed.includes('https://permitplate.retallyrecovery.com/trial'));
   assert(!transformed.includes('/permitplate-nyc/'));
@@ -97,7 +100,7 @@ test('async trial receipts bind to submitted fields, not later edits or repeated
     const fields={businessName:'Fictional Vendor',website:'https://fictional-vendor.com/',
       email:'owner@fictional-vendor.com',category:'equipment',territory:'Brooklyn',fax:''};
     const events={},pending=[];
-    const submitButton={disabled:false,textContent:'Send my free-trial request'};
+    const submitButton={disabled:true,textContent:'Send my free-trial request'};
     const form={hidden:false,querySelector:()=>submitButton,reportValidity:()=>true,
       addEventListener:(event,listener)=>{events[event]=listener;}};
     const link={hidden:true,removeAttribute(name){delete this[name];}};
@@ -120,6 +123,7 @@ test('async trial receipts bind to submitted fields, not later edits or repeated
   }
   const response={status:202,json:async()=>({status:'RECEIVED_FOR_REVIEW'})};
   const normal=harness();
+  assert.equal(normal.submitButton.disabled,false, 'the live handler enables the submit control');
   normal.submit();await flush();
   assert.equal(normal.pending.length,1);
   normal.pending[0].resolve(response);await flush();await flush();
